@@ -1,0 +1,28 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "peasyprints-4bd2d",
+          "appId": "1:476553703080:android:dd2fc25b326d684fae9c9d",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "peasyprints-4bd2d",
+          "configurations": {
+            "android": "1:476553703080:android:dd2fc25b326d684fae9c9d",
+            "web": "1:476553703080:web:6ebcffc148b711a8ae9c9d",
+            "windows": "1:476553703080:web:e70dbc5b22476f3dae9c9d"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "database": "(default)",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

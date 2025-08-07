@@ -1,0 +1,34 @@
+# Flutter & Dart
+build/
+.dart_tool/
+.packages
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool/
+generated_plugin_registrant.dart
+
+# Android
+android/.gradle/
+.gradle/
+*.iml
+.idea/
+*.lock
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# VS Code
+.vscode/
+
+# macOS
+macos/Flutter/ephemeral/
+
+# Linux
+linux/Flutter/ephemeral/
+
+# Web
+web/generated_plugin_registrant.dart
