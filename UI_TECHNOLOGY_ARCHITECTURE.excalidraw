@@ -2428,7 +2428,7 @@
       "x": 190,
       "y": 140,
       "width": 0,
-      "height": 60,
+      "height": 210,
       "angle": 0,
       "strokeColor": "#1e1e1e",
       "backgroundColor": "transparent",
@@ -2452,7 +2452,7 @@
       "locked": false,
       "points": [
         [0, 0],
-        [0, 60]
+        [0, 210]
       ],
       "lastCommittedPoint": null,
       "startBinding": {
@@ -2514,7 +2514,7 @@
       "x": 330,
       "y": 140,
       "width": 0,
-      "height": 60,
+      "height": 210,
       "angle": 0,
       "strokeColor": "#1e1e1e",
       "backgroundColor": "transparent",
@@ -2538,7 +2538,7 @@
       "locked": false,
       "points": [
         [0, 0],
-        [0, 60]
+        [0, 210]
       ],
       "lastCommittedPoint": null,
       "startBinding": {
@@ -2600,7 +2600,7 @@
       "x": 330,
       "y": 190,
       "width": 0,
-      "height": 60,
+      "height": 160,
       "angle": 0,
       "strokeColor": "#1e1e1e",
       "backgroundColor": "transparent",
@@ -2624,7 +2624,7 @@
       "locked": false,
       "points": [
         [0, 0],
-        [0, 60]
+        [0, 160]
       ],
       "lastCommittedPoint": null,
       "startBinding": {
@@ -2686,7 +2686,7 @@
       "x": 330,
       "y": 190,
       "width": 0,
-      "height": 60,
+      "height": 160,
       "angle": 0,
       "strokeColor": "#1e1e1e",
       "backgroundColor": "transparent",
@@ -2710,7 +2710,7 @@
       "locked": false,
       "points": [
         [0, 0],
-        [0, 60]
+        [0, 160]
       ],
       "lastCommittedPoint": null,
       "startBinding": {
@@ -2772,7 +2772,7 @@
       "x": 190,
       "y": 390,
       "width": 0,
-      "height": 60,
+      "height": 160,
       "angle": 0,
       "strokeColor": "#1e1e1e",
       "backgroundColor": "transparent",
@@ -2796,7 +2796,7 @@
       "locked": false,
       "points": [
         [0, 0],
-        [0, 60]
+        [0, 160]
       ],
       "lastCommittedPoint": null,
       "startBinding": {
@@ -5003,7 +5003,13 @@
   ],
   "appState": {
     "gridSize": null,
-    "viewBackgroundColor": "#ffffff"
+    "viewBackgroundColor": "#ffffff",
+    "zoom": {
+      "value": 1
+    },
+    "scrollX": 0,
+    "scrollY": 0,
+    "theme": "light"
   },
   "files": {}
 }
