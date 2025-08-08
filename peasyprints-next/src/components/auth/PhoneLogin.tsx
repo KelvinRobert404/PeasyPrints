@@ -5,7 +5,7 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { useRouter } from 'next/navigation';
 
 export function PhoneLogin() {
-  const { initRecaptcha, sendOTP, verificationId, loading, error } = useAuthStore();
+  const { initRecaptcha, startPhoneLogin, verificationId, loading, error } = useAuthStore();
   const [phone, setPhone] = useState('');
   const router = useRouter();
 
@@ -27,10 +27,10 @@ export function PhoneLogin() {
         onChange={(e) => setPhone(e.target.value)}
       />
       {error && <div className="text-sm text-red-600">{error}</div>}
-      <button className="w-full h-12 bg-blue-600 text-white rounded" disabled={loading} onClick={() => sendOTP(phone)}>
+      <button className="w-full h-12 bg-blue-600 text-white rounded" disabled={loading} onClick={() => startPhoneLogin(phone)}>
         {loading ? 'Sending...' : 'Send OTP'}
       </button>
-      <div id="recaptcha-container-login" />
+      <div id="recaptcha-container-login" className="mt-2" />
     </div>
   );
 }

@@ -17,3 +17,11 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// Dev-only: disable app verification for phone auth to avoid reCAPTCHA issues locally
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  try {
+    // @ts-ignore - settings is available at runtime
+    auth.settings.appVerificationDisabledForTesting = true;
+  } catch {}
+}

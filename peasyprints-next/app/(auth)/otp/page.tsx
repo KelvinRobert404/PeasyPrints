@@ -8,10 +8,12 @@ import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
 
 export default function OTPPage() {
   const { verifyOTP, loading, error, sendOTP, lastPhoneNumber } = useAuthStore();
   const [code, setCode] = useState('');
+  const router = useRouter();
 
   return (
     <div className="min-h-screen flex flex-col">
