@@ -20,7 +20,14 @@ export function ShopCard({ shop, onSelect }: Props) {
     >
       <div className="flex items-start gap-3">
         {shop.logoUrl ? (
-          <Image src={shop.logoUrl} alt={shop.name} width={56} height={56} className="rounded-md object-cover" />
+          <Image
+            src={shop.logoUrl}
+            alt={shop.name}
+            width={56}
+            height={56}
+            style={{ width: '56px', height: '56px' }}
+            className="rounded-md object-cover"
+          />
         ) : (
           <div className="w-14 h-14 bg-gray-100 rounded-md" />
         )}

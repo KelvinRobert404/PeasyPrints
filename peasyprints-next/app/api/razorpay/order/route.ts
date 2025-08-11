@@ -25,14 +25,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ order });
     }
 
-    // Fallback mock if secrets are not configured
-    const mock = {
-      id: 'order_MOCK123456',
-      amount: Math.round(amount * 100),
-      currency,
-      receipt: receipt || `rcpt_${Date.now()}`
-    };
-    return NextResponse.json({ order: mock });
+    // No secrets configured → do not create a mock order (it causes checkout failure). Surface error.
+    return NextResponse.json({ error: 'Razorpay server keys are not configured' }, { status: 500 });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed to create order' }, { status: 500 });
   }

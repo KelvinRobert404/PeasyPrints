@@ -27,7 +27,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         body: JSON.stringify({ amount: totalCost, currency: 'INR' })
       });
       const { order, error } = await orderRes.json();
-      if (error) throw new Error(error);
+      if (error || !order?.id) throw new Error(error || 'Failed to create Razorpay order');
 
       // 2) Load Razorpay SDK and open checkout quickly to keep click context
       await loadRazorpay();
@@ -45,7 +45,22 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
           contact: clerkUser.phoneNumbers?.[0]?.phoneNumber
         },
         theme: { color: '#2563eb' },
-        handler: async () => {
+        handler: async (response: any) => {
+          // Verify signature server-side per Razorpay docs
+          const verifyRes = await fetch('/api/razorpay/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          });
+          const verify = await verifyRes.json();
+          if (!verifyRes.ok || !verify.valid) {
+            alert('Payment verification failed.');
+            return;
+          }
           try {
             // 3) After successful payment, upload and create order doc
             const uid = clerkUser.id;
