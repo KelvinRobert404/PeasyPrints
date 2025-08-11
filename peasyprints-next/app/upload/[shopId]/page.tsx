@@ -37,7 +37,7 @@ export default function UploadPage() {
         <h1 className="text-lg font-semibold">Upload</h1>
         <div className="text-xs text-gray-600">Shop: {shop?.name || shopId}</div>
       </header>
-      <main className="flex-1 overflow-y-auto p-4 space-y-4">
+      <main className="flex-1 overflow-y-auto p-4 pb-24 space-y-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Select PDF</CardTitle>

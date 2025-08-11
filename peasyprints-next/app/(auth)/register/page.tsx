@@ -7,6 +7,7 @@ import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PhoneRegister } from '@/components/auth/PhoneRegister';
+import { SignUp } from '@clerk/nextjs';
 import { useEffect } from 'react';
 
 export default function RegisterPage() {
@@ -27,13 +28,13 @@ export default function RegisterPage() {
       <header className="bg-white border-b px-4 py-3">
         <h1 className="text-lg font-semibold">Register</h1>
       </header>
-      <main className="flex-1 overflow-y-auto px-4 py-6">
+      <main className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Create Account</CardTitle>
+            <CardTitle>Create Account with Clerk</CardTitle>
           </CardHeader>
           <CardContent>
-            <PhoneRegister />
+            <SignUp routing="hash" afterSignUpUrl="/dashboard" signInUrl="/login" />
           </CardContent>
         </Card>
       </main>

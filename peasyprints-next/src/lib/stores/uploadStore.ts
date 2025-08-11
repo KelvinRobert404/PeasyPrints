@@ -3,6 +3,7 @@ import { immer } from 'zustand/middleware/immer';
 import type { PrintSettings, ShopPricing } from '@/types/models';
 import { PDFDocument } from 'pdf-lib';
 import { calculateTotalCost } from '@/lib/utils/pricing';
+import { usePricingStore } from '@/lib/stores/pricingStore';
 
 interface UploadState {
   file: File | null;
@@ -90,7 +91,35 @@ export const useUploadStore = create<UploadState>()(
 
     recalc: () => {
       const { settings, pageCount, shopPricing } = get();
-      const { total } = calculateTotalCost(settings, pageCount, shopPricing);
+      const effectivePricing: ShopPricing | undefined = shopPricing ?? (() => {
+        // Fallback to legacy defaults from pricingStore if shop pricing not loaded
+        try {
+          const p = usePricingStore.getState();
+          return {
+            a4: {
+              singleBW: p.A4SingBlaWh,
+              doubleBW: p.A4DoubBlaWh,
+              singleColor: p.A4SingColor,
+              doubleColor: p.A4DoubColor
+            },
+            a3: {
+              singleBW: p.A3SingBlaWh,
+              doubleBW: p.A3DoubBlaWh,
+              singleColor: p.A3SingColor,
+              doubleColor: p.A3DoubColor
+            },
+            services: {
+              softBinding: p.SoftBinding,
+              hardBinding: p.HardBinding,
+              spiralBinding: 0,
+              emergency: p.EmergencyPr
+            }
+          } as ShopPricing;
+        } catch {
+          return undefined;
+        }
+      })();
+      const { total } = calculateTotalCost(settings, pageCount, effectivePricing);
       set((s) => { s.totalCost = total; });
     },
 

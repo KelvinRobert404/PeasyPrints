@@ -60,20 +60,32 @@ export const useAuthStore = create<AuthState>()(
     clearError: () => set((s) => { s.error = null; }),
     setInitialized: (v) => set((s) => { s.initialized = v; }),
 
-    initRecaptcha: (containerId, size = 'invisible') => {
+    initRecaptcha: (containerId, size = 'normal') => {
       if (typeof window === 'undefined') return;
       const state = get();
       const existing = state.recaptchaMap[containerId];
       if (existing) {
         try { existing.clear(); } catch {}
       }
-      const verifier = new RecaptchaVerifier(auth, containerId, { size });
+      const verifier = new RecaptchaVerifier(auth, containerId, {
+        size,
+        callback: () => {
+          // token received
+          set((s) => { s.recaptchaReady = true; });
+        },
+        'expired-callback': () => {
+          set((s) => { s.recaptchaReady = false; });
+        }
+      });
       // Ensure widget is rendered to obtain a fresh token when needed
-      try { void verifier.render(); } catch {}
+      try {
+        void verifier.render().then(() => {
+          set((s) => { s.recaptchaReady = true; });
+        }).catch(() => {});
+      } catch {}
       set((s) => {
         s.recaptchaMap[containerId] = verifier;
         s.activeRecaptchaId = containerId;
-        s.recaptchaReady = true;
       });
     },
 

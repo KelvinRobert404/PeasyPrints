@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { useUser } from '@clerk/nextjs';
 import { uploadPdfAndGetUrl } from '@/lib/firebase/storageUpload';
 import { loadRazorpay } from '@/lib/razorpay/loadRazorpay';
 import { createOrderDoc } from '@/lib/firebase/createOrder';
@@ -11,48 +12,67 @@ import { useRouter } from 'next/navigation';
 export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?: string }) {
   const { file, pageCount, totalCost, settings } = useUploadStore();
   const { user } = useAuthStore();
+  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleCheckout = async () => {
-    if (!user || !file || pageCount === 0 || totalCost <= 0) return;
+    if (!isClerkLoaded || !clerkUser || !file || pageCount === 0 || totalCost <= 0) return;
     setLoading(true);
     try {
-      const fileUrl = await uploadPdfAndGetUrl(user.uid, file);
-
+      // 1) Create Razorpay order first (match Flutter flow)
       const orderRes = await fetch('/api/razorpay/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: totalCost, currency: 'INR' })
       });
-      const { order } = await orderRes.json();
+      const { order, error } = await orderRes.json();
+      if (error) throw new Error(error);
 
+      // 2) Load Razorpay SDK and open checkout quickly to keep click context
       await loadRazorpay();
       // @ts-ignore
       const rzp = new window.Razorpay({
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_xxxxxxxx',
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         name: 'PeasyPrints',
         description: file.name,
         order_id: order.id,
-        handler: async function () {
-          await createOrderDoc({
-            userId: user.uid,
-            shopId,
-            shopName: shopName || '',
-            userName: user.displayName || user.phoneNumber || user.email || 'User',
-            fileName: file.name,
-            fileUrl,
-            totalPages: pageCount,
-            totalCost: totalCost,
-            emergency: false,
-            printSettings: settings,
-            pricingDetails: { basePricePerPage: 0, bindingCost: 0, emergencyCost: 0, commission: 0 },
-            status: 'processing'
-          });
-          router.replace('/orders');
+        prefill: {
+          name: clerkUser.fullName || 'User',
+          email: clerkUser.emailAddresses?.[0]?.emailAddress,
+          contact: clerkUser.phoneNumbers?.[0]?.phoneNumber
+        },
+        theme: { color: '#2563eb' },
+        handler: async () => {
+          try {
+            // 3) After successful payment, upload and create order doc
+            const uid = clerkUser.id;
+            const fileUrl = await uploadPdfAndGetUrl(uid, file);
+            await createOrderDoc({
+              userId: uid,
+              shopId,
+              shopName: shopName || '',
+              userName: clerkUser.fullName || clerkUser.username || clerkUser.phoneNumbers?.[0]?.phoneNumber || clerkUser.emailAddresses?.[0]?.emailAddress || 'User',
+              fileName: file.name,
+              fileUrl,
+              totalPages: pageCount,
+              totalCost: totalCost,
+              emergency: !!settings.emergency,
+              printSettings: settings,
+              pricingDetails: { basePricePerPage: 0, bindingCost: 0, emergencyCost: 0, commission: 0 },
+              status: 'processing'
+            });
+            router.replace('/orders');
+          } catch (err: any) {
+            alert(err?.message || 'Order finalization failed');
+          }
         }
+      });
+      rzp.on('payment.failed', function (resp: any) {
+        console.error('Razorpay payment failed', resp?.error);
+        alert('Payment failed. Please try again.');
       });
       rzp.open();
     } catch (e: any) {
@@ -65,7 +85,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
   return (
     <button
       onClick={handleCheckout}
-      disabled={loading || !file || totalCost <= 0}
+      disabled={loading || !file || totalCost <= 0 || !isClerkLoaded || !clerkUser}
       className="w-full h-12 bg-blue-600 text-white rounded disabled:opacity-50"
     >
       {loading ? 'Processing...' : 'Checkout'}

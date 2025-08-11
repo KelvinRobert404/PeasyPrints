@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useAuthStore } from '@/lib/stores/authStore';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,17 @@ import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 
 export default function OTPPage() {
-  const { verifyOTP, loading, error, sendOTP, lastPhoneNumber } = useAuthStore();
+  const { verifyOTP, loading, error, sendOTP, lastPhoneNumber, initRecaptcha, resetRecaptcha, recaptchaReady } = useAuthStore();
   const [code, setCode] = useState('');
   const router = useRouter();
+
+  // Ensure a recaptcha instance exists on this page for Resend OTP
+  useEffect(() => {
+    initRecaptcha('recaptcha-container-otp');
+    return () => {
+      resetRecaptcha('recaptcha-container-otp');
+    };
+  }, [initRecaptcha, resetRecaptcha]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -45,14 +53,15 @@ export default function OTPPage() {
                 {loading ? 'Verifying...' : 'Verify'}
               </Button>
             </form>
-            <Button
+              <Button
               variant="outline"
               className="w-full"
-              disabled={loading || !lastPhoneNumber}
+              disabled={loading || !lastPhoneNumber || !recaptchaReady}
               onClick={() => lastPhoneNumber && sendOTP(lastPhoneNumber)}
             >
               Resend OTP
             </Button>
+            <div id="recaptcha-container-otp" className="mt-2" />
           </CardContent>
         </Card>
       </main>
