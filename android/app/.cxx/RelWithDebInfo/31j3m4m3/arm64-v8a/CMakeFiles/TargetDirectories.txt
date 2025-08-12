@@ -1,2 +1,0 @@
-D:/Kelvin/PrintEase/android/app/.cxx/RelWithDebInfo/31j3m4m3/arm64-v8a/CMakeFiles/edit_cache.dir
-D:/Kelvin/PrintEase/android/app/.cxx/RelWithDebInfo/31j3m4m3/arm64-v8a/CMakeFiles/rebuild_cache.dir
