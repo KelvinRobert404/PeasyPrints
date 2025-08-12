@@ -1,0 +1,71 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
+import { useAuthStore } from '@/lib/stores/authStore';
+import { useEffect, useState } from 'react';
+import { BottomNavigation } from '@/components/layout/BottomNavigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
+
+export default function OTPPage() {
+  const { verifyOTP, loading, error, sendOTP, lastPhoneNumber, initRecaptcha, resetRecaptcha, recaptchaReady } = useAuthStore();
+  const [code, setCode] = useState('');
+  const router = useRouter();
+
+  // Ensure a recaptcha instance exists on this page for Resend OTP
+  useEffect(() => {
+    initRecaptcha('recaptcha-container-otp');
+    return () => {
+      resetRecaptcha('recaptcha-container-otp');
+    };
+  }, [initRecaptcha, resetRecaptcha]);
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <header className="bg-white border-b px-4 py-3">
+        <h1 className="text-lg font-semibold">Verify OTP</h1>
+      </header>
+      <main className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Enter Code</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form
+              className="space-y-4"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (code.length === 6) await verifyOTP(code);
+              }}
+            >
+              <Input
+                placeholder="------"
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                className="tracking-widest text-center"
+              />
+              {error && <div className="text-sm text-red-600">{error}</div>}
+              <Button className="w-full" disabled={loading || code.length !== 6}>
+                {loading ? 'Verifying...' : 'Verify'}
+              </Button>
+            </form>
+              <Button
+              variant="outline"
+              className="w-full"
+              disabled={loading || !lastPhoneNumber || !recaptchaReady}
+              onClick={() => lastPhoneNumber && sendOTP(lastPhoneNumber)}
+            >
+              Resend OTP
+            </Button>
+            <div id="recaptcha-container-otp" className="mt-2" />
+          </CardContent>
+        </Card>
+      </main>
+      <BottomNavigation />
+    </div>
+  );
+}
