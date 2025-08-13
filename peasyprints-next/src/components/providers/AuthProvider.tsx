@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     if (isAuthRoute && isSignedIn) {
-      router.replace('/shops');
+      router.replace('/');
     }
   }, [mounted, isProtectedRoute, isAuthRoute, isSignedIn, router]);
 
