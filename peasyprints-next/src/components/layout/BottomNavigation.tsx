@@ -6,7 +6,7 @@ import { Store, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const navigation = [
-  { name: 'Shops', href: '/shops', icon: Store },
+  { name: 'Home', href: '/', icon: Store },
   { name: 'Orders', href: '/orders', icon: FileText },
 ];
 
