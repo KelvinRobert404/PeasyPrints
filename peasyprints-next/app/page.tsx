@@ -42,7 +42,8 @@ export default function IndexPage() {
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[428px] px-4">
         <Link
           href="/upload"
-          className="block text-center bg-blue-600 hover:bg-blue-700 text-white font-extrabold tracking-widest text-lg rounded-xl py-4 font-quinn"
+          className="block text-center bg-blue-600 text-white font-extrabold text-[30px] rounded-xl py-2 font-quinn"
+          style={{ letterSpacing: 'var(--swoop-letter-spacing, 0em)' }}
         >
           SWOOP
         </Link>

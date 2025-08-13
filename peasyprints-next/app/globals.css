@@ -33,8 +33,9 @@
 /* Quinn display font for SWOOP heading */
 @font-face {
   font-family: 'Quinn';
-  src: local('Quinn'), url('/fonts/Quinn.woff2') format('woff2');
-  font-weight: 400 800;
+  /* Use OTF now; add WOFF2 later if available */
+  src: url('/fonts/Quinn-Bold.otf') format('opentype');
+  font-weight: 700 800;
   font-style: normal;
   font-display: swap;
 }
