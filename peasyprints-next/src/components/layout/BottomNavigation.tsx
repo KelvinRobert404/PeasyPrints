@@ -2,14 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Store, FileText, User } from 'lucide-react';
+import { Store, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const navigation = [
-  { name: 'Home', href: '/dashboard', icon: Home },
   { name: 'Shops', href: '/shops', icon: Store },
   { name: 'Orders', href: '/orders', icon: FileText },
-  { name: 'Profile', href: '/profile', icon: User },
 ];
 
 export function BottomNavigation() {
@@ -17,7 +15,7 @@ export function BottomNavigation() {
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[428px] bg-white border-t border-gray-200 z-50">
-      <div className="grid grid-cols-4 h-16">
+      <div className="grid grid-cols-2 h-16">
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

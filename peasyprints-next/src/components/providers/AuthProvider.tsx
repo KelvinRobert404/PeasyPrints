@@ -22,7 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isProtectedRoute = useMemo(() => {
     if (!pathname) return false;
     return (
-      pathname === '/dashboard' ||
+      pathname === '/shops' ||
+      pathname.startsWith('/shops') ||
       pathname === '/orders' ||
       pathname === '/profile' ||
       pathname.startsWith('/upload')
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     if (isAuthRoute && isSignedIn) {
-      router.replace('/dashboard');
+      router.replace('/shops');
     }
   }, [mounted, isProtectedRoute, isAuthRoute, isSignedIn, router]);
 
