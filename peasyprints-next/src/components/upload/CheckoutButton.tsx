@@ -101,9 +101,10 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
     <button
       onClick={handleCheckout}
       disabled={loading || !file || totalCost <= 0 || !isClerkLoaded || !clerkUser}
-      className="w-full h-12 bg-blue-600 text-white rounded disabled:opacity-50"
+      className="w-full h-14 bg-blue-600 text-white rounded-xl disabled:opacity-50 font-quinn text-[24px]"
+      style={{ letterSpacing: '0.02em' }}
     >
-      {loading ? 'Processing...' : 'Checkout'}
+      {loading ? 'PROCESSING…' : 'CHECKOUT'}
     </button>
   );
 }

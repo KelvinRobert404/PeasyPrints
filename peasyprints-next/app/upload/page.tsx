@@ -8,15 +8,16 @@ import { FileDropzone } from '@/components/upload/FileDropzone';
 import { PrintConfigurator } from '@/components/upload/PrintConfigurator';
 import { PriceSummary } from '@/components/upload/PriceSummary';
 import { CheckoutButton } from '@/components/upload/CheckoutButton';
-import { PdfPreviewer } from '@/components/upload/PdfPreviewer';
 import { useShopsStore } from '@/lib/stores/shopsStore';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Store } from 'lucide-react';
 
 export default function UploadEntryPage() {
   const { shops, subscribe } = useShopsStore();
   const { setShopPricing } = useUploadStore();
   const [selectedShopId, setSelectedShopId] = useState<string>('');
+  const [shopOpen, setShopOpen] = useState(false);
 
   useEffect(() => {
     const unsub = subscribe();
@@ -42,20 +43,37 @@ export default function UploadEntryPage() {
             <CardTitle className="text-base">Select Shop</CardTitle>
           </CardHeader>
           <CardContent>
-            <select
-              className="w-full h-10 rounded-md border border-gray-300 px-3 text-sm"
-              value={selectedShopId}
-              onChange={(e) => setSelectedShopId(e.target.value)}
-            >
-              <option value="" disabled>
-                Choose a shop
-              </option>
-              {shops.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShopOpen((v) => !v)}
+                className="w-full rounded-2xl bg-gray-100 flex items-center px-3 h-12 text-sm text-gray-800"
+              >
+                <Store className="w-4 h-4 text-gray-500 mr-2" />
+                <span className="truncate">
+                  {selectedShopId ? (shops.find((s) => s.id === selectedShopId)?.name ?? 'Choose a store') : 'Choose a store'}
+                </span>
+              </button>
+              {shopOpen && (
+                <div className="absolute left-0 right-0 mt-2 z-20 rounded-xl border bg-white shadow">
+                  <ul className="max-h-56 overflow-auto py-1 text-sm">
+                    {shops.map((s) => (
+                      <li key={s.id}>
+                        <button
+                          className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                          onClick={() => {
+                            setSelectedShopId(s.id);
+                            setShopOpen(false);
+                          }}
+                        >
+                          {s.name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -70,15 +88,6 @@ export default function UploadEntryPage() {
 
         <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
           <CardHeader>
-            <CardTitle className="text-base">Preview & Rotate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PdfPreviewer />
-          </CardContent>
-        </Card>
-
-        <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
-          <CardHeader>
             <CardTitle className="text-base">Print Configuration</CardTitle>
           </CardHeader>
           <CardContent>
@@ -88,13 +97,17 @@ export default function UploadEntryPage() {
 
         <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
           <CardHeader>
-            <CardTitle className="text-base">Price Summary</CardTitle>
+            <CardTitle className="text-base">Summary</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent>
             <PriceSummary />
-            <CheckoutButton shopId={selectedShopId} shopName={selectedShop?.name} />
           </CardContent>
         </Card>
+
+        {/* Checkout CTA separated */}
+        <div className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
+          <CheckoutButton shopId={selectedShopId} shopName={selectedShop?.name} />
+        </div>
       </main>
       <BottomNavigation />
     </div>
