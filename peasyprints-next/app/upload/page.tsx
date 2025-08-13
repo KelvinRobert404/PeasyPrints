@@ -12,6 +12,7 @@ import { useShopsStore } from '@/lib/stores/shopsStore';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Store } from 'lucide-react';
+import { useCollegeStore, COLLEGES } from '@/lib/stores/collegeStore';
 
 export default function UploadEntryPage() {
   const { shops, subscribe } = useShopsStore();
@@ -34,9 +35,13 @@ export default function UploadEntryPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="bg-white border-b px-4 py-3">
-        <h1 className="text-lg font-semibold">Upload</h1>
-      </header>
+      {/* Swoop header with college selector */}
+      <div className="px-4 pt-6">
+        <div className="flex items-center justify-between bg-blue-600 text-white rounded-2xl px-4 py-3">
+          <div className="font-quinn text-[24px] tracking-[0.02em]">SWOOP</div>
+          <CollegePill />
+        </div>
+      </div>
       <main className="flex-1 overflow-y-auto p-4 pb-24 space-y-4">
         <Card>
           <CardHeader>
@@ -115,3 +120,12 @@ export default function UploadEntryPage() {
 }
 
 
+function CollegePill() {
+  const { selectedCollege } = useCollegeStore();
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full bg-white/90 text-blue-900 px-3 py-1 text-xs">
+      <span className="inline-block w-2 h-2 rounded-full bg-blue-900" />
+      <span className="truncate max-w-[180px]">{selectedCollege}</span>
+    </div>
+  );
+}
