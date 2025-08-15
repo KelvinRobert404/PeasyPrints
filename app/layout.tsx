@@ -1,6 +1,15 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { GeistSans } from 'geist/font/sans';
+import localFont from 'next/font/local';
+
+const Quinn = localFont({
+  src: '../public/fonts/Quinn-Bold.otf',
+  weight: '700 800',
+  style: 'normal',
+  display: 'swap',
+  variable: '--font-quinn'
+});
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ClerkProvider } from '@clerk/nextjs';
 
@@ -25,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body>
+      <body className={Quinn.variable}>
         <ClerkProvider>
           <div className="min-h-screen bg-gray-100 flex justify-center">
             {/* Mobile container - max width 428px, centered on larger screens */}

@@ -30,16 +30,5 @@
   body { @apply bg-background text-foreground; }
 }
 
-/* Quinn display font for SWOOP heading */
-@font-face {
-  font-family: 'Quinn';
-  /* Use OTF now; add WOFF2 later if available */
-  src: url('/fonts/Quinn-Bold.otf') format('opentype');
-  font-weight: 700 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-.font-quinn {
-  font-family: 'Quinn', 'Geist Sans', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
-}
+/* Quinn loaded via next/font/local → exposes CSS variable */
+.font-quinn { font-family: var(--font-quinn), 'Geist Sans', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; }
