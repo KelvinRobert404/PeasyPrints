@@ -11,6 +11,7 @@ const Quinn = localFont({
   variable: '--font-quinn'
 });
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import { RootShell } from '@/components/layout/RootShell';
 import { ClerkProvider } from '@clerk/nextjs';
 
 export const metadata: Metadata = {
@@ -36,14 +37,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={Quinn.variable}>
         <ClerkProvider>
-          <div className="min-h-screen bg-gray-100 flex justify-center">
-            {/* Mobile container - max width 428px, centered on larger screens */}
-            <div className="w-full max-w-[428px] bg-white shadow-lg min-h-screen flex flex-col">
-              <AuthProvider>
-                {children}
-              </AuthProvider>
-            </div>
-          </div>
+          <RootShell>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </RootShell>
         </ClerkProvider>
       </body>
     </html>

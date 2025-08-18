@@ -32,3 +32,10 @@
 
 /* Quinn loaded via next/font/local → exposes CSS variable */
 .font-quinn { font-family: var(--font-quinn), 'Geist Sans', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; }
+
+/* Emergency order blink */
+@keyframes pulse-red {
+  0%, 100% { background-color: rgb(254 226 226); border-color: rgb(239 68 68); }
+  50% { background-color: rgb(255 255 255); border-color: rgb(239 68 68); }
+}
+.emergency-order { animation: pulse-red 1s ease-in-out infinite; }
