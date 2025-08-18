@@ -90,11 +90,15 @@ export const useShopStore = create<ShopState>()(
       const qHistory = query(
         collection(db, 'history'),
         where('shopId', '==', shopId),
-        orderBy('timestamp', 'desc')
+        where('status', 'in', ['completed', 'cancelled']),
+        orderBy('historyTimestamp', 'desc')
       );
       const unsubHistory = onSnapshot(qHistory, (snap) => {
         const list = snap.docs.map((d) => ({ ...(d.data() as OrderDoc), id: d.id })) as any as OrderDoc[];
         set((s) => { s.historyOrders = list; });
+      }, (err) => {
+        // Index might be missing in some environments; keep store stable
+        console.error('History listener error', err);
       });
 
       return () => { unsubAll(); unsubPending(); unsubHistory(); };

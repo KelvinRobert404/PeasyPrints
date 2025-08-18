@@ -51,7 +51,7 @@ export default function ShopfrontHistoryPage() {
                 <TableRow key={o.id}>
                   <TableCell className="font-medium">{o.userName}</TableCell>
                   <TableCell>{o.fileName}</TableCell>
-                  <TableCell>{new Date(o.timestamp?.toDate?.() || o.timestamp).toLocaleString()}</TableCell>
+                  <TableCell>{new Date(o.historyTimestamp?.toDate?.() || o.historyTimestamp || o.timestamp).toLocaleString()}</TableCell>
                   <TableCell>₹{o.totalCost}</TableCell>
                   <TableCell>
                     <Badge variant={o.status === 'completed' ? 'default' : 'destructive'}>
