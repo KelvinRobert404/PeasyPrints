@@ -61,7 +61,7 @@ export interface OrderDoc {
   fileUrl: string;
   totalPages: number;
   totalCost: number;
-  status: 'pending' | 'processing' | 'completed' | 'cancelled';
+  status: 'pending' | 'processing' | 'printing' | 'completed' | 'cancelled';
   timestamp: any; // Firestore Timestamp
   emergency: boolean;
   printSettings: PrintSettings;

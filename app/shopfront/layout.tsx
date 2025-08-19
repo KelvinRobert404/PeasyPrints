@@ -32,56 +32,38 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
   ];
 
   return (
-    <div className="flex h-screen">
-      <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:bg-white">
-        <div className="p-4 font-quinn text-xl">Swoop Shopfront</div>
-        <nav className="flex-1 p-2 space-y-1">
-          {items.map((it) => {
-            const Icon = it.icon;
-            const active = pathname?.startsWith(it.href);
-            return (
-              <Link key={it.href} href={it.href} className="block">
-                <div className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${active ? 'bg-gray-100' : 'hover:bg-gray-50'}`}>
-                  <Icon className="h-4 w-4" />
-                  <span>{it.label}</span>
-                </div>
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
-
-      <div className="flex-1 overflow-y-auto">
-        <div className="md:hidden sticky top-0 z-10 bg-white border-b">
-          <div className="container mx-auto max-w-7xl p-3 flex items-center justify-between">
-            <div className="font-semibold text-lg">Swoop Shop</div>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0">
-                <nav className="p-2 space-y-1">
-                  {items.map((it) => {
-                    const Icon = it.icon;
-                    const active = pathname?.startsWith(it.href);
-                    return (
-                      <Link key={it.href} href={it.href} className="block">
-                        <div className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${active ? 'bg-gray-100' : 'hover:bg-gray-50'}`}>
-                          <Icon className="h-4 w-4" />
-                          <span>{it.label}</span>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </div>
+    <div className="flex h-screen flex-col">
+      {/* Single top navbar spanning full width */}
+      <div className="sticky top-0 z-20 bg-blue-600 text-white">
+        <div className="h-12 px-4 flex items-center">
+          <span className="font-quinn text-3xl">SWOOP</span>
         </div>
+      </div>
 
-        <main className="container mx-auto max-w-7xl p-4">
-          {signedIn == null ? null : children}
-        </main>
+      {/* Main content with sidebar below navbar */}
+      <div className="flex flex-1">
+        <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:bg-white">
+          <nav className="flex-1 p-2 space-y-1">
+            {items.map((it) => {
+              const Icon = it.icon;
+              const active = pathname?.startsWith(it.href);
+              return (
+                <Link key={it.href} href={it.href} className="block">
+                  <div className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${active ? 'bg-gray-100' : 'hover:bg-gray-50'}`}>
+                    <Icon className="h-4 w-4" />
+                    <span>{it.label}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
+
+        <div className="flex-1 overflow-y-auto">
+          <main className="container mx-auto max-w-7xl p-4">
+            {signedIn == null ? null : children}
+          </main>
+        </div>
       </div>
     </div>
   );
