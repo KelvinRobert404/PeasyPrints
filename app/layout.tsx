@@ -36,7 +36,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={Quinn.variable}>
-        <ClerkProvider>
+        <ClerkProvider
+          signInUrl="/login"
+          signUpUrl="/register"
+          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+        >
           <RootShell>
             <AuthProvider>
               {children}

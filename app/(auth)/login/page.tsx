@@ -3,13 +3,24 @@
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { useAuth } from '@clerk/nextjs';
 import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SignIn } from '@clerk/nextjs';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams?.get('redirect_url') || '/';
+  const { isSignedIn, isLoaded } = useAuth();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace(redirect);
+    }
+  }, [isLoaded, isSignedIn, redirect, router]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -22,7 +33,7 @@ export default function LoginPage() {
             <CardTitle>Sign in</CardTitle>
           </CardHeader>
           <CardContent>
-            <SignIn routing="hash" afterSignInUrl="/" signUpUrl="/register" />
+            <SignIn forceRedirectUrl={redirect} signUpUrl="/register" />
           </CardContent>
         </Card>
       </main>

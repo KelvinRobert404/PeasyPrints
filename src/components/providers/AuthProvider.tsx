@@ -56,16 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isClerkLoaded, clerkUser, bridgeAttempted]);
 
   useEffect(() => {
-    if (!mounted) return;
-    // Use Clerk for route gating to avoid loops if Firebase bridge fails
+    if (!mounted || !isClerkLoaded) return;
     if (isProtectedRoute && !isSignedIn) {
-      router.replace('/login');
-      return;
+      const params = new URLSearchParams();
+      params.set('redirect_url', pathname || '/');
+      router.replace(`/login?${params.toString()}`);
     }
-    if (isAuthRoute && isSignedIn) {
-      router.replace('/');
-    }
-  }, [mounted, isProtectedRoute, isAuthRoute, isSignedIn, router]);
+  }, [mounted, isClerkLoaded, isProtectedRoute, isSignedIn, pathname, router]);
 
   if (!mounted) return null;
   return <>{children}</>;
