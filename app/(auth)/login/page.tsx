@@ -23,7 +23,7 @@ export default function LoginPage() {
     <div className="relative min-h-screen bg-[#1155EE] flex items-center justify-center px-4">
       <div className="absolute top-6 left-4 md:top-10 md:left-10 text-white">
         <h1 className="text-2xl md:text-5xl font-extrabold leading-tight tracking-tight uppercase">
-          Queues suck,
+          Queues SUCK,
           <br />
           College doesn't.
           <br />
