@@ -35,13 +35,6 @@ export default function UploadEntryPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Swoop header with college selector */}
-      <div className="px-4 pt-6">
-        <div className="flex items-center justify-between bg-blue-600 text-white rounded-2xl px-4 py-3">
-          <div className="font-quinn text-[24px] tracking-[0.02em]">SWOOP</div>
-          <CollegePill />
-        </div>
-      </div>
       <main className="flex-1 overflow-y-auto p-4 pb-24 space-y-4">
         <Card>
           <CardHeader>
