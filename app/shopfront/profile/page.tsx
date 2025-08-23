@@ -1,25 +1,38 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useShopStore } from '@/lib/stores/shopStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, Store, LogOut } from 'lucide-react';
-import { db, auth } from '@/lib/firebase/config';
-import { doc, updateDoc } from 'firebase/firestore';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { auth } from '@/lib/firebase/config';
+import { LogOut } from 'lucide-react';
+
+const schema = z.object({
+  a4: z.object({ singleBW: z.coerce.number(), doubleBW: z.coerce.number(), singleColor: z.coerce.number(), doubleColor: z.coerce.number() }),
+  a3: z.object({ singleBW: z.coerce.number(), doubleBW: z.coerce.number(), singleColor: z.coerce.number(), doubleColor: z.coerce.number() }),
+  services: z.object({ softBinding: z.coerce.number().optional(), hardBinding: z.coerce.number().optional(), spiralBinding: z.coerce.number().optional(), emergency: z.coerce.number().optional() })
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export default function ShopfrontProfilePage() {
   const { user } = useAuthStore();
-  const { currentShop, fetchShopData } = useShopStore();
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
+  const { currentShop, fetchShopData, updatePricing } = useShopStore();
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: currentShop?.pricing ?? {
+      a4: { singleBW: 0, doubleBW: 0, singleColor: 0, doubleColor: 0 },
+      a3: { singleBW: 0, doubleBW: 0, singleColor: 0, doubleColor: 0 },
+      services: { softBinding: 0, hardBinding: 0, spiralBinding: 0, emergency: 0 }
+    }
+  });
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -27,87 +40,168 @@ export default function ShopfrontProfilePage() {
   }, [user?.uid, fetchShopData]);
 
   useEffect(() => {
-    if (!currentShop) return;
-    setName(currentShop.name || '');
-    setAddress(currentShop.address || '');
-    setEmail((currentShop as any).email || '');
-    setPhone((currentShop as any).phone || '');
-    setLogoUrl(currentShop.logoUrl);
-  }, [currentShop]);
+    if (currentShop?.pricing) form.reset(currentShop.pricing as any);
+  }, [currentShop?.pricing, form]);
 
-  const handleUpload = async (file: File) => {
-    if (!user?.uid) return;
-    const idToken = await auth.currentUser?.getIdToken();
-    if (!idToken) return;
-    const bucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string;
-    const objectName = encodeURIComponent(`shop_logos/${user.uid}.jpg`);
-    const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${objectName}`;
-    await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Authorization': `Bearer ${idToken}`
-      },
-      body: await file.arrayBuffer()
-    });
-    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${objectName}?alt=media`;
-    setLogoUrl(publicUrl);
-    await updateDoc(doc(db, 'shops', user.uid), { logoUrl: publicUrl });
-  };
-
-  const handleSave = async () => {
-    if (!user?.uid) return;
-    setLoading(true);
-    try {
-      await updateDoc(doc(db, 'shops', user.uid), { name, address, phone, email });
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = async (values: FormValues) => {
+    await updatePricing(values as any);
   };
 
   const logout = async () => { await auth.signOut(); };
 
   return (
-    <div className="max-w-md mx-auto space-y-4">
-      <div className="flex flex-col items-center space-y-4">
-        <Avatar className="h-24 w-24">
-          <AvatarImage src={logoUrl} />
-          <AvatarFallback><Store className="h-12 w-12" /></AvatarFallback>
-        </Avatar>
-        <label className="inline-flex items-center gap-2 text-sm">
-          <Button variant="outline" size="sm" asChild>
-            <span><Upload className="h-4 w-4 mr-2" />Upload Logo</span>
-          </Button>
-          <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleUpload(f); }} />
-        </label>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-semibold">Shop Profile</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-1">
-            <label className="text-sm">Shop Name</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm">Address</label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-sm">Phone</label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm">Email</label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-          </div>
-          <Button onClick={handleSave} className="w-full" disabled={loading}>{loading ? 'Saving...' : 'Save'}</Button>
-          <Button onClick={logout} variant="destructive" className="w-full"><LogOut className="h-4 w-4 mr-2" />Logout</Button>
-        </CardContent>
-      </Card>
+    <div className="space-y-4 max-w-xl mx-auto">
+      <Tabs defaultValue="a4" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="a4">A4 Pricing</TabsTrigger>
+          <TabsTrigger value="a3">A3 Pricing</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
+        </TabsList>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <TabsContent value="a4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-semibold">A4 Paper Pricing</CardTitle>
+                  <CardDescription>Set your prices for A4 paper printing</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-3">
+                  <FormField name="a4.singleBW" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Single-sided Black & White</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField name="a4.doubleBW" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Double-sided Black & White</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField name="a4.singleColor" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Single-sided Color</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField name="a4.doubleColor" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Double-sided Color</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="a3">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-semibold">A3 Paper Pricing</CardTitle>
+                  <CardDescription>Set your prices for A3 paper printing</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-3">
+                  <FormField name="a3.singleBW" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Single-sided Black & White</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField name="a3.doubleBW" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Double-sided Black & White</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField name="a3.singleColor" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Single-sided Color</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField name="a3.doubleColor" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Double-sided Color</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="services">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-semibold">Additional Services</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-3">
+                  <FormField name="services.softBinding" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Soft Binding</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField name="services.hardBinding" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Hard Binding</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField name="services.spiralBinding" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Spiral Binding</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField name="services.emergency" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Emergency Printing</FormLabel>
+                      <FormControl>
+                        <Input className="h-9" type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <Button type="submit" className="w-full">Save</Button>
+          </form>
+        </Form>
+      </Tabs>
+
+      <Button onClick={logout} variant="destructive" className="w-full"><LogOut className="h-4 w-4 mr-2" />Logout</Button>
     </div>
   );
 }
