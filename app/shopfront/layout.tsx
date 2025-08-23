@@ -8,11 +8,13 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, LayoutDashboard, History, DollarSign, Store, Wallet } from 'lucide-react';
 import { auth } from '@/lib/firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useShopStore } from '@/lib/stores/shopStore';
 
 export default function ShopfrontLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const { currentShop, fetchShopData } = useShopStore();
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setSignedIn(!!u));
     return () => unsub();
@@ -23,11 +25,17 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
     if (!signedIn && !isAuthRoute) router.replace('/shopfront/login');
     if (signedIn && isAuthRoute) router.replace('/shopfront/dashboard');
   }, [signedIn, isAuthRoute, router]);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    const uid = auth.currentUser?.uid;
+    if (uid && !currentShop) {
+      void fetchShopData(uid);
+    }
+  }, [signedIn, currentShop, fetchShopData]);
   const items = [
     { href: '/shopfront/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/shopfront/history', label: 'History', icon: History },
-    { href: '/shopfront/pricing', label: 'Pricing', icon: DollarSign },
-    { href: '/shopfront/profile', label: 'Shop Profile', icon: Store },
+    { href: '/shopfront/profile', label: 'Profile', icon: Store },
     { href: '/shopfront/withdraw', label: 'Withdraw', icon: Wallet }
   ];
 
@@ -35,8 +43,9 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
     <div className="flex h-screen flex-col">
       {/* Single top navbar spanning full width */}
       <div className="sticky top-0 z-20 bg-blue-600 text-white">
-        <div className="h-12 px-4 flex items-center">
+        <div className="h-12 px-4 flex items-center justify-between">
           <span className="font-quinn text-3xl">SWOOP</span>
+          <span className="font-geist uppercase text-xl truncate max-w-[55%]">{currentShop?.name}</span>
         </div>
       </div>
 
