@@ -9,15 +9,25 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { ExternalLink, X } from 'lucide-react';
+import { ExternalLink, X, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 
 export default function ShopfrontDashboardPage() {
   const { user } = useAuthStore();
-  const { currentShop, pendingOrders, historyOrders, fetchShopData, fetchOrders, updateOrderStatus, completeOrder, cancelOrder } = useShopStore();
+  const { currentShop, orders, pendingOrders, historyOrders, fetchShopData, fetchOrders, updateOrderStatus, completeOrder, cancelOrder, markPrinted, markCollected, revertToProcessing, undoCollected } = useShopStore();
   const [openId, setOpenId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  function toLocalYMD(d: Date) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  const [selectedDate, setSelectedDate] = useState<string>(() => toLocalYMD(new Date()));
+  const [range, setRange] = useState<{ start: string; end: string } | null>(null);
   const openedOrder = useMemo(() => pendingOrders.find((o: any) => (o as any).id === openId), [pendingOrders, openId]);
 
   useEffect(() => {
@@ -34,10 +44,42 @@ export default function ShopfrontDashboardPage() {
       <Skeleton className="h-24 w-full" />
     </div>
   );
+  const filteredHistoryByDate = useMemo(() => {
+    const normalize = (date: Date) => toLocalYMD(date);
+    const list = historyOrders;
+    if (range) {
+      const start = new Date(range.start + 'T00:00:00');
+      const end = new Date(range.end + 'T23:59:59');
+      return list.filter((o: any) => {
+        const resolved = coerceDate(o.historyTimestamp);
+        const d = resolved || (o.status === 'completed' ? new Date() : coerceDate(o.timestamp));
+        if (!d) return false;
+        return d >= start && d <= end;
+      });
+    } else {
+      return list.filter((o: any) => {
+        const resolved = coerceDate(o.historyTimestamp);
+        const d = resolved || (o.status === 'completed' ? new Date() : coerceDate(o.timestamp));
+        if (!d) return false;
+        return normalize(d) === selectedDate;
+      });
+    }
+  }, [historyOrders, selectedDate, range]);
 
-  const totalOrders = pendingOrders.length;
-  const completed = 0; // summary can be derived via history store if needed
-  const todaysRevenue = 0; // placeholder; compute via date filter on history
+  const totalOrders = orders.length;
+  const pendingCount = pendingOrders.length;
+  const [showRevenue, setShowRevenue] = useState<boolean>(() => {
+    try { const v = localStorage.getItem('sf_showRevenue'); return v === null ? true : v === '1'; } catch { return true; }
+  });
+  useEffect(() => { try { localStorage.setItem('sf_showRevenue', showRevenue ? '1' : '0'); } catch {} }, [showRevenue]);
+  const todaysRevenue = useMemo(() => {
+    const start = new Date(); start.setHours(0,0,0,0);
+    const end = new Date(); end.setHours(23,59,59,999);
+    return historyOrders
+      .filter((o: any) => o.status === 'completed')
+      .filter((o: any) => { const d = coerceDate(o.historyTimestamp || o.timestamp); return !!d && d >= start && d <= end; })
+      .reduce((sum: number, o: any) => sum + Number(o.totalCost || 0), 0);
+  }, [historyOrders]);
   const availableBalance = (currentShop as any)?.receivableAmount ?? 0;
 
   function coerceDate(input: any): Date | null {
@@ -73,39 +115,39 @@ export default function ShopfrontDashboardPage() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalOrders}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">Completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completed}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">Today's Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₹{todaysRevenue}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">Available Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₹{currentShop ? (currentShop as any).receivableAmount ?? 0 : 0}</div>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-between">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 flex-1">
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-gray-500">Total Orders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalOrders}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-gray-500">Pending Orders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pendingCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-gray-500">Today's Revenue</CardTitle>
+                <button aria-label={showRevenue ? 'Hide revenue' : 'Show revenue'} onClick={() => setShowRevenue((v) => !v)} className="text-gray-500 hover:text-gray-800">
+                  {showRevenue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{showRevenue ? `₹${todaysRevenue}` : '••••'}</div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="ml-3" />
       </div>
 
       <div className="space-y-2">
@@ -118,7 +160,6 @@ export default function ShopfrontDashboardPage() {
               <Card
                 key={(o as any).id}
                 className={`border ${o.emergency ? 'emergency-order' : ''}`}
-                onClick={() => { setOpenId((o as any).id); if (o.status === 'pending') void updateOrderStatus((o as any).id, 'printing'); }}
               >
                 <CardContent className="py-3">
                   <div className="flex items-center gap-3">
@@ -131,8 +172,59 @@ export default function ShopfrontDashboardPage() {
                     <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); void cancelOrder((o as any).id, o); }}>
                       <X className="h-4 w-4" />
                     </Button>
+                    {o.status !== 'printed' ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={(e) => { e.stopPropagation(); if (!((o as any).id)) return; void markPrinted((o as any).id); }}
+                      >
+                        Printed
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => { e.stopPropagation(); if (!((o as any).id)) return; void revertToProcessing((o as any).id); }}
+                      >
+                        Undo Printed
+                      </Button>
+                    )}
+                    {o.status !== 'printed' ? (
+                      <Button size="sm" disabled>
+                        Collected
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!((o as any).id)) return;
+                          await completeOrder((o as any).id, o as any);
+                          // Auto-show history for a few seconds and focus on Today
+                          setRange(null);
+                          setSelectedDate(toLocalYMD(new Date()));
+                          setHistoryOpen(true);
+                          setFilterOpen(true);
+                          setTimeout(() => setHistoryOpen(false), 5000);
+                        }}
+                      >
+                        Collected
+                      </Button>
+                    )}
                     {o.emergency && <Badge variant="destructive">URGENT</Badge>}
-                    <Badge variant="secondary">{o.status}</Badge>
+                    {!(o.status === 'processing' || o.status === 'printing') && (
+                      <Badge variant="secondary">{o.status}</Badge>
+                    )}
+                  </div>
+                  {/* Label badges inline */}
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
+                    <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
+                    <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
+                      {o.printSettings?.printColor}
+                    </Badge>
+                    <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
+                    <Badge variant="secondary">₹{o.totalCost}</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -142,79 +234,82 @@ export default function ShopfrontDashboardPage() {
       </div>
 
       <div className="space-y-2">
-        <div className="text-sm text-gray-500">History</div>
-        {historyOrders.length === 0 ? (
-          <Card className="border-0 shadow-sm"><CardContent>No completed or cancelled orders</CardContent></Card>
-        ) : (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">History</div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setFilterOpen((v) => !v)}>Filter</Button>
+            <button className="text-xs text-blue-600" onClick={() => setHistoryOpen((v) => !v)}>
+              {historyOpen ? 'Hide' : 'Show'}
+            </button>
+          </div>
+        </div>
+        {filterOpen && (
+          <div className="mt-2 p-3 border rounded bg-white space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <input
+                  type="date"
+                  value={range ? range.start : selectedDate}
+                  onChange={(e) => range ? setRange({ start: e.target.value, end: range.end }) : setSelectedDate(e.target.value)}
+                  className="text-xs border rounded px-2 py-1"
+                />
+                <span className="text-xs text-gray-500">to</span>
+                <input
+                  type="date"
+                  value={range ? range.end : selectedDate}
+                  onChange={(e) => setRange({ start: range ? range.start : selectedDate, end: e.target.value })}
+                  className="text-xs border rounded px-2 py-1"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="text-xs underline" onClick={() => { const d=new Date(); setRange(null); setSelectedDate(toLocalYMD(d)); }}>Today</button>
+              <button className="text-xs underline" onClick={() => { const d=new Date(); d.setDate(d.getDate()-1); setRange(null); setSelectedDate(toLocalYMD(d)); }}>Yesterday</button>
+              <button className="text-xs underline" onClick={() => { const end=new Date(); const start=new Date(); start.setDate(start.getDate()-6); setRange({ start: toLocalYMD(start), end: toLocalYMD(end) }); }}>Last 7 days</button>
+              <button className="text-xs underline" onClick={() => setRange(null)}>Single day</button>
+            </div>
+          </div>
+        )}
+        {historyOpen && (
           <div className="space-y-3">
-            {historyOrders.map((o: any) => {
-              const parts = getDateLabelParts(o.historyTimestamp || o.timestamp);
-              return (
+            {filteredHistoryByDate.length === 0 ? (
+              <Card className="border-0 shadow-sm"><CardContent>No history for selected date</CardContent></Card>
+            ) : (
+              filteredHistoryByDate.map((o: any) => (
                 <Card key={o.id} className={`border ${o.status === 'cancelled' ? 'opacity-60' : ''}`}>
                   <CardContent className="py-3">
                     <div className="flex items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="truncate font-medium">{o.userName} • {o.fileName}</div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {parts.label ? (
-                          <Badge variant="secondary">{parts.label}</Badge>
-                        ) : (
-                          <span className="text-xs text-gray-500">{parts.formattedDate}</span>
-                        )}
-                        <span className="text-xs text-gray-500">{parts.time}</span>
-                      </div>
-                      <span className="text-sm text-gray-600">₹{o.totalCost}</span>
-                      <Button size="sm" variant="outline" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
+                      <Button size="sm" variant="ghost" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
                         <ExternalLink className="h-4 w-4" />
                       </Button>
-                      <Badge variant={o.status === 'completed' ? 'default' : 'destructive'}>{o.status}</Badge>
+                      {o.status === 'completed' && (
+                        <Button size="sm" variant="outline" onClick={() => { void undoCollected(o.orderId, o); }}>
+                          Undo Collected
+                        </Button>
+                      )}
+                      {o.emergency && <Badge variant="destructive">URGENT</Badge>}
+                      <Badge variant="secondary">{o.status}</Badge>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                      <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
+                      <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
+                      <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
+                        {o.printSettings?.printColor}
+                      </Badge>
+                      <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
+                      <Badge variant="secondary">₹{o.totalCost}</Badge>
                     </div>
                   </CardContent>
                 </Card>
-              );
-            })}
+              ))
+            )}
           </div>
         )}
       </div>
 
-      <Dialog open={!!openId} onOpenChange={(o) => setOpenId(o ? openId : null)}>
-        <DialogContent>
-          {openedOrder && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="font-quinn">Order Details</DialogTitle>
-                <DialogDescription>{openedOrder.userName} - {openedOrder.fileName}</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-3 text-sm">
-                {openedOrder.emergency && <Badge variant="destructive">URGENT</Badge>}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-gray-500">Paper Size</div>
-                  <div className="font-medium">{openedOrder.printSettings?.paperSize}</div>
-                  <div className="text-gray-500">Format</div>
-                  <div className="font-medium">{openedOrder.printSettings?.printFormat}</div>
-                  <div className="text-gray-500">Color</div>
-                  <div className="font-medium">{openedOrder.printSettings?.printColor}</div>
-                  <div className="text-gray-500">Copies</div>
-                  <div className="font-medium">{openedOrder.printSettings?.copies}</div>
-                </div>
-                <Separator />
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-gray-500">Total Pages</div>
-                  <div className="font-semibold">{openedOrder.totalPages}</div>
-                  <div className="text-gray-500">Amount</div>
-                  <div className="font-semibold">₹{openedOrder.totalCost}</div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => { if (openedOrder?.fileUrl) window.open(openedOrder.fileUrl, '_blank', 'noopener,noreferrer'); }}><ExternalLink className="h-4 w-4 mr-2" />Open</Button>
-                <Button variant="destructive" onClick={() => { if (!openId) return; void cancelOrder(openId, openedOrder); setOpenId(null); }}>Cancel</Button>
-                <Button onClick={() => { if (!openId) return; void completeOrder(openId, openedOrder); setOpenId(null); }}>Complete</Button>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
       <div className="h-4" />
     </div>
   );

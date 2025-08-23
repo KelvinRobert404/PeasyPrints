@@ -8,6 +8,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -28,6 +29,10 @@ interface ShopState {
   fetchShopData: (uid: string) => Promise<void>;
   fetchOrders: (shopId: string) => Promise<() => void>;
   updateOrderStatus: (orderId: string, status: OrderDoc['status']) => Promise<void>;
+  markPrinted: (orderId: string) => Promise<void>;
+  markCollected: (orderId: string) => Promise<void>;
+  revertToProcessing: (orderId: string) => Promise<void>;
+  undoCollected: (orderId: string, order: OrderDoc) => Promise<void>;
   completeOrder: (orderId: string, order: OrderDoc) => Promise<void>;
   cancelOrder: (orderId: string, order: OrderDoc) => Promise<void>;
   updatePricing: (pricing: ShopPricing) => Promise<void>;
@@ -77,7 +82,7 @@ export const useShopStore = create<ShopState>()(
       const qPending = query(
         collection(db, 'orders'),
         where('shopId', '==', shopId),
-        where('status', 'in', ['processing', 'printing']),
+        where('status', 'in', ['processing', 'printing', 'printed']),
         orderBy('timestamp', 'desc')
       );
       const unsubPending = onSnapshot(qPending, (snap) => {
@@ -90,7 +95,6 @@ export const useShopStore = create<ShopState>()(
       const qHistory = query(
         collection(db, 'history'),
         where('shopId', '==', shopId),
-        where('status', 'in', ['completed', 'cancelled']),
         orderBy('historyTimestamp', 'desc')
       );
       const unsubHistory = onSnapshot(qHistory, (snap) => {
@@ -109,11 +113,48 @@ export const useShopStore = create<ShopState>()(
       await updateDoc(ref, { status, updatedAt: serverTimestamp() as any });
     },
 
+    markPrinted: async (orderId) => {
+      const ref = doc(db, 'orders', orderId);
+      await updateDoc(ref, { status: 'printed', updatedAt: serverTimestamp() as any });
+    },
+
+    markCollected: async (orderId) => {
+      const ref = doc(db, 'orders', orderId);
+      await updateDoc(ref, { status: 'collected', updatedAt: serverTimestamp() as any });
+    },
+
+    revertToProcessing: async (orderId) => {
+      const ref = doc(db, 'orders', orderId);
+      await updateDoc(ref, { status: 'processing', updatedAt: serverTimestamp() as any });
+    },
+
+    undoCollected: async (orderId, order) => {
+      // Remove matching history entry if exists and revert status, adjusting receivable
+      try {
+        const q = query(collection(db, 'history'), where('orderId', '==', orderId), where('status', '==', 'completed'));
+        const snap = await getDocs(q);
+        for (const d of snap.docs) {
+          await deleteDoc(doc(db, 'history', d.id));
+        }
+      } catch {}
+      const ref = doc(db, 'orders', orderId);
+      await updateDoc(ref, { status: 'printed', updatedAt: serverTimestamp() as any });
+      // Adjust receivable amount back
+      try {
+        const shopRef = doc(db, 'shops', order.shopId);
+        const snap = await getDoc(shopRef);
+        const prev = Number(snap.data()?.receivableAmount ?? 0);
+        const next = Math.max(0, prev - Number(order.totalCost ?? 0));
+        await updateDoc(shopRef, { receivableAmount: next, updatedAt: serverTimestamp() as any });
+        set((s) => { s.receivableAmount = next; });
+      } catch {}
+    },
+
     completeOrder: async (orderId, order) => {
       const ref = doc(db, 'orders', orderId);
       const historyRef = doc(collection(db, 'history'));
       // Mirror to history with historyTimestamp
-      const completedPayload = { ...order, status: 'completed', shopId: order.shopId, orderId: orderId, historyTimestamp: serverTimestamp() } as any;
+      const completedPayload = { ...order, status: 'completed', shopId: order.shopId, orderId: orderId, historyTimestamp: serverTimestamp(), fileUrl: order.fileUrl } as any;
       await setDoc(historyRef, completedPayload);
       await updateDoc(ref, { status: 'completed' });
       // Update receivableAmount on shop
@@ -131,7 +172,7 @@ export const useShopStore = create<ShopState>()(
     cancelOrder: async (orderId, order) => {
       const ref = doc(db, 'orders', orderId);
       const historyRef = doc(collection(db, 'history'));
-      const cancelledPayload = { ...order, status: 'cancelled', shopId: order.shopId, orderId: orderId, historyTimestamp: serverTimestamp() } as any;
+      const cancelledPayload = { ...order, status: 'cancelled', shopId: order.shopId, orderId: orderId, historyTimestamp: serverTimestamp(), fileUrl: order.fileUrl } as any;
       await setDoc(historyRef, cancelledPayload);
       await updateDoc(ref, { status: 'cancelled' });
       // No receivable update on cancel
