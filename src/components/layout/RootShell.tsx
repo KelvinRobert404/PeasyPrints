@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 export function RootShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isShopfront = pathname?.startsWith('/shopfront');
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/otp';
 
   if (isShopfront) {
     return (
@@ -19,7 +20,7 @@ export function RootShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center">
       <div className="w-full max-w-[428px] bg-white shadow-lg min-h-screen flex flex-col">
-        <SwoopNavbar />
+        {!isAuthPage && <SwoopNavbar />}
         {children}
       </div>
     </div>

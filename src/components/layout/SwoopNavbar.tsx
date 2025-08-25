@@ -7,7 +7,7 @@ import { useCollegeStore, COLLEGES } from '@/lib/stores/collegeStore';
 
 export function SwoopNavbar() {
   return (
-    <div className="px-4 pt-4">
+    <div className="px-[5px] pt-[5px]">
       <div className="rounded-2xl bg-blue-600 text-white px-4 py-3 grid grid-cols-3 items-center">
         <div className="justify-self-start font-quinn text-[30px] tracking-[0.02em]">SWOOP</div>
         <div className="justify-self-center">
