@@ -38,7 +38,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={Quinn.variable}>
         <ClerkProvider
           signInUrl="/login"
-          signUpUrl="/register"
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
         >
           <RootShell>

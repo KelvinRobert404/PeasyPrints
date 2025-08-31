@@ -31,7 +31,13 @@ export default function LoginPage() {
         </h1>
       </div>
 
-      <SignIn forceRedirectUrl={redirect} signUpUrl="/register" />
+      <SignIn
+        forceRedirectUrl={redirect}
+        signUpUrl="/register"
+        fallbackRedirectUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
+        afterSignInUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
+        afterSignUpUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
+      />
 
       <div className="pointer-events-none fixed inset-x-0 bottom-3 md:bottom-6 text-center">
         <span className="font-quinn text-white text-[40px] md:text-[30px] font-extrabold tracking-[0.02em]">

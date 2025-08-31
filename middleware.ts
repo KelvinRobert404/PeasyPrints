@@ -9,7 +9,7 @@ const isPublicRoute = createRouteMatcher([
   '/shopfront(.*)',
   '/api/(.*)',
   '/login',
-  '/register',
+  // no standalone register page; sign-up handled via SSO callback
   '/otp'
 ]);
 
