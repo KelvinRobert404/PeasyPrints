@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { assertRequiredEnvInProd } from '@/lib/utils/env';
 import localFont from 'next/font/local';
 
 const Quinn = localFont({
@@ -26,6 +27,7 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  try { assertRequiredEnvInProd(); } catch (e) { console.error(e); throw e; }
   return (
     <html lang="en">
       <head>

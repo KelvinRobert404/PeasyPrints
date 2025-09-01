@@ -7,7 +7,6 @@ const isPublicRoute = createRouteMatcher([
   '/orders(.*)',
   '/shops(.*)',
   '/shopfront(.*)',
-  '/api/(.*)',
   '/login',
   // no standalone register page; sign-up handled via SSO callback
   '/otp'
@@ -36,6 +35,11 @@ export default clerkMiddleware(async (auth, req) => {
     req.nextUrl.pathname = target || '/';
     req.nextUrl.search = '';
     return NextResponse.redirect(req.nextUrl);
+  }
+
+  // Allow Razorpay webhook to pass without auth (it uses its own signature verification)
+  if (pathname.startsWith('/api/razorpay/webhook')) {
+    return NextResponse.next();
   }
 
   if (!isPublicRoute(req)) {

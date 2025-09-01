@@ -4,6 +4,7 @@ import type { PrintSettings, ShopPricing } from '@/types/models';
 import { PDFDocument } from 'pdf-lib';
 import { calculateTotalCost } from '@/lib/utils/pricing';
 import { usePricingStore } from '@/lib/stores/pricingStore';
+import { captureEvent } from '@/lib/posthog/client';
 
 interface UploadState {
   file: File | null;
@@ -84,8 +85,11 @@ export const useUploadStore = create<UploadState>()(
           s.loading = false;
         });
         get().recalc();
+        // Track upload analyzed with masked filename
+        captureEvent('upload_analyzed', { totalPages: pages });
       } catch (e: any) {
         set((s) => { s.loading = false; s.error = e?.message || 'Failed to read PDF'; });
+        captureEvent('error', { error: e?.message || 'Failed to read PDF' });
       }
     },
 
@@ -130,6 +134,7 @@ export const useUploadStore = create<UploadState>()(
       })();
       const { total } = calculateTotalCost(settings, pageCount, effectivePricing);
       set((s) => { s.totalCost = total; });
+      captureEvent('pricing_recalculated', { totalPages: pageCount, totalCost: total, printSettings: settings });
     },
 
     reset: () => {

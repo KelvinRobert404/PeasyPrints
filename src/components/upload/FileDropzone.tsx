@@ -5,13 +5,21 @@ import { useDropzone } from 'react-dropzone';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { FileText, Plus } from 'lucide-react';
 import { PdfPreviewer } from '@/components/upload/PdfPreviewer';
+import { usePosthog } from '@/hooks/usePosthog';
 
 export function FileDropzone() {
   const { setFile, file } = useUploadStore();
+  const { capture } = usePosthog();
 
   const onDrop = useCallback(async (accepted: File[]) => {
     const pdf = accepted[0];
-    if (pdf) await setFile(pdf);
+    if (pdf) {
+      await setFile(pdf);
+      capture('upload_selected', {
+        totalPages: useUploadStore.getState().pageCount,
+        printSettings: useUploadStore.getState().settings,
+      });
+    }
   }, [setFile]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

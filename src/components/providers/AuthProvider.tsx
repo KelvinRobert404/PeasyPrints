@@ -5,6 +5,7 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import { signInWithCustomToken } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { usePathname, useRouter } from 'next/navigation';
+import { usePosthog } from '@/hooks/usePosthog';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -14,6 +15,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [bridgeAttempted, setBridgeAttempted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { capture, isFeatureEnabled } = usePosthog();
 
   const isAuthRoute = useMemo(() => {
     return pathname?.startsWith('/login') || pathname?.startsWith('/register') || pathname?.startsWith('/otp');
@@ -48,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           // Upsert user doc to mirror Flutter _processAfterSignIn
           await fetch('/api/users/upsert', { method: 'POST' });
+          capture('feature_flag_ready', { userId: clerkUser.id });
         } catch {
           // swallow; user stays signed in with Clerk only
         }

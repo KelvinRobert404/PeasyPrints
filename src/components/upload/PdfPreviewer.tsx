@@ -72,5 +72,5 @@ export function PdfPreviewer() {
 
   if (!fileUrl) return null;
 
-  return <div ref={containerRef} />;
+  return <div ref={containerRef} data-ph-no-capture />;
 }

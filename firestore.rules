@@ -2,8 +2,58 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Users can only manage their own profile with limited fields
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow write: if isSignedIn() && request.auth.uid == userId
+                   && request.resource.data.keys().hasOnly(['username','phoneNumber','email','updatedAt','createdAt'])
+                   && request.time == request.resource.data.updatedAt;
+    }
+
+    // Shops: public read; owner-managed writes
+    match /shops/{shopId} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == shopId;
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      // Read own orders or orders for own shop
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.shopId == request.auth.uid
+      );
+
+      // Creation must be done server-side via Admin SDK; disallow client create
+      allow create: if false;
+
+      // Status updates: only the shop that owns the order may update status
+      allow update: if isSignedIn()
+        && resource.data.shopId == request.auth.uid
+        && request.resource.data.keys().hasOnly(resource.data.keys())
+        && request.resource.data.status in ['processing','printing','printed','collected','completed','cancelled'];
+
+      allow delete: if false;
+    }
+
+    // History mirror: created by shop, readable by involved principals
+    match /history/{historyId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.shopId == request.auth.uid
+      );
+      allow create: if isSignedIn() && request.resource.data.shopId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Payout records: created/read by shop owner
+    match /payouts/{payoutId} {
+      allow read, create: if isSignedIn() && request.resource.data.shopId == request.auth.uid;
+      allow update, delete: if false;
     }
   }
 }
