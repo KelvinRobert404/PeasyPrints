@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useShopStore } from '@/lib/stores/shopStore';
+import { db } from '@/lib/firebase/config';
+import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +27,8 @@ type FormValues = z.infer<typeof schema>;
 export default function ShopfrontProfilePage() {
   const { user } = useAuthStore();
   const { currentShop, fetchShopData, updatePricing } = useShopStore();
+  const [openingTime, setOpeningTime] = useState<string>('');
+  const [closingTime, setClosingTime] = useState<string>('');
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: currentShop?.pricing ?? {
@@ -41,6 +45,8 @@ export default function ShopfrontProfilePage() {
 
   useEffect(() => {
     if (currentShop?.pricing) form.reset(currentShop.pricing as any);
+    if (currentShop?.openingTime) setOpeningTime(currentShop.openingTime);
+    if (currentShop?.closingTime) setClosingTime(currentShop.closingTime);
   }, [currentShop?.pricing, form]);
 
   const onSubmit = async (values: FormValues) => {
@@ -49,16 +55,48 @@ export default function ShopfrontProfilePage() {
 
   const logout = async () => { await auth.signOut(); };
 
+  const saveTimings = async () => {
+    if (!user?.uid) return;
+    const ref = doc(db, 'shops', user.uid);
+    await updateDoc(ref, {
+      openingTime,
+      closingTime,
+      timing: `${openingTime} to ${closingTime}`,
+      updatedAt: serverTimestamp() as any
+    });
+  };
+
   return (
-    <div className="space-y-4 max-w-xl mx-auto">
+    <div className="space-y-6 container mx-auto max-w-5xl">
       <Tabs defaultValue="a4" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="a4">A4 Pricing</TabsTrigger>
           <TabsTrigger value="a3">A3 Pricing</TabsTrigger>
           <TabsTrigger value="services">Services</TabsTrigger>
         </TabsList>
+        <Card className="mt-3">
+          <CardHeader>
+            <CardTitle className="font-semibold">Shop Timings</CardTitle>
+            <CardDescription>Set opening and closing times shown to customers</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs block mb-1">Opens</label>
+                <Input type="time" className="h-9" value={openingTime} onChange={(e) => setOpeningTime(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs block mb-1">Closes</label>
+                <Input type="time" className="h-9" value={closingTime} onChange={(e) => setClosingTime(e.target.value)} />
+              </div>
+              <div className="flex items-end">
+                <Button type="button" variant="outline" className="w-full" onClick={saveTimings}>Save Timings</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <TabsContent value="a4">
               <Card>
                 <CardHeader>

@@ -29,6 +29,8 @@ export interface Shop {
   name: string;
   address: string;
   timing?: string;
+  openingTime?: string;
+  closingTime?: string;
   logoUrl?: string;
   pricing?: ShopPricing;
 }

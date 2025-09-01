@@ -218,6 +218,9 @@ export default function ShopfrontDashboardPage() {
                   </div>
                   {/* Label badges inline */}
                   <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    {(() => { const p = getDateLabelParts(o.timestamp); return (
+                      <Badge variant="outline" className="font-bold bg-blue-50 text-blue-700 border-blue-200">{p.time}</Badge>
+                    ); })()}
                     <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
                     <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
                     <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>

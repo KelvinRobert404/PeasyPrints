@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth, db, storage } from '@/lib/firebase/config';
+import { auth, db } from '@/lib/firebase/config';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -31,10 +30,18 @@ export default function ShopfrontRegisterPage() {
       if (!uid) throw new Error('Please sign in first');
       let logoUrl: string | undefined = undefined;
       if (logoFile) {
-        const objectPath = `shop_logos/${uid}.jpg`;
-        const storageRef = ref(storage, objectPath);
-        await uploadBytes(storageRef, logoFile, { contentType: logoFile.type || 'image/jpeg' });
-        logoUrl = await getDownloadURL(storageRef);
+        const idToken = await auth.currentUser?.getIdToken();
+        if (idToken) {
+          const bucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string;
+          const objectName = encodeURIComponent(`shop_logos/${uid}.jpg`);
+          const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${objectName}`;
+          await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/octet-stream', 'Authorization': `Bearer ${idToken}` },
+            body: await logoFile.arrayBuffer()
+          });
+          logoUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${objectName}?alt=media`;
+        }
       }
       const timing = `${openingTime} to ${closingTime}`;
       await setDoc(doc(db, 'shops', uid), {
@@ -45,7 +52,7 @@ export default function ShopfrontRegisterPage() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       }, { merge: true });
-      router.replace('/shopfront/dashboard');
+      router.replace('/shopfront');
     } catch (e: any) {
       setError(e?.message || 'Failed to register');
     } finally {

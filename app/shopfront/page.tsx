@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation';
+"use client";
 
-export default function ShopfrontIndexPage() {
-  redirect('/shopfront/dashboard');
-}
+import ShopfrontDashboardPage from './dashboard/page';
+
+export default ShopfrontDashboardPage;
 
 

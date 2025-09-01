@@ -27,7 +27,7 @@ export default function ShopfrontLoginPage() {
       const shopRef = doc(db, 'shops', uid);
       const snap = await getDoc(shopRef);
       if (snap.exists()) {
-        router.replace('/shopfront/dashboard');
+        router.replace('/shopfront');
       } else {
         setError('No shop found for this account. Please register.');
       }
