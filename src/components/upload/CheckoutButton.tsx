@@ -75,8 +75,9 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
               totalPages: pageCount,
               totalCost: totalCost,
               emergency: !!settings.emergency,
+              afterDark: !!settings.afterDark,
               printSettings: settings,
-              pricingDetails: { basePricePerPage: 0, bindingCost: 0, emergencyCost: 0, commission: 0 },
+              pricingDetails: { basePricePerPage: 0, bindingCost: 0, emergencyCost: 0, afterDarkCost: 0, commission: 0 },
               status: 'processing'
             });
             router.replace('/orders');

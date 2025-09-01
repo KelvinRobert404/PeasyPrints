@@ -9,6 +9,7 @@ export function calculateTotalCost(
     basePricePerPage: 0,
     bindingCost: 0,
     emergencyCost: 0,
+    afterDarkCost: 0,
     commission: 0
   };
 
@@ -38,19 +39,22 @@ export function calculateTotalCost(
 
   const bindingCost = bindingMap[settings.binding ?? ''] ?? 0;
   const emergencyUnit = shopPricing.services.emergency ?? 0;
+  const afterDarkUnit = shopPricing.services.afterDark ?? emergencyUnit ?? 0;
 
   const basePagesCost = perPage * pageCount;
   const copies = Math.max(settings.copies || 1, 1);
 
   const base = (basePagesCost + bindingCost + (settings.printColor === 'Black & White' ? extraColorDelta : 0)) * copies;
   const emergencyCost = settings.emergency ? emergencyUnit : 0;
+  const afterDarkCost = settings.afterDark ? afterDarkUnit : 0;
 
-  const total = base + emergencyCost;
+  const total = base + emergencyCost + afterDarkCost;
 
   const details: PricingDetails = {
     basePricePerPage: perPage,
     bindingCost,
     emergencyCost,
+    afterDarkCost,
     commission: 0
   };
 

@@ -85,15 +85,6 @@ export function PrintConfigurator() {
       </div>
 
       {/* No extra color pages input per new design */}
-
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={!!settings.emergency}
-          onChange={(e) => setSettings({ emergency: e.target.checked })}
-        />
-        Emergency print
-      </label>
     </div>
   );
 }

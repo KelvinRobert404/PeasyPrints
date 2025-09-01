@@ -77,7 +77,8 @@ function adaptShopPricing(data: any): ShopPricing | undefined {
       softBinding: data.SoftBinding ?? data.softBinding ?? 0,
       spiralBinding: data.SpiralBinding ?? data.spiralBinding ?? 0,
       hardBinding: data.HardBinding ?? data.hardBinding ?? 0,
-      emergency: data.EmergencyPr ?? data.emergency ?? 0
+      emergency: data.EmergencyPr ?? data.emergency ?? 0,
+      afterDark: data.AfterDarkPr ?? data.afterDark ?? data.afterdark ?? 0
     }
   };
 

@@ -32,6 +32,8 @@ const defaultSettings: PrintSettings = {
   binding: '',
   copies: 1,
   extraColorPages: 0,
+  emergency: false,
+  afterDark: false,
 };
 
 export const useUploadStore = create<UploadState>()(
@@ -52,7 +54,13 @@ export const useUploadStore = create<UploadState>()(
     },
 
     setSettings: (partial) => {
-      set((s) => { s.settings = { ...s.settings, ...partial }; });
+      set((s) => {
+        const next = { ...s.settings, ...partial } as PrintSettings;
+        // Enforce mutual exclusivity between emergency (rush) and afterDark
+        if (partial?.emergency) next.afterDark = false;
+        if (partial?.afterDark) next.emergency = false;
+        s.settings = next;
+      });
       get().recalc();
     },
 
@@ -112,7 +120,8 @@ export const useUploadStore = create<UploadState>()(
               softBinding: p.SoftBinding,
               hardBinding: p.HardBinding,
               spiralBinding: 0,
-              emergency: p.EmergencyPr
+              emergency: p.EmergencyPr,
+              afterDark: 0
             }
           } as ShopPricing;
         } catch {

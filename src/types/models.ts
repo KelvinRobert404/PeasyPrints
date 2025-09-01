@@ -19,6 +19,7 @@ export interface ShopPricing {
     softBinding?: number;
     hardBinding?: number;
     emergency?: number;
+    afterDark?: number;
     spiralBinding?: number;
   };
 }
@@ -43,12 +44,14 @@ export interface PrintSettings {
   vinylColor?: string;
   extraColorPages?: number;
   emergency?: boolean;
+  afterDark?: boolean;
 }
 
 export interface PricingDetails {
   basePricePerPage: number;
   bindingCost: number;
   emergencyCost: number;
+  afterDarkCost?: number;
   commission: number;
 }
 
@@ -66,6 +69,7 @@ export interface OrderDoc {
   status: 'pending' | 'processing' | 'printing' | 'printed' | 'collected' | 'completed' | 'cancelled';
   timestamp: any; // Firestore Timestamp
   emergency: boolean;
+  afterDark?: boolean;
   printSettings: PrintSettings;
   pricingDetails: PricingDetails;
 }

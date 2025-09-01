@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { FileDropzone } from '@/components/upload/FileDropzone';
 import { PrintConfigurator } from '@/components/upload/PrintConfigurator';
+import { PrintUpgrades } from '@/components/upload/PrintUpgrades';
 import { PriceSummary } from '@/components/upload/PriceSummary';
 import { CheckoutButton } from '@/components/upload/CheckoutButton';
 import { useShopsStore } from '@/lib/stores/shopsStore';
@@ -90,6 +91,15 @@ export default function UploadEntryPage() {
           </CardHeader>
           <CardContent>
             <PrintConfigurator />
+          </CardContent>
+        </Card>
+
+        <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
+          <CardHeader>
+            <CardTitle className="text-base">Print Upgrades</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PrintUpgrades shopTiming={selectedShop?.timing} />
           </CardContent>
         </Card>
 

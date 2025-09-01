@@ -22,6 +22,15 @@ const nextConfig = {
         pathname: '/v0/b/**'
       }
     ]
+  },
+  async redirects() {
+    return [
+      {
+        source: '/upload/:shopId',
+        destination: '/upload?shopId=:shopId',
+        permanent: false
+      }
+    ];
   }
 };
 
