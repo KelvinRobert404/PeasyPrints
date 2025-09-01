@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { GeistSans } from 'geist/font/sans';
 import localFont from 'next/font/local';
 
 const Quinn = localFont({
@@ -28,14 +27,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={GeistSans.className}>
+    <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="stylesheet" href="https://use.typekit.net/vex5zkw.css" />
       </head>
-      <body className={Quinn.variable}>
+      <body className={`${Quinn.variable} font-[coolvetica]`}>
         <ClerkProvider
           signInUrl="/login"
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}

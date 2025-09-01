@@ -8,6 +8,7 @@ export function RootShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isShopfront = pathname?.startsWith('/shopfront');
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/otp';
+  const isPickup = pathname?.startsWith('/orders/') && pathname?.includes('/pickup');
 
   if (isShopfront) {
     return (
@@ -20,7 +21,7 @@ export function RootShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center">
       <div className="w-full max-w-[428px] bg-white shadow-lg min-h-screen flex flex-col">
-        {!isAuthPage && <SwoopNavbar />}
+        {!isAuthPage && !isPickup && <SwoopNavbar />}
         {children}
       </div>
     </div>

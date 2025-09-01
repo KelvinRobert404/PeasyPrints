@@ -26,7 +26,7 @@ export const useOrdersStore = create<OrdersState>()(
         orderBy('timestamp', 'desc')
       );
       const unsub = onSnapshot(q, (snap) => {
-        const orders = snap.docs.map((d) => d.data() as OrderDoc).map((o) => ({
+        const orders = snap.docs.map((d) => ({ ...(d.data() as OrderDoc), id: d.id })).map((o) => ({
           ...o,
           // Presentational mapping for customer app
           status: o.status === 'printed' ? 'printed_ready' as any : (o.status === 'collected' ? 'collected' : o.status)

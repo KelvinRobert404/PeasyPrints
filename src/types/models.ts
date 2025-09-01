@@ -53,6 +53,8 @@ export interface PricingDetails {
 }
 
 export interface OrderDoc {
+  // Optional Firestore document id for routing/navigation
+  id?: string;
   userId: string;
   shopId: string;
   shopName: string;

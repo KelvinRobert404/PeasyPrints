@@ -13,7 +13,7 @@ export default function OrdersPage() {
   const { user } = useAuthStore();
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
   const { orders, subscribeByUser, loading, error } = useOrdersStore();
-  const [status, setStatus] = useState<'all' | 'pending' | 'processing' | 'completed' | 'cancelled'>('all');
+  // Figma design shows a simple list; no status filters on customer app
 
   useEffect(() => {
     // Prefer Clerk userId (used when creating orders) and fall back to Firebase uid
@@ -23,37 +23,41 @@ export default function OrdersPage() {
     return () => unsub();
   }, [isClerkLoaded, clerkUser, user, subscribeByUser]);
 
-  const filteredOrders = useMemo(() => {
-    if (status === 'all') return orders;
-    return orders.filter((o) => o.status === status);
-  }, [orders, status]);
+  function isToday(ts: any) {
+    try {
+      const d = (ts?.toDate ? ts.toDate() : new Date(ts)) as Date;
+      const now = new Date();
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    } catch {
+      return false;
+    }
+  }
+
+  const { todayOrders, olderOrders } = useMemo(() => {
+    const todayOrders = orders.filter((o) => isToday(o.timestamp));
+    const olderOrders = orders.filter((o) => !isToday(o.timestamp));
+    return { todayOrders, olderOrders };
+  }, [orders]);
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b px-4 py-3">
-        <h1 className="text-lg font-semibold">Orders</h1>
-      </header>
       <main className="flex-1 overflow-y-auto px-4 py-6">
         {!(isClerkLoaded ? clerkUser : user) && (
           <div className="text-sm text-gray-500">Please sign in</div>
         )}
         {(isClerkLoaded ? clerkUser : user) && (
           <>
-            <div className="mb-4 flex gap-2 text-sm">
-              {(['all','pending','processing','completed','cancelled'] as const).map((s) => (
-                <button
-                  key={s}
-                  className={`px-3 h-9 rounded border ${status===s ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700'}`}
-                  onClick={() => setStatus(s)}
-                >
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </button>
-              ))}
-            </div>
             {loading && <div className="text-sm text-gray-500">Loading...</div>}
             {error && <div className="text-sm text-red-600">{error}</div>}
-            {filteredOrders.map((o, i) => <OrderCard key={i} order={o} />)}
-            {!loading && filteredOrders.length === 0 && (
+            {(todayOrders.length > 0) && (
+              <div className="mb-2 text-xs font-semibold text-gray-700">Today</div>
+            )}
+            {todayOrders.map((o, i) => <OrderCard key={`t-${i}`} order={o} />)}
+            {(olderOrders.length > 0) && (
+              <div className="mt-4 mb-2 text-xs font-semibold text-gray-700">Older</div>
+            )}
+            {olderOrders.map((o, i) => <OrderCard key={`o-${i}`} order={o} />)}
+            {!loading && orders.length === 0 && (
               <div className="text-sm text-gray-500">No orders yet</div>
             )}
           </>
