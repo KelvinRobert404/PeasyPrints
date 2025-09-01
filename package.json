@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs || true"
+    "postinstall": "node -e \"const fs = require('fs'); try { fs.copyFileSync('node_modules/pdfjs-dist/build/pdf.worker.min.mjs', 'public/pdf.worker.min.mjs'); } catch (e) { console.log('PDF worker copy skipped:', e.message); }\""
   },
   "dependencies": {
     "@clerk/nextjs": "^6.30.0",

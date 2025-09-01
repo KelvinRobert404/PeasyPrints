@@ -14,8 +14,16 @@ export function FormField({ name, render }: { name: string; render: (ctx: any) =
 export function FormItem({ className, children }: { className?: string; children?: React.ReactNode }) {
   return <div className={cn('space-y-1', className)}>{children}</div>;
 }
-export function FormLabel({ children }: { children?: React.ReactNode }) { return <label className="text-sm">{children}</label>; }
-export function FormControl({ children }: { children?: React.ReactNode }) { return <div>{children}</div>; }
-export function FormMessage({ children }: { children?: React.ReactNode }) { return <p className="text-xs text-red-600">{children}</p>; }
+export function FormLabel({ children, className }: { children?: React.ReactNode, className?: string }) { 
+  return <label className={cn("text-sm", className)}>{children}</label>; 
+}
+
+export function FormControl({ children, className }: { children?: React.ReactNode, className?: string }) { 
+  return <div className={className}>{children}</div>; 
+}
+
+export function FormMessage({ children, className }: { children?: React.ReactNode, className?: string }) { 
+  return <p className={cn("text-xs text-red-600", className)}>{children}</p>; 
+}
 
 

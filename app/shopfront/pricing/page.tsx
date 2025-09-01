@@ -54,7 +54,7 @@ export default function ShopfrontPricingPage() {
           <TabsTrigger value="a3">A3 Pricing</TabsTrigger>
           <TabsTrigger value="services">Services</TabsTrigger>
         </TabsList>
-        <Form {...form}>
+        <Form {...(form as any)}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <TabsContent value="a4">
               <Card>

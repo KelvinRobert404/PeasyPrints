@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
 
     ensureAdminInit();
 
-    const user = await clerkClient.users.getUser(userId);
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
     const username = user.username || [user.firstName, user.lastName].filter(Boolean).join(' ') || null;
     const email = user.emailAddresses?.find(e => e.id === user.primaryEmailAddressId)?.emailAddress || user.emailAddresses?.[0]?.emailAddress || null;
     const phoneNumber = user.phoneNumbers?.find(p => p.id === user.primaryPhoneNumberId)?.phoneNumber || user.phoneNumbers?.[0]?.phoneNumber || null;

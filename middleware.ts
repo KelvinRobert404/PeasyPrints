@@ -13,9 +13,9 @@ const isPublicRoute = createRouteMatcher([
   '/otp'
 ]);
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   const { pathname, searchParams } = req.nextUrl;
-  const { userId } = auth();
+  const { userId } = await auth();
 
   // Allow static assets through without auth checks
   const isStaticAssetRequest =
