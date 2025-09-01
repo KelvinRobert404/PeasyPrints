@@ -37,7 +37,8 @@ export async function captureServerEvent<T extends AnalyticsEventName>(params: {
       properties: params.properties || {},
       timestamp: new Date(),
     });
-    await client.flushAsync?.();
+    // Ensure queued events are sent without blocking
+    try { (client as any).flush?.(); } catch {}
   } catch {}
 }
 
