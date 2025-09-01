@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { haptics } from '@/lib/utils/haptics';
 import type { OrderDoc } from '@/types/models';
 import { Card } from '@/components/ui/card';
 
@@ -45,7 +46,7 @@ export function OrderCard({ order }: { order: OrderDoc }) {
   );
 
   return href ? (
-    <Link href={href} className="block">{content}</Link>
+    <Link href={href} className="block" onClick={() => haptics.tap()}>{content}</Link>
   ) : (
     content
   );

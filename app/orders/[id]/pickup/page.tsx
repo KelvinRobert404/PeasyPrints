@@ -6,7 +6,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { OrderDoc } from '@/types/models';
 import Link from 'next/link';
-import Image from 'next/image';
+import { haptics } from '@/lib/utils/haptics';
 
 function isToday(ts: any) {
   try {
@@ -53,6 +53,13 @@ export default function PickupPage() {
       completed: { label: 'completed', color: 'text-white' }
     };
     return map[order.status] || { label: order.status?.toUpperCase?.() || '', color: 'text-white' };
+  }, [order]);
+
+  // Fire a success haptic when the order is ready. Must be before any early returns
+  useEffect(() => {
+    if (order && (order.status === 'printed' || (order as any).status === 'printed_ready')) {
+      haptics.success();
+    }
   }, [order]);
 
   if (loading) return <div className="p-6 text-sm text-gray-100 bg-[#155dfc] min-h-screen">Loading...</div>;
