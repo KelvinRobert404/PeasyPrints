@@ -3,8 +3,6 @@
 */
 import type { AnalyticsEventName, BaseEventProperties } from '@/types/analytics';
 
-type PostHogJs = typeof import('posthog-js');
-
 let posthogJsSingleton: import('posthog-js').PostHog | null = null;
 let posthogJsLoaded = false;
 
@@ -23,9 +21,9 @@ async function ensurePosthogJsInit(): Promise<import('posthog-js').PostHog | nul
   const key = getPublicKey();
   if (!key) return null;
 
-  const phModule: PostHogJs = await import('posthog-js');
+  const { default: posthog } = await import('posthog-js');
   if (!posthogJsLoaded) {
-    phModule.init(key, {
+    posthog.init(key, {
       api_host: getPublicHost(),
       autocapture: true,
       capture_pageview: true,
@@ -33,11 +31,7 @@ async function ensurePosthogJsInit(): Promise<import('posthog-js').PostHog | nul
       disable_cookie: false,
       session_recording: {
         maskAllInputs: true,
-        maskAllText: true,
-        maskFormFields: true,
-        captureNetwork: false,
         maskTextSelector: 'canvas, [data-ph-no-capture], [data-ph-mask]',
-        maskInputOptions: { password: true, email: true, tel: true, text: true },
       },
       persistence: 'localStorage+cookie',
       request_batching: true,
@@ -48,7 +42,7 @@ async function ensurePosthogJsInit(): Promise<import('posthog-js').PostHog | nul
     });
   }
   // @ts-ignore
-  posthogJsSingleton = (window.posthog as import('posthog-js').PostHog) || posthogJsSingleton;
+  posthogJsSingleton = (window.posthog as import('posthog-js').PostHog) || posthogJsSingleton || posthog;
   return posthogJsSingleton;
 }
 
