@@ -17,6 +17,14 @@ function getPublicHost() {
 async function ensurePosthogJsInit(): Promise<import('posthog-js').PostHog | null> {
   if (typeof window === 'undefined') return null;
   if (posthogJsSingleton) return posthogJsSingleton;
+  // If wizard already initialized PostHog globally, reuse it to avoid double init
+  // @ts-ignore
+  if ((window as any).posthog) {
+    // @ts-ignore
+    posthogJsSingleton = (window as any).posthog as import('posthog-js').PostHog;
+    posthogJsLoaded = true;
+    return posthogJsSingleton;
+  }
 
   const key = getPublicKey();
   if (!key) return null;
