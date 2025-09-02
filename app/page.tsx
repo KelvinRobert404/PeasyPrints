@@ -49,7 +49,7 @@ export default function IndexPage() {
       {/* footer ctas */}
       <div className="px-[5px] mt-4 grid grid-cols-2 gap-[5px]">
         <Link
-          href="mailto:hello@swoopapp.in"
+          href="/contact"
           className="rounded-2xl bg-neutral-800 h-12 text-white text-sm flex items-center justify-center active:scale-[0.99] transition"
         >
           contact us

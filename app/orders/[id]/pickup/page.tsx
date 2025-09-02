@@ -114,7 +114,14 @@ export default function PickupPage() {
           <div className="mt-5 text-[#fcf6b1]">
             <span className="text-[40px] lowercase">status</span>
             <span className="text-[40px]">: </span>
-            <span className={`text-[28px] ${statusDisplay.color}`}>{statusDisplay.label}</span>
+            <span className={`${statusDisplay.color} text-[28px]`}>{statusDisplay.label}</span>
+          </div>
+
+          {/* Contact support CTA */}
+          <div className="mt-4">
+            <Link href="/contact" className="inline-flex items-center justify-center h-12 px-4 rounded-xl bg-white text-[#101828] font-semibold">
+              contact us
+            </Link>
           </div>
         </div>
       </div>

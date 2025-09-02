@@ -13,29 +13,20 @@ export default function ContactPage() {
   }, [phone, text]);
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-[428px]">
-        <div className="rounded-2xl bg-white shadow border p-6">
-          <h1 className="text-2xl font-bold text-gray-900">Contact us</h1>
-          <p className="mt-2 text-gray-600 text-sm">
-            Have a question about your order or pricing? We are here to help.
-          </p>
-          <div className="mt-6">
-            <a
-              href={waLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full inline-flex items-center justify-center h-12 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors"
-            >
-              Chat on WhatsApp
-            </a>
-            {!phone && (
-              <p className="mt-2 text-[11px] text-gray-500">
-                Tip: set NEXT_PUBLIC_WHATSAPP_NUMBER in your env to direct chats to a specific number.
-              </p>
-            )}
-          </div>
-        </div>
+    <div className="flex flex-col h-full">
+      <div className="flex-1 px-6 py-6">
+        <h1 className="text-2xl font-bold text-gray-900">Contact us</h1>
+        <p className="mt-2 text-gray-600 text-sm max-w-md">
+          Have a question about your order or pricing? We’re here to help.
+        </p>
+        <a
+          href={waLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex items-center justify-center h-12 px-5 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors"
+        >
+          Chat on WhatsApp
+        </a>
       </div>
     </div>
   );

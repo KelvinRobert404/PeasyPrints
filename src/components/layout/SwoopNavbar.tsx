@@ -4,16 +4,17 @@ import { UserButton } from '@clerk/nextjs';
 import { MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { useCollegeStore, COLLEGES } from '@/lib/stores/collegeStore';
+import Link from 'next/link';
 
 export function SwoopNavbar() {
   return (
     <div className="px-[5px] pt-[5px]">
       <div className="rounded-2xl bg-blue-600 text-white px-4 py-3 grid grid-cols-3 items-center">
-        <div className="justify-self-start font-quinn text-[30px] tracking-[0.02em]">SWOOP</div>
+        <Link href="/" className="justify-self-start font-quinn text-[30px] tracking-[0.02em]">SWOOP</Link>
         <div className="justify-self-center">
           <CollegeSelector />
         </div>
-        <div className="justify-self-end flex items-center justify-end">
+        <div className="justify-self-end flex items-center justify-end gap-2">
           <UserButton
             afterSignOutUrl="/"
             appearance={{
