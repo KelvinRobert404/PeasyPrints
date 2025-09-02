@@ -20,7 +20,7 @@ export default function SsoCallbackPage() {
     if (!signInLoaded || !signUpLoaded) return;
     (async () => {
       try {
-        const res = await signIn.handleRedirectCallback();
+        const res = await (signIn as any)?.handleRedirectCallback?.();
         if (res?.createdSessionId) {
           await setActive({ session: res.createdSessionId });
           router.replace(redirect);
@@ -28,7 +28,7 @@ export default function SsoCallbackPage() {
         }
       } catch {}
       try {
-        const res = await signUp.handleRedirectCallback();
+        const res = await (signUp as any)?.handleRedirectCallback?.();
         if ((res as any)?.createdSessionId) {
           await setActive({ session: (res as any).createdSessionId });
           router.replace(redirect);
