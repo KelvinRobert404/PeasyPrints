@@ -14,6 +14,9 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react']
   },
+  // Allow local network dev origins (Next.js 15+ deprecation warning)
+  // Update IPs/hosts as needed for your environment
+  allowedDevOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://10.170.218.153:3000'],
   images: {
     remotePatterns: [
       {
