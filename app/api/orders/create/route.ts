@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       const shopSnap = await shopRef.get()
       shopData = shopSnap.data() as any
     } catch (err: any) {
-      captureServerEvent({ event: 'order_create_failed_server', distinctId: userId, properties: { shopId, stage: 'fetch_shop', error: String(err?.message || err) } })
+      captureServerEvent({ event: 'order_creation_failed', distinctId: userId, properties: { shopId, stage: 'fetch_shop', error: String(err?.message || err) } })
       if (process.env.NODE_ENV !== 'production') {
         return NextResponse.json({ error: `Failed to create order: ${String(err?.message || '')}` }, { status: 500 })
       }
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     try {
       ref = await admin.firestore().collection('orders').add(orderDoc)
     } catch (err: any) {
-      captureServerEvent({ event: 'order_create_failed_server', distinctId: userId, properties: { shopId, error: String(err?.message || err) } })
+      captureServerEvent({ event: 'order_creation_failed', distinctId: userId, properties: { shopId, error: String(err?.message || err) } })
       if (process.env.NODE_ENV !== 'production') {
         const msg = String(err?.message || '')
         return NextResponse.json({ error: `Failed to create order: ${msg}` }, { status: 500 })
