@@ -34,7 +34,11 @@ export default function RegisterPage() {
             <CardTitle>Create Account with Clerk</CardTitle>
           </CardHeader>
           <CardContent>
-            <SignUp routing="hash" afterSignUpUrl="/dashboard" signInUrl="/login" />
+            <SignUp
+              routing="hash"
+              signInUrl="/login"
+              afterSignUpUrl="/sso-callback?redirect_url=/dashboard"
+            />
           </CardContent>
         </Card>
       </main>

@@ -32,9 +32,8 @@ export default function LoginPage() {
       </div>
 
       <SignIn
-        forceRedirectUrl={redirect}
+        routing="hash"
         signUpUrl="/register"
-        fallbackRedirectUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
         afterSignInUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
         afterSignUpUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
       />
