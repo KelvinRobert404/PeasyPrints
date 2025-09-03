@@ -19,7 +19,7 @@ function ensurePosthogInit(): void {
     api_host: apiHost,
     capture_pageview: false,
     mask_all_text: true,
-    mask_all_attributes: true,
+    mask_all_element_attributes: true,
     persistence: 'localStorage+cookie',
     person_profiles: 'identified_only'
   });
