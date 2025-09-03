@@ -7,8 +7,9 @@ const isPublicRoute = createRouteMatcher([
   '/orders(.*)',
   '/shops(.*)',
   '/shopfront(.*)',
-  '/login',
-  // no standalone register page; sign-up handled via SSO callback
+  '/login(.*)',
+  '/register(.*)',
+  '/sso-callback(.*)',
   '/otp'
 ]);
 
