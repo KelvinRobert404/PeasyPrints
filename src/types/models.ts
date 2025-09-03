@@ -33,6 +33,8 @@ export interface Shop {
   closingTime?: string;
   logoUrl?: string;
   pricing?: ShopPricing;
+  // Whether the storefront is open for customers
+  isOpen?: boolean;
 }
 
 export interface PrintSettings {

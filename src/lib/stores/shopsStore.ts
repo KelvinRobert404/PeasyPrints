@@ -30,8 +30,11 @@ export const useShopsStore = create<ShopsState>()(
             name: data.name ?? 'Shop',
             address: data.address ?? '',
             timing: data.timing,
+            openingTime: data.openingTime,
+            closingTime: data.closingTime,
             logoUrl: data.logoUrl,
-            pricing
+            pricing,
+            isOpen: data.isOpen
           } as Shop;
         });
         set((s) => { s.shops = shops; s.loading = false; });

@@ -3,6 +3,8 @@ import { auth as clerkAuth } from '@clerk/nextjs/server'
 import admin from 'firebase-admin'
 import { z } from 'zod'
 import { captureServerEvent } from '@/lib/posthog/server'
+export const runtime = 'nodejs'
+import { isAllowedOrigin } from '@/lib/utils/origin'
 
 const CreateOrderSchema = z.object({
   shopId: z.string().min(1),
@@ -44,14 +46,9 @@ export async function POST(req: NextRequest) {
     const { userId } = await clerkAuth()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // CSRF: same-site check
-    const origin = req.headers.get('origin')
-    if (origin) {
-      const url = new URL(req.url)
-      const expectedOrigin = `${url.protocol}//${url.host}`
-      if (origin !== expectedOrigin) {
-        return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
-      }
+    // CSRF: same-site/allowlisted check
+    if (!isAllowedOrigin(req.url, req.headers.get('origin'))) {
+      return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
     }
 
     const json = await req.json()
@@ -62,9 +59,18 @@ export async function POST(req: NextRequest) {
     const { shopId, shopName, userName, fileUrl, fileName, totalPages, printSettings } = parsed.data
 
     // Fetch shop pricing
-    const shopRef = admin.firestore().collection('shops').doc(shopId)
-    const shopSnap = await shopRef.get()
-    const shopData = shopSnap.data() as any
+    let shopData: any
+    try {
+      const shopRef = admin.firestore().collection('shops').doc(shopId)
+      const shopSnap = await shopRef.get()
+      shopData = shopSnap.data() as any
+    } catch (err: any) {
+      captureServerEvent({ event: 'order_create_failed_server', distinctId: userId, properties: { shopId, stage: 'fetch_shop', error: String(err?.message || err) } })
+      if (process.env.NODE_ENV !== 'production') {
+        return NextResponse.json({ error: `Failed to create order: ${String(err?.message || '')}` }, { status: 500 })
+      }
+      return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
+    }
     const pricing = shopData?.pricing
     if (!pricing) {
       return NextResponse.json({ error: 'Shop pricing unavailable' }, { status: 400 })
@@ -120,7 +126,17 @@ export async function POST(req: NextRequest) {
       }
     } as any
 
-    const ref = await admin.firestore().collection('orders').add(orderDoc)
+    let ref
+    try {
+      ref = await admin.firestore().collection('orders').add(orderDoc)
+    } catch (err: any) {
+      captureServerEvent({ event: 'order_create_failed_server', distinctId: userId, properties: { shopId, error: String(err?.message || err) } })
+      if (process.env.NODE_ENV !== 'production') {
+        const msg = String(err?.message || '')
+        return NextResponse.json({ error: `Failed to create order: ${msg}` }, { status: 500 })
+      }
+      return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
+    }
     captureServerEvent({ event: 'order_created', distinctId: userId, properties: { shopId, totalPages, totalCost } })
     const res = NextResponse.json({ id: ref.id })
     res.headers.set('Cache-Control', 'no-store')

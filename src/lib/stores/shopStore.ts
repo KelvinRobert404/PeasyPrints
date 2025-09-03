@@ -36,6 +36,7 @@ interface ShopState {
   completeOrder: (orderId: string, order: OrderDoc) => Promise<void>;
   cancelOrder: (orderId: string, order: OrderDoc) => Promise<void>;
   updatePricing: (pricing: ShopPricing) => Promise<void>;
+  updateOpenStatus: (isOpen: boolean) => Promise<void>;
 }
 
 export const useShopStore = create<ShopState>()(
@@ -60,6 +61,7 @@ export const useShopStore = create<ShopState>()(
           closingTime: data.closingTime,
           logoUrl: data.logoUrl,
           pricing: data.pricing,
+          isOpen: data.isOpen,
         } as Shop;
         set((s) => {
           s.currentShop = shop;
@@ -186,6 +188,14 @@ export const useShopStore = create<ShopState>()(
       const ref = doc(db, 'shops', shop.id);
       await updateDoc(ref, { pricing, updatedAt: serverTimestamp() as any });
       set((s) => { if (s.currentShop) s.currentShop.pricing = pricing; });
+    },
+
+    updateOpenStatus: async (isOpen) => {
+      const shop = get().currentShop;
+      if (!shop) return;
+      const ref = doc(db, 'shops', shop.id);
+      await updateDoc(ref, { isOpen, updatedAt: serverTimestamp() as any });
+      set((s) => { if (s.currentShop) s.currentShop.isOpen = isOpen; });
     }
   }))
 );

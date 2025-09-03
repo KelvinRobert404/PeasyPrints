@@ -15,7 +15,7 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  const { currentShop, fetchShopData } = useShopStore();
+  const { currentShop, fetchShopData, updateOpenStatus } = useShopStore();
   const [now, setNow] = useState<Date>(new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -57,9 +57,30 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
     <div className={`${GeistSans.className} flex h-screen flex-col`} data-sf-zoom>
       {/* Single top navbar spanning full width */}
       <div className="sticky top-0 z-20 bg-blue-600 text-white">
-        <div className="h-12 px-4 flex items-center justify-between">
+        <div className="h-12 px-4 flex items-center justify-between gap-3">
           <span className="font-quinn text-3xl">SWOOP</span>
-          <span className="uppercase text-xl truncate max-w-[55%]">{currentShop?.name}</span>
+          {signedIn ? (
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="uppercase text-sm sm:text-base truncate max-w-[40vw] sm:max-w-[55%]">{currentShop?.name}</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={currentShop?.isOpen ? 'outline' : 'secondary'}
+                  className="h-8"
+                  onClick={() => updateOpenStatus(!currentShop?.isOpen)}
+                >
+                  {currentShop?.isOpen ? 'Close store' : 'Open store'}
+                </Button>
+                <Button size="sm" variant="destructive" className="h-8" onClick={() => auth.signOut()}>Logout</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="ml-auto">
+              <Link href="/shopfront/login">
+                <Button size="sm" className="h-8">Log in</Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 

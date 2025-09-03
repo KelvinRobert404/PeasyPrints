@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth as clerkAuth } from '@clerk/nextjs/server';
 import admin from 'firebase-admin';
 import crypto from 'crypto';
+import { isAllowedOrigin } from '@/lib/utils/origin';
 
 export const runtime = 'nodejs';
 
@@ -38,14 +39,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Basic CSRF protection for same-site requests
-    const origin = req.headers.get('origin');
-    if (origin) {
-      const url = new URL(req.url);
-      const expectedOrigin = `${url.protocol}//${url.host}`;
-      if (origin !== expectedOrigin) {
-        return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
-      }
+    // Basic CSRF protection for same-site/allowlisted requests
+    if (!isAllowedOrigin(req.url, req.headers.get('origin'))) {
+      return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
     }
 
     const contentType = req.headers.get('content-type') || '';

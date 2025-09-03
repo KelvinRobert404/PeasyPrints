@@ -47,7 +47,7 @@ export default function ShopfrontProfilePage() {
     await updatePricing(values as any);
   };
 
-  const logout = async () => { await auth.signOut(); };
+  // Logout moved to navbar
 
   return (
     <div className="space-y-4 max-w-xl mx-auto">
@@ -201,7 +201,7 @@ export default function ShopfrontProfilePage() {
         </Form>
       </Tabs>
 
-      <Button onClick={logout} variant="destructive" className="w-full"><LogOut className="h-4 w-4 mr-2" />Logout</Button>
+      {/* Login/Logout controls are handled in the navbar */}
     </div>
   );
 }
