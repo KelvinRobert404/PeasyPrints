@@ -1,49 +1,40 @@
 /*
- Server-only PostHog client using posthog-node
+PostHog server wrapper. Initializes lazily.
 */
 import type { AnalyticsEventName, BaseEventProperties } from '@/types/analytics';
+import { PostHog } from 'posthog-node';
 
-let serverClient: import('posthog-node').PostHog | null = null;
+let client: PostHog | null = null;
 
-function getServerKey() {
-  return process.env.POSTHOG_API_KEY || process.env.POSTHOG_PERSONAL_API_KEY || '';
+function ensureServerClient(): void {
+  if (client) return;
+  const apiKey = process.env.POSTHOG_API_KEY as string | undefined;
+  if (!apiKey) return;
+  const host = (process.env.POSTHOG_HOST as string | undefined) || 'https://us.i.posthog.com';
+  client = new PostHog(apiKey, { host });
 }
 
-function getServerHost() {
-  return process.env.POSTHOG_HOST || process.env.NEXT_PUBLIC_POSTHOG_HOST || undefined;
-}
-
-function ensureServerClient(): import('posthog-node').PostHog | null {
-  if (serverClient) return serverClient;
-  const key = getServerKey();
-  if (!key) return null;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { PostHog } = require('posthog-node') as typeof import('posthog-node');
-  serverClient = new PostHog(key, { host: getServerHost(), flushAt: 1, flushInterval: 0 });
-  return serverClient;
-}
-
-export async function captureServerEvent<T extends AnalyticsEventName>(params: {
+export async function captureServerEvent<T extends AnalyticsEventName>({
+  distinctId,
+  event,
+  properties
+}: {
   distinctId?: string;
   event: T;
   properties?: BaseEventProperties & Record<string, any>;
 }): Promise<void> {
+  ensureServerClient();
+  if (!client) return;
   try {
-    const client = ensureServerClient();
-    if (!client) return;
-    client.capture({
-      distinctId: params.distinctId || 'server',
-      event: params.event,
-      properties: params.properties || {},
-      timestamp: new Date(),
+    await client.capture({
+      distinctId: distinctId || 'anonymous',
+      event: event as string,
+      properties
     });
-    // Ensure queued events are sent without blocking
-    try { (client as any).flush?.(); } catch {}
   } catch {}
 }
 
 export function shutdownServerAnalytics(): void {
-  try { ensureServerClient()?.shutdown(); } catch {}
+  if (!client) return;
+  try { client.shutdown(); } catch {}
 }
-
-

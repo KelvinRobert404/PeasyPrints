@@ -1,121 +1,80 @@
 /*
- Browser-only PostHog client using posthog-js
+PostHog client wrapper. Initializes lazily on first use.
 */
 import type { AnalyticsEventName, BaseEventProperties } from '@/types/analytics';
+import posthog from 'posthog-js';
 
-let posthogJsSingleton: import('posthog-js').PostHog | null = null;
-let posthogJsLoaded = false;
+let posthogInitialized = false;
 
-function getPublicKey() {
-  return process.env.NEXT_PUBLIC_POSTHOG_KEY || '';
-}
+function ensurePosthogInit(): void {
+  if (posthogInitialized) return;
+  if (typeof window === 'undefined') return;
 
-function getPublicHost() {
-  return process.env.NEXT_PUBLIC_POSTHOG_HOST || undefined;
-}
-
-async function ensurePosthogJsInit(): Promise<import('posthog-js').PostHog | null> {
-  if (typeof window === 'undefined') return null;
-  if (posthogJsSingleton) return posthogJsSingleton;
-  // If wizard already initialized PostHog globally, reuse it to avoid double init
-  // @ts-ignore
-  if ((window as any).posthog) {
-    // @ts-ignore
-    posthogJsSingleton = (window as any).posthog as import('posthog-js').PostHog;
-    posthogJsLoaded = true;
-    return posthogJsSingleton;
+  const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY as string | undefined;
+  if (!apiKey) {
+    return;
   }
-
-  const key = getPublicKey();
-  if (!key) return null;
-
-  const { default: posthog } = await import('posthog-js');
-  if (!posthogJsLoaded) {
-    posthog.init(key, {
-      api_host: getPublicHost(),
-      autocapture: true,
-      capture_pageview: true,
-      capture_pageleave: true,
-      disable_cookie: false,
-      session_recording: {
-        maskAllInputs: true,
-        maskTextSelector: 'canvas, [data-ph-no-capture], [data-ph-mask]',
-      },
-      persistence: 'localStorage+cookie',
-      request_batching: true,
-      loaded: (ph) => {
-        posthogJsSingleton = ph;
-        posthogJsLoaded = true;
-      },
-    });
-  }
-  // @ts-ignore
-  posthogJsSingleton = (window.posthog as import('posthog-js').PostHog) || posthogJsSingleton || posthog;
-  return posthogJsSingleton;
+  const apiHost = (process.env.NEXT_PUBLIC_POSTHOG_HOST as string | undefined) || '/ingest';
+  posthog.init(apiKey, {
+    api_host: apiHost,
+    capture_pageview: false,
+    mask_all_text: true,
+    mask_all_attributes: true,
+    persistence: 'localStorage+cookie',
+    person_profiles: 'identified_only'
+  });
+  posthogInitialized = true;
 }
 
 export async function identifyUser(distinctId: string, props?: Record<string, any>): Promise<void> {
-  const ph = await ensurePosthogJsInit();
-  if (!ph) return;
-  try { ph.identify(distinctId, sanitizeProps(props)); } catch {}
+  ensurePosthogInit();
+  if (!posthogInitialized) return;
+  try {
+    posthog.identify(distinctId, props);
+  } catch {}
 }
 
 export async function resetUser(): Promise<void> {
-  const ph = await ensurePosthogJsInit();
-  if (!ph) return;
-  try { ph.reset(); } catch {}
+  if (!posthogInitialized) return;
+  try { posthog.reset(); } catch {}
 }
 
 export async function captureEvent<T extends AnalyticsEventName>(
   event: T,
   properties?: BaseEventProperties & Record<string, any>
 ): Promise<void> {
-  const ph = await ensurePosthogJsInit();
-  if (!ph) return;
-  try { ph.capture(event, sanitizeProps(properties)); } catch {}
+  ensurePosthogInit();
+  if (!posthogInitialized) return;
+  try {
+    posthog.capture(event as string, properties);
+  } catch {}
 }
 
 export async function isFeatureEnabled(flagKey: string): Promise<boolean> {
-  const ph = await ensurePosthogJsInit();
-  if (!ph) return false;
-  try { return !!ph.isFeatureEnabled(flagKey); } catch { return false; }
+  ensurePosthogInit();
+  if (!posthogInitialized) return false;
+  try {
+    const res = await (posthog as any).isFeatureEnabledAsync?.(flagKey);
+    if (typeof res === 'boolean') return res;
+    return Boolean(posthog.isFeatureEnabled(flagKey));
+  } catch {
+    return false;
+  }
 }
 
 export async function getFeatureFlag(flagKey: string): Promise<any> {
-  const ph = await ensurePosthogJsInit();
-  if (!ph) return undefined;
-  try { return ph.getFeatureFlag(flagKey); } catch { return undefined; }
+  ensurePosthogInit();
+  if (!posthogInitialized) return undefined;
+  try { return posthog.getFeatureFlag(flagKey); } catch { return undefined; }
 }
 
 export async function startSessionRecording(): Promise<void> {
-  const ph = await ensurePosthogJsInit();
-  if (!ph) return;
-  // @ts-ignore
-  try { ph.startSessionRecording?.(); } catch {}
+  ensurePosthogInit();
+  if (!posthogInitialized) return;
+  try { (posthog as any).startSessionRecording?.(); } catch {}
 }
 
 export async function stopSessionRecording(): Promise<void> {
-  const ph = await ensurePosthogJsInit();
-  if (!ph) return;
-  // @ts-ignore
-  try { ph.stopSessionRecording?.(); } catch {}
+  if (!posthogInitialized) return;
+  try { (posthog as any).stopSessionRecording?.(); } catch {}
 }
-
-function sanitizeProps<T extends Record<string, any> | undefined>(props: T): T {
-  if (!props) return props;
-  const cloned: any = { ...props };
-  if (typeof cloned.fileUrl === 'string') cloned.fileUrl = '[redacted]';
-  if (typeof cloned.fileName === 'string') cloned.fileName = anonymizeFilename(cloned.fileName);
-  if (cloned.pdfBuffer) delete cloned.pdfBuffer;
-  if (cloned.token) delete cloned.token;
-  if (cloned.privateKey) delete cloned.privateKey;
-  return cloned;
-}
-
-function anonymizeFilename(name: string): string {
-  const idx = name.lastIndexOf('.');
-  const ext = idx >= 0 ? name.slice(idx) : '';
-  return `file${ext || ''}`;
-}
-
-

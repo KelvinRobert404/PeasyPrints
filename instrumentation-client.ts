@@ -1,24 +1,22 @@
-import posthog from "posthog-js";
+// Lightweight client-side analytics bootstrap (optional)
+// Initializes PostHog early if a public key is configured.
 
-// Auto-loaded by Next.js to initialize PostHog (wizard)
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-if (POSTHOG_KEY) {
-  posthog.init(POSTHOG_KEY, {
-    api_host: "/ingest",
-    ui_host: "https://us.posthog.com",
-    autocapture: true,
-    capture_pageview: true,
-    capture_pageleave: true,
-    capture_exceptions: true,
-    session_recording: {
-      maskAllInputs: true,
-      maskTextSelector: 'canvas, [data-ph-no-capture], [data-ph-mask]',
-    },
-    debug: process.env.NODE_ENV === "development",
-  });
-} else {
-  if (typeof window !== 'undefined') {
-    // eslint-disable-next-line no-console
-    console.warn('PostHog disabled: NEXT_PUBLIC_POSTHOG_KEY is not set');
-  }
+if (typeof window !== 'undefined') {
+	const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string | undefined;
+	if (key) {
+		// Import dynamically to avoid SSR bundles including posthog-js by default
+		import('posthog-js').then(({ default: posthog }) => {
+			const host = (process.env.NEXT_PUBLIC_POSTHOG_HOST as string | undefined) || '/ingest';
+			try {
+				posthog.init(key, {
+					api_host: host,
+					capture_pageview: false,
+					mask_all_text: true,
+					mask_all_attributes: true,
+					persistence: 'localStorage+cookie',
+					person_profiles: 'identified_only'
+				});
+			} catch {}
+		});
+	}
 }
