@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     } catch (err: any) {
       // Ignore Firestore permission/race errors; verification remains successful
       captureServerEvent({
-        event: 'razorpay_verify_persist_warning',
+        event: 'error',
         distinctId: userId,
         properties: { razorpay_order_id, razorpay_payment_id, warning: String(err?.message || err) }
       });
