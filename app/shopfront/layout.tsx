@@ -5,6 +5,9 @@ import { GeistSans } from 'geist/font/sans';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { ClosedOverlay } from '@/components/layout/ClosedOverlay';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ShopfrontLoginForm } from '@/components/shopfront/ShopfrontLoginForm';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, LayoutDashboard, History, DollarSign, Store, Wallet, Clock } from 'lucide-react';
 import { auth } from '@/lib/firebase/config';
@@ -17,6 +20,7 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const { currentShop, fetchShopData, updateOpenStatus } = useShopStore();
   const [now, setNow] = useState<Date>(new Date());
+  const [shopChecked, setShopChecked] = useState(false);
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
@@ -33,19 +37,23 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
     const unsub = onAuthStateChanged(auth, (u) => setSignedIn(!!u));
     return () => unsub();
   }, []);
-  const isAuthRoute = useMemo(() => pathname?.startsWith('/shopfront/login') || pathname?.startsWith('/shopfront/register'), [pathname]);
+  const isAuthRoute = useMemo(() => pathname?.startsWith('/shopfront/login'), [pathname]);
+  const [loginOpen, setLoginOpen] = useState(false);
   useEffect(() => {
     if (signedIn == null) return;
-    if (!signedIn && !isAuthRoute) router.replace('/shopfront/login');
-    if (signedIn && isAuthRoute) router.replace('/shopfront');
-  }, [signedIn, isAuthRoute, router]);
+    // Disable route redirects; use modal instead
+  }, [signedIn, isAuthRoute, router, currentShop, shopChecked]);
 
   useEffect(() => {
-    if (!signedIn) return;
+    if (!signedIn) { setShopChecked(true); return; }
     const uid = auth.currentUser?.uid;
-    if (uid && !currentShop) {
-      void fetchShopData(uid);
-    }
+    if (!uid) { setShopChecked(true); return; }
+    (async () => {
+      if (!currentShop) {
+        await fetchShopData(uid);
+      }
+      setShopChecked(true);
+    })();
   }, [signedIn, currentShop, fetchShopData]);
   const items = [
     { href: '/shopfront', label: 'Dashboard', icon: LayoutDashboard },
@@ -59,26 +67,30 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
       <div className="sticky top-0 z-20 bg-blue-600 text-white">
         <div className="h-12 px-4 flex items-center justify-between gap-3">
           <span className="font-quinn text-3xl">SWOOP</span>
-          {signedIn ? (
+          {signedIn && shopChecked ? (
             <div className="flex items-center gap-2 ml-auto">
-              <span className="uppercase text-sm sm:text-base truncate max-w-[40vw] sm:max-w-[55%]">{currentShop?.name}</span>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant={currentShop?.isOpen ? 'outline' : 'secondary'}
-                  className="h-8"
-                  onClick={() => updateOpenStatus(!currentShop?.isOpen)}
-                >
-                  {currentShop?.isOpen ? 'Close store' : 'Open store'}
-                </Button>
-                <Button size="sm" variant="destructive" className="h-8" onClick={() => auth.signOut()}>Logout</Button>
-              </div>
+              {currentShop ? (
+                <>
+                  <span className="uppercase text-sm sm:text-base truncate max-w-[40vw] sm:max-w-[55%]">{currentShop?.name}</span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={currentShop?.isOpen ? 'destructive' : 'success'}
+                      className="h-8"
+                      onClick={() => updateOpenStatus(!currentShop?.isOpen)}
+                    >
+                      {currentShop?.isOpen ? 'Close store now' : 'Open store now'}
+                    </Button>
+                    <Button size="sm" variant="destructive" className="h-8" onClick={() => auth.signOut()}>Logout</Button>
+                  </div>
+                </>
+              ) : (
+                <Button size="sm" className="h-8" onClick={() => setLoginOpen(true)}>Log in</Button>
+              )}
             </div>
           ) : (
             <div className="ml-auto">
-              <Link href="/shopfront/login">
-                <Button size="sm" className="h-8">Log in</Button>
-              </Link>
+              <Button size="sm" className="h-8" onClick={() => setLoginOpen(true)}>Log in</Button>
             </div>
           )}
         </div>
@@ -117,10 +129,19 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <div className="flex-1 overflow-y-auto">
-          <main className="container mx-auto max-w-7xl p-4">
-            {signedIn == null ? null : children}
-          </main>
+        <div className="flex-1 overflow-y-auto relative">
+          <main className="container mx-auto max-w-7xl p-4">{signedIn == null ? null : children}</main>
+          {signedIn && currentShop && currentShop.isOpen === false && (
+            <ClosedOverlay onOpenNow={() => updateOpenStatus(true)} />
+          )}
+          <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Shopfront login</DialogTitle>
+              </DialogHeader>
+              <ShopfrontLoginForm onSuccess={() => setLoginOpen(false)} />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

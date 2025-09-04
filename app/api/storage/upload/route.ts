@@ -76,14 +76,21 @@ export async function POST(req: NextRequest) {
     const envBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || defaultBucket;
     const bucket = admin.storage().bucket(envBucket);
     const gcsFile = bucket.file(path);
+    const downloadToken = crypto.randomUUID();
     await gcsFile.save(buffer, {
       contentType: 'application/pdf',
       resumable: false,
-      public: false
+      public: false,
+      metadata: {
+        // Custom metadata for Firebase Storage token-based access
+        metadata: { firebaseStorageDownloadTokens: downloadToken }
+      }
     });
 
-    const [signedUrl] = await gcsFile.getSignedUrl({ action: 'read', expires: Date.now() + 60 * 60 * 1000 });
-    const url = signedUrl;
+    // Return a stable Firebase media URL (rules allow public reads under /uploads)
+    const bucketName = envBucket;
+    const encodedPath = encodeURIComponent(path);
+    const url = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media&token=${downloadToken}`;
     const res = NextResponse.json({ url, path });
     res.headers.set('Cache-Control', 'no-store');
     return res;
