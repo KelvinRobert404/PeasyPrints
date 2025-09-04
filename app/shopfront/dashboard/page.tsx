@@ -13,6 +13,7 @@ import { ExternalLink, X, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { useOrderAlerts } from '@/hooks/useOrderAlerts';
 
 export default function ShopfrontDashboardPage() {
   const { user } = useAuthStore();
@@ -37,6 +38,13 @@ export default function ShopfrontDashboardPage() {
     (async () => { unsub = await fetchOrders(user.uid); })();
     return () => { if (unsub) unsub(); };
   }, [user?.uid, fetchShopData, fetchOrders]);
+
+  // Alerts: chime on new orders, loop when overdue and idle/unfocused
+  const { enable: enableSound, enabled: soundEnabled } = useOrderAlerts({
+    getOrders: () => orders as any,
+    pendingThresholdMs: 120000,
+    idleMs: 20000,
+  });
 
   // Removed early return to ensure hooks below run on every render
   const filteredHistoryByDate = useMemo(() => {
@@ -149,6 +157,13 @@ export default function ShopfrontDashboardPage() {
           </Card>
         </div>
         <div className="ml-3" />
+        {!soundEnabled && (
+          <div className="ml-3">
+            <Button size="sm" variant="default" onClick={() => enableSound()}>
+              Enable Sound
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
