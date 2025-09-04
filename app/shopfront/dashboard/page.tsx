@@ -38,12 +38,7 @@ export default function ShopfrontDashboardPage() {
     return () => { if (unsub) unsub(); };
   }, [user?.uid, fetchShopData, fetchOrders]);
 
-  if (!user) return (
-    <div className="space-y-3">
-      <Skeleton className="h-10 w-40" />
-      <Skeleton className="h-24 w-full" />
-    </div>
-  );
+  // Removed early return to ensure hooks below run on every render
   const filteredHistoryByDate = useMemo(() => {
     const normalize = (date: Date) => toLocalYMD(date);
     const list = historyOrders;
@@ -115,6 +110,12 @@ export default function ShopfrontDashboardPage() {
 
   return (
     <div className="space-y-4">
+      {!user ? (
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+      ) : null}
       <div className="flex items-center justify-between">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 flex-1">
           <Card className="border-0 shadow-sm">
