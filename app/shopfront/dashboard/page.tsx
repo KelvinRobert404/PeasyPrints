@@ -19,7 +19,7 @@ export default function ShopfrontDashboardPage() {
   const { user } = useAuthStore();
   const { currentShop, orders, pendingOrders, historyOrders, fetchShopData, fetchOrders, updateOrderStatus, completeOrder, cancelOrder, markPrinted, markCollected, revertToProcessing, undoCollected } = useShopStore();
   const [openId, setOpenId] = useState<string | null>(null);
-  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
   function toLocalYMD(d: Date) {
     const y = d.getFullYear();
