@@ -40,10 +40,12 @@ export default function ShopfrontDashboardPage() {
   }, [user?.uid, fetchShopData, fetchOrders]);
 
   // Alerts: chime on new orders, loop when overdue and idle/unfocused
+  const isOpen = (currentShop as any)?.isOpen !== false; // default to true if undefined
   const { enable: enableSound, enabled: soundEnabled } = useOrderAlerts({
     getOrders: () => orders as any,
     pendingThresholdMs: 120000,
     idleMs: 20000,
+    muted: !isOpen,
   });
 
   // Removed early return to ensure hooks below run on every render
@@ -157,13 +159,7 @@ export default function ShopfrontDashboardPage() {
           </Card>
         </div>
         <div className="ml-3" />
-        {!soundEnabled && (
-          <div className="ml-3">
-            <Button size="sm" variant="default" onClick={() => enableSound()}>
-              Enable Sound
-            </Button>
-          </div>
-        )}
+        {/* Sound auto-enables; no manual button needed */}
       </div>
 
       <div className="space-y-2">

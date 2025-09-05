@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type SoundConfig = {
   chimeUrl: string;
@@ -35,6 +35,36 @@ export function useOrderAudio(config: SoundConfig = { chimeUrl: "/sounds/new-ord
       // ignore
     }
   }, [ensureContext]);
+
+  // Auto-enable attempts: on mount, visibility change, focus and first interactions
+  useEffect(() => {
+    const tryResume = async () => {
+      if (enabled) return;
+      const ctx = ensureContext();
+      if (!ctx) return;
+      try {
+        await ctx.resume();
+        if (ctx.state === "running") setEnabled(true);
+      } catch {}
+    };
+
+    void tryResume();
+    const onInteract = () => { void tryResume(); };
+    const onVisibility = () => { if (document.visibilityState === "visible") void tryResume(); };
+    window.addEventListener("click", onInteract, { passive: true });
+    window.addEventListener("keydown", onInteract);
+    window.addEventListener("touchstart", onInteract, { passive: true });
+    window.addEventListener("focus", onInteract);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      window.removeEventListener("click", onInteract as any);
+      window.removeEventListener("keydown", onInteract as any);
+      window.removeEventListener("touchstart", onInteract as any);
+      window.removeEventListener("focus", onInteract as any);
+      document.removeEventListener("visibilitychange", onVisibility as any);
+    };
+  }, [enabled, ensureContext]);
 
   const loadBuffer = useCallback(async (url: string) => {
     try {
