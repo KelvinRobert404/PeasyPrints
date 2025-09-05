@@ -21,9 +21,11 @@ export function useOrderAlerts(params: {
   getOrders: () => MinimalOrder[];
   pendingThresholdMs?: number;
   idleMs?: number;
+  muted?: boolean;
 }) {
   const pendingThresholdMs = params.pendingThresholdMs ?? 120000; // 2 minutes
   const idleMs = params.idleMs ?? 20000; // 20 seconds
+  const muted = params.muted ?? false;
   const { isIdle, isTabHidden } = useIdle(idleMs);
   const { isLeader } = useSoundLeader();
   const { enable, enabled, playChime, startLoop, stopLoop } = useOrderAudio();
@@ -36,16 +38,17 @@ export function useOrderAlerts(params: {
 
   // One-shot chime on new orders
   useEffect(() => {
-    if (!isLeader || !enabled) return;
+    if (!isLeader || !enabled || muted) return;
     const unseen = unresolvedOrders.filter((o) => !lastSeenIdsRef.current.has(o.id));
     if (unseen.length > 0) {
       void playChime();
       unseen.forEach((o) => lastSeenIdsRef.current.add(o.id));
     }
-  }, [unresolvedOrders, isLeader, enabled, playChime]);
+  }, [unresolvedOrders, isLeader, enabled, muted, playChime]);
 
   // Looping alert when overdue + idle/hidden
   useEffect(() => {
+    if (muted) { stopLoop(); return; }
     const now = Date.now();
     const getMillis = (t: any): number | null => {
       if (!t) return null;
@@ -77,7 +80,7 @@ export function useOrderAlerts(params: {
     } else {
       stopLoop();
     }
-  }, [unresolvedOrders, isIdle, isTabHidden, isLeader, enabled, pendingThresholdMs, startLoop, stopLoop]);
+  }, [unresolvedOrders, isIdle, isTabHidden, isLeader, enabled, muted, pendingThresholdMs, startLoop, stopLoop]);
 
   return { enable, enabled } as const;
 }
