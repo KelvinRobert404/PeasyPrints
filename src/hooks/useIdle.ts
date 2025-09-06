@@ -23,9 +23,7 @@ export function useIdle(idleMs: number = 20000): { isIdle: boolean; isTabHidden:
     const onVisibility = () => {
       const hidden = document.visibilityState === "hidden";
       setIsTabHidden(hidden);
-      if (hidden) {
-        setIsIdle(true);
-      } else {
+      if (!hidden) {
         markActive();
       }
     };

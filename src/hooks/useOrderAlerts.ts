@@ -23,8 +23,8 @@ export function useOrderAlerts(params: {
   idleMs?: number;
   muted?: boolean;
 }) {
-  const pendingThresholdMs = params.pendingThresholdMs ?? 120000; // 2 minutes
-  const idleMs = params.idleMs ?? 20000; // 20 seconds
+  const pendingThresholdMs = params.pendingThresholdMs ?? 120000; // order age threshold (not used for loop condition)
+  const idleMs = params.idleMs ?? 180000; // 3 minutes of inactivity required
   const muted = params.muted ?? false;
   const { isIdle, isTabHidden } = useIdle(idleMs);
   const { isLeader } = useSoundLeader();
@@ -46,7 +46,7 @@ export function useOrderAlerts(params: {
     }
   }, [unresolvedOrders, isLeader, enabled, muted, playChime]);
 
-  // Looping alert when overdue + idle/hidden
+  // Looping alert: only when there's at least one pending order AND user is inactive for idleMs
   useEffect(() => {
     if (muted) { stopLoop(); return; }
     const now = Date.now();
@@ -65,15 +65,8 @@ export function useOrderAlerts(params: {
       }
     };
 
-    const overduePending = unresolvedOrders.some((o) => {
-      // consider statuses that are not completed/cancelled
-      if (["completed", "cancelled", "collected"].includes(o.status)) return false;
-      const ts = getMillis((o as any).timestamp ?? (o as any).createdAt);
-      if (ts === null) return false;
-      return now - ts >= pendingThresholdMs;
-    });
-
-    const shouldLoop = overduePending && (isIdle || isTabHidden);
+    const hasPending = unresolvedOrders.some((o) => !["completed", "cancelled", "collected"].includes(o.status));
+    const shouldLoop = hasPending && (isIdle || isTabHidden);
 
     if (isLeader && enabled && shouldLoop) {
       void startLoop();
