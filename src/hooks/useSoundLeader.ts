@@ -12,7 +12,19 @@ export function useSoundLeader(channelName: string = "swoop-audio") {
   const lastHeartbeatAtMs = useRef<number>(0);
 
   useEffect(() => {
-    const channel = new BroadcastChannel(channelName);
+    // Fallback: if BroadcastChannel unsupported or throws, become leader locally
+    let channel: BroadcastChannel | null = null;
+    try {
+      // @ts-expect-error: guard runtime support
+      if (typeof BroadcastChannel !== "undefined") {
+        channel = new BroadcastChannel(channelName);
+      }
+    } catch {}
+
+    if (!channel) {
+      setIsLeader(true);
+      return;
+    }
     channelRef.current = channel;
 
     const onMessage = (event: MessageEvent) => {
@@ -40,8 +52,8 @@ export function useSoundLeader(channelName: string = "swoop-audio") {
     return () => {
       window.clearTimeout(claimTimer);
       window.clearInterval(heartbeatTimer);
-      channel.removeEventListener("message", onMessage);
-      channel.close();
+      try { channel.removeEventListener("message", onMessage); } catch {}
+      try { channel.close(); } catch {}
     };
   }, [channelName, isLeader]);
 
