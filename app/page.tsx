@@ -3,14 +3,13 @@
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
+import { AnnouncementCarousel } from '@/components/AnnouncementCarousel';
 
 export default function IndexPage() {
   return (
     <div className="min-h-screen flex flex-col pb-6">
       {/* Hero banner */}
-      <div className="px-[5px] mt-4">
-        <div className="h-48 w-full rounded-2xl bg-neutral-800" />
-      </div>
+      <AnnouncementCarousel heightClass="h-48" outerClassName="px-[5px] mt-4" backgroundClass="bg-red-500" />
 
       {/* Tiles grid */}
       <div className="px-[5px] mt-4 grid grid-cols-2 gap-[5px] auto-rows-[176px]">
@@ -61,6 +60,8 @@ export default function IndexPage() {
           about us
         </Link>
       </div>
+
+      {/* announcements carousel (moved to hero) */}
     </div>
   );
 }
