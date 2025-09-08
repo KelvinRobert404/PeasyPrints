@@ -15,9 +15,8 @@ export function useSoundLeader(channelName: string = "swoop-audio") {
     // Fallback: if BroadcastChannel unsupported or throws, become leader locally
     let channel: BroadcastChannel | null = null;
     try {
-      // @ts-expect-error: guard runtime support
-      if (typeof BroadcastChannel !== "undefined") {
-        channel = new BroadcastChannel(channelName);
+      if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+        channel = new (window as any).BroadcastChannel(channelName);
       }
     } catch {}
 

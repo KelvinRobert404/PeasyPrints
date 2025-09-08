@@ -9,7 +9,7 @@ export default function IndexPage() {
   return (
     <div className="min-h-screen flex flex-col pb-6">
       {/* Hero banner */}
-      <AnnouncementCarousel heightClass="h-48" outerClassName="px-[5px] mt-4" backgroundClass="bg-red-500" />
+      <AnnouncementCarousel heightClass="h-48" outerClassName="px-[5px] mt-4" backgroundClass="bg-red-500 border-2 border-blue-500" />
 
       {/* Tiles grid */}
       <div className="px-[5px] mt-4 grid grid-cols-2 gap-[5px] auto-rows-[176px]">
