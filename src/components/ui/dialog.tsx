@@ -1,16 +1,17 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 
-export function Dialog({ open, onOpenChange, children }: { open: boolean; onOpenChange: (o: boolean) => void; children?: React.ReactNode }) {
+export function Dialog({ open, onOpenChange, children, dismissible = true }: { open: boolean; onOpenChange: (o: boolean) => void; children?: React.ReactNode; dismissible?: boolean }) {
   React.useEffect(() => {
+    if (!open || !dismissible) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onOpenChange(false); };
-    if (open) document.addEventListener('keydown', onKey);
+    document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [open, onOpenChange]);
+  }, [open, onOpenChange, dismissible]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={() => onOpenChange(false)} />
+      <div className="absolute inset-0 bg-black/40" onClick={dismissible ? () => onOpenChange(false) : undefined} />
       {children}
     </div>
   );

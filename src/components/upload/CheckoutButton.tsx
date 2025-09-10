@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useUser } from '@clerk/nextjs';
@@ -10,12 +10,15 @@ import { loadRazorpay } from '@/lib/razorpay/loadRazorpay';
 import { useRouter } from 'next/navigation';
 import { usePosthog } from '@/hooks/usePosthog';
 import { startSessionRecording, stopSessionRecording } from '@/lib/posthog/client';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?: string }) {
   const { file, pageCount, totalCost, settings } = useUploadStore();
   const { user } = useAuthStore();
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
   const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [isLongWait, setIsLongWait] = useState(false);
   const router = useRouter();
   const { capture, isFeatureEnabled } = usePosthog();
 
@@ -63,6 +66,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         },
         theme: { color: '#2563eb' },
         handler: async (response: any) => {
+          setProcessing(true);
           // Verify signature server-side per Razorpay docs
           const verifyRes = await fetch('/api/razorpay/verify', {
             method: 'POST',
@@ -81,6 +85,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
               razorpay_payment_id: response.razorpay_payment_id,
               status: 'verification_failed',
             });
+            setProcessing(false);
             return;
           }
           try {
@@ -115,6 +120,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
           } catch (err: any) {
             alert(err?.message || 'Order finalization failed');
             capture('error', { error: err?.message || 'Order finalization failed' });
+            setProcessing(false);
           }
         }
       });
@@ -133,14 +139,55 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
     }
   };
 
+  // Show long-wait hint if processing takes >60s
+  useEffect(() => {
+    if (!processing) {
+      setIsLongWait(false);
+      return;
+    }
+    const timer = setTimeout(() => setIsLongWait(true), 60000);
+    return () => clearTimeout(timer);
+  }, [processing]);
+
   return (
-    <button
-      onClick={handleCheckout}
-      disabled={loading || !file || totalCost <= 0 || !isClerkLoaded || !clerkUser}
-      className="w-full h-14 bg-blue-600 text-white rounded-xl disabled:opacity-50 font-quinn text-[24px]"
-      style={{ letterSpacing: '0.02em' }}
-    >
-      {loading ? 'PROCESSING…' : 'CHECKOUT'}
-    </button>
+    <>
+      <button
+        onClick={handleCheckout}
+        disabled={loading || !file || totalCost <= 0 || !isClerkLoaded || !clerkUser}
+        className="w-full h-14 bg-blue-600 text-white rounded-xl disabled:opacity-50 font-quinn text-[24px]"
+        style={{ letterSpacing: '0.02em' }}
+      >
+        {loading ? 'PROCESSING…' : 'CHECKOUT'}
+      </button>
+
+      <Dialog open={processing} onOpenChange={() => {}} dismissible={false}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Processing payment</DialogTitle>
+            <DialogDescription>
+              Do not close or refresh this page. This can take up to a minute.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-3 text-gray-700 text-sm">
+            <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            Waiting for confirmation…
+          </div>
+          {isLongWait && (
+            <div className="mt-4 text-sm text-gray-600">
+              <div>Still processing… This is taking longer than usual.</div>
+              <button
+                onClick={() => router.push('/orders')}
+                className="mt-3 w-full h-10 rounded-md bg-blue-600 text-white"
+              >
+                View Orders
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
