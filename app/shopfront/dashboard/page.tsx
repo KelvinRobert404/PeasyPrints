@@ -17,7 +17,7 @@ import { useOrderAlerts } from '@/hooks/useOrderAlerts';
 
 export default function ShopfrontDashboardPage() {
   const { user } = useAuthStore();
-  const { currentShop, orders, pendingOrders, historyOrders, fetchShopData, fetchOrders, updateOrderStatus, completeOrder, cancelOrder, markPrinted, markCollected, revertToProcessing, undoCollected } = useShopStore();
+  const { currentShop, orders, pendingOrders, historyOrders, fetchShopData, fetchOrders, updateOrderStatus, completeOrder, cancelOrder, markPrinted, markCollected, revertToProcessing, undoCollected, undoCancelled } = useShopStore();
   const [openId, setOpenId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -303,6 +303,11 @@ export default function ShopfrontDashboardPage() {
                       {o.status === 'completed' && (
                         <Button size="sm" variant="outline" onClick={() => { void undoCollected(o.orderId, o); }}>
                           Undo Collected
+                        </Button>
+                      )}
+                      {o.status === 'cancelled' && (
+                        <Button size="sm" variant="outline" onClick={() => { void undoCancelled(o.orderId, o); }}>
+                          Undo Cancelled
                         </Button>
                       )}
                       {o.emergency && <Badge variant="destructive">URGENT</Badge>}

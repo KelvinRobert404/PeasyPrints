@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 const flashIcon = '/figma/3a3d1724c2727a8bfe5104c30b0f9c4f34325e85.png';
 const batmanIcon = '/figma/a9df3efab731ab9679d53bf2e350d8ff724a5c4b.png';
@@ -31,6 +32,8 @@ export function PrintUpgrades({ shopTiming }: { shopTiming?: string }) {
 
   const rushPrice = shopPricing?.services.emergency ?? 0;
   const afterDarkPrice = shopPricing?.services.afterDark ?? rushPrice ?? 0;
+  const rushUnavailable = shopPricing ? Number(rushPrice ?? 0) <= 0 : false;
+  const afterDarkUnavailable = shopPricing ? Number(afterDarkPrice ?? 0) <= 0 : false;
 
   const toggleRush = () => {
     setSettings({ emergency: !settings.emergency, afterDark: false });
@@ -44,7 +47,7 @@ export function PrintUpgrades({ shopTiming }: { shopTiming?: string }) {
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-3">
-        <button type="button" onClick={toggleRush} className={`rounded-2xl bg-white text-left p-4 border ${settings.emergency ? 'ring-2 ring-blue-600' : 'border-gray-200'}`}>
+        <button type="button" onClick={rushUnavailable ? undefined : toggleRush} disabled={rushUnavailable} className={`rounded-2xl bg-white text-left p-4 border ${settings.emergency ? 'ring-2 ring-blue-600' : 'border-gray-200'} ${rushUnavailable ? 'opacity-60 cursor-not-allowed' : ''}`}>
           <div className="flex items-center justify-between">
             <div className="text-lg font-extrabold">rush</div>
             <img src={flashIcon} alt="rush" className="w-6 h-6" />
@@ -54,14 +57,16 @@ export function PrintUpgrades({ shopTiming }: { shopTiming?: string }) {
             <div>ready in 5 mins flat</div>
             <div>or refund of the extras.</div>
           </div>
-          <div className="mt-2 text-right font-extrabold lowercase">rs{rushPrice}</div>
+          <div className="mt-2 text-right font-extrabold lowercase">
+            {shopPricing && rushUnavailable ? <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge> : <>rs{rushPrice}</>}
+          </div>
         </button>
 
         <button
           type="button"
-          onClick={toggleAfterDark}
-          disabled={!isShopClosed && !settings.afterDark}
-          className={`rounded-2xl bg-white text-left p-4 border ${settings.afterDark ? 'ring-2 ring-blue-600' : 'border-gray-200'} ${(!isShopClosed && !settings.afterDark) ? 'opacity-60 cursor-not-allowed' : ''}`}
+          onClick={afterDarkUnavailable ? undefined : toggleAfterDark}
+          disabled={afterDarkUnavailable || (!isShopClosed && !settings.afterDark)}
+          className={`rounded-2xl bg-white text-left p-4 border ${settings.afterDark ? 'ring-2 ring-blue-600' : 'border-gray-200'} ${((!isShopClosed && !settings.afterDark) || afterDarkUnavailable) ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
           <div className="flex items-center justify-between">
             <div className="text-lg font-extrabold">afterdark</div>
@@ -72,7 +77,9 @@ export function PrintUpgrades({ shopTiming }: { shopTiming?: string }) {
             <div>shop snoozes.</div>
             <div>grab it first thing, 8:30–10 am.</div>
           </div>
-          <div className="mt-2 text-right font-extrabold lowercase">rs{afterDarkPrice}</div>
+          <div className="mt-2 text-right font-extrabold lowercase">
+            {shopPricing && afterDarkUnavailable ? <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge> : <>rs{afterDarkPrice}</>}
+          </div>
         </button>
       </div>
     </div>

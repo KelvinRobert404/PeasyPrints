@@ -33,6 +33,7 @@ interface ShopState {
   markCollected: (orderId: string) => Promise<void>;
   revertToProcessing: (orderId: string) => Promise<void>;
   undoCollected: (orderId: string, order: OrderDoc) => Promise<void>;
+  undoCancelled: (orderId: string, order: OrderDoc) => Promise<void>;
   completeOrder: (orderId: string, order: OrderDoc) => Promise<void>;
   cancelOrder: (orderId: string, order: OrderDoc) => Promise<void>;
   updatePricing: (pricing: ShopPricing) => Promise<void>;
@@ -152,6 +153,19 @@ export const useShopStore = create<ShopState>()(
         await updateDoc(shopRef, { receivableAmount: next, updatedAt: serverTimestamp() as any });
         set((s) => { s.receivableAmount = next; });
       } catch {}
+    },
+
+    undoCancelled: async (orderId, order) => {
+      // Remove matching cancelled history entries and revert status back to processing
+      try {
+        const q = query(collection(db, 'history'), where('orderId', '==', orderId), where('status', '==', 'cancelled'));
+        const snap = await getDocs(q);
+        for (const d of snap.docs) {
+          await deleteDoc(doc(db, 'history', d.id));
+        }
+      } catch {}
+      const ref = doc(db, 'orders', orderId);
+      await updateDoc(ref, { status: 'processing', updatedAt: serverTimestamp() as any });
     },
 
     completeOrder: async (orderId, order) => {
