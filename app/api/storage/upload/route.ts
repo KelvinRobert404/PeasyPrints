@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Basic CSRF protection for same-site/allowlisted requests
-    if (!isAllowedOrigin(req.url, req.headers.get('origin'))) {
+    if (!isAllowedOrigin(req.url, req.headers.get('origin'), req.headers.get('x-forwarded-host'), req.headers.get('x-forwarded-proto'))) {
       return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
     }
 

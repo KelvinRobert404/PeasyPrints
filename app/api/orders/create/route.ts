@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // CSRF: same-site/allowlisted check
-    if (!isAllowedOrigin(req.url, req.headers.get('origin'))) {
+    if (!isAllowedOrigin(req.url, req.headers.get('origin'), req.headers.get('x-forwarded-host'), req.headers.get('x-forwarded-proto'))) {
       return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
     }
 

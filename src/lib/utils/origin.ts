@@ -18,17 +18,31 @@ export function getAllowedOrigins(): string[] {
   return Array.from(set);
 }
 
-export function isAllowedOrigin(requestUrl: string, requestOriginHeader: string | null): boolean {
+export function isAllowedOrigin(
+  requestUrl: string,
+  requestOriginHeader: string | null,
+  forwardedHost?: string | null,
+  forwardedProto?: string | null
+): boolean {
   // If no Origin header (same-origin or non-browser), allow
   if (!requestOriginHeader) return true;
 
   const url = new URL(requestUrl);
   const sameOrigin = `${url.protocol}//${url.host}`;
 
+  // Also consider reverse proxy forwarded headers (e.g. ngrok, vercel, cloudflared)
+  const proxyOrigin = forwardedHost
+    ? `${(forwardedProto || url.protocol.replace(':', ''))}://${forwardedHost}`
+    : null;
+
   const allowed = getAllowedOrigins();
   for (const allowedOrigin of allowed) {
-    if (allowedOrigin === 'self' && requestOriginHeader === sameOrigin) return true;
-    if (allowedOrigin !== 'self' && requestOriginHeader === allowedOrigin) return true;
+    if (allowedOrigin === 'self') {
+      if (requestOriginHeader === sameOrigin) return true;
+      if (proxyOrigin && requestOriginHeader === proxyOrigin) return true;
+      continue;
+    }
+    if (requestOriginHeader === allowedOrigin) return true;
   }
   return false;
 }
