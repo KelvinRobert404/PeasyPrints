@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCollegeStore, COLLEGES } from '@/lib/stores/collegeStore';
+import haptics from '@/lib/utils/haptics';
 
 export default function UploadEntryPage() {
   const { shops, subscribe } = useShopsStore();
@@ -38,6 +39,7 @@ export default function UploadEntryPage() {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
+  const [toast, setToast] = useState<string>('');
 
   function updateScrollIndicators() {
     const el = scrollerRef.current;
@@ -81,6 +83,17 @@ export default function UploadEntryPage() {
     const close = formatHourLabel(s.closingTime);
     if (open && close) return `${open}:${close}`;
     return s.timing ?? undefined;
+  }
+
+  function nudgeSelectShop() {
+    // Show toast and auto-scroll to the shops scroller
+    try { haptics.warn(); } catch {}
+    setToast('Select a shop first to continue.');
+    try {
+      scrollerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch {}
+    // Auto-hide after 2.5s
+    window.setTimeout(() => setToast(''), 2500);
   }
 
   return (
@@ -172,14 +185,24 @@ export default function UploadEntryPage() {
           </CardContent>
         </Card>
 
-        <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
-          <CardHeader>
-            <CardTitle className="text-base">Select PDF</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FileDropzone />
-          </CardContent>
-        </Card>
+        <div className="relative" onClick={disabled ? nudgeSelectShop : undefined}>
+          <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
+            <CardHeader>
+              <CardTitle className="text-base">Select PDF</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FileDropzone />
+            </CardContent>
+          </Card>
+          {disabled && (
+            <button
+              type="button"
+              aria-label="Select a shop first to continue"
+              onClick={nudgeSelectShop}
+              className="absolute inset-0 z-20 bg-transparent"
+            />
+          )}
+        </div>
 
         <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
           <CardHeader>
@@ -213,6 +236,13 @@ export default function UploadEntryPage() {
           <CheckoutButton shopId={selectedShopId} shopName={selectedShop?.name} />
         </div>
       </main>
+      {toast && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[60]">
+          <div className="rounded-md bg-gray-900 text-white px-3 py-2 text-sm shadow-lg">
+            {toast}
+          </div>
+        </div>
+      )}
       <BottomNavigation />
     </div>
   );
