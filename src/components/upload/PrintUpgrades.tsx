@@ -32,13 +32,19 @@ export function PrintUpgrades({ shopTiming }: { shopTiming?: string }) {
   const rushPrice = shopPricing?.services.emergency ?? 0;
   const afterDarkPrice = shopPricing?.services.afterDark ?? rushPrice ?? 0;
 
-  const selectRush = () => setSettings({ emergency: true, afterDark: false });
-  const selectAfterDark = () => setSettings({ afterDark: true, emergency: false });
+  const toggleRush = () => {
+    setSettings({ emergency: !settings.emergency, afterDark: false });
+  };
+  const toggleAfterDark = () => {
+    // Allow turning off even if shop is open; only gate turning on
+    if (!settings.afterDark && !isShopClosed) return;
+    setSettings({ afterDark: !settings.afterDark, emergency: false });
+  };
 
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-3">
-        <button type="button" onClick={selectRush} className={`rounded-2xl bg-white text-left p-4 border ${settings.emergency ? 'ring-2 ring-blue-600' : 'border-gray-200'}`}>
+        <button type="button" onClick={toggleRush} className={`rounded-2xl bg-white text-left p-4 border ${settings.emergency ? 'ring-2 ring-blue-600' : 'border-gray-200'}`}>
           <div className="flex items-center justify-between">
             <div className="text-lg font-extrabold">rush</div>
             <img src={flashIcon} alt="rush" className="w-6 h-6" />
@@ -53,9 +59,9 @@ export function PrintUpgrades({ shopTiming }: { shopTiming?: string }) {
 
         <button
           type="button"
-          onClick={selectAfterDark}
-          disabled={!isShopClosed}
-          className={`rounded-2xl bg-white text-left p-4 border ${settings.afterDark ? 'ring-2 ring-blue-600' : 'border-gray-200'} ${!isShopClosed ? 'opacity-60 cursor-not-allowed' : ''}`}
+          onClick={toggleAfterDark}
+          disabled={!isShopClosed && !settings.afterDark}
+          className={`rounded-2xl bg-white text-left p-4 border ${settings.afterDark ? 'ring-2 ring-blue-600' : 'border-gray-200'} ${(!isShopClosed && !settings.afterDark) ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
           <div className="flex items-center justify-between">
             <div className="text-lg font-extrabold">afterdark</div>
