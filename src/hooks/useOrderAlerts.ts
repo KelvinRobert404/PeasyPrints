@@ -65,15 +65,16 @@ export function useOrderAlerts(params: {
       }
     };
 
-    const hasPending = unresolvedOrders.some((o) => !["completed", "cancelled", "collected"].includes(o.status));
-    const shouldLoop = hasPending && (isIdle || isTabHidden);
+    const hasPending = unresolvedOrders.some((o) => ["processing", "printing"].includes(o.status));
+    // Require a full idle interval; do not auto-loop solely on hidden tab
+    const shouldLoop = hasPending && isIdle;
 
     if (isLeader && enabled && shouldLoop) {
       void startLoop();
     } else {
       stopLoop();
     }
-  }, [unresolvedOrders, isIdle, isTabHidden, isLeader, enabled, muted, pendingThresholdMs, startLoop, stopLoop]);
+  }, [unresolvedOrders, isIdle, isLeader, enabled, muted, pendingThresholdMs, startLoop, stopLoop]);
 
   return { enable, enabled } as const;
 }
