@@ -6,6 +6,23 @@ import Link from 'next/link';
 import { AnnouncementCarousel } from '@/components/AnnouncementCarousel';
 
 export default function IndexPage() {
+  function showToast(message: string) {
+    try {
+      const el = document.createElement('div');
+      el.textContent = message;
+      el.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-black text-white text-sm px-3 py-2 rounded-full shadow-lg transition-opacity duration-200 opacity-0';
+      document.body.appendChild(el);
+      requestAnimationFrame(() => {
+        el.classList.remove('opacity-0');
+        el.classList.add('opacity-100');
+      });
+      window.setTimeout(() => {
+        el.classList.remove('opacity-100');
+        el.classList.add('opacity-0');
+        window.setTimeout(() => { try { el.remove(); } catch {} }, 200);
+      }, 1600);
+    } catch {}
+  }
   return (
     <div className="min-h-screen flex flex-col pb-6">
       {/* Hero banner */}
@@ -25,6 +42,7 @@ export default function IndexPage() {
         {/* canteen - tall column */}
         <Link
           href="/shopfront"
+          onClick={(e) => { e.preventDefault(); showToast('Coming Soon'); }}
           className="row-span-2 rounded-2xl bg-neutral-800 h-full flex flex-col items-center justify-center gap-8 active:scale-[0.99] transition relative"
         >
           <span className="absolute top-3 left-1/2 -translate-x-1/2 inline-flex items-center h-5 px-2 rounded-full border border-white/40 text-white text-[10px] uppercase tracking-wide opacity-90">COMING SOON</span>
@@ -37,6 +55,7 @@ export default function IndexPage() {
         {/* marketplace */}
         <Link
           href="/shops"
+          onClick={(e) => { e.preventDefault(); showToast('Coming Soon'); }}
           className="rounded-2xl bg-neutral-800 h-full flex flex-col items-center justify-center gap-3 active:scale-[0.99] transition relative"
         >
           <span className="absolute top-3 left-1/2 -translate-x-1/2 inline-flex items-center h-5 px-2 rounded-full border border-white/40 text-white text-[10px] uppercase tracking-wide opacity-90">COMING SOON</span>
