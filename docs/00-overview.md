@@ -7,7 +7,7 @@ Executive, engineering, and SRE overview of the PeasyPrints web platform: capabi
 - Auth: Clerk UI/session bridged to Firebase (custom token)
 - Backend: Firestore, Firebase Storage (Admin SDK for server writes), Razorpay
 - PWA: Service worker and precache
-- Key flows: Upload → Pricing → Payment → Verify → Order → Shopfront queue
+- Key flows: Upload → Pricing (preview) → Payment → Verify → Order (server recompute) → Shopfront queue
 
 ### Executive summary
 PeasyPrints enables users to upload PDFs, configure print settings, pay via Razorpay, and place orders to local print shops. Shops manage queues, update statuses, and track receivables in a Shopfront interface with real-time Firestore updates.
@@ -101,7 +101,7 @@ sequenceDiagram
   FE->>API: POST /api/storage/upload (file)
   API->>ST: Save file (Admin SDK), public URL
   API-->>FE: { url, path }
-  FE->>FE: Compute price (pricing.ts)
+  FE->>FE: Compute price (pricing.ts) [preview]
   FE->>API: POST /api/razorpay/order { amount }
   API->>RZP: Create order
   RZP-->>API: { order_id }
@@ -111,14 +111,15 @@ sequenceDiagram
   FE->>API: POST /api/razorpay/verify
   API->>RZP: HMAC verify (server secret)
   API-->>FE: { valid: true }
-  FE->>FS: Create orders doc (createOrder.ts) [Assumption: client write]
-  FS-->>SF: Realtime snapshot update (pending/printing)
+  FE->>API: POST /api/orders/create { fileUrl, fileName, totalPages, printSettings }
+  API->>FS: Create orders doc with server-side price recompute from shop pricing
+  FS-->>SF: Realtime snapshot update (processing/printing)
   SF->>FS: Update status → completed/cancelled
   FS-->>SF: History mirror and receivables updates
 ```
 
-### Assumptions
-- Client creates `orders` after successful verification; recommended to migrate to server-created orders post-verify for stricter integrity.
+### Notes
+- Orders are created server-side at `/api/orders/create` after payment verification; the server recomputes totals from the shop’s pricing and persists `printSettings` and `pricingDetails`.
 - Taxes/rounding policy: inclusive of tax, currency INR; rounding to nearest paise.
 
 ### TODO

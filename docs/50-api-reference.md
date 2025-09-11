@@ -92,3 +92,40 @@ type CustomTokenResponse = { token: string };
 | 500 | Server failure | Exponential backoff (3 tries) |
 
 
+---
+
+#### POST /api/orders/create
+- Auth: User session (Clerk)
+- Runtime: Node (Firebase Admin)
+- CSRF: Origin-checked against allowed hosts
+- Request (validated via zod):
+```ts
+type CreateOrderRequest = {
+  shopId: string;
+  shopName?: string;
+  userName?: string;
+  fileUrl: string; // uploaded PDF public URL
+  fileName: string;
+  totalPages: number; // int > 0
+  printSettings: {
+    paperSize: 'A3' | 'A4';
+    printFormat: 'Single-Sided' | 'Double-Sided';
+    printColor: 'Black & White' | 'Color';
+    orientation: 'Vertical' | 'Horizontal';
+    binding?: 'Soft Binding' | 'Spiral Binding' | 'Hard Binding' | '';
+    copies: number; // int > 0
+    extraColorPages?: number; // >= 0
+    emergency?: boolean;
+    afterDark?: boolean;
+  };
+}
+```
+- Behavior: Fetch shop `pricing`, recompute canonical totals server-side, and persist order with `printSettings` and `pricingDetails`.
+- Response:
+```ts
+type CreateOrderResponse = { id: string };
+type ErrorResponse = { error: string };
+```
+- Errors: 400 (invalid input/pricing unavailable), 401 (unauthorized), 403 (invalid origin), 500 (server error)
+
+

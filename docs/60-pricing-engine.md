@@ -2,7 +2,7 @@
 Define pricing contract and deterministic outcomes.
 
 ### At a glance
-- Inputs: pages, sides, color/BW, size, copies, bindings, emergency, shop overrides.
+- Inputs: pages, sides, color/BW, size, copies, bindings, emergency/afterDark, shop overrides.
 - Currency: INR; rounding to nearest paise.
 
 ### Contract
@@ -15,7 +15,7 @@ export interface PricingInput {
   printColor: 'Black & White' | 'Color';
   binding?: 'Soft Binding' | 'Spiral Binding' | 'Hard Binding' | '';
   emergency?: boolean;
-  afterDark?: boolean;
+  afterDark?: boolean; // mutually exclusive with emergency in UI
   extraColorPages?: number;
   shopPricing?: ShopPricing; // overrides defaults
 }
@@ -44,5 +44,10 @@ Note: numbers assume sample shop pricing: A4 Double BW=3, A4 Spiral=70, A4 Singl
 - Totals rounded to 2 decimals using bankers rounding.
 - Tax inclusive within per-page/service rates (Assumption).
 - TODO: Confirm GST handling and receipt breakdown.
+
+### Implementation notes
+- Client: `useUploadStore.recalc()` calls `calculateTotalCost(settings, pageCount, shopPricing)` to show a preview total.
+- Server: `/api/orders/create` recomputes totals from `shops/{id}.pricing` and persists `pricingDetails`; client totals are not trusted.
+- UI guarantees `emergency` and `afterDark` are mutually exclusive, and `afterDark` is only enabled when the shop is closed.
 
 

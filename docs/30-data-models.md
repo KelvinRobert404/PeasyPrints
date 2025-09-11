@@ -53,6 +53,7 @@ export interface Shop {
   closingTime?: string;
   logoUrl?: string;
   pricing?: ShopPricing;
+  isOpen?: boolean;
   receivableAmount?: number;
   createdAt?: any;
   updatedAt?: any;
@@ -133,6 +134,7 @@ export interface Payout {
   "address": "Block A, IIT Main Road",
   "openingTime": "08:00",
   "closingTime": "20:00",
+  "isOpen": true,
   "logoUrl": "https://.../shop_logos/abc.jpg",
   "pricing": {
     "a4": { "singleBW": 2, "doubleBW": 3, "singleColor": 10, "doubleColor": 18 },

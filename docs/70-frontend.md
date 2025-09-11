@@ -99,8 +99,14 @@ interface ShopState {
 ```
 
 ### Loading/error states & optimistic updates
-- Upload: optimistic page count; pricing recalculates on each edit.
+- Upload: optimistic page count; pricing recalculates on each edit via `calculateTotalCost`; `PrintUpgrades` toggles `emergency`/`afterDark` with mutual exclusivity and shop timing gating.
 - Orders: server is source-of-truth; no optimistic status flips; wait for Firestore ack.
+### Upload and configuration flow (customer)
+- `PrintConfigurator.tsx`: controls `paperSize`, `printColor`, `printFormat`, `copies`, `binding`; disables unavailable options based on `shopPricing`.
+- `PrintUpgrades.tsx`: toggles `emergency` and `afterDark` (mutually exclusive; `afterDark` only when shop is closed). Prices for upgrades come from `shopPricing.services`.
+- `PriceSummary.tsx`: shows per-page rate, binding cost, rush/afterDark add-ons, and total for the selected `settings` and `pageCount`.
+- `CheckoutButton.tsx`: creates Razorpay order, verifies payment, uploads file, then calls `/api/orders/create` with `printSettings` and `totalPages`.
+
 
 ### Accessibility & performance
 - Use semantic elements, focus traps in dialogs, aria-labels on buttons/inputs.

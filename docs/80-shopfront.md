@@ -35,6 +35,13 @@ sequenceDiagram
 - Shop updates `pricing` nested map on `shops/{uid}`.
 - Persist via `updateDoc` with server timestamps.
 
+### Order display (print configuration)
+- Queue and history cards surface persisted `printSettings` and totals for the operator:
+  - Badges: `paperSize`, `printFormat`, `printColor`
+  - Meta: `{copies} copies • {totalPages} pages`
+  - Price badge: `₹{totalCost}`
+  - Source fields match `OrderDoc.printSettings` and `OrderDoc.pricingDetails`.
+
 ### Permissions
 - Shop admins: full access to own shop doc and orders.
 - Staff (Assumption): read-only queue; status updates only (TODO: add staff role and claims).
