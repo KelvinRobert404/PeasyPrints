@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 
 export function PdfPreviewer() {
-  const { fileUrl, pageCount, pageRotations, rotatePage } = useUploadStore();
+  const { fileUrl, pageCount } = useUploadStore();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [pdfjs, setPdfjs] = useState<any>(null);
 
@@ -36,7 +36,7 @@ export function PdfPreviewer() {
 
       for (let i = 1; i <= pageCount; i++) {
         const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 0.5, rotation: pageRotations[i - 1] || 0 });
+        const viewport = page.getViewport({ scale: 0.5 });
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d')!;
         canvas.width = viewport.width;
@@ -45,21 +45,10 @@ export function PdfPreviewer() {
 
         const wrapper = document.createElement('div');
         wrapper.className = 'mb-4';
-
-        const controls = document.createElement('div');
-        controls.className = 'flex gap-2 mb-2';
-        const left = document.createElement('button');
-        left.className = 'px-3 h-10 border rounded';
-        left.innerText = '⟲';
-        left.onclick = () => rotatePage(i - 1, -90);
-        const right = document.createElement('button');
-        right.className = 'px-3 h-10 border rounded';
-        right.innerText = '⟳';
-        right.onclick = () => rotatePage(i - 1, 90);
-        controls.appendChild(left);
-        controls.appendChild(right);
-
-        wrapper.appendChild(controls);
+        const label = document.createElement('div');
+        label.className = 'mb-2 text-xs text-gray-600';
+        label.textContent = `Page ${i} of ${pageCount}`;
+        wrapper.appendChild(label);
         wrapper.appendChild(canvas);
         container.appendChild(wrapper);
       }
@@ -68,7 +57,7 @@ export function PdfPreviewer() {
     return () => {
       cancelled = true;
     };
-  }, [pdfjs, fileUrl, pageCount, pageRotations, rotatePage]);
+  }, [pdfjs, fileUrl, pageCount]);
 
   if (!fileUrl) return null;
 

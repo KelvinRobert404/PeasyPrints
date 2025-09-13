@@ -27,6 +27,29 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
   const router = useRouter();
   const { capture, isFeatureEnabled } = usePosthog();
 
+  function formatRanges(nums: number[]): string {
+    if (!nums || nums.length === 0) return '';
+    const a = [...nums].sort((x, y) => x - y);
+    const parts: string[] = [];
+    let start = a[0];
+    let prev = a[0];
+    for (let i = 1; i < a.length; i++) {
+      if (a[i] === prev + 1) prev = a[i];
+      else { parts.push(start === prev ? String(start) : `${start}-${prev}`); start = prev = a[i]; }
+    }
+    parts.push(start === prev ? String(start) : `${start}-${prev}`);
+    return parts.join(', ');
+  }
+
+  const colorText = (() => formatRanges(assignmentColorPages))();
+  const bwText = (() => {
+    if (!pageCount) return '';
+    const color = new Set(assignmentColorPages);
+    const bw: number[] = [];
+    for (let i = 1; i <= pageCount; i++) if (!color.has(i)) bw.push(i);
+    return formatRanges(bw);
+  })();
+
   const startPaymentFlow = async () => {
     // Prepare upload blobs upfront to avoid File permission issues post-payment
     let preparedSingle: { blob: Blob; name: string } | null = null;
@@ -48,8 +71,10 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
           const { bwBytes, colorBytes } = await splitAssignmentPdf(buf, assignmentColorPages);
           preparedSplit = {
             bw: new Blob([bwBytes], { type: 'application/pdf' }),
-            color: new Blob([colorBytes], { type: 'application/pdf' })
-          };
+            color: new Blob([colorBytes], { type: 'application/pdf' }),
+            // also keep original for shop access
+            original: new Blob([buf], { type: 'application/pdf' })
+          } as any;
         } else {
           // Clone original file to ensure stable Blob reference
           const buf = await file.arrayBuffer();
@@ -135,16 +160,25 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
             // 3) After successful payment, upload the prepared blob(s)
             const uid = clerkUser.id;
             let fileUrl = '';
-            let splitUrls: { bwUrl: string; colorUrl: string } | null = null;
+            let splitUrls: { bwUrl: string; colorUrl: string; originalUrl?: string } | null = null;
             if (preparedSplit) {
-              const bwFile = new File([preparedSplit.bw], 'bw.pdf', { type: 'application/pdf' });
-              const colorFile = new File([preparedSplit.color], 'color.pdf', { type: 'application/pdf' });
-              const [bwUrl, colorUrl] = await Promise.all([
+              const bwFile = new File([ (preparedSplit as any).bw ], 'bw.pdf', { type: 'application/pdf' });
+              const colorFile = new File([ (preparedSplit as any).color ], 'color.pdf', { type: 'application/pdf' });
+              const originalBlob: Blob | undefined = (preparedSplit as any).original;
+              const uploads: Promise<string>[] = [
                 uploadPdfAndGetUrl(uid, bwFile),
-                uploadPdfAndGetUrl(uid, colorFile),
-              ]);
-              splitUrls = { bwUrl, colorUrl };
-              fileUrl = colorUrl; // primary reference
+                uploadPdfAndGetUrl(uid, colorFile)
+              ];
+              if (originalBlob) {
+                const originalFile = new File([originalBlob], 'original.pdf', { type: 'application/pdf' });
+                uploads.push(uploadPdfAndGetUrl(uid, originalFile));
+              }
+              const urls = await Promise.all(uploads);
+              const bwUrl = urls[0];
+              const colorUrl = urls[1];
+              const originalUrl = urls[2];
+              splitUrls = { bwUrl, colorUrl, originalUrl };
+              fileUrl = originalUrl || colorUrl; // primary reference
             } else if (preparedSingle) {
               const uploadFile = new File([preparedSingle.blob], preparedSingle.name, { type: 'application/pdf' });
               fileUrl = await uploadPdfAndGetUrl(uid, uploadFile);
@@ -243,6 +277,12 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
             <DialogTitle>Confirm preview</DialogTitle>
             <DialogDescription>What you see is exactly what the shop sees.</DialogDescription>
           </DialogHeader>
+          {jobType === 'Assignment' && assignmentMode === 'Mixed' && (
+            <div className="mb-2 flex flex-wrap gap-2 text-xs">
+              <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">Color: {colorText || 'None'}</span>
+              <span className="px-2 py-0.5 rounded bg-gray-50 text-gray-700 border">B/W: {bwText || 'None'}</span>
+            </div>
+          )}
           <div className="max-h-[60vh] overflow-auto border rounded p-2 bg-white">
             {jobType === 'Images' ? <ImagesLayoutPreview /> : <PdfPreviewer />}
           </div>
