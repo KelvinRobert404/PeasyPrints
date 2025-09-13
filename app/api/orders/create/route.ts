@@ -3,6 +3,7 @@ import { auth as clerkAuth } from '@clerk/nextjs/server'
 import admin from 'firebase-admin'
 import { z } from 'zod'
 import { captureServerEvent } from '@/lib/posthog/server'
+import type { PrintJobType } from '@/types/models'
 export const runtime = 'nodejs'
 import { isAllowedOrigin } from '@/lib/utils/origin'
 
@@ -23,7 +24,10 @@ const CreateOrderSchema = z.object({
     extraColorPages: z.number().int().min(0).optional().default(0),
     emergency: z.boolean().optional().default(false),
     afterDark: z.boolean().optional().default(false)
-  })
+  }),
+  jobType: z.enum(['PDF','Images','Assignment']).optional(),
+  splitFiles: z.object({ bwUrl: z.string().url(), colorUrl: z.string().url() }).optional(),
+  assignment: z.object({ colorPages: z.array(z.number().int().positive()) }).optional()
 })
 
 export const dynamic = 'force-dynamic'
@@ -56,7 +60,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
     }
-    const { shopId, shopName, userName, fileUrl, fileName, totalPages, printSettings } = parsed.data
+    const { shopId, shopName, userName, fileUrl, fileName, totalPages, printSettings, jobType, splitFiles, assignment } = parsed.data
 
     // Fetch shop pricing
     let shopData: any
@@ -103,7 +107,7 @@ export async function POST(req: NextRequest) {
     const afterDarkCost = printSettings.afterDark ? afterDarkUnit : 0
     const totalCost = base + emergencyCost + afterDarkCost
 
-    const orderDoc = {
+    const orderDoc: any = {
       userId,
       shopId,
       shopName: shopName || shopData?.name || '',
@@ -124,7 +128,11 @@ export async function POST(req: NextRequest) {
         afterDarkCost,
         commission: 0
       }
-    } as any
+    }
+
+    if (jobType) orderDoc.jobType = jobType as PrintJobType
+    if (splitFiles) orderDoc.splitFiles = splitFiles
+    if (assignment) orderDoc.assignment = assignment
 
     let ref
     try {
