@@ -4,7 +4,7 @@ import { useUploadStore } from '@/lib/stores/uploadStore';
 import { useMemo } from 'react';
 
 export function PriceSummary() {
-  const { totalCost, pageCount, settings, shopPricing } = useUploadStore();
+  const { totalCost, pageCount, settings, shopPricing, jobType, assignmentMode, assignmentColorPages } = useUploadStore();
 
   const breakdown = useMemo(() => {
     if (!shopPricing) {
@@ -15,7 +15,8 @@ export function PriceSummary() {
         extraColorSurcharge: 0,
         rushCost: 0,
         afterDarkCost: 0,
-        copies: settings.copies || 1
+        copies: settings.copies || 1,
+        assignment: null as null | { bwPages: number; colorPages: number; bwSubtotal: number; colorSubtotal: number }
       };
     }
 
@@ -50,34 +51,52 @@ export function PriceSummary() {
     const rushCost = settings.emergency ? rushUnit : 0;
     const afterDarkCost = settings.afterDark ? afterDarkUnit : 0;
 
-    const basePagesCost = basePagesCostSingle * copies;
+    let assignment: null | { bwPages: number; colorPages: number; bwSubtotal: number; colorSubtotal: number } = null;
+    if (jobType === 'Assignment') {
+      const colorPages = assignmentMode === 'Mixed' ? (assignmentColorPages?.length || 0) : 0;
+      const bwPages = Math.max(pageCount - colorPages, 0);
+      const bwSubtotal = bwPages * bwPerPage * copies;
+      const colorSubtotal = colorPages * colorPerPage * copies;
+      assignment = { bwPages, colorPages, bwSubtotal, colorSubtotal };
+    }
 
-    return { perPage, basePagesCost, bindingCostTotal, extraColorSurcharge, rushCost, afterDarkCost, copies };
-  }, [shopPricing, settings, pageCount]);
+    return {
+      perPage,
+      basePagesCost: basePagesCostSingle * copies,
+      bindingCostTotal,
+      extraColorSurcharge,
+      rushCost,
+      afterDarkCost,
+      copies,
+      assignment
+    };
+  }, [shopPricing, settings, pageCount, jobType, assignmentMode, assignmentColorPages]);
+
+  const total = totalCost;
 
   return (
-    <div className="rounded-2xl bg-gray-100 p-4">
-      <div className="space-y-1 text-gray-800">
-        <div className="text-sm">Total Pages = {pageCount} pages</div>
-        <div className="text-sm">Price / page = Rs{breakdown.perPage}</div>
-        {breakdown.copies > 1 && (
-          <div className="text-sm">Copies = x{breakdown.copies}</div>
-        )}
-        <div className="text-sm">Base pages = Rs{breakdown.basePagesCost}</div>
-        {breakdown.bindingCostTotal > 0 && (
-          <div className="text-sm">Binding = Rs{breakdown.bindingCostTotal}</div>
-        )}
-        {breakdown.extraColorSurcharge > 0 && (
-          <div className="text-sm">Extra color pages = Rs{breakdown.extraColorSurcharge}</div>
-        )}
-        {breakdown.rushCost > 0 && (
-          <div className="text-sm">Rush = Rs{breakdown.rushCost}</div>
-        )}
-        {breakdown.afterDarkCost > 0 && (
-          <div className="text-sm">Afterdark = Rs{breakdown.afterDarkCost}</div>
-        )}
-      </div>
-      <div className="mt-4 text-gray-900 font-semibold">Total Payable = Rs{totalCost}</div>
+    <div className="space-y-2 text-sm">
+      {breakdown.assignment ? (
+        <div className="space-y-1">
+          <div className="flex justify-between"><span>B&W ({breakdown.assignment.bwPages} pages)</span><span>₹{breakdown.assignment.bwSubtotal}</span></div>
+          <div className="flex justify-between"><span>Color ({breakdown.assignment.colorPages} pages)</span><span>₹{breakdown.assignment.colorSubtotal}</span></div>
+        </div>
+      ) : (
+        <div className="flex justify-between"><span>Pages × Rate</span><span>₹{breakdown.basePagesCost}</span></div>
+      )}
+      {breakdown.bindingCostTotal > 0 && (
+        <div className="flex justify-between"><span>Binding</span><span>₹{breakdown.bindingCostTotal}</span></div>
+      )}
+      {breakdown.extraColorSurcharge > 0 && (
+        <div className="flex justify-between"><span>Extra color pages</span><span>₹{breakdown.extraColorSurcharge}</span></div>
+      )}
+      {breakdown.rushCost > 0 && (
+        <div className="flex justify-between"><span>Rush</span><span>₹{breakdown.rushCost}</span></div>
+      )}
+      {breakdown.afterDarkCost > 0 && (
+        <div className="flex justify-between"><span>After dark</span><span>₹{breakdown.afterDarkCost}</span></div>
+      )}
+      <div className="flex justify-between font-semibold"><span>Total</span><span>₹{total}</span></div>
     </div>
   );
 }

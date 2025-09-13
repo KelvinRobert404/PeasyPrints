@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import type { PrintSettings, ShopPricing } from '@/types/models';
+import type { PrintSettings, ShopPricing, PrintJobType } from '@/types/models';
 import { PDFDocument } from 'pdf-lib';
 import { calculateTotalCost } from '@/lib/utils/pricing';
 import { usePricingStore } from '@/lib/stores/pricingStore';
@@ -17,12 +17,35 @@ interface UploadState {
   loading: boolean;
   error: string | null;
 
+  // New: umbrella job type and images workflow state
+  jobType: PrintJobType;
+  images: File[];
+  imagesPages: number; // target pages for Images mode (1-5)
+  imagesGapCm: number; // spacing between images in cm (0-4)
+  imagesScale: number; // 0.5 - 2.0 multiplier for image size
+
+  // Assignment workflow state
+  assignmentMode: 'BW' | 'Mixed';
+  assignmentColorPages: number[]; // 1-based page indices
+  assignmentConfirmed: boolean;
+
   setShopPricing: (pricing?: ShopPricing) => void;
   setSettings: (partial: Partial<PrintSettings>) => void;
   setFile: (file: File | null) => Promise<void>;
   rotatePage: (index: number, delta: 90 | -90) => void;
   recalc: () => void;
   reset: () => void;
+
+  // New setters for umbrella flow
+  setJobType: (jobType: PrintJobType) => void;
+  setImages: (files: File[]) => void;
+  setImagesPages: (n: number) => void;
+  setImagesGapCm: (n: number) => void;
+  setImagesScale: (n: number) => void;
+  setAssignmentMode: (mode: 'BW' | 'Mixed') => void;
+  toggleAssignmentColorPage: (page: number) => void;
+  clearAssignmentSelection: () => void;
+  setAssignmentConfirmed: (v: boolean) => void;
 }
 
 const defaultSettings: PrintSettings = {
@@ -48,6 +71,14 @@ export const useUploadStore = create<UploadState>()(
     totalCost: 0,
     loading: false,
     error: null,
+    jobType: 'PDF',
+    images: [],
+    imagesPages: 1,
+    imagesGapCm: 0.5,
+    imagesScale: 1.0,
+    assignmentMode: 'BW',
+    assignmentColorPages: [],
+    assignmentConfirmed: false,
 
     setShopPricing: (pricing) => {
       set((s) => { s.shopPricing = pricing; });
@@ -65,6 +96,107 @@ export const useUploadStore = create<UploadState>()(
       get().recalc();
     },
 
+    setJobType: (jobType) => {
+      set((s) => {
+        s.jobType = jobType;
+        // Reset file/images when switching modes to avoid stale state
+        s.file = null;
+        s.fileUrl = null;
+        s.pageCount = 0;
+        s.pageRotations = [];
+        s.images = [];
+        // Adjust settings for Assignment constraints
+        if (jobType === 'Assignment') {
+          s.settings.paperSize = 'A4';
+          s.settings.printFormat = 'Single-Sided';
+          s.settings.copies = Math.max(s.settings.copies || 1, 1);
+          s.assignmentMode = 'BW';
+          s.assignmentColorPages = [];
+          s.assignmentConfirmed = false;
+          s.settings.extraColorPages = 0;
+        }
+        if (jobType !== 'Assignment') {
+          s.assignmentConfirmed = false;
+          s.assignmentColorPages = [];
+        }
+      });
+      get().recalc();
+    },
+
+    setImages: (files) => {
+      set((s) => {
+        s.images = files;
+        // Recompute page count for Images mode
+        if (s.jobType === 'Images') {
+          const target = Math.min(Math.max(s.imagesPages || 1, 1), 5);
+          s.pageCount = target;
+        }
+      });
+      get().recalc();
+    },
+
+    setImagesPages: (n) => {
+      set((s) => {
+        s.imagesPages = Math.min(Math.max(Number(n) || 1, 1), 5);
+        if (s.jobType === 'Images') {
+          s.pageCount = s.imagesPages;
+        }
+      });
+      get().recalc();
+    },
+
+    setImagesGapCm: (n) => {
+      set((s) => {
+        s.imagesGapCm = 0.5; // spacing fixed at 0.5cm
+      });
+    },
+
+    setImagesScale: (n) => {
+      set((s) => {
+        const v = Math.max(0.5, Math.min(Number(n) || 1.0, 2.0));
+        s.imagesScale = v;
+      });
+    },
+
+    setAssignmentMode: (mode) => {
+      set((s) => {
+        s.assignmentMode = mode;
+        if (mode === 'BW') {
+          s.assignmentColorPages = [];
+          s.assignmentConfirmed = false;
+          s.settings.extraColorPages = 0;
+        }
+      });
+      get().recalc();
+    },
+
+    toggleAssignmentColorPage: (page) => {
+      set((s) => {
+        if (s.assignmentMode !== 'Mixed') return;
+        const p = Math.max(1, Math.floor(page));
+        const idx = s.assignmentColorPages.indexOf(p);
+        if (idx >= 0) s.assignmentColorPages.splice(idx, 1);
+        else s.assignmentColorPages.push(p);
+        s.assignmentColorPages.sort((a, b) => a - b);
+        s.settings.extraColorPages = s.assignmentColorPages.length;
+        s.assignmentConfirmed = false;
+      });
+      get().recalc();
+    },
+
+    clearAssignmentSelection: () => {
+      set((s) => {
+        s.assignmentColorPages = [];
+        s.settings.extraColorPages = 0;
+        s.assignmentConfirmed = false;
+      });
+      get().recalc();
+    },
+
+    setAssignmentConfirmed: (v) => {
+      set((s) => { s.assignmentConfirmed = v; });
+    },
+
     setFile: async (file) => {
       if (!file) {
         set((s) => { s.file = null; s.fileUrl = null; s.pageCount = 0; s.pageRotations = []; });
@@ -73,6 +205,12 @@ export const useUploadStore = create<UploadState>()(
       }
       set((s) => { s.loading = true; s.error = null; });
       try {
+        // Only count pages for PDF/Assignment modes
+        const { jobType } = get();
+        if (jobType === 'Images') {
+          set((s) => { s.loading = false; s.error = 'Unexpected file upload in Images mode'; });
+          return;
+        }
         const buf = await file.arrayBuffer();
         const pdf = await PDFDocument.load(buf);
         const pages = pdf.getPageCount();
@@ -102,7 +240,8 @@ export const useUploadStore = create<UploadState>()(
     },
 
     recalc: () => {
-      const { settings, pageCount, shopPricing } = get();
+      const { settings, pageCount, shopPricing, jobType, imagesPages } = get();
+      const effectivePages = jobType === 'Images' ? Math.min(Math.max(imagesPages || 1, 1), 5) : pageCount;
       const effectivePricing: ShopPricing | undefined = shopPricing ?? (() => {
         // Fallback to legacy defaults from pricingStore if shop pricing not loaded
         try {
@@ -132,9 +271,9 @@ export const useUploadStore = create<UploadState>()(
           return undefined;
         }
       })();
-      const { total } = calculateTotalCost(settings, pageCount, effectivePricing);
+      const { total } = calculateTotalCost(settings, effectivePages, effectivePricing);
       set((s) => { s.totalCost = total; });
-      captureEvent('pricing_recalculated', { totalPages: pageCount, totalCost: total, printSettings: settings });
+      captureEvent('pricing_recalculated', { totalPages: effectivePages, totalCost: total, printSettings: settings, jobType });
     },
 
     reset: () => {
@@ -148,6 +287,14 @@ export const useUploadStore = create<UploadState>()(
         totalCost: 0,
         loading: false,
         error: null,
+        jobType: 'PDF',
+        images: [],
+        imagesPages: 1,
+        imagesGapCm: 0.5,
+        imagesScale: 1.0,
+        assignmentMode: 'BW',
+        assignmentColorPages: [],
+        assignmentConfirmed: false,
       }));
     }
   }))

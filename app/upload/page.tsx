@@ -9,6 +9,9 @@ import { PrintConfigurator } from '@/components/upload/PrintConfigurator';
 import { PrintUpgrades } from '@/components/upload/PrintUpgrades';
 import { PriceSummary } from '@/components/upload/PriceSummary';
 import { CheckoutButton } from '@/components/upload/CheckoutButton';
+import { UmbrellaSelector } from '@/components/upload/UmbrellaSelector';
+import { ImagesUploader } from '@/components/upload/ImagesUploader';
+import { AssignmentConfigurator } from '@/components/upload/AssignmentConfigurator';
 import { useShopsStore } from '@/lib/stores/shopsStore';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +22,7 @@ import haptics from '@/lib/utils/haptics';
 
 export default function UploadEntryPage() {
   const { shops, subscribe } = useShopsStore();
-  const { setShopPricing } = useUploadStore();
+  const { setShopPricing, jobType } = useUploadStore();
   const [selectedShopId, setSelectedShopId] = useState<string>('');
   
 
@@ -185,13 +188,28 @@ export default function UploadEntryPage() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">What are you printing?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <UmbrellaSelector />
+          </CardContent>
+        </Card>
+
         <div className="relative" onClick={disabled ? nudgeSelectShop : undefined}>
           <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
             <CardHeader>
-              <CardTitle className="text-base">Select PDF</CardTitle>
+              <CardTitle className="text-base">
+                {jobType === 'PDF' && 'Select PDF'}
+                {jobType === 'Images' && 'Select Images'}
+                {jobType === 'Assignment' && 'Select Assignment PDF'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <FileDropzone />
+              {jobType === 'PDF' && <FileDropzone />}
+              {jobType === 'Images' && <ImagesUploader />}
+              {jobType === 'Assignment' && <FileDropzone />}
             </CardContent>
           </Card>
           {disabled && (
@@ -209,7 +227,11 @@ export default function UploadEntryPage() {
             <CardTitle className="text-base">Print Configuration</CardTitle>
           </CardHeader>
           <CardContent>
-            <PrintConfigurator />
+            {jobType === 'Assignment' ? (
+              <AssignmentConfigurator />
+            ) : (
+              <PrintConfigurator />
+            )}
           </CardContent>
         </Card>
 

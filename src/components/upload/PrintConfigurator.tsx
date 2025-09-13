@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils/cn';
 import { Badge } from '@/components/ui/badge';
 
 export function PrintConfigurator() {
-  const { settings, setSettings, pageCount, shopPricing } = useUploadStore();
+  const { settings, setSettings, pageCount, shopPricing, jobType } = useUploadStore();
 
   const priceTable = useMemo(() => {
     if (!shopPricing) return null;
@@ -97,33 +97,35 @@ export function PrintConfigurator() {
         );})}
       </div>
 
-      {/* Format */}
-      <div className="grid grid-cols-2 gap-3">
-        {(['Single-Sided', 'Double-Sided'] as const).map((format) => {
-          const unavailable = isUnavailableFormat(format);
-          return (
-            <button
-              key={format}
-              className={cn(
-                'h-12 rounded-xl border text-xs font-semibold',
-                settings.printFormat === format ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
-                unavailable ? 'opacity-60 cursor-not-allowed' : ''
-              )}
-              onClick={unavailable ? undefined : toggle('printFormat', format)}
-              disabled={unavailable}
-            >
-              <div className="px-3 w-full flex flex-col items-center text-center">
-                <div>{format === 'Single-Sided' ? 'single-sided' : 'double-sided'}</div>
-                {shopPricing && unavailable && (
-                  <div className="mt-1">
-                    <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge>
-                  </div>
+      {/* Format (hidden for Images) */}
+      {jobType !== 'Images' && (
+        <div className="grid grid-cols-2 gap-3">
+          {(['Single-Sided', 'Double-Sided'] as const).map((format) => {
+            const unavailable = isUnavailableFormat(format);
+            return (
+              <button
+                key={format}
+                className={cn(
+                  'h-12 rounded-xl border text-xs font-semibold',
+                  settings.printFormat === format ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
+                  unavailable ? 'opacity-60 cursor-not-allowed' : ''
                 )}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+                onClick={unavailable ? undefined : toggle('printFormat', format)}
+                disabled={unavailable}
+              >
+                <div className="px-3 w-full flex flex-col items-center text-center">
+                  <div>{format === 'Single-Sided' ? 'single-sided' : 'double-sided'}</div>
+                  {shopPricing && unavailable && (
+                    <div className="mt-1">
+                      <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge>
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Copies */}
       <div className="grid grid-cols-3 gap-3 items-center">
@@ -145,35 +147,37 @@ export function PrintConfigurator() {
         </button>
       </div>
 
-      {/* Binding & Sides */}
-      <div className="grid grid-cols-2 gap-3">
-        <select
-          className="border rounded h-12 px-3"
-          value={settings.binding}
-          onChange={(e) => setSettings({ binding: e.target.value as any })}
-        >
-          <option value="">No Binding</option>
-          {(['Soft Binding','Spiral Binding','Hard Binding'] as const).map((label) => {
-            const price = label === 'Soft Binding' ? shopPricing?.services.softBinding
-              : label === 'Spiral Binding' ? shopPricing?.services.spiralBinding
-              : shopPricing?.services.hardBinding;
-            const unavailable = shopPricing ? Number(price ?? 0) <= 0 : false;
-            return (
-              <option key={label} value={label} disabled={unavailable}>
-                {label}{shopPricing && unavailable ? ' — UNAVAILABLE' : ''}
-              </option>
-            );
-          })}
-        </select>
-        <select
-          className="border rounded h-12 px-3"
-          value={settings.printFormat}
-          onChange={(e) => setSettings({ printFormat: e.target.value as any })}
-        >
-          <option>Single-Sided</option>
-          <option>Double-Sided</option>
-        </select>
-      </div>
+      {/* Binding & Sides (hidden for Images) */}
+      {jobType !== 'Images' && (
+        <div className="grid grid-cols-2 gap-3">
+          <select
+            className="border rounded h-12 px-3"
+            value={settings.binding}
+            onChange={(e) => setSettings({ binding: e.target.value as any })}
+          >
+            <option value="">No Binding</option>
+            {(['Soft Binding','Spiral Binding','Hard Binding'] as const).map((label) => {
+              const price = label === 'Soft Binding' ? shopPricing?.services.softBinding
+                : label === 'Spiral Binding' ? shopPricing?.services.spiralBinding
+                : shopPricing?.services.hardBinding;
+              const unavailable = shopPricing ? Number(price ?? 0) <= 0 : false;
+              return (
+                <option key={label} value={label} disabled={unavailable}>
+                  {label}{shopPricing && unavailable ? ' — UNAVAILABLE' : ''}
+                </option>
+              );
+            })}
+          </select>
+          <select
+            className="border rounded h-12 px-3"
+            value={settings.printFormat}
+            onChange={(e) => setSettings({ printFormat: e.target.value as any })}
+          >
+            <option>Single-Sided</option>
+            <option>Double-Sided</option>
+          </select>
+        </div>
+      )}
 
       {/* No extra color pages input per new design */}
     </div>

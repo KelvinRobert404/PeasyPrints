@@ -2,6 +2,8 @@ export type PrintFormat = 'Single-Sided' | 'Double-Sided';
 export type PrintColor = 'Black & White' | 'Color';
 export type PaperSize = 'A3' | 'A4';
 
+export type PrintJobType = 'PDF' | 'Images' | 'Assignment';
+
 export interface ShopPricing {
   a4: {
     singleBW: number;
@@ -62,12 +64,18 @@ export interface PricingDetails {
 export interface OrderDoc {
   // Optional Firestore document id for routing/navigation
   id?: string;
+  jobType?: PrintJobType;
   userId: string;
   shopId: string;
   shopName: string;
   userName: string;
   fileName: string;
   fileUrl: string;
+  // Optional multi-file support for complex jobs (e.g., assignments split)
+  // Prefer named fields over array for clarity in shopfront UI
+  splitFiles?: { bwUrl: string; colorUrl: string };
+  // Optional assignment metadata (for color page indices)
+  assignment?: { colorPages: number[] };
   totalPages: number;
   totalCost: number;
   status: 'pending' | 'processing' | 'printing' | 'printed' | 'collected' | 'completed' | 'cancelled';

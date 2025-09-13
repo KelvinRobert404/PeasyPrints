@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useUploadStore } from '@/lib/stores/uploadStore';
+import { imagesToPdf } from '@/lib/utils/imagesToPdf';
+import { splitAssignmentPdf } from '@/lib/utils/splitAssignmentPdf';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useUser } from '@clerk/nextjs';
 import { uploadPdfAndGetUrl } from '@/lib/firebase/storageUpload';
@@ -11,19 +13,59 @@ import { useRouter } from 'next/navigation';
 import { usePosthog } from '@/hooks/usePosthog';
 import { startSessionRecording, stopSessionRecording } from '@/lib/posthog/client';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PdfPreviewer } from '@/components/upload/PdfPreviewer';
+import { ImagesLayoutPreview } from '@/components/upload/ImagesLayoutPreview';
 
 export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?: string }) {
-  const { file, pageCount, totalCost, settings } = useUploadStore();
+  const { file, pageCount, totalCost, settings, jobType, images, imagesPages, imagesGapCm, imagesScale, assignmentMode, assignmentColorPages, assignmentConfirmed } = useUploadStore();
   const { user } = useAuthStore();
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [isLongWait, setIsLongWait] = useState(false);
   const router = useRouter();
   const { capture, isFeatureEnabled } = usePosthog();
 
-  const handleCheckout = async () => {
-    if (!isClerkLoaded || !clerkUser || !file || pageCount === 0 || totalCost <= 0) return;
+  const startPaymentFlow = async () => {
+    // Prepare upload blobs upfront to avoid File permission issues post-payment
+    let preparedSingle: { blob: Blob; name: string } | null = null;
+    let preparedSplit: { bw: Blob; color: Blob } | null = null;
+    try {
+      if (jobType === 'Images') {
+        const pdfBytes = await imagesToPdf(images, imagesPages, settings.paperSize, imagesGapCm, imagesScale);
+        const date = new Date();
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mm = String(date.getMinutes()).padStart(2, '0');
+        const dynamicName = `images-${images.length}img-${imagesPages}pg-${settings.paperSize}-${y}${m}${d}-${hh}${mm}.pdf`;
+        preparedSingle = { blob: new Blob([pdfBytes], { type: 'application/pdf' }), name: dynamicName };
+      } else if (jobType === 'Assignment' && file) {
+        if (assignmentMode === 'Mixed' && assignmentColorPages.length > 0) {
+          const buf = await file.arrayBuffer();
+          const { bwBytes, colorBytes } = await splitAssignmentPdf(buf, assignmentColorPages);
+          preparedSplit = {
+            bw: new Blob([bwBytes], { type: 'application/pdf' }),
+            color: new Blob([colorBytes], { type: 'application/pdf' })
+          };
+        } else {
+          // Clone original file to ensure stable Blob reference
+          const buf = await file.arrayBuffer();
+          preparedSingle = { blob: new Blob([buf], { type: 'application/pdf' }), name: file.name || 'document.pdf' };
+        }
+      } else if (file) {
+        const buf = await file.arrayBuffer();
+        preparedSingle = { blob: new Blob([buf], { type: 'application/pdf' }), name: file.name || 'document.pdf' };
+      }
+    } catch (e) {
+      alert('Failed to prepare file for upload. Please reselect your file.');
+      return;
+    }
+    const hasPdf = jobType !== 'Images' && !!file;
+    const hasImages = jobType === 'Images' && images.length > 0;
+    if (!isClerkLoaded || !clerkUser || (!hasPdf && !hasImages) || pageCount === 0 || totalCost <= 0) return;
     setLoading(true);
     try {
       // Conditionally enable session recording for checkout flow
@@ -38,6 +80,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         totalPages: pageCount,
         totalCost,
         printSettings: settings,
+        jobType,
       });
       // 1) Create Razorpay order first (match Flutter flow)
       const orderRes = await fetch('/api/razorpay/order', {
@@ -57,7 +100,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         amount: order.amount,
         currency: order.currency,
         name: 'PeasyPrints',
-        description: file.name,
+        description: hasPdf ? file!.name : `${images.length} images`,
         order_id: order.id,
         prefill: {
           name: clerkUser.fullName || 'User',
@@ -89,9 +132,25 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
             return;
           }
           try {
-            // 3) After successful payment, upload file and ask server to create the order
+            // 3) After successful payment, upload the prepared blob(s)
             const uid = clerkUser.id;
-            const fileUrl = await uploadPdfAndGetUrl(uid, file);
+            let fileUrl = '';
+            let splitUrls: { bwUrl: string; colorUrl: string } | null = null;
+            if (preparedSplit) {
+              const bwFile = new File([preparedSplit.bw], 'bw.pdf', { type: 'application/pdf' });
+              const colorFile = new File([preparedSplit.color], 'color.pdf', { type: 'application/pdf' });
+              const [bwUrl, colorUrl] = await Promise.all([
+                uploadPdfAndGetUrl(uid, bwFile),
+                uploadPdfAndGetUrl(uid, colorFile),
+              ]);
+              splitUrls = { bwUrl, colorUrl };
+              fileUrl = colorUrl; // primary reference
+            } else if (preparedSingle) {
+              const uploadFile = new File([preparedSingle.blob], preparedSingle.name, { type: 'application/pdf' });
+              fileUrl = await uploadPdfAndGetUrl(uid, uploadFile);
+            } else {
+              throw new Error('Nothing to upload');
+            }
             const res = await fetch('/api/orders/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -100,9 +159,12 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
                 shopName: shopName || '',
                 userName: clerkUser.fullName || clerkUser.username || clerkUser.phoneNumbers?.[0]?.phoneNumber || clerkUser.emailAddresses?.[0]?.emailAddress || 'User',
                 fileUrl,
-                fileName: file.name,
+                fileName: hasPdf ? file!.name : (jobType === 'Images' ? 'images.pdf' : 'document.pdf'),
                 totalPages: pageCount,
-                printSettings: settings
+                printSettings: settings,
+                jobType,
+                splitFiles: splitUrls || undefined,
+                assignment: (jobType === 'Assignment' && assignmentMode === 'Mixed') ? { colorPages: assignmentColorPages } : undefined
               })
             });
             if (!res.ok) {
@@ -139,6 +201,17 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
     }
   };
 
+  const handleCheckout = () => {
+    const hasPdf = jobType !== 'Images' && !!file;
+    const hasImages = jobType === 'Images' && images.length > 0;
+    if (jobType === 'Assignment' && assignmentMode === 'Mixed' && !assignmentConfirmed) {
+      alert('Please confirm color page selection before checkout.');
+      return;
+    }
+    if (!isClerkLoaded || !clerkUser || (!hasPdf && !hasImages) || pageCount === 0 || totalCost <= 0) return;
+    setPreviewOpen(true);
+  };
+
   // Show long-wait hint if processing takes >60s
   useEffect(() => {
     if (!processing) {
@@ -153,12 +226,41 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
     <>
       <button
         onClick={handleCheckout}
-        disabled={loading || !file || totalCost <= 0 || !isClerkLoaded || !clerkUser}
+        disabled={(() => {
+          const hasPdf = jobType !== 'Images' && !!file;
+          const hasImages = jobType === 'Images' && images.length > 0;
+          return loading || (!hasPdf && !hasImages) || totalCost <= 0 || !isClerkLoaded || !clerkUser;
+        })()}
         className="w-full h-14 bg-blue-600 text-white rounded-xl disabled:opacity-50 font-quinn text-[24px]"
         style={{ letterSpacing: '0.02em' }}
       >
         {loading ? 'PROCESSING…' : 'CHECKOUT'}
       </button>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Confirm preview</DialogTitle>
+            <DialogDescription>What you see is exactly what the shop sees.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-auto border rounded p-2 bg-white">
+            {jobType === 'Images' ? <ImagesLayoutPreview /> : <PdfPreviewer />}
+          </div>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="h-10 px-3 rounded-md border bg-white" onClick={() => setPreviewOpen(false)}>Cancel</button>
+            <button
+              type="button"
+              className="h-10 px-3 rounded-md bg-blue-600 text-white"
+              onClick={async () => {
+                setPreviewOpen(false);
+                await startPaymentFlow();
+              }}
+            >
+              Confirm & Pay
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={processing} onOpenChange={() => {}} dismissible={false}>
         <DialogContent className="max-w-sm">
