@@ -79,7 +79,7 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
                       className="h-8"
                       onClick={() => updateOpenStatus(!currentShop?.isOpen)}
                     >
-                      {currentShop?.isOpen ? 'Close store now' : 'Open store now'}
+                      {currentShop?.isOpen ? 'Close store' : 'Open store now'}
                     </Button>
                     <Button size="sm" variant="destructive" className="h-8" onClick={() => auth.signOut()}>Logout</Button>
                   </div>

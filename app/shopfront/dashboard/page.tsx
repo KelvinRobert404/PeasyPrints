@@ -169,80 +169,92 @@ export default function ShopfrontDashboardPage() {
         ) : (
           <div className="space-y-3">
             {pendingOrders.map((o) => (
-              <Card
-                key={(o as any).id}
-                className={`border ${o.emergency ? 'emergency-order' : ''}`}
-              >
-                <CardContent className="py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate font-medium">{o.userName} • {o.fileName}</div>
+              <div key={(o as any).id} className="flex items-stretch gap-2">
+                <Card className={`flex-1 border ${o.emergency ? 'emergency-order' : ''}`}>
+                  <CardContent className="py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate font-medium">{o.userName} • {o.fileName}</div>
+                      </div>
+                      {o.splitFiles ? (
+                        <div className="flex items-center gap-1">
+                          {o.fileUrl && (
+                            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>Original</Button>
+                          )}
+                          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.open((o as any).splitFiles?.bwUrl, '_blank', 'noopener,noreferrer'); }}>B&W</Button>
+                          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.open((o as any).splitFiles?.colorUrl, '_blank', 'noopener,noreferrer'); }}>Color</Button>
+                        </div>
+                      ) : (
+                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); void cancelOrder((o as any).id, o); }}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                      {o.emergency && <Badge variant="destructive">URGENT</Badge>}
+                      {!(o.status === 'processing' || o.status === 'printing' || o.status === 'printed') && (
+                        <Badge variant="secondary">{o.status}</Badge>
+                      )}
                     </div>
-                    <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
-                      <ExternalLink className="h-4 w-4" />
+                    {/* Label badges inline */}
+                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                      {(() => { const p = getDateLabelParts(o.timestamp); return (
+                        <Badge variant="outline" className="font-bold bg-blue-50 text-blue-700 border-blue-200">{p.time}</Badge>
+                      ); })()}
+                      <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
+                      <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
+                      <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
+                        {o.printSettings?.printColor}
+                      </Badge>
+                      <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
+                      <Badge variant="secondary">₹{o.totalCost}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+                <div className="flex flex-col gap-2 self-stretch w-28">
+                  {o.status !== 'printed' ? (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="flex-1 h-auto min-h-[48px]"
+                      onClick={() => { if (!((o as any).id)) return; void markPrinted((o as any).id); }}
+                    >
+                      Printed
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); void cancelOrder((o as any).id, o); }}>
-                      <X className="h-4 w-4" />
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 h-auto min-h-[48px]"
+                      onClick={() => { if (!((o as any).id)) return; void revertToProcessing((o as any).id); }}
+                    >
+                      Undo Printed
                     </Button>
-                    {o.status !== 'printed' ? (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={(e) => { e.stopPropagation(); if (!((o as any).id)) return; void markPrinted((o as any).id); }}
-                      >
-                        Printed
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => { e.stopPropagation(); if (!((o as any).id)) return; void revertToProcessing((o as any).id); }}
-                      >
-                        Undo Printed
-                      </Button>
-                    )}
-                    {o.status !== 'printed' ? (
-                      <Button size="sm" disabled>
-                        Collected
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          if (!((o as any).id)) return;
-                          await completeOrder((o as any).id, o as any);
-                          // Auto-show history for a few seconds and focus on Today
-                          setRange(null);
-                          setSelectedDate(toLocalYMD(new Date()));
-                          setHistoryOpen(true);
-                          setFilterOpen(true);
-                          setTimeout(() => setHistoryOpen(false), 5000);
-                        }}
-                      >
-                        Collected
-                      </Button>
-                    )}
-                    {o.emergency && <Badge variant="destructive">URGENT</Badge>}
-                    {!(o.status === 'processing' || o.status === 'printing') && (
-                      <Badge variant="secondary">{o.status}</Badge>
-                    )}
-                  </div>
-                  {/* Label badges inline */}
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    {(() => { const p = getDateLabelParts(o.timestamp); return (
-                      <Badge variant="outline" className="font-bold bg-blue-50 text-blue-700 border-blue-200">{p.time}</Badge>
-                    ); })()}
-                    <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
-                    <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
-                    <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
-                      {o.printSettings?.printColor}
-                    </Badge>
-                    <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
-                    <Badge variant="secondary">₹{o.totalCost}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                  )}
+                  {o.status !== 'printed' ? (
+                    <Button size="sm" disabled className="flex-1 h-auto min-h-[48px]">
+                      Collected
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="flex-1 h-auto min-h-[48px]"
+                      onClick={async () => {
+                        if (!((o as any).id)) return;
+                        await completeOrder((o as any).id, o as any);
+                        setRange(null);
+                        setSelectedDate(toLocalYMD(new Date()));
+                        setHistoryOpen(true);
+                        setFilterOpen(true);
+                        setTimeout(() => setHistoryOpen(false), 5000);
+                      }}
+                    >
+                      Collected
+                    </Button>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -297,9 +309,19 @@ export default function ShopfrontDashboardPage() {
                       <div className="flex-1 min-w-0">
                         <div className="truncate font-medium">{o.userName} • {o.fileName}</div>
                       </div>
-                      <Button size="sm" variant="ghost" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
+                      {o.splitFiles ? (
+                        <div className="flex items-center gap-1">
+                          {o.fileUrl && (
+                            <Button size="sm" variant="outline" onClick={() => { window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>Original</Button>
+                          )}
+                          <Button size="sm" variant="outline" onClick={() => { window.open((o as any).splitFiles?.bwUrl, '_blank', 'noopener,noreferrer'); }}>B&W</Button>
+                          <Button size="sm" variant="outline" onClick={() => { window.open((o as any).splitFiles?.colorUrl, '_blank', 'noopener,noreferrer'); }}>Color</Button>
+                        </div>
+                      ) : (
+                        <Button size="sm" variant="ghost" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      )}
                       {o.status === 'completed' && (
                         <Button size="sm" variant="outline" onClick={() => { void undoCollected(o.orderId, o); }}>
                           Undo Collected
@@ -311,7 +333,9 @@ export default function ShopfrontDashboardPage() {
                         </Button>
                       )}
                       {o.emergency && <Badge variant="destructive">URGENT</Badge>}
-                      <Badge variant="secondary">{o.status}</Badge>
+                      {o.status !== 'completed' && (
+                        <Badge variant="secondary">{o.status}</Badge>
+                      )}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
                       {o.jobType && (
@@ -325,12 +349,7 @@ export default function ShopfrontDashboardPage() {
                       <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
                       <Badge variant="secondary">₹{o.totalCost}</Badge>
                     </div>
-                    {o.splitFiles && (
-                      <div className="mt-2 flex gap-2">
-                        <a href={o.splitFiles.bwUrl} target="_blank" className="text-xs underline text-blue-700">Open B&W</a>
-                        <a href={o.splitFiles.colorUrl} target="_blank" className="text-xs underline text-blue-700">Open Color</a>
-                      </div>
-                    )}
+                    
                   </CardContent>
                 </Card>
               ))
