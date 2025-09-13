@@ -28,7 +28,18 @@ export function useIdle(idleMs: number = 20000): { isIdle: boolean; isTabHidden:
       }
     };
 
-    const events: Array<keyof WindowEventMap> = ["mousemove", "keydown", "touchstart", "click"];
+    const events: Array<keyof WindowEventMap> = [
+      "mousemove",
+      "keydown",
+      "touchstart",
+      "touchmove",
+      "pointerdown",
+      "pointermove",
+      "wheel",
+      "scroll",
+      "click",
+      "focus",
+    ];
     events.forEach((eventName) => window.addEventListener(eventName, markActive, { passive: true }));
     document.addEventListener("visibilitychange", onVisibility);
 
