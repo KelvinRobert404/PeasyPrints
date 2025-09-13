@@ -3,12 +3,36 @@
 import { useMemo, useState } from 'react';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { cn } from '@/lib/utils/cn';
+import { AssignmentPagePicker } from '@/components/upload/AssignmentPagePicker';
 
 export function AssignmentConfigurator() {
   const { settings, setSettings, pageCount, assignmentMode, setAssignmentMode, assignmentColorPages, toggleAssignmentColorPage, assignmentConfirmed, setAssignmentConfirmed } = useUploadStore();
 
   function selectBW() { setAssignmentMode('BW'); setSettings({ printColor: 'Black & White' }); }
   function selectMixed() { setAssignmentMode('Mixed'); setSettings({ printColor: 'Black & White' }); }
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  function formatRanges(nums: number[]): string {
+    if (!nums.length) return '';
+    const a = [...nums].sort((x, y) => x - y);
+    const parts: string[] = [];
+    let start = a[0];
+    let prev = a[0];
+    for (let i = 1; i < a.length; i++) {
+      if (a[i] === prev + 1) prev = a[i];
+      else { parts.push(start === prev ? String(start) : `${start}-${prev}`); start = prev = a[i]; }
+    }
+    parts.push(start === prev ? String(start) : `${start}-${prev}`);
+    return parts.join(', ');
+  }
+
+  const colorText = useMemo(() => formatRanges(assignmentColorPages), [assignmentColorPages]);
+  const bwText = useMemo(() => {
+    const color = new Set(assignmentColorPages);
+    const bw: number[] = [];
+    for (let i = 1; i <= pageCount; i++) if (!color.has(i)) bw.push(i);
+    return formatRanges(bw);
+  }, [assignmentColorPages, pageCount]);
 
   return (
     <div className="space-y-3">
@@ -32,27 +56,18 @@ export function AssignmentConfigurator() {
       {assignmentMode === 'Mixed' && (
         <div className="rounded-md border p-3 bg-white">
           <div className="text-sm font-medium mb-2">Select color pages</div>
-          <div className="grid grid-cols-8 gap-1">
-            {Array.from({ length: Math.max(pageCount, 0) }, (_, i) => i + 1).map((p) => {
-              const selected = assignmentColorPages.includes(p);
-              return (
-                <button
-                  type="button"
-                  key={p}
-                  onClick={() => toggleAssignmentColorPage(p)}
-                  className={cn('h-8 rounded border flex items-center justify-center text-xs', selected ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-800')}
-                >
-                  <span>{p}</span>
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-2">
+            <button type="button" className="h-9 px-3 rounded-md border text-sm" onClick={() => setPickerOpen(true)}>Open preview picker</button>
+            <div className="text-xs text-gray-600">Select pages visually with thumbnails.</div>
           </div>
-          <div className="text-xs text-gray-600 mt-2">Confirm selection before checkout. We will split the PDF into B&W and Color documents.</div>
-          <div className="mt-3 flex items-center justify-end">
-            <button type="button" onClick={() => setAssignmentConfirmed(true)} className="h-9 px-3 rounded-md bg-blue-600 text-white text-sm">
-              Confirm Selection
-            </button>
-          </div>
+          {assignmentConfirmed && (
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">Color: {colorText || 'None'}</span>
+              <span className="px-2 py-0.5 rounded bg-gray-50 text-gray-700 border">B/W: {bwText || 'None'}</span>
+            </div>
+          )}
+          <div className="text-xs text-gray-600 mt-2">We will split the PDF into B&W and Color documents.</div>
+          <AssignmentPagePicker open={pickerOpen} onOpenChange={setPickerOpen} />
         </div>
       )}
     </div>
