@@ -42,7 +42,7 @@ export default function ShopfrontDashboardPage() {
   // Alerts: chime on new orders, loop when overdue and idle/unfocused
   const isOpen = (currentShop as any)?.isOpen !== false; // default to true if undefined
   const { enable: enableSound, enabled: soundEnabled } = useOrderAlerts({
-    getOrders: () => orders as any,
+    getOrders: () => (orders as any).filter((o: any) => o.status === 'processing' || o.status === 'printing'),
     pendingThresholdMs: 120000,
     idleMs: 20000,
     muted: !isOpen,
@@ -314,6 +314,9 @@ export default function ShopfrontDashboardPage() {
                       <Badge variant="secondary">{o.status}</Badge>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                      {o.jobType && (
+                        <Badge variant="secondary">{o.jobType}</Badge>
+                      )}
                       <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
                       <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
                       <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
@@ -322,6 +325,12 @@ export default function ShopfrontDashboardPage() {
                       <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
                       <Badge variant="secondary">₹{o.totalCost}</Badge>
                     </div>
+                    {o.splitFiles && (
+                      <div className="mt-2 flex gap-2">
+                        <a href={o.splitFiles.bwUrl} target="_blank" className="text-xs underline text-blue-700">Open B&W</a>
+                        <a href={o.splitFiles.colorUrl} target="_blank" className="text-xs underline text-blue-700">Open Color</a>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))
