@@ -64,7 +64,10 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         const hh = String(date.getHours()).padStart(2, '0');
         const mm = String(date.getMinutes()).padStart(2, '0');
         const dynamicName = `images-${images.length}img-${imagesPages}pg-${settings.paperSize}-${y}${m}${d}-${hh}${mm}.pdf`;
-        preparedSingle = { blob: new Blob([pdfBytes], { type: 'application/pdf' }), name: dynamicName };
+        // Convert Uint8Array -> ArrayBuffer to satisfy DOM BlobPart typing
+        const ab = new ArrayBuffer(pdfBytes.byteLength);
+        new Uint8Array(ab).set(pdfBytes);
+        preparedSingle = { blob: new Blob([ab], { type: 'application/pdf' }), name: dynamicName };
       } else if (jobType === 'Assignment' && file) {
         if (assignmentMode === 'Mixed' && assignmentColorPages.length > 0) {
           const buf = await file.arrayBuffer();
