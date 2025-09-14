@@ -72,9 +72,14 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         if (assignmentMode === 'Mixed' && assignmentColorPages.length > 0) {
           const buf = await file.arrayBuffer();
           const { bwBytes, colorBytes } = await splitAssignmentPdf(buf, assignmentColorPages);
+          // Convert Uint8Array outputs to true ArrayBuffers for Blob compatibility
+          const bwAb = new ArrayBuffer(bwBytes.byteLength);
+          new Uint8Array(bwAb).set(bwBytes);
+          const colorAb = new ArrayBuffer(colorBytes.byteLength);
+          new Uint8Array(colorAb).set(colorBytes);
           preparedSplit = {
-            bw: new Blob([bwBytes], { type: 'application/pdf' }),
-            color: new Blob([colorBytes], { type: 'application/pdf' }),
+            bw: new Blob([bwAb], { type: 'application/pdf' }),
+            color: new Blob([colorAb], { type: 'application/pdf' }),
             // also keep original for shop access
             original: new Blob([buf], { type: 'application/pdf' })
           } as any;
