@@ -13,20 +13,10 @@ export function PdfPreviewer() {
     (async () => {
       if (typeof window === 'undefined') return;
       const pdfjsLib = await import('pdfjs-dist');
-      // Prefer same-origin worker; if unavailable in production, fall back to env URL
-      // Place the worker at public/pdf.worker.min.mjs via postinstall
-      const localWorker = '/pdf.worker.min.mjs';
-      let workerSrc: string = localWorker;
-      try {
-        const res = await fetch(localWorker, { method: 'HEAD', cache: 'no-store' });
-        if (!res.ok) {
-          const envUrl = process.env.NEXT_PUBLIC_PDF_WORKER_URL as string | undefined;
-          if (envUrl) workerSrc = envUrl;
-        }
-      } catch {
-        const envUrl = process.env.NEXT_PUBLIC_PDF_WORKER_URL as string | undefined;
-        if (envUrl) workerSrc = envUrl;
-      }
+      // Prefer external worker in production to avoid SW interception/CORS issues,
+      // falling back to the local copy if env is not set.
+      const envUrl = process.env.NEXT_PUBLIC_PDF_WORKER_URL as string | undefined;
+      const workerSrc: string = envUrl || '/pdf.worker.min.mjs';
       // @ts-ignore
       pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
       if (!cancelled) setPdfjs(pdfjsLib);
