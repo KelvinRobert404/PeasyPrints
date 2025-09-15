@@ -42,8 +42,20 @@ export function AssignmentPagePicker({ open, onOpenChange }: { open: boolean; on
     (async () => {
       if (!open) return;
       const pdfjsLib = await import('pdfjs-dist');
+      // Align worker version with the runtime API to avoid mismatch
+      const version: string = (pdfjsLib as any)?.version || '4.8.69';
+      const envUrl = process.env.NEXT_PUBLIC_PDF_WORKER_URL as string | undefined;
+      let workerSrc: string = envUrl
+        ? envUrl.replace('{version}', version)
+        : `https://unpkg.com/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
+      try {
+        const res = await fetch(workerSrc, { method: 'HEAD', cache: 'no-store' });
+        if (!res.ok) workerSrc = '/pdf.worker.min.mjs';
+      } catch {
+        workerSrc = '/pdf.worker.min.mjs';
+      }
       // @ts-ignore
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+      pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
       if (!cancelled) setPdfjs(pdfjsLib);
     })();
     return () => { cancelled = true; };
