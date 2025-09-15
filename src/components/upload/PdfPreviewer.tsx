@@ -13,10 +13,21 @@ export function PdfPreviewer() {
     (async () => {
       if (typeof window === 'undefined') return;
       const pdfjsLib = await import('pdfjs-dist');
-      // Prefer external worker in production to avoid SW interception/CORS issues,
-      // falling back to the local copy if env is not set.
+      // Prefer external worker in production to avoid SW interception/CORS issues.
+      // Ensure API/Worker versions match by deriving from the loaded library version.
+      const version: string = (pdfjsLib as any)?.version || '4.8.69';
       const envUrl = process.env.NEXT_PUBLIC_PDF_WORKER_URL as string | undefined;
-      const workerSrc: string = envUrl || '/pdf.worker.min.mjs';
+      // If env is provided and uses a {version} token, substitute it; otherwise use unpkg with the exact version.
+      let workerSrc: string = envUrl
+        ? envUrl.replace('{version}', version)
+        : `https://unpkg.com/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
+      // Fallback to local copy if external fails (useful in dev)
+      try {
+        const res = await fetch(workerSrc, { method: 'HEAD', cache: 'no-store' });
+        if (!res.ok) workerSrc = '/pdf.worker.min.mjs';
+      } catch {
+        workerSrc = '/pdf.worker.min.mjs';
+      }
       // @ts-ignore
       pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
       if (!cancelled) setPdfjs(pdfjsLib);
