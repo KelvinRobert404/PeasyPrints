@@ -3,8 +3,9 @@
 import { useMemo } from 'react';
 
 export default function ContactPage() {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
-  const text = encodeURIComponent('Hi PeasyPrints team! I need help with my order.');
+  // Hardcoded WhatsApp contact per request
+  const phone = '918867224918';
+  const text = encodeURIComponent('Hi Swoop, I have an issue with');
   const waLink = useMemo(() => {
     if (phone && /\d{8,15}/.test(phone)) {
       return `https://wa.me/${phone}?text=${text}`;
