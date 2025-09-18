@@ -14,6 +14,7 @@ const Quinn = localFont({
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { RootShell } from '@/components/layout/RootShell';
 import { ClerkProvider } from '@clerk/nextjs';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
   title: 'PeasyPrints',
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </AuthProvider>
           </RootShell>
         </ClerkProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
