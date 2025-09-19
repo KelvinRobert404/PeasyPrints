@@ -43,6 +43,11 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
+  // Allow PostHog ingest/proxy endpoints to pass without auth
+  if (pathname.startsWith('/ingest')) {
+    return NextResponse.next();
+  }
+
   // Allow announcements API for signed-out users
   if (pathname.startsWith('/api/announcements')) {
     return NextResponse.next();
