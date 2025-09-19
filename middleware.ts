@@ -43,6 +43,11 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
+  // Allow announcements API for signed-out users
+  if (pathname.startsWith('/api/announcements')) {
+    return NextResponse.next();
+  }
+
   if (!isPublicRoute(req)) {
     if (!userId) {
       const signInUrl = new URL('/login', req.url);
