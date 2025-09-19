@@ -15,7 +15,7 @@ if (typeof window !== 'undefined') {
 		// Import dynamically to avoid SSR bundles including posthog-js by default
 		if (shouldBootstrap) {
 			import('posthog-js').then(({ default: posthog }) => {
-				const host = (process.env.NEXT_PUBLIC_POSTHOG_HOST as string | undefined) || '/ingest';
+				const host = (process.env.NEXT_PUBLIC_POSTHOG_HOST as string | undefined) || '/ph';
 				try {
 					posthog.init(key, {
 						api_host: host,

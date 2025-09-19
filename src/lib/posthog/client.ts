@@ -35,7 +35,7 @@ function ensurePosthogInit(): void {
   if (!apiKey) {
     return;
   }
-  const apiHost = (process.env.NEXT_PUBLIC_POSTHOG_HOST as string | undefined) || '/ingest';
+  const apiHost = (process.env.NEXT_PUBLIC_POSTHOG_HOST as string | undefined) || '/ph';
   posthog.init(apiKey, {
     api_host: apiHost,
     capture_pageview: false,
