@@ -251,6 +251,17 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
       return;
     }
     if (!isClerkLoaded || !clerkUser || (!hasPdf && !hasImages) || pageCount === 0 || totalCost <= 0) return;
+    try {
+      // Fire GA4 recommended event for checkout start
+      (window as any).gtag?.('event', 'begin_checkout', {
+        currency: 'INR',
+        value: totalCost,
+        shop_id: shopId,
+        shop_name: shopName || undefined,
+        job_type: jobType,
+        page_count: pageCount
+      });
+    } catch {}
     setPreviewOpen(true);
   };
 
