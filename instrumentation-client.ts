@@ -4,6 +4,13 @@
 if (typeof window !== 'undefined') {
 	const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string | undefined;
 	if (key) {
+		try {
+			const wph = (window as any).posthog;
+			if (wph && (wph.__loaded || wph.capture)) {
+				// Already initialized via snippet; skip
+				return;
+			}
+		} catch {}
 		// Import dynamically to avoid SSR bundles including posthog-js by default
 		import('posthog-js').then(({ default: posthog }) => {
 			const host = (process.env.NEXT_PUBLIC_POSTHOG_HOST as string | undefined) || '/ingest';

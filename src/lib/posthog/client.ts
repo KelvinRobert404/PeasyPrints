@@ -10,6 +10,15 @@ function ensurePosthogInit(): void {
   if (posthogInitialized) return;
   if (typeof window === 'undefined') return;
 
+  try {
+    const wph = (window as any).posthog;
+    if (wph && (wph.__loaded || wph.capture)) {
+      // Already initialized via snippet
+      posthogInitialized = true;
+      return;
+    }
+  } catch {}
+
   const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY as string | undefined;
   if (!apiKey) {
     return;
