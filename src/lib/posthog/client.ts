@@ -6,6 +6,18 @@ import posthog from 'posthog-js';
 
 let posthogInitialized = false;
 
+function getPosthog(): any {
+  try {
+    if (typeof window !== 'undefined') {
+      const globalPh = (window as any).posthog;
+      if (globalPh && (globalPh.__loaded || globalPh.capture)) {
+        return globalPh;
+      }
+    }
+  } catch {}
+  return posthog as any;
+}
+
 function ensurePosthogInit(): void {
   if (posthogInitialized) return;
   if (typeof window === 'undefined') return;
@@ -39,13 +51,17 @@ export async function identifyUser(distinctId: string, props?: Record<string, an
   ensurePosthogInit();
   if (!posthogInitialized) return;
   try {
-    posthog.identify(distinctId, props);
+    const ph = getPosthog();
+    ph.identify(distinctId, props);
   } catch {}
 }
 
 export async function resetUser(): Promise<void> {
   if (!posthogInitialized) return;
-  try { posthog.reset(); } catch {}
+  try {
+    const ph = getPosthog();
+    ph.reset();
+  } catch {}
 }
 
 export async function captureEvent<T extends AnalyticsEventName>(
@@ -55,7 +71,8 @@ export async function captureEvent<T extends AnalyticsEventName>(
   ensurePosthogInit();
   if (!posthogInitialized) return;
   try {
-    posthog.capture(event as string, properties);
+    const ph = getPosthog();
+    ph.capture(event as string, properties);
   } catch {}
 }
 
@@ -63,9 +80,10 @@ export async function isFeatureEnabled(flagKey: string): Promise<boolean> {
   ensurePosthogInit();
   if (!posthogInitialized) return false;
   try {
-    const res = await (posthog as any).isFeatureEnabledAsync?.(flagKey);
+    const ph = getPosthog();
+    const res = await (ph as any).isFeatureEnabledAsync?.(flagKey);
     if (typeof res === 'boolean') return res;
-    return Boolean(posthog.isFeatureEnabled(flagKey));
+    return Boolean(ph.isFeatureEnabled(flagKey));
   } catch {
     return false;
   }
@@ -74,16 +92,25 @@ export async function isFeatureEnabled(flagKey: string): Promise<boolean> {
 export async function getFeatureFlag(flagKey: string): Promise<any> {
   ensurePosthogInit();
   if (!posthogInitialized) return undefined;
-  try { return posthog.getFeatureFlag(flagKey); } catch { return undefined; }
+  try {
+    const ph = getPosthog();
+    return ph.getFeatureFlag(flagKey);
+  } catch { return undefined; }
 }
 
 export async function startSessionRecording(): Promise<void> {
   ensurePosthogInit();
   if (!posthogInitialized) return;
-  try { (posthog as any).startSessionRecording?.(); } catch {}
+  try {
+    const ph = getPosthog();
+    (ph as any).startSessionRecording?.();
+  } catch {}
 }
 
 export async function stopSessionRecording(): Promise<void> {
   if (!posthogInitialized) return;
-  try { (posthog as any).stopSessionRecording?.(); } catch {}
+  try {
+    const ph = getPosthog();
+    (ph as any).stopSessionRecording?.();
+  } catch {}
 }
