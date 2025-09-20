@@ -6,6 +6,14 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.admin == true ||
+        request.auth.token.role == 'super_admin' ||
+        (request.auth.token.roles != null && 'SUPER_ADMIN' in request.auth.token.roles)
+      );
+    }
+
     // Users can only manage their own profile with limited fields
     match /users/{userId} {
       allow read: if isSignedIn() && request.auth.uid == userId;
@@ -17,7 +25,7 @@ service cloud.firestore {
     // Shops: public read; owner-managed writes
     match /shops/{shopId} {
       allow read: if true;
-      allow write: if isSignedIn() && request.auth.uid == shopId;
+      allow write: if (isSignedIn() && request.auth.uid == shopId) || isAdmin();
     }
 
     // Orders
@@ -25,15 +33,18 @@ service cloud.firestore {
       // Read own orders or orders for own shop
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
-        resource.data.shopId == request.auth.uid
+        resource.data.shopId == request.auth.uid ||
+        isAdmin()
       );
 
       // Creation must be done server-side via Admin SDK; disallow client create
       allow create: if false;
 
-      // Status updates: only the shop that owns the order may update status
+      // Status updates: shop owner or admin may update status
       allow update: if isSignedIn()
-        && resource.data.shopId == request.auth.uid
+        && (
+          resource.data.shopId == request.auth.uid || isAdmin()
+        )
         && request.resource.data.keys().hasOnly(resource.data.keys())
         && request.resource.data.status in ['processing','printing','printed','collected','completed','cancelled'];
 
@@ -44,9 +55,19 @@ service cloud.firestore {
     match /history/{historyId} {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
-        resource.data.shopId == request.auth.uid
+        resource.data.shopId == request.auth.uid ||
+        isAdmin()
       );
-      allow create: if isSignedIn() && request.resource.data.shopId == request.auth.uid;
+      allow create: if isSignedIn() && (
+        request.resource.data.shopId == request.auth.uid || isAdmin()
+      );
+      allow update, delete: if false;
+    }
+
+    // Admin action audit log
+    match /admin_actions/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
       allow update, delete: if false;
     }
 

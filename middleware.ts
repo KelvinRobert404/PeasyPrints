@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   '/orders(.*)',
   '/shops(.*)',
   '/shopfront(.*)',
+  '/godview(.*)',
   '/login(.*)',
   '/register(.*)',
   '/sso-callback(.*)',
@@ -40,6 +41,11 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Allow Razorpay webhook to pass without auth (it uses its own signature verification)
   if (pathname.startsWith('/api/razorpay/webhook')) {
+    return NextResponse.next();
+  }
+
+  // Allow godview snapshot API with passphrase gating
+  if (pathname.startsWith('/api/godview/')) {
     return NextResponse.next();
   }
 

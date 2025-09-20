@@ -7,10 +7,11 @@ import { usePathname } from 'next/navigation';
 export function RootShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isShopfront = pathname?.startsWith('/shopfront');
+  const isGodview = pathname?.startsWith('/godview');
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/otp';
   const isPickup = pathname?.startsWith('/orders/') && pathname?.includes('/pickup');
 
-  if (isShopfront) {
+  if (isShopfront || isGodview) {
     return (
       <div className="min-h-screen bg-gray-100">
         {children}
