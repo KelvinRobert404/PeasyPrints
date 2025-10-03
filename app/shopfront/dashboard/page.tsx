@@ -85,6 +85,11 @@ export default function ShopfrontDashboardPage() {
       .filter((o: any) => { const d = coerceDate(o.historyTimestamp || o.timestamp); return !!d && d >= start && d <= end; })
       .reduce((sum: number, o: any) => sum + Number(o.totalCost || 0), 0);
   }, [historyOrders]);
+  const totalRevenue = useMemo(() => {
+    return historyOrders
+      .filter((o: any) => o.status === 'completed')
+      .reduce((sum: number, o: any) => sum + Number(o.totalCost || 0), 0);
+  }, [historyOrders]);
   const availableBalance = (currentShop as any)?.receivableAmount ?? 0;
 
   function coerceDate(input: any): Date | null {
@@ -127,7 +132,7 @@ export default function ShopfrontDashboardPage() {
         </div>
       ) : null}
       <div className="flex items-center justify-between">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 flex-1">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-gray-500">Total Orders</CardTitle>
@@ -155,6 +160,19 @@ export default function ShopfrontDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{showRevenue ? `₹${todaysRevenue}` : '••••'}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-gray-500">Total Revenue</CardTitle>
+                <button aria-label={showRevenue ? 'Hide revenue' : 'Show revenue'} onClick={() => setShowRevenue((v) => !v)} className="text-gray-500 hover:text-gray-800">
+                  {showRevenue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{showRevenue ? `₹${totalRevenue}` : '••••'}</div>
             </CardContent>
           </Card>
         </div>
