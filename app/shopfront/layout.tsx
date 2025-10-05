@@ -74,7 +74,7 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
         // Do not show onboarding if permission was already granted previously
         return;
       }
-      if (!alreadyRequested && Notification.permission !== 'granted') {
+      if (!alreadyRequested && Notification.permission === 'default') {
         localStorage.setItem('sf_notif_requested', '1');
         Notification.requestPermission().then((p) => {
           if (p === 'granted' && !alreadyOnboarded) {

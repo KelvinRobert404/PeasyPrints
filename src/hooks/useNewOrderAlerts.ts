@@ -30,9 +30,9 @@ export function useNewOrderAlerts(opts: UseNewOrderAlertsOptions) {
       orderBy('timestamp', 'desc')
     );
     const unsub = onSnapshot(qPending, (snap) => {
-      const docs = snap.docs.map((d) => ({ ...(d.data() as DocumentData), id: d.id }));
-      const latest = docs[0];
-      const ts = toMillis(latest?.timestamp) ?? toMillis((latest as any)?.createdAt);
+      const docs = snap.docs.map((d) => ({ ...(d.data() as any), id: d.id })) as any[];
+      const latest: any = docs[0];
+      const ts = toMillis(latest?.timestamp) ?? toMillis(latest?.createdAt);
       if (!ts) return;
       if (ts > latestTsRef.current) {
         latestTsRef.current = ts;
@@ -59,7 +59,6 @@ export function useNewOrderAlerts(opts: UseNewOrderAlertsOptions) {
         const n = new Notification('New order', {
           body: 'Tap to open Dashboard',
           tag: 'shopfront-new-order',
-          renotify: true,
         });
         n.onclick = () => {
           window.focus();
