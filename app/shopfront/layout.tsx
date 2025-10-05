@@ -13,6 +13,7 @@ import { Menu, LayoutDashboard, History, DollarSign, Store, Wallet, Clock } from
 import { auth } from '@/lib/firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useShopStore } from '@/lib/stores/shopStore';
+import { useNewOrderAlerts } from '@/hooks/useNewOrderAlerts';
 
 export default function ShopfrontLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -55,10 +56,43 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
       setShopChecked(true);
     })();
   }, [signedIn, currentShop, fetchShopData]);
+
+  const { hasNewOrder, clearNewOrderFlag } = useNewOrderAlerts({ shopId: (currentShop as any)?.id });
+  useEffect(() => {
+    const onDashboard = pathname === '/shopfront' || pathname === '/shopfront/';
+    if (onDashboard && hasNewOrder) clearNewOrderFlag();
+  }, [pathname, hasNewOrder, clearNewOrderFlag]);
+
+  // After login: request notifications if not yet granted, and show onboarding notification once
+  useEffect(() => {
+    if (!signedIn || !shopChecked) return;
+    if (typeof window === 'undefined' || !("Notification" in window)) return;
+    try {
+      const alreadyOnboarded = localStorage.getItem('sf_notif_onboarded') === '1';
+      const alreadyRequested = localStorage.getItem('sf_notif_requested') === '1';
+      if (Notification.permission === 'granted') {
+        // Do not show onboarding if permission was already granted previously
+        return;
+      }
+      if (!alreadyRequested && Notification.permission !== 'granted') {
+        localStorage.setItem('sf_notif_requested', '1');
+        Notification.requestPermission().then((p) => {
+          if (p === 'granted' && !alreadyOnboarded) {
+            try {
+              const n = new Notification('Notifications Enables', { body: 'You will receive notifications from now on' });
+              n.onclick = () => { try { n.close(); } catch {} };
+            } catch {}
+            localStorage.setItem('sf_notif_onboarded', '1');
+          }
+        });
+      }
+    } catch {}
+  }, [signedIn, shopChecked]);
   const items = [
     { href: '/shopfront', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/shopfront/profile', label: 'Profile', icon: Store },
-    { href: '/shopfront/settings', label: 'Settings', icon: Wallet }
+    { href: '/shopfront/settings', label: 'Settings', icon: Wallet },
+    { href: '/shopfront/updates', label: 'Updates', icon: History }
   ];
 
   return (
@@ -85,12 +119,12 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
                   </div>
                 </>
               ) : (
-                <Button size="sm" className="h-8" onClick={() => setLoginOpen(true)}>Log in</Button>
+                <Button size="sm" variant="outline" className="h-8 bg-white text-blue-600 hover:bg-white/90 border-transparent font-[coolvetica] font-bold" onClick={() => setLoginOpen(true)}>LOGIN</Button>
               )}
             </div>
           ) : (
             <div className="ml-auto">
-              <Button size="sm" className="h-8" onClick={() => setLoginOpen(true)}>Log in</Button>
+              <Button size="sm" variant="outline" className="h-8 bg-white text-blue-600 hover:bg-white/90 border-transparent font-[coolvetica] font-bold" onClick={() => setLoginOpen(true)}>LOGIN</Button>
             </div>
           )}
         </div>
@@ -98,30 +132,31 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
 
       {/* Main content with sidebar below navbar */}
       <div className="flex flex-1">
-        <aside className="hidden md:flex md:w-72 md:flex-col md:border-r md:border-gray-300 md:bg-white">
-          <nav className="flex-1 p-3 space-y-2">
+        <aside className="hidden md:flex md:w-52 md:flex-col md:border-r md:border-gray-300 md:bg-white">
+          <nav className="flex-1 p-2 space-y-1">
             {items.map((it) => {
               const Icon = it.icon;
               const active = it.href === '/shopfront'
                 ? (pathname === '/shopfront' || pathname === '/shopfront/')
                 : Boolean(pathname?.startsWith(it.href));
+              const isDashboard = it.href === '/shopfront';
               return (
                 <Link key={it.href} href={it.href} className="block">
                   <div
-                    className={`flex items-center gap-3 rounded-md px-4 py-3 text-base transition-colors ${
+                    className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
                       active
                         ? 'bg-blue-50 text-blue-700 border border-blue-200'
                         : 'hover:bg-blue-50 hover:text-blue-700'
-                    }`}
+                    } ${!active && isDashboard && hasNewOrder ? 'animate-pulse' : ''}`}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{it.label}</span>
+                    <Icon className="h-4 w-4" />
+                    <span className="font-medium">{isDashboard && hasNewOrder && !active ? 'Dashboard • New' : it.label}</span>
                   </div>
                 </Link>
               );
             })}
           </nav>
-          <div className="p-3 border-t md:border-gray-300 text-sm text-gray-700">
+          <div className="p-2 border-t md:border-gray-300 text-xs text-gray-700">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               <span className="font-medium">{formatTime(now)}</span>

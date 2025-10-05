@@ -49,7 +49,8 @@ export function useOrderAlerts(params: {
   // Looping alert: only when there's at least one pending order AND user is inactive for idleMs
   useEffect(() => {
     if (muted) { stopLoop(); return; }
-    const now = Date.now();
+    // Whenever activity resumes (isIdle becomes false), stop the loop immediately
+    if (!isIdle) { stopLoop(); }
     const getMillis = (t: any): number | null => {
       if (!t) return null;
       try {
