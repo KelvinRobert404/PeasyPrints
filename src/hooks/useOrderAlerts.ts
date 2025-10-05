@@ -77,6 +77,22 @@ export function useOrderAlerts(params: {
     }
   }, [unresolvedOrders, isIdle, isLeader, enabled, muted, pendingThresholdMs, startLoop, stopLoop]);
 
+  // Hard stop on visibility/activity events when returning to the tab
+  useEffect(() => {
+    if (!enabled) return;
+    const stop = () => { stopLoop(); };
+    const onVisibility = () => { if (document.visibilityState === "visible") stop(); };
+    const events: Array<keyof WindowEventMap> = [
+      "mousemove","keydown","touchstart","pointerdown","wheel","focus","click"
+    ];
+    events.forEach((e) => window.addEventListener(e, stop, { passive: true }));
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, stop as any));
+      document.removeEventListener("visibilitychange", onVisibility as any);
+    };
+  }, [enabled, stopLoop]);
+
   return { enable, enabled } as const;
 }
 
