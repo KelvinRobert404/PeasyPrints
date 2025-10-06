@@ -28,6 +28,13 @@ namespace PeasyPrint.Helper
                     return;
                 }
 
+                // If we received a jobId only, fetch job details from API
+                if (!request.FileUrl.HasValue() && !string.IsNullOrWhiteSpace(request.JobId))
+                {
+                    var resolved = ResolveJob(request.JobId!);
+                    request = resolved ?? request;
+                }
+
                 ShowPrefilledPrintDialog(request);
             }
             catch (Exception ex)
@@ -37,6 +44,28 @@ namespace PeasyPrint.Helper
             finally
             {
                 Shutdown(0);
+            }
+        }
+
+        private static PrintRequest? ResolveJob(string jobId)
+        {
+            try
+            {
+                var apiBase = Environment.GetEnvironmentVariable("PEASYPRINT_API_BASE");
+                var apiKey = Environment.GetEnvironmentVariable("PEASYPRINT_API_KEY");
+                if (string.IsNullOrWhiteSpace(apiBase))
+                {
+                    throw new InvalidOperationException("PEASYPRINT_API_BASE not set");
+                }
+                var http = new System.Net.Http.HttpClient();
+                var client = new JobClient(http, new Uri(apiBase));
+                var resolved = client.FetchJobAsync(jobId, apiKey, CancellationToken.None).GetAwaiter().GetResult();
+                return resolved;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to fetch job: {ex.Message}", "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
+                return null;
             }
         }
 
