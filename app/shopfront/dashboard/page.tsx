@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { useOrderAlerts } from '@/hooks/useOrderAlerts';
+import { useTabAttention } from '@/hooks/useTabAttention';
 
 export default function ShopfrontDashboardPage() {
   const { user } = useAuthStore();
@@ -46,6 +47,12 @@ export default function ShopfrontDashboardPage() {
     pendingThresholdMs: 120000,
     idleMs: 20000,
     muted: !isOpen,
+  });
+
+  // Blink tab title when there are pending orders and the tab is hidden/idle
+  useTabAttention((orders as any).some((o: any) => o.status === 'processing' || o.status === 'printing'), {
+    message: 'New orders waiting',
+    intervalMs: 1200,
   });
 
   // Removed early return to ensure hooks below run on every render
