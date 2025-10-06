@@ -34,15 +34,20 @@ namespace PeasyPrint.Helper
                     return;
                 }
 
+                // If launched with no parameters, open Settings by default (standalone app UX)
+                if (args.Length <= 1)
+                {
+                    new SettingsWindow(SettingsStore.Load()).ShowDialog();
+                    Shutdown(0);
+                    return;
+                }
+
                 var request = StartupArgumentsParser.Parse(args);
 
                 if (request == null)
                 {
-                    MessageBox.Show(
-                        "No print parameters provided. Expected peasyprint:// or CLI args.",
-                        "PeasyPrint Helper",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    // Fallback to Settings if arguments are not recognized
+                    new SettingsWindow(SettingsStore.Load()).ShowDialog();
                     Shutdown(0);
                     return;
                 }
