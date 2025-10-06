@@ -22,7 +22,7 @@ namespace PeasyPrint.Helper
 {
     internal sealed class PdfPrintService
     {
-        public async Task PrintWithDialogAsync(Uri fileUrl, PrintDialog printDialog, PrintTicket ticket)
+        public async Task PrintWithDialogAsync(Uri fileUrl, System.Windows.Controls.PrintDialog printDialog, PrintTicket ticket)
         {
             if (fileUrl == null)
             {

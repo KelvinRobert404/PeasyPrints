@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PeasyPrint.Helper
 {
-    internal sealed class Settings
+    public sealed class Settings
     {
         public string? PreferredPrinterNameSubstring { get; set; }
         public string? BwPrinterNameSubstring { get; set; }

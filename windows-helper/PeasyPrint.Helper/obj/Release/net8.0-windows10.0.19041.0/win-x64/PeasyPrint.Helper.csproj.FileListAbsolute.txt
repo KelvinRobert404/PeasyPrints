@@ -21,3 +21,5 @@ C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-win
 C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.pdb
 C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.genruntimeconfig.cache
 C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\ref\PeasyPrint.Helper.dll
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\SettingsWindow.baml
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\SettingsWindow.g.cs
