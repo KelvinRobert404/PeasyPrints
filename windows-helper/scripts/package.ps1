@@ -75,4 +75,16 @@ New-Item -ItemType Directory -Force -Path $appDir | Out-Null
 robocopy $publishDir $appDir /MIR | Out-Null
 Write-Host "Copied app to: $appDir" -ForegroundColor Green
 
+# Optional cleanup: keep only the single app folder (remove bin/obj/dist)
+try {
+    $binDir = Join-Path $PSScriptRoot "..\PeasyPrint.Helper\bin"
+    $objDir = Join-Path $PSScriptRoot "..\PeasyPrint.Helper\obj"
+    if (Test-Path $binDir) { Remove-Item -Recurse -Force $binDir }
+    if (Test-Path $objDir) { Remove-Item -Recurse -Force $objDir }
+    if (Test-Path $distDir) { Remove-Item -Recurse -Force $distDir }
+    Write-Host "Cleaned: bin/, obj/, dist/ -> single app folder remains" -ForegroundColor Yellow
+} catch {
+    Write-Warning "Cleanup skipped: $($_.Exception.Message)"
+}
+
 
