@@ -10,9 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PdfiumViewer.Core" Version="2.16.0" />
-    <PackageReference Include="PdfiumViewer.Native.x64" Version="2023.10.21.0" />
-    <PackageReference Include="System.Drawing.Common" Version="8.0.7" />
+    <PackageReference Include="System.Runtime.WindowsRuntime" Version="4.7.0" />
   </ItemGroup>
 </Project>
 

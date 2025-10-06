@@ -9,9 +9,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Xps;
 using System.Windows.Xps.Serialization;
-using PdfiumViewer;
-using System.Drawing;
-using System.Drawing.Imaging;
+using Windows.Data.Pdf;
+using Windows.Storage.Streams;
+using Windows.UI;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 // Requires Windows 10/11 with Windows Runtime PDF APIs available.
 // This implementation loads the PDF via WinRT, renders each page to images,
@@ -48,19 +49,39 @@ namespace PeasyPrint.Helper
         private static async Task<FixedDocument> RenderPdfToFixedDocumentAsync(Stream pdfStream)
         {
             // Load PDF via WinRT API
-            using var pdfDocument = PdfDocument.Load(pdfStream);
-            if (pdfDocument.PageCount <= 0)
-                throw new InvalidOperationException("PDF has no pages");
+            var ras = pdfStream.AsRandomAccessStream();
+            var pdfDoc = await PdfDocument.LoadFromStreamAsync(ras);
+            if (pdfDoc == null || pdfDoc.PageCount == 0)
+                throw new InvalidOperationException("Unable to load PDF or PDF is empty");
 
             var fixedDoc = new FixedDocument();
 
-            for (int i = 0; i < pdfDocument.PageCount; i++)
+            for (uint i = 0; i < pdfDoc.PageCount; i++)
             {
-                using var img = RenderPageToBitmap(pdfDocument, i, 300);
-                var bitmapImage = ConvertToBitmapImage(img);
+                using var page = pdfDoc.GetPage(i);
+                var pageSize = page.Size;
+                var width = Math.Max(1, (int)Math.Round(pageSize.Width));
+                var height = Math.Max(1, (int)Math.Round(pageSize.Height));
 
-                var image = new Image { Source = bitmapImage, Stretch = Stretch.Uniform };
-                var fixedPage = new FixedPage { Width = bitmapImage.PixelWidth, Height = bitmapImage.PixelHeight };
+                using var outStream = new InMemoryRandomAccessStream();
+                var renderOptions = new PdfPageRenderOptions
+                {
+                    DestinationWidth = (uint)width,
+                    DestinationHeight = (uint)height,
+                    BackgroundColor = Color.FromArgb(255, 255, 255, 255)
+                };
+                await page.RenderToStreamAsync(outStream, renderOptions);
+
+                using var managedStream = outStream.GetInputStreamAt(0).AsStreamForRead();
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.StreamSource = new MemoryStream(ReadAllBytes(managedStream));
+                bitmap.EndInit();
+                bitmap.Freeze();
+
+                var image = new Image { Source = bitmap, Stretch = Stretch.Uniform };
+                var fixedPage = new FixedPage { Width = bitmap.PixelWidth, Height = bitmap.PixelHeight };
                 fixedPage.Children.Add(image);
 
                 var pageContent = new PageContent();
@@ -71,36 +92,11 @@ namespace PeasyPrint.Helper
             return fixedDoc;
         }
 
-        private static System.Drawing.Bitmap RenderPageToBitmap(PdfDocument doc, int pageIndex, int dpi)
-        {
-            var size = doc.PageSizes[pageIndex];
-            var width = (int)Math.Round(size.Width * dpi / 72.0);
-            var height = (int)Math.Round(size.Height * dpi / 72.0);
-            var bitmap = new System.Drawing.Bitmap(width, height);
-            bitmap.SetResolution(dpi, dpi);
-            using (var g = System.Drawing.Graphics.FromImage(bitmap))
-            {
-                g.Clear(System.Drawing.Color.White);
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                doc.Render(pageIndex, g, new System.Drawing.Rectangle(0, 0, width, height), PdfRenderFlags.Annotations);
-            }
-            return bitmap;
-        }
-
-        private static BitmapImage ConvertToBitmapImage(System.Drawing.Bitmap bmp)
+        private static byte[] ReadAllBytes(Stream stream)
         {
             using var ms = new MemoryStream();
-            bmp.Save(ms, ImageFormat.Png);
-            ms.Position = 0;
-            var bitmapImage = new BitmapImage();
-            bitmapImage.BeginInit();
-            bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-            bitmapImage.StreamSource = new MemoryStream(ms.ToArray());
-            bitmapImage.EndInit();
-            bitmapImage.Freeze();
-            return bitmapImage;
+            stream.CopyTo(ms);
+            return ms.ToArray();
         }
     }
 }

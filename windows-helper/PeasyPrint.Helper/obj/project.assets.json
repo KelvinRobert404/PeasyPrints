@@ -2,521 +2,168 @@
   "version": 3,
   "targets": {
     "net8.0-windows10.0.19041": {
-      "Microsoft.NETCore.Platforms/3.1.0": {
+      "Microsoft.Win32.SystemEvents/8.0.0": {
         "type": "package",
         "compile": {
-          "lib/netstandard1.0/_._": {}
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/netstandard1.0/_._": {}
-        }
-      },
-      "Microsoft.Windows.CsWinRT/2.1.6": {
-        "type": "package",
-        "compile": {
-          "lib/net8.0/WinRT.Runtime.dll": {}
-        },
-        "runtime": {
-          "lib/net8.0/WinRT.Runtime.dll": {}
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "related": ".xml"
+          }
         },
         "build": {
-          "build/Microsoft.Windows.CsWinRT.props": {},
-          "build/Microsoft.Windows.CsWinRT.targets": {}
-        }
-      },
-      "Microsoft.Windows.SDK.NET.Ref/10.0.26100.1": {
-        "type": "package",
-        "compile": {
-          "lib/net6.0/Microsoft.Windows.SDK.NET.dll": {
-            "related": ".xml"
-          },
-          "lib/net6.0/WinRT.Runtime.dll": {}
-        },
-        "runtime": {
-          "lib/net6.0/Microsoft.Windows.SDK.NET.dll": {
-            "related": ".xml"
-          },
-          "lib/net6.0/WinRT.Runtime.dll": {}
-        }
-      },
-      "System.Runtime.WindowsRuntime/4.7.0": {
-        "type": "package",
-        "dependencies": {
-          "Microsoft.NETCore.Platforms": "3.1.0"
-        },
-        "compile": {
-          "ref/netstandard2.0/System.Runtime.WindowsRuntime.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/System.Runtime.WindowsRuntime.dll": {
-            "related": ".xml"
-          }
+          "buildTransitive/net6.0/_._": {}
         },
         "runtimeTargets": {
-          "runtimes/win/lib/netcoreapp3.0/System.Runtime.WindowsRuntime.dll": {
+          "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
             "assetType": "runtime",
             "rid": "win"
           }
         }
+      },
+      "System.Drawing.Common/8.0.7": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Win32.SystemEvents": "8.0.0"
+        },
+        "compile": {
+          "lib/net8.0/System.Drawing.Common.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/System.Drawing.Common.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
+        }
       }
     },
     "net8.0-windows10.0.19041/win-x64": {
-      "Microsoft.NETCore.Platforms/3.1.0": {
+      "Microsoft.Win32.SystemEvents/8.0.0": {
         "type": "package",
         "compile": {
-          "lib/netstandard1.0/_._": {}
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/netstandard1.0/_._": {}
-        }
-      },
-      "Microsoft.Windows.CsWinRT/2.1.6": {
-        "type": "package",
-        "compile": {
-          "lib/net8.0/WinRT.Runtime.dll": {}
-        },
-        "runtime": {
-          "lib/net8.0/WinRT.Runtime.dll": {}
+          "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "related": ".xml"
+          }
         },
         "build": {
-          "build/Microsoft.Windows.CsWinRT.props": {},
-          "build/Microsoft.Windows.CsWinRT.targets": {}
+          "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.Windows.SDK.NET.Ref/10.0.26100.1": {
-        "type": "package",
-        "compile": {
-          "lib/net6.0/Microsoft.Windows.SDK.NET.dll": {
-            "related": ".xml"
-          },
-          "lib/net6.0/WinRT.Runtime.dll": {}
-        },
-        "runtime": {
-          "lib/net6.0/Microsoft.Windows.SDK.NET.dll": {
-            "related": ".xml"
-          },
-          "lib/net6.0/WinRT.Runtime.dll": {}
-        }
-      },
-      "System.Runtime.WindowsRuntime/4.7.0": {
+      "System.Drawing.Common/8.0.7": {
         "type": "package",
         "dependencies": {
-          "Microsoft.NETCore.Platforms": "3.1.0"
+          "Microsoft.Win32.SystemEvents": "8.0.0"
         },
         "compile": {
-          "ref/netstandard2.0/System.Runtime.WindowsRuntime.dll": {
-            "related": ".xml"
+          "lib/net8.0/System.Drawing.Common.dll": {
+            "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "runtimes/win/lib/netcoreapp3.0/System.Runtime.WindowsRuntime.dll": {
-            "related": ".xml"
+          "lib/net8.0/System.Drawing.Common.dll": {
+            "related": ".pdb;.xml"
           }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
         }
       }
     }
   },
   "libraries": {
-    "Microsoft.NETCore.Platforms/3.1.0": {
-      "sha512": "z7aeg8oHln2CuNulfhiLYxCVMPEwBl3rzicjvIX+4sUuCwvXw5oXQEtbiU2c0z4qYL5L3Kmx0mMA/+t/SbY67w==",
+    "Microsoft.Win32.SystemEvents/8.0.0": {
+      "sha512": "9opKRyOKMCi2xJ7Bj7kxtZ1r9vbzosMvRrdEhVhDz8j8MoBGgB+WmC94yH839NPH+BclAjtQ/pyagvi/8gDLkw==",
       "type": "package",
-      "path": "microsoft.netcore.platforms/3.1.0",
+      "path": "microsoft.win32.systemevents/8.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
+        "Icon.png",
         "LICENSE.TXT",
         "THIRD-PARTY-NOTICES.TXT",
-        "lib/netstandard1.0/_._",
-        "microsoft.netcore.platforms.3.1.0.nupkg.sha512",
-        "microsoft.netcore.platforms.nuspec",
-        "runtime.json",
-        "useSharedDesignerContext.txt",
-        "version.txt"
+        "buildTransitive/net461/Microsoft.Win32.SystemEvents.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net6.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Win32.SystemEvents.targets",
+        "lib/net462/Microsoft.Win32.SystemEvents.dll",
+        "lib/net462/Microsoft.Win32.SystemEvents.xml",
+        "lib/net6.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/net6.0/Microsoft.Win32.SystemEvents.xml",
+        "lib/net7.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/net7.0/Microsoft.Win32.SystemEvents.xml",
+        "lib/net8.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/net8.0/Microsoft.Win32.SystemEvents.xml",
+        "lib/netstandard2.0/Microsoft.Win32.SystemEvents.dll",
+        "lib/netstandard2.0/Microsoft.Win32.SystemEvents.xml",
+        "microsoft.win32.systemevents.8.0.0.nupkg.sha512",
+        "microsoft.win32.systemevents.nuspec",
+        "runtimes/win/lib/net6.0/Microsoft.Win32.SystemEvents.dll",
+        "runtimes/win/lib/net6.0/Microsoft.Win32.SystemEvents.xml",
+        "runtimes/win/lib/net7.0/Microsoft.Win32.SystemEvents.dll",
+        "runtimes/win/lib/net7.0/Microsoft.Win32.SystemEvents.xml",
+        "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll",
+        "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.xml",
+        "useSharedDesignerContext.txt"
       ]
     },
-    "Microsoft.Windows.CsWinRT/2.1.6": {
-      "sha512": "k5G30dezZjGnGyLokTkj+yBX9gyAhDSm8pY7MqEUX1Dorl4GfSywfodOA8wmhFaNuUd4OI6q1MuQQaxQIA/t0w==",
+    "System.Drawing.Common/8.0.7": {
+      "sha512": "DoeBae0gZvxs3mtfoub6F1k28fSkFPzmhFuvblplKMnLYKmTMVy0j4Yxahh96KM532JzHGDxhJn1VpMKSB1pyg==",
       "type": "package",
-      "path": "microsoft.windows.cswinrt/2.1.6",
+      "path": "system.drawing.common/8.0.7",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "LICENSE",
-        "NOTICE.txt",
-        "analyzers/dotnet/cs/WinRT.SourceGenerator.dll",
-        "analyzers/dotnet/cs/de-DE/CsWinRTDiagnosticStrings.resx",
-        "analyzers/dotnet/cs/es-ES/CsWinRTDiagnosticStrings.resx",
-        "analyzers/dotnet/cs/fr-FR/CsWinRTDiagnosticStrings.resx",
-        "analyzers/dotnet/cs/it-IT/CsWinRTDiagnosticStrings.resx",
-        "analyzers/dotnet/cs/ja-JP/CsWinRTDiagnosticStrings.resx",
-        "analyzers/dotnet/cs/ko-KR/CsWinRTDiagnosticStrings.resx",
-        "analyzers/dotnet/cs/pt-BR/CsWinRTDiagnosticStrings.resx",
-        "analyzers/dotnet/cs/ru-RU/CsWinRTDiagnosticStrings.resx",
-        "analyzers/dotnet/cs/zh-CN/CsWinRTDiagnosticStrings.resx",
-        "analyzers/dotnet/cs/zh-TW/CsWinRTDiagnosticStrings.resx",
-        "build/Microsoft.Windows.CsWinRT.Authoring.Transitive.targets",
-        "build/Microsoft.Windows.CsWinRT.Authoring.targets",
-        "build/Microsoft.Windows.CsWinRT.Embedded.targets",
-        "build/Microsoft.Windows.CsWinRT.IIDOptimizer.targets",
-        "build/Microsoft.Windows.CsWinRT.props",
-        "build/Microsoft.Windows.CsWinRT.targets",
-        "build/tools/IIDOptimizer/IIDOptimizer.deps.json",
-        "build/tools/IIDOptimizer/IIDOptimizer.dll",
-        "build/tools/IIDOptimizer/IIDOptimizer.exe",
-        "build/tools/IIDOptimizer/IIDOptimizer.runtimeconfig.json",
-        "build/tools/IIDOptimizer/Mono.Cecil.Mdb.dll",
-        "build/tools/IIDOptimizer/Mono.Cecil.Pdb.dll",
-        "build/tools/IIDOptimizer/Mono.Cecil.Rocks.dll",
-        "build/tools/IIDOptimizer/Mono.Cecil.dll",
-        "build/tools/IIDOptimizer/System.CommandLine.dll",
-        "cswinrt.exe",
-        "embedded/any/ActivationFactory.cs",
-        "embedded/any/AgileReference.cs",
-        "embedded/any/Attributes.cs",
-        "embedded/any/CastExtensions.cs",
-        "embedded/any/ComWrappersSupport.cs",
-        "embedded/any/Context.cs",
-        "embedded/any/DataErrorsChangedEventArgs.cs",
-        "embedded/any/DelegateExtensions.cs",
-        "embedded/any/DerivedComposed.cs",
-        "embedded/any/EventHandler.cs",
-        "embedded/any/EventHandlerEventSource.cs",
-        "embedded/any/EventHandlerEventSource{T}.cs",
-        "embedded/any/EventRegistrationToken.cs",
-        "embedded/any/EventRegistrationTokenTable{T}.cs",
-        "embedded/any/EventSourceCache.cs",
-        "embedded/any/EventSourceState{TDelegate}.cs",
-        "embedded/any/EventSource{TDelegate}.cs",
-        "embedded/any/ExceptionHelpers.Microsoft.cs",
-        "embedded/any/ExceptionHelpers.cs",
-        "embedded/any/FeatureSwitches.cs",
-        "embedded/any/FundamentalMarshalers.cs",
-        "embedded/any/Geometry.cs",
-        "embedded/any/GuidGenerator.cs",
-        "embedded/any/IActivationFactory.cs",
-        "embedded/any/IContextCallback.cs",
-        "embedded/any/IDelegateVftbl.cs",
-        "embedded/any/IID.g.cs",
-        "embedded/any/IInspectable.cs",
-        "embedded/any/IReferenceTracker.cs",
-        "embedded/any/IStringable.cs",
-        "embedded/any/IUnknownVftbl.cs",
-        "embedded/any/KeyValuePair.cs",
-        "embedded/any/Marshalers.cs",
-        "embedded/any/Module.cs",
-        "embedded/any/MonoSupport.cs",
-        "embedded/any/NotifyCollectionChangedAction.cs",
-        "embedded/any/NotifyCollectionChangedEventArgs.cs",
-        "embedded/any/NotifyCollectionChangedEventHandler.cs",
-        "embedded/any/Nullable.cs",
-        "embedded/any/Numerics.cs",
-        "embedded/any/ObjectReference.cs",
-        "embedded/any/Platform.cs",
-        "embedded/any/Projections.CustomTypeMappings.EventHandler.cs",
-        "embedded/any/Projections.CustomTypeMappings.g.cs",
-        "embedded/any/Projections.cs",
-        "embedded/any/PropertyChangedEventArgs.cs",
-        "embedded/any/PropertyChangedEventHandler.cs",
-        "embedded/any/StandardDelegates.cs",
-        "embedded/any/SystemTypes.cs",
-        "embedded/any/Type.ArrayMarshalling.cs",
-        "embedded/any/Type.cs",
-        "embedded/any/TypeExtensions.cs",
-        "embedded/any/TypeNameSupport.cs",
-        "embedded/any/Uri.cs",
-        "embedded/any/WinRTRuntimeErrorStrings.Designer.cs",
-        "embedded/any/WuxMuxProjectedTypeAttribute.cs",
-        "embedded/net6.0/AttributeMessages.net5.cs",
-        "embedded/net6.0/Bindable.net5.cs",
-        "embedded/net6.0/CollectionHybrid.net5.cs",
-        "embedded/net6.0/ComWrappersSupport.net5.cs",
-        "embedded/net6.0/ExceptionErrorInfo.net5.cs",
-        "embedded/net6.0/ExceptionHelpers.Windows.net5.cs",
-        "embedded/net6.0/GenericDelegateHelper.net5.cs",
-        "embedded/net6.0/IAgileReference.net5.cs",
-        "embedded/net6.0/ICommand.net5.cs",
-        "embedded/net6.0/ICustomPropertyProvider.net5.cs",
-        "embedded/net6.0/IDictionary.net5.cs",
-        "embedded/net6.0/IDisposable.net5.cs",
-        "embedded/net6.0/IEnumerable.net5.cs",
-        "embedded/net6.0/IInspectable.net5.cs",
-        "embedded/net6.0/IList.net5.cs",
-        "embedded/net6.0/IMarshal.net5.cs",
-        "embedded/net6.0/INotifyCollectionChanged.net5.cs",
-        "embedded/net6.0/INotifyDataErrorInfo.net5.cs",
-        "embedded/net6.0/INotifyPropertyChanged.net5.cs",
-        "embedded/net6.0/IPropertyValue.net5.cs",
-        "embedded/net6.0/IReadOnlyDictionary.net5.cs",
-        "embedded/net6.0/IReadOnlyList.net5.cs",
-        "embedded/net6.0/IReferenceArray.net5.cs",
-        "embedded/net6.0/IServiceProvider.net5.cs",
-        "embedded/net6.0/IWeakReferenceSource.net5.cs",
-        "embedded/net6.0/IWinRTObject.net5.cs",
-        "embedded/net6.0/SingleInterfaceOptimizedObject.net5.cs",
-        "embedded/netstandard2.0/Bindable.netstandard2.0.cs",
-        "embedded/netstandard2.0/ComWrappersSupport.netstandard2.0.cs",
-        "embedded/netstandard2.0/ExceptionErrorInfo.netstandard2.0.cs",
-        "embedded/netstandard2.0/IAgileReference.netstandard2.0.cs",
-        "embedded/netstandard2.0/ICommand.netstandard2.0.cs",
-        "embedded/netstandard2.0/ICustomPropertyProvider.netstandard2.0.cs",
-        "embedded/netstandard2.0/IDictionary.netstandard2.0.cs",
-        "embedded/netstandard2.0/IDisposable.netstandard2.0.cs",
-        "embedded/netstandard2.0/IEnumerable.netstandard2.0.cs",
-        "embedded/netstandard2.0/IList.netstandard2.0.cs",
-        "embedded/netstandard2.0/IMarshal.netstandard2.0.cs",
-        "embedded/netstandard2.0/INotifyCollectionChanged.netstandard2.0.cs",
-        "embedded/netstandard2.0/INotifyDataErrorInfo.netstandard2.0.cs",
-        "embedded/netstandard2.0/INotifyPropertyChanged.netstandard2.0.cs",
-        "embedded/netstandard2.0/IPropertyValue.netstandard2.0.cs",
-        "embedded/netstandard2.0/IReadOnlyDictionary.netstandard2.0.cs",
-        "embedded/netstandard2.0/IReadOnlyList.netstandard2.0.cs",
-        "embedded/netstandard2.0/IReferenceArray.netstandard2.0.cs",
-        "embedded/netstandard2.0/IServiceProvider.netstandard2.0.cs",
-        "embedded/netstandard2.0/IWeakReferenceSource.netstandard2.0.cs",
-        "embedded/netstandard2.0/WeakReference.netstandard2.0.cs",
-        "hosting/arm64/native/WinRT.Host.dll",
-        "hosting/arm64/native/de-DE/WinRT.Host.dll.mui",
-        "hosting/arm64/native/en-US/WinRT.Host.dll.mui",
-        "hosting/arm64/native/es-ES/WinRT.Host.dll.mui",
-        "hosting/arm64/native/fr-FR/WinRT.Host.dll.mui",
-        "hosting/arm64/native/it-IT/WinRT.Host.dll.mui",
-        "hosting/arm64/native/ja-JP/WinRT.Host.dll.mui",
-        "hosting/arm64/native/ko-KR/WinRT.Host.dll.mui",
-        "hosting/arm64/native/pt-BR/WinRT.Host.dll.mui",
-        "hosting/arm64/native/ru-RU/WinRT.Host.dll.mui",
-        "hosting/arm64/native/zh-CN/WinRT.Host.dll.mui",
-        "hosting/arm64/native/zh-TW/WinRT.Host.dll.mui",
-        "hosting/x64/native/WinRT.Host.dll",
-        "hosting/x64/native/de-DE/WinRT.Host.dll.mui",
-        "hosting/x64/native/en-US/WinRT.Host.dll.mui",
-        "hosting/x64/native/es-ES/WinRT.Host.dll.mui",
-        "hosting/x64/native/fr-FR/WinRT.Host.dll.mui",
-        "hosting/x64/native/it-IT/WinRT.Host.dll.mui",
-        "hosting/x64/native/ja-JP/WinRT.Host.dll.mui",
-        "hosting/x64/native/ko-KR/WinRT.Host.dll.mui",
-        "hosting/x64/native/pt-BR/WinRT.Host.dll.mui",
-        "hosting/x64/native/ru-RU/WinRT.Host.dll.mui",
-        "hosting/x64/native/zh-CN/WinRT.Host.dll.mui",
-        "hosting/x64/native/zh-TW/WinRT.Host.dll.mui",
-        "hosting/x86/native/WinRT.Host.dll",
-        "hosting/x86/native/de-DE/WinRT.Host.dll.mui",
-        "hosting/x86/native/en-US/WinRT.Host.dll.mui",
-        "hosting/x86/native/es-ES/WinRT.Host.dll.mui",
-        "hosting/x86/native/fr-FR/WinRT.Host.dll.mui",
-        "hosting/x86/native/it-IT/WinRT.Host.dll.mui",
-        "hosting/x86/native/ja-JP/WinRT.Host.dll.mui",
-        "hosting/x86/native/ko-KR/WinRT.Host.dll.mui",
-        "hosting/x86/native/pt-BR/WinRT.Host.dll.mui",
-        "hosting/x86/native/ru-RU/WinRT.Host.dll.mui",
-        "hosting/x86/native/zh-CN/WinRT.Host.dll.mui",
-        "hosting/x86/native/zh-TW/WinRT.Host.dll.mui",
-        "lib/net6.0/WinRT.Host.Shim.dll",
-        "lib/net6.0/WinRT.Runtime.dll",
-        "lib/net6.0/de-DE/WinRTRuntimeErrorStrings.resx",
-        "lib/net6.0/es-ES/WinRTRuntimeErrorStrings.resx",
-        "lib/net6.0/fr-FR/WinRTRuntimeErrorStrings.resx",
-        "lib/net6.0/it-IT/WinRTRuntimeErrorStrings.resx",
-        "lib/net6.0/ja-JP/WinRTRuntimeErrorStrings.resx",
-        "lib/net6.0/ko-KR/WinRTRuntimeErrorStrings.resx",
-        "lib/net6.0/pt-BR/WinRTRuntimeErrorStrings.resx",
-        "lib/net6.0/ru-RU/WinRTRuntimeErrorStrings.resx",
-        "lib/net6.0/zh-CN/WinRTRuntimeErrorStrings.resx",
-        "lib/net6.0/zh-TW/WinRTRuntimeErrorStrings.resx",
-        "lib/net8.0/WinRT.Runtime.dll",
-        "metadata/WinRT.Interop.winmd",
-        "microsoft.windows.cswinrt.2.1.6.nupkg.sha512",
-        "microsoft.windows.cswinrt.nuspec",
-        "readme.txt"
-      ]
-    },
-    "Microsoft.Windows.SDK.NET.Ref/10.0.26100.1": {
-      "sha512": "xL0Gw/viHSlW3uO/UnhnD5mJhgtOntQkb8Ya/jTUZlbFFbS2qED5khN/IQxLKJuSijQgmkve4xSp9mQNgito2Q==",
-      "type": "package",
-      "path": "microsoft.windows.sdk.net.ref/10.0.26100.1",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "data/FrameworkList.xml",
-        "data/RuntimeList.xml",
-        "lib/net6.0/Microsoft.Windows.SDK.NET.dll",
-        "lib/net6.0/Microsoft.Windows.SDK.NET.xml",
-        "lib/net6.0/WinRT.Runtime.dll",
-        "microsoft.windows.sdk.net.ref.10.0.26100.1.nupkg.sha512",
-        "microsoft.windows.sdk.net.ref.nuspec",
-        "winmd/Windows.AI.MachineLearning.MachineLearningContract.winmd",
-        "winmd/Windows.AI.MachineLearning.Preview.MachineLearningPreviewContract.winmd",
-        "winmd/Windows.ApplicationModel.Activation.ActivatedEventsContract.winmd",
-        "winmd/Windows.ApplicationModel.Activation.ActivationCameraSettingsContract.winmd",
-        "winmd/Windows.ApplicationModel.Activation.ContactActivatedEventsContract.winmd",
-        "winmd/Windows.ApplicationModel.Activation.WebUISearchActivatedEventsContract.winmd",
-        "winmd/Windows.ApplicationModel.Background.BackgroundAlarmApplicationContract.winmd",
-        "winmd/Windows.ApplicationModel.Calls.Background.CallsBackgroundContract.winmd",
-        "winmd/Windows.ApplicationModel.Calls.CallsPhoneContract.winmd",
-        "winmd/Windows.ApplicationModel.Calls.CallsVoipContract.winmd",
-        "winmd/Windows.ApplicationModel.Calls.LockScreenCallContract.winmd",
-        "winmd/Windows.ApplicationModel.CommunicationBlocking.CommunicationBlockingContract.winmd",
-        "winmd/Windows.ApplicationModel.FullTrustAppContract.winmd",
-        "winmd/Windows.ApplicationModel.Preview.InkWorkspace.PreviewInkWorkspaceContract.winmd",
-        "winmd/Windows.ApplicationModel.Preview.Notes.PreviewNotesContract.winmd",
-        "winmd/Windows.ApplicationModel.Resources.Management.ResourceIndexerContract.winmd",
-        "winmd/Windows.ApplicationModel.Search.Core.SearchCoreContract.winmd",
-        "winmd/Windows.ApplicationModel.Search.SearchContract.winmd",
-        "winmd/Windows.ApplicationModel.SocialInfo.SocialInfoContract.winmd",
-        "winmd/Windows.ApplicationModel.StartupTaskContract.winmd",
-        "winmd/Windows.ApplicationModel.Wallet.WalletContract.winmd",
-        "winmd/Windows.Devices.Custom.CustomDeviceContract.winmd",
-        "winmd/Windows.Devices.DevicesLowLevelContract.winmd",
-        "winmd/Windows.Devices.Portable.PortableDeviceContract.winmd",
-        "winmd/Windows.Devices.Power.PowerGridApiContract.winmd",
-        "winmd/Windows.Devices.Printers.Extensions.ExtensionsContract.winmd",
-        "winmd/Windows.Devices.Printers.PrintersContract.winmd",
-        "winmd/Windows.Devices.Scanners.ScannerDeviceContract.winmd",
-        "winmd/Windows.Devices.SmartCards.SmartCardBackgroundTriggerContract.winmd",
-        "winmd/Windows.Devices.SmartCards.SmartCardEmulatorContract.winmd",
-        "winmd/Windows.Devices.Sms.LegacySmsApiContract.winmd",
-        "winmd/Windows.Foundation.FoundationContract.winmd",
-        "winmd/Windows.Foundation.UniversalApiContract.winmd",
-        "winmd/Windows.Gaming.Input.GamingInputPreviewContract.winmd",
-        "winmd/Windows.Gaming.Preview.GamesEnumerationContract.winmd",
-        "winmd/Windows.Gaming.UI.GameChatOverlayContract.winmd",
-        "winmd/Windows.Gaming.UI.GamingUIProviderContract.winmd",
-        "winmd/Windows.Gaming.XboxLive.StorageApiContract.winmd",
-        "winmd/Windows.Globalization.GlobalizationJapanesePhoneticAnalyzerContract.winmd",
-        "winmd/Windows.Graphics.Printing3D.Printing3DContract.winmd",
-        "winmd/Windows.Management.Deployment.Preview.DeploymentPreviewContract.winmd",
-        "winmd/Windows.Management.Deployment.SharedPackageContainerContract.winmd",
-        "winmd/Windows.Management.Update.WindowsUpdateContract.winmd",
-        "winmd/Windows.Management.Workplace.WorkplaceSettingsContract.winmd",
-        "winmd/Windows.Media.AppBroadcasting.AppBroadcastingContract.winmd",
-        "winmd/Windows.Media.AppRecording.AppRecordingContract.winmd",
-        "winmd/Windows.Media.Capture.AppBroadcastContract.winmd",
-        "winmd/Windows.Media.Capture.AppCaptureContract.winmd",
-        "winmd/Windows.Media.Capture.AppCaptureMetadataContract.winmd",
-        "winmd/Windows.Media.Capture.CameraCaptureUIContract.winmd",
-        "winmd/Windows.Media.Capture.GameBarContract.winmd",
-        "winmd/Windows.Media.Devices.CallControlContract.winmd",
-        "winmd/Windows.Media.MediaControlContract.winmd",
-        "winmd/Windows.Media.Playlists.PlaylistsContract.winmd",
-        "winmd/Windows.Media.Protection.ProtectionRenewalContract.winmd",
-        "winmd/Windows.Networking.Connectivity.WwanContract.winmd",
-        "winmd/Windows.Networking.NetworkOperators.LegacyNetworkOperatorsContract.winmd",
-        "winmd/Windows.Networking.Sockets.ControlChannelTriggerContract.winmd",
-        "winmd/Windows.Networking.XboxLive.XboxLiveSecureSocketsContract.winmd",
-        "winmd/Windows.Perception.Automation.Core.PerceptionAutomationCoreContract.winmd",
-        "winmd/Windows.Security.EnterpriseData.EnterpriseDataContract.winmd",
-        "winmd/Windows.Security.ExchangeActiveSyncProvisioning.EasContract.winmd",
-        "winmd/Windows.Security.Isolation.IsolatedWindowsEnvironmentContract.winmd",
-        "winmd/Windows.Services.Maps.GuidanceContract.winmd",
-        "winmd/Windows.Services.Maps.LocalSearchContract.winmd",
-        "winmd/Windows.Services.Store.StoreContract.winmd",
-        "winmd/Windows.Services.TargetedContent.TargetedContentContract.winmd",
-        "winmd/Windows.Storage.Provider.CloudFilesContract.winmd",
-        "winmd/Windows.System.Profile.PlatformAutomaticAppSignInContract.winmd",
-        "winmd/Windows.System.Profile.ProfileHardwareTokenContract.winmd",
-        "winmd/Windows.System.Profile.ProfileRetailInfoContract.winmd",
-        "winmd/Windows.System.Profile.ProfileSharedModeContract.winmd",
-        "winmd/Windows.System.Profile.SystemManufacturers.SystemManufacturersContract.winmd",
-        "winmd/Windows.System.SystemManagementContract.winmd",
-        "winmd/Windows.System.UserProfile.UserProfileContract.winmd",
-        "winmd/Windows.System.UserProfile.UserProfileLockScreenContract.winmd",
-        "winmd/Windows.UI.ApplicationSettings.ApplicationsSettingsContract.winmd",
-        "winmd/Windows.UI.Core.AnimationMetrics.AnimationMetricsContract.winmd",
-        "winmd/Windows.UI.Core.CoreWindowDialogsContract.winmd",
-        "winmd/Windows.UI.Shell.SecurityAppManagerContract.winmd",
-        "winmd/Windows.UI.Shell.WindowTabManagerContract.winmd",
-        "winmd/Windows.UI.UIAutomation.UIAutomationContract.winmd",
-        "winmd/Windows.UI.ViewManagement.ViewManagementViewScalingContract.winmd",
-        "winmd/Windows.Web.Http.Diagnostics.HttpDiagnosticsContract.winmd"
-      ]
-    },
-    "System.Runtime.WindowsRuntime/4.7.0": {
-      "sha512": "RQxUkf37fp7MSWbOfKRjUjyudyfZb2u79YY5i1s+d7vuD80A7kmr2YfefO0JprQUhanxSm8bhXigCVfX2kEh+w==",
-      "type": "package",
-      "path": "system.runtime.windowsruntime/4.7.0",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
+        "Icon.png",
         "LICENSE.TXT",
         "THIRD-PARTY-NOTICES.TXT",
-        "build/net45/System.Runtime.WindowsRuntime.targets",
-        "build/net451/System.Runtime.WindowsRuntime.targets",
-        "build/net461/System.Runtime.WindowsRuntime.targets",
-        "buildTransitive/net45/System.Runtime.WindowsRuntime.targets",
-        "buildTransitive/net451/System.Runtime.WindowsRuntime.targets",
-        "buildTransitive/net461/System.Runtime.WindowsRuntime.targets",
-        "lib/net45/_._",
-        "lib/netstandard1.0/System.Runtime.WindowsRuntime.dll",
-        "lib/netstandard1.0/System.Runtime.WindowsRuntime.xml",
-        "lib/netstandard1.2/System.Runtime.WindowsRuntime.dll",
-        "lib/netstandard1.2/System.Runtime.WindowsRuntime.xml",
-        "lib/netstandard2.0/System.Runtime.WindowsRuntime.dll",
-        "lib/netstandard2.0/System.Runtime.WindowsRuntime.xml",
-        "lib/portable-win8+wp8+wpa81/_._",
-        "lib/uap10.0.16299/_._",
-        "lib/win8/_._",
-        "lib/wp80/_._",
-        "lib/wpa81/_._",
-        "ref/net45/_._",
-        "ref/netcore50/System.Runtime.WindowsRuntime.dll",
-        "ref/netcore50/System.Runtime.WindowsRuntime.xml",
-        "ref/netcore50/de/System.Runtime.WindowsRuntime.xml",
-        "ref/netcore50/es/System.Runtime.WindowsRuntime.xml",
-        "ref/netcore50/fr/System.Runtime.WindowsRuntime.xml",
-        "ref/netcore50/it/System.Runtime.WindowsRuntime.xml",
-        "ref/netcore50/ja/System.Runtime.WindowsRuntime.xml",
-        "ref/netcore50/ko/System.Runtime.WindowsRuntime.xml",
-        "ref/netcore50/ru/System.Runtime.WindowsRuntime.xml",
-        "ref/netcore50/zh-hans/System.Runtime.WindowsRuntime.xml",
-        "ref/netcore50/zh-hant/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.0/System.Runtime.WindowsRuntime.dll",
-        "ref/netstandard1.0/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.0/de/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.0/es/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.0/fr/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.0/it/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.0/ja/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.0/ko/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.0/ru/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.0/zh-hans/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.0/zh-hant/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.2/System.Runtime.WindowsRuntime.dll",
-        "ref/netstandard1.2/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.2/de/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.2/es/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.2/fr/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.2/it/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.2/ja/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.2/ko/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.2/ru/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.2/zh-hans/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard1.2/zh-hant/System.Runtime.WindowsRuntime.xml",
-        "ref/netstandard2.0/System.Runtime.WindowsRuntime.dll",
-        "ref/netstandard2.0/System.Runtime.WindowsRuntime.xml",
-        "ref/portable-win8+wp8+wpa81/_._",
-        "ref/uap10.0.16299/_._",
-        "ref/win8/_._",
-        "ref/wp80/_._",
-        "ref/wpa81/_._",
-        "runtimes/win-aot/lib/netcore50/System.Runtime.WindowsRuntime.dll",
-        "runtimes/win-aot/lib/uap10.0.16299/_._",
-        "runtimes/win/lib/netcore50/System.Runtime.WindowsRuntime.dll",
-        "runtimes/win/lib/netcoreapp3.0/System.Runtime.WindowsRuntime.dll",
-        "runtimes/win/lib/netcoreapp3.0/System.Runtime.WindowsRuntime.xml",
-        "runtimes/win/lib/uap10.0.16299/_._",
-        "system.runtime.windowsruntime.4.7.0.nupkg.sha512",
-        "system.runtime.windowsruntime.nuspec",
-        "useSharedDesignerContext.txt",
-        "version.txt"
+        "buildTransitive/net461/System.Drawing.Common.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net6.0/_._",
+        "buildTransitive/netcoreapp2.0/System.Drawing.Common.targets",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net462/System.Drawing.Common.dll",
+        "lib/net462/System.Drawing.Common.pdb",
+        "lib/net462/System.Drawing.Common.xml",
+        "lib/net6.0/System.Drawing.Common.dll",
+        "lib/net6.0/System.Drawing.Common.pdb",
+        "lib/net6.0/System.Drawing.Common.xml",
+        "lib/net7.0/System.Drawing.Common.dll",
+        "lib/net7.0/System.Drawing.Common.pdb",
+        "lib/net7.0/System.Drawing.Common.xml",
+        "lib/net8.0/System.Drawing.Common.dll",
+        "lib/net8.0/System.Drawing.Common.pdb",
+        "lib/net8.0/System.Drawing.Common.xml",
+        "lib/netstandard2.0/System.Drawing.Common.dll",
+        "lib/netstandard2.0/System.Drawing.Common.pdb",
+        "lib/netstandard2.0/System.Drawing.Common.xml",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "system.drawing.common.8.0.7.nupkg.sha512",
+        "system.drawing.common.nuspec",
+        "useSharedDesignerContext.txt"
       ]
     }
   },
   "projectFileDependencyGroups": {
     "net8.0-windows10.0.19041": [
-      "Microsoft.Windows.CsWinRT >= 2.1.6",
-      "Microsoft.Windows.SDK.NET.Ref >= 10.0.26100.1",
-      "System.Runtime.WindowsRuntime >= 4.7.0"
+      "PdfiumViewer.Core >= 2.16.0",
+      "PdfiumViewer.Native.x64 >= 2023.10.21",
+      "System.Drawing.Common >= 8.0.7"
     ]
   },
   "packageFolders": {
@@ -562,17 +209,17 @@
       "net8.0-windows10.0.19041": {
         "targetAlias": "net8.0-windows10.0.19041.0",
         "dependencies": {
-          "Microsoft.Windows.CsWinRT": {
+          "PdfiumViewer.Core": {
             "target": "Package",
-            "version": "[2.1.6, )"
+            "version": "[2.16.0, )"
           },
-          "Microsoft.Windows.SDK.NET.Ref": {
+          "PdfiumViewer.Native.x64": {
             "target": "Package",
-            "version": "[10.0.26100.1, )"
+            "version": "[2023.10.21, )"
           },
-          "System.Runtime.WindowsRuntime": {
+          "System.Drawing.Common": {
             "target": "Package",
-            "version": "[4.7.0, )"
+            "version": "[8.0.7, )"
           }
         },
         "imports": [
@@ -630,20 +277,22 @@
   },
   "logs": [
     {
-      "code": "NU1213",
+      "code": "NU1102",
       "level": "Error",
-      "message": "The package Microsoft.Windows.SDK.NET.Ref 10.0.26100.1 has a package type DotnetPlatform that is incompatible with this project. ",
-      "libraryId": "Microsoft.Windows.SDK.NET.Ref",
+      "message": "Unable to find package PdfiumViewer.Core with version (>= 2.16.0)\r\n  - Found 4 version(s) in nuget.org [ Nearest version: 1.0.4 ]",
+      "libraryId": "PdfiumViewer.Core",
       "targetGraphs": [
-        "net8.0-windows10.0.19041"
+        "net8.0-windows10.0.19041",
+        "net8.0-windows10.0.19041/win-x64"
       ]
     },
     {
-      "code": "NU1213",
+      "code": "NU1101",
       "level": "Error",
-      "message": "The package Microsoft.Windows.SDK.NET.Ref 10.0.26100.1 has a package type DotnetPlatform that is incompatible with this project. ",
-      "libraryId": "Microsoft.Windows.SDK.NET.Ref",
+      "message": "Unable to find package PdfiumViewer.Native.x64. No packages exist with this id in source(s): nuget.org",
+      "libraryId": "PdfiumViewer.Native.x64",
       "targetGraphs": [
+        "net8.0-windows10.0.19041",
         "net8.0-windows10.0.19041/win-x64"
       ]
     }
