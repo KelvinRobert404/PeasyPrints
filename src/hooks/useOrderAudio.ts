@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 
 type SoundConfig = {
   chimeUrl: string;
@@ -16,6 +16,21 @@ export function useOrderAudio(config: SoundConfig = { chimeUrl: "/sounds/new-ord
   const loopSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const loopIntervalRef = useRef<number | null>(null);
   const [enabled, setEnabled] = useState<boolean>(false);
+
+  const resolvePublicUrl = useCallback((path: string) => {
+    try {
+      const isAbsolute = /^https?:\/\//i.test(path);
+      if (isAbsolute) return path;
+      const prefix = (globalThis as any)?.__NEXT_DATA__?.assetPrefix || "";
+      if (path.startsWith("/")) return `${prefix}${path}`;
+      return `${prefix}/${path}`;
+    } catch {
+      return path;
+    }
+  }, []);
+
+  const chimeUrlResolved = useMemo(() => resolvePublicUrl(config.chimeUrl), [config.chimeUrl, resolvePublicUrl]);
+  const loopUrlResolved = useMemo(() => resolvePublicUrl(config.loopUrl), [config.loopUrl, resolvePublicUrl]);
 
   const ensureContext = useCallback(() => {
     if (!audioContextRef.current) {
@@ -101,7 +116,7 @@ export function useOrderAudio(config: SoundConfig = { chimeUrl: "/sounds/new-ord
     if (!enabled) return;
     const ctx = ensureContext();
     if (!ctx) return;
-    const buffer = await loadBuffer(config.chimeUrl);
+    const buffer = await loadBuffer(chimeUrlResolved);
     if (buffer) {
       const source = ctx.createBufferSource();
       source.buffer = buffer;
@@ -110,13 +125,13 @@ export function useOrderAudio(config: SoundConfig = { chimeUrl: "/sounds/new-ord
     } else {
       await beep(240, 560);
     }
-  }, [config.chimeUrl, enabled, ensureContext, loadBuffer, beep]);
+  }, [chimeUrlResolved, enabled, ensureContext, loadBuffer, beep]);
 
   const startLoop = useCallback(async () => {
     if (!enabled || loopSourceRef.current || loopIntervalRef.current !== null) return;
     const ctx = ensureContext();
     if (!ctx) return;
-    const buffer = await loadBuffer(config.loopUrl);
+    const buffer = await loadBuffer(loopUrlResolved);
     if (buffer) {
       const source = ctx.createBufferSource();
       source.buffer = buffer;
@@ -130,7 +145,7 @@ export function useOrderAudio(config: SoundConfig = { chimeUrl: "/sounds/new-ord
         void beep(200, 520);
       }, 2000);
     }
-  }, [config.loopUrl, enabled, ensureContext, loadBuffer, beep]);
+  }, [loopUrlResolved, enabled, ensureContext, loadBuffer, beep]);
 
   const stopLoop = useCallback(() => {
     if (loopSourceRef.current) {
