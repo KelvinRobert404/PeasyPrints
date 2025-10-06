@@ -15,6 +15,7 @@ import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { useOrderAlerts } from '@/hooks/useOrderAlerts';
 import { useTabAttention } from '@/hooks/useTabAttention';
+import { triggerPeasyPrint, isWindows } from '@/lib/utils/peasyPrint';
 
 export default function ShopfrontDashboardPage() {
   const { user } = useAuthStore();
@@ -212,6 +213,24 @@ export default function ShopfrontDashboardPage() {
                       ) : (
                         <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
                           <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {isWindows() && (
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const jobId = (o as any).id as string;
+                            if (!jobId) return;
+                            triggerPeasyPrint(jobId, {
+                              onMissingHelper: () => {
+                                alert('PeasyPrint Helper not detected. Please install it, then click Print again.');
+                              }
+                            });
+                          }}
+                        >
+                          Print
                         </Button>
                       )}
                       <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); void cancelOrder((o as any).id, o); }}>
