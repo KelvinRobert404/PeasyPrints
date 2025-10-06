@@ -1,7 +1,0 @@
-C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\PeasyPrint.Helper.exe
-C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\PeasyPrint.Helper.dll
-C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\PeasyPrint.Helper.deps.json
-C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\PeasyPrint.Helper.runtimeconfig.json
-C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\PeasyPrint.Helper.pdb
-C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\Microsoft.Windows.SDK.NET.dll
-C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\WinRT.Runtime.dll
