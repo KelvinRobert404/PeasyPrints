@@ -35,7 +35,15 @@ namespace PeasyPrint.Helper
                     request = resolved ?? request;
                 }
 
-                ShowPrefilledPrintDialog(request);
+                // Show dialog with defaults
+                var (printDialog, ticket) = CreatePrefilledDialog(request);
+                var confirmed = printDialog.ShowDialog();
+                if (confirmed == true && request.FileUrl.HasValue())
+                {
+                    // Render and print the PDF using the chosen printer
+                    var pdfService = new PdfPrintService();
+                    pdfService.PrintWithDialogAsync(request.FileUrl!, printDialog, ticket).GetAwaiter().GetResult();
+                }
             }
             catch (Exception ex)
             {
@@ -69,7 +77,7 @@ namespace PeasyPrint.Helper
             }
         }
 
-        private static void ShowPrefilledPrintDialog(PrintRequest request)
+        private static (PrintDialog dialog, PrintTicket ticket) CreatePrefilledDialog(PrintRequest request)
         {
             var dialog = new PrintDialog();
 
@@ -78,10 +86,7 @@ namespace PeasyPrint.Helper
             ticket.CopyCount = request.NumberOfCopies;
             ticket.OutputColor = request.IsColor ? OutputColor.Color : OutputColor.Grayscale;
             dialog.PrintTicket = ticket;
-
-            dialog.ShowDialog();
-            // Intentionally not printing here; the user will click Print in the dialog.
-            // Actual PDF rendering/printing will be wired in a later step.
+            return (dialog, ticket);
         }
     }
 
