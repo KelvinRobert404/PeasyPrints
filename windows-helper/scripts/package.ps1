@@ -69,4 +69,10 @@ Write-Host "ZIP: $zipPath"
 Write-Host "Publish folder: $publishDir"
 Write-Host "Protocol .reg: $regPath"
 
+# Copy to canonical app folder for convenience
+$appDir = Join-Path $PSScriptRoot "..\PeasyPrint.Helper\app"
+New-Item -ItemType Directory -Force -Path $appDir | Out-Null
+robocopy $publishDir $appDir /MIR | Out-Null
+Write-Host "Copied app to: $appDir" -ForegroundColor Green
+
 
