@@ -12,7 +12,6 @@ using System.Windows.Xps;
 using System.Windows.Xps.Serialization;
 using Windows.Data.Pdf;
 using Windows.Storage.Streams;
-using Windows.UI;
 using System.Runtime.InteropServices.WindowsRuntime;
 
 // Requires Windows 10/11 with Windows Runtime PDF APIs available.
