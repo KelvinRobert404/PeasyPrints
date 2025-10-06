@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using WinColor = Windows.UI.Color;
 using System.Windows.Xps;
 using System.Windows.Xps.Serialization;
 using Windows.Data.Pdf;
@@ -68,7 +69,7 @@ namespace PeasyPrint.Helper
                 {
                     DestinationWidth = (uint)width,
                     DestinationHeight = (uint)height,
-                    BackgroundColor = Color.FromArgb(255, 255, 255, 255)
+                    BackgroundColor = WinColor.FromArgb(255, 255, 255, 255)
                 };
                 await page.RenderToStreamAsync(outStream, renderOptions);
 

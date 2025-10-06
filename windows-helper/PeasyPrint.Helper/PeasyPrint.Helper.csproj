@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Runtime.WindowsRuntime" Version="4.7.0" />
+    <FrameworkReference Include="Microsoft.Windows.SDK.NET.Ref" />
   </ItemGroup>
 </Project>
 

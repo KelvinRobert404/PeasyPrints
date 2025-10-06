@@ -44,17 +44,9 @@
         "net8.0-windows10.0.19041": {
           "targetAlias": "net8.0-windows10.0.19041.0",
           "dependencies": {
-            "PdfiumViewer.Core": {
+            "System.Runtime.WindowsRuntime": {
               "target": "Package",
-              "version": "[2.16.0, )"
-            },
-            "PdfiumViewer.Native.x64": {
-              "target": "Package",
-              "version": "[2023.10.21, )"
-            },
-            "System.Drawing.Common": {
-              "target": "Package",
-              "version": "[8.0.7, )"
+              "version": "[4.7.0, )"
             }
           },
           "imports": [
