@@ -1,13 +1,41 @@
 {
   "version": 2,
-  "dgSpecHash": "A5+FmZCsANk=",
-  "success": true,
+  "dgSpecHash": "iZEI9gtHSyI=",
+  "success": false,
   "projectFilePath": "C:\\Developer\\PeasyPrints\\windows-helper\\PeasyPrint.Helper\\PeasyPrint.Helper.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\siyon\\.nuget\\packages\\microsoft.netcore.platforms\\3.1.0\\microsoft.netcore.platforms.3.1.0.nupkg.sha512",
+    "C:\\Users\\siyon\\.nuget\\packages\\microsoft.windows.cswinrt\\2.1.6\\microsoft.windows.cswinrt.2.1.6.nupkg.sha512",
+    "C:\\Users\\siyon\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.26100.1\\microsoft.windows.sdk.net.ref.10.0.26100.1.nupkg.sha512",
+    "C:\\Users\\siyon\\.nuget\\packages\\system.runtime.windowsruntime\\4.7.0\\system.runtime.windowsruntime.4.7.0.nupkg.sha512",
     "C:\\Users\\siyon\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.20\\microsoft.netcore.app.ref.8.0.20.nupkg.sha512",
     "C:\\Users\\siyon\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.20\\microsoft.windowsdesktop.app.ref.8.0.20.nupkg.sha512",
     "C:\\Users\\siyon\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.20\\microsoft.aspnetcore.app.ref.8.0.20.nupkg.sha512",
-    "C:\\Users\\siyon\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.20\\microsoft.netcore.app.host.win-x64.8.0.20.nupkg.sha512"
+    "C:\\Users\\siyon\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.20\\microsoft.netcore.app.host.win-x64.8.0.20.nupkg.sha512",
+    "C:\\Users\\siyon\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.19041.57\\microsoft.windows.sdk.net.ref.10.0.19041.57.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1213",
+      "level": "Error",
+      "message": "The package Microsoft.Windows.SDK.NET.Ref 10.0.26100.1 has a package type DotnetPlatform that is incompatible with this project. ",
+      "projectPath": "C:\\Developer\\PeasyPrints\\windows-helper\\PeasyPrint.Helper\\PeasyPrint.Helper.csproj",
+      "filePath": "C:\\Developer\\PeasyPrints\\windows-helper\\PeasyPrint.Helper\\PeasyPrint.Helper.csproj",
+      "libraryId": "Microsoft.Windows.SDK.NET.Ref",
+      "targetGraphs": [
+        "net8.0-windows10.0.19041"
+      ]
+    },
+    {
+      "code": "NU1213",
+      "level": "Error",
+      "message": "The package Microsoft.Windows.SDK.NET.Ref 10.0.26100.1 has a package type DotnetPlatform that is incompatible with this project. ",
+      "projectPath": "C:\\Developer\\PeasyPrints\\windows-helper\\PeasyPrint.Helper\\PeasyPrint.Helper.csproj",
+      "filePath": "C:\\Developer\\PeasyPrints\\windows-helper\\PeasyPrint.Helper\\PeasyPrint.Helper.csproj",
+      "libraryId": "Microsoft.Windows.SDK.NET.Ref",
+      "targetGraphs": [
+        "net8.0-windows10.0.19041/win-x64"
+      ]
+    }
+  ]
 }
