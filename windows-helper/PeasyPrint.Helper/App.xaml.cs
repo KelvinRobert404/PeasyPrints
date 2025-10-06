@@ -35,8 +35,10 @@ namespace PeasyPrint.Helper
                     request = resolved ?? request;
                 }
 
+                var settings = SettingsStore.Load();
+
                 // Show dialog with defaults
-                var (printDialog, ticket) = CreatePrefilledDialog(request);
+                var (printDialog, ticket) = CreatePrefilledDialog(request, settings);
                 var confirmed = printDialog.ShowDialog();
                 if (confirmed == true && request.FileUrl.HasValue())
                 {
@@ -77,7 +79,7 @@ namespace PeasyPrint.Helper
             }
         }
 
-        private static (PrintDialog dialog, PrintTicket ticket) CreatePrefilledDialog(PrintRequest request)
+        private static (PrintDialog dialog, PrintTicket ticket) CreatePrefilledDialog(PrintRequest request, Settings settings)
         {
             var dialog = new PrintDialog();
 
@@ -86,6 +88,27 @@ namespace PeasyPrint.Helper
             ticket.CopyCount = request.NumberOfCopies;
             ticket.OutputColor = request.IsColor ? OutputColor.Color : OutputColor.Grayscale;
             dialog.PrintTicket = ticket;
+
+            // Try to preselect a printer that contains the preferred substring
+            if (!string.IsNullOrWhiteSpace(settings.PreferredPrinterNameSubstring))
+            {
+                try
+                {
+                    var server = new LocalPrintServer();
+                    foreach (var queue in server.GetPrintQueues())
+                    {
+                        if (queue.FullName.IndexOf(settings.PreferredPrinterNameSubstring, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            dialog.PrintQueue = queue;
+                            break;
+                        }
+                    }
+                }
+                catch
+                {
+                    // ignore and leave default printer
+                }
+            }
             return (dialog, ticket);
         }
     }

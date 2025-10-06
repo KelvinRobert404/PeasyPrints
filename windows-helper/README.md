@@ -15,4 +15,11 @@ A small Windows helper app that opens the native Windows Print dialog prefilled 
 
 Printing pipeline for PDF will be implemented next; current build shows the Windows dialog with prefilled options.
 
+## Settings
+
+- Stored at `%LOCALAPPDATA%/PeasyPrint/settings.json`:
+  - `preferredPrinterNameSubstring`: optional string used to preselect a printer by name match.
+  - `allowedDomains`: optional array of allowed website domains (future use).
+  - `apiBaseOverride`: optional API base URL override (env `PEASYPRINT_API_BASE` wins).
+
 
