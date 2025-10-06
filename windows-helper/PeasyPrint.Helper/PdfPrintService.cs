@@ -9,6 +9,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Xps;
 using System.Windows.Xps.Serialization;
+using Windows.Data.Pdf;
+using Windows.Storage.Streams;
+using Windows.UI;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 // Requires Windows 10/11 with Windows Runtime PDF APIs available.
 // This implementation loads the PDF via WinRT, renders each page to images,
@@ -45,8 +49,8 @@ namespace PeasyPrint.Helper
         private static async Task<FixedDocument> RenderPdfToFixedDocumentAsync(Stream pdfStream)
         {
             // Load PDF via WinRT API
-            var ras = WindowsRuntimeStreamExtensions.AsRandomAccessStream(pdfStream);
-            var pdfDoc = await Windows.Data.Pdf.PdfDocument.LoadFromStreamAsync(ras);
+            var ras = pdfStream.AsRandomAccessStream();
+            var pdfDoc = await PdfDocument.LoadFromStreamAsync(ras);
             if (pdfDoc == null || pdfDoc.PageCount == 0)
             {
                 throw new InvalidOperationException("Unable to load PDF or PDF is empty");
@@ -63,17 +67,17 @@ namespace PeasyPrint.Helper
                 var width = Math.Max(1, (int)Math.Round(pageSize.Width));
                 var height = Math.Max(1, (int)Math.Round(pageSize.Height));
 
-                using var outStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
-                var renderOptions = new Windows.Data.Pdf.PdfPageRenderOptions
+                using var outStream = new InMemoryRandomAccessStream();
+                var renderOptions = new PdfPageRenderOptions
                 {
                     DestinationWidth = (uint)width,
                     DestinationHeight = (uint)height,
-                    BackgroundColor = Windows.UI.Color.FromArgb(255, 255, 255, 255)
+                    BackgroundColor = Color.FromArgb(255, 255, 255, 255)
                 };
                 await page.RenderToStreamAsync(outStream, renderOptions);
 
                 // Convert WinRT stream to .NET stream
-                using var managedStream = WindowsRuntimeStreamExtensions.AsStreamForRead(outStream.GetInputStreamAt(0));
+                using var managedStream = outStream.GetInputStreamAt(0).AsStreamForRead();
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
