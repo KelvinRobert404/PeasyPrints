@@ -6,6 +6,8 @@ namespace PeasyPrint.Helper
     internal sealed class Settings
     {
         public string? PreferredPrinterNameSubstring { get; set; }
+        public string? BwPrinterNameSubstring { get; set; }
+        public string? ColorPrinterNameSubstring { get; set; }
         public List<string> AllowedDomains { get; set; } = new List<string>();
         public string? ApiBaseOverride { get; set; }
     }

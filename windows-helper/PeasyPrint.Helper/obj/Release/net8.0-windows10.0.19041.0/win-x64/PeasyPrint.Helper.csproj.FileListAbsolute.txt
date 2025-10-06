@@ -1,4 +1,3 @@
-C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.csproj.AssemblyReference.cache
 C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\MainWindow.baml
 C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\MainWindow.g.cs
 C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\App.g.cs
@@ -9,3 +8,16 @@ C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-win
 C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.AssemblyInfo.cs
 C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.csproj.CoreCompileInputs.cache
 C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.sourcelink.json
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.exe
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.deps.json
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.runtimeconfig.json
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.dll
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.pdb
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\Microsoft.Windows.SDK.NET.dll
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\bin\Release\net8.0-windows10.0.19041.0\win-x64\WinRT.Runtime.dll
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPri.B8884785.Up2Date
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.dll
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\refint\PeasyPrint.Helper.dll
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.pdb
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\PeasyPrint.Helper.genruntimeconfig.cache
+C:\Developer\PeasyPrints\windows-helper\PeasyPrint.Helper\obj\Release\net8.0-windows10.0.19041.0\win-x64\ref\PeasyPrint.Helper.dll

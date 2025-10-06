@@ -43,12 +43,6 @@
       "frameworks": {
         "net8.0-windows10.0.19041": {
           "targetAlias": "net8.0-windows10.0.19041.0",
-          "dependencies": {
-            "System.Runtime.WindowsRuntime": {
-              "target": "Package",
-              "version": "[4.7.0, )"
-            }
-          },
           "imports": [
             "net461",
             "net462",
@@ -85,6 +79,9 @@
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
+            },
+            "Microsoft.Windows.SDK.NET.Ref": {
+              "privateAssets": "none"
             },
             "Microsoft.Windows.SDK.NET.Ref.Windows": {
               "privateAssets": "all"

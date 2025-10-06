@@ -15,7 +15,16 @@ namespace PeasyPrint.Helper
 
             try
             {
-                var request = StartupArgumentsParser.Parse(Environment.GetCommandLineArgs());
+                var args = Environment.GetCommandLineArgs();
+                // Open settings UI if requested
+                if (Array.Exists(args, a => a.StartsWith("peasyprint://settings", StringComparison.OrdinalIgnoreCase)))
+                {
+                    new SettingsWindow(SettingsStore.Load()).ShowDialog();
+                    Shutdown(0);
+                    return;
+                }
+
+                var request = StartupArgumentsParser.Parse(args);
 
                 if (request == null)
                 {
@@ -89,15 +98,17 @@ namespace PeasyPrint.Helper
             ticket.OutputColor = request.IsColor ? OutputColor.Color : OutputColor.Grayscale;
             dialog.PrintTicket = ticket;
 
-            // Try to preselect a printer that contains the preferred substring
-            if (!string.IsNullOrWhiteSpace(settings.PreferredPrinterNameSubstring))
+            // Try to preselect printer by role first (color vs BW), then fallback to preferred substring
+            var roleSubstring = request.IsColor ? settings.ColorPrinterNameSubstring : settings.BwPrinterNameSubstring;
+            if (!string.IsNullOrWhiteSpace(roleSubstring) || !string.IsNullOrWhiteSpace(settings.PreferredPrinterNameSubstring))
             {
                 try
                 {
                     var server = new LocalPrintServer();
                     foreach (var queue in server.GetPrintQueues())
                     {
-                        if (queue.FullName.IndexOf(settings.PreferredPrinterNameSubstring, StringComparison.OrdinalIgnoreCase) >= 0)
+                        var target = roleSubstring ?? settings.PreferredPrinterNameSubstring;
+                        if (!string.IsNullOrWhiteSpace(target) && queue.FullName.IndexOf(target, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             dialog.PrintQueue = queue;
                             break;
