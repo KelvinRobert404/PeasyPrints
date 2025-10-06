@@ -16,6 +16,16 @@ namespace PeasyPrint.Helper
             try
             {
                 var args = Environment.GetCommandLineArgs();
+                // Tray mode: keep running in system tray
+                if (Array.Exists(args, a => string.Equals(a, "--tray", StringComparison.OrdinalIgnoreCase)))
+                {
+                    System.Windows.Forms.Application.EnableVisualStyles();
+                    using var tray = new Tray();
+                    System.Windows.Forms.Application.Run();
+                    Shutdown(0);
+                    return;
+                }
+
                 // Open settings UI if requested
                 if (Array.Exists(args, a => a.StartsWith("peasyprint://settings", StringComparison.OrdinalIgnoreCase)))
                 {
