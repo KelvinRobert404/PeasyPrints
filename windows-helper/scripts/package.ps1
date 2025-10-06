@@ -24,7 +24,8 @@ if (-not (Test-Path $projectPath)) {
 Write-Host "[2/5] Publishing helper..." -ForegroundColor Cyan
 & dotnet publish $projectPath -c $Configuration -r $Runtime --self-contained:$SelfContained | Write-Output
 
-$publishDir = Join-Path $PSScriptRoot "..\PeasyPrint.Helper\bin\$Configuration\net8.0-windows\$Runtime\publish"
+$tfm = "net8.0-windows10.0.19041.0"
+$publishDir = Join-Path $PSScriptRoot "..\PeasyPrint.Helper\bin\$Configuration\$tfm\$Runtime\publish"
 if (-not (Test-Path $publishDir)) {
     Write-Error "Publish output not found at $publishDir"
     exit 1
