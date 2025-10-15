@@ -18,3 +18,4 @@ Install steps on a Windows PC:
 5. Launch a test: `peasyprint://print?file=https%3A%2F%2Fexample.com%2Fsample.pdf&copies=2&color=color` or jobId flow.
 
 
+

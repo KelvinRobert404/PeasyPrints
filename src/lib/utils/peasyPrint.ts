@@ -17,6 +17,8 @@ export function isWindows(): boolean {
   return /Windows NT/i.test(navigator.userAgent);
 }
 
+const PROD_API_BASE = 'https://theswoop.club/api';
+
 export function triggerPeasyPrint(jobId: string, opts: PeasyPrintOptions = {}): void {
   const { timeoutMs = 1200, installUrl, onMissingHelper, onLaunched } = opts;
 
@@ -28,7 +30,9 @@ export function triggerPeasyPrint(jobId: string, opts: PeasyPrintOptions = {}): 
     return;
   }
 
-  const url = `peasyprint://print?jobId=${encodeURIComponent(jobId)}`;
+  // Prefer jobUrl so the helper needs no local API configuration
+  const jobUrl = `${PROD_API_BASE}/print-jobs/${encodeURIComponent(jobId)}`;
+  const url = `peasyprint://print?jobUrl=${encodeURIComponent(jobUrl)}`;
 
   // Kick off protocol launch (must be in direct response to a user gesture for best compatibility)
   try {

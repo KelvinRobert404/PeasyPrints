@@ -8,3 +8,4 @@
 - During development, you can register the protocol manually by editing and importing `peasyprint-protocol.reg` (update the EXE path first).
 
 
+

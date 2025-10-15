@@ -68,7 +68,7 @@ namespace PeasyPrint.Helper
             settings.ColorPrinterNameSubstring = ColorCombo.Text?.Trim();
             settings.PreferredPrinterNameSubstring = FallbackText.Text?.Trim();
             SettingsStore.Save(settings);
-            MessageBox.Show("Saved", "PeasyPrint", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show("Saved", "PeasyPrint", MessageBoxButton.OK, MessageBoxImage.Information);
             Close();
         }
 
@@ -98,7 +98,7 @@ namespace PeasyPrint.Helper
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "PeasyPrint", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show(ex.Message, "PeasyPrint", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

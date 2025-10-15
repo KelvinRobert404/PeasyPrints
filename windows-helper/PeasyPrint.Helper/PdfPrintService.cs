@@ -80,7 +80,7 @@ namespace PeasyPrint.Helper
                 bitmap.EndInit();
                 bitmap.Freeze();
 
-                var image = new Image { Source = bitmap, Stretch = Stretch.Uniform };
+                var image = new System.Windows.Controls.Image { Source = bitmap, Stretch = Stretch.Uniform };
                 var fixedPage = new FixedPage { Width = bitmap.PixelWidth, Height = bitmap.PixelHeight };
                 fixedPage.Children.Add(image);
 

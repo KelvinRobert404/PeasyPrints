@@ -9,6 +9,7 @@ namespace PeasyPrint.Helper
 {
     public partial class App : System.Windows.Application
     {
+        private const string DEFAULT_API_BASE = "https://theswoop.club/api";
         protected override void OnStartup(StartupEventArgs e)
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -52,10 +53,10 @@ namespace PeasyPrint.Helper
                     return;
                 }
 
-                // If we received a jobId only, fetch job details from API
-                if (!request.FileUrl.HasValue() && !string.IsNullOrWhiteSpace(request.JobId))
+                // If we need to resolve job details
+                if (!request.FileUrl.HasValue() && (!string.IsNullOrWhiteSpace(request.JobId) || request.JobUrl != null))
                 {
-                    var resolved = ResolveJob(request.JobId!);
+                    var resolved = ResolveJob(request);
                     request = resolved ?? request;
                 }
 
@@ -73,7 +74,7 @@ namespace PeasyPrint.Helper
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show(ex.Message, "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -81,31 +82,42 @@ namespace PeasyPrint.Helper
             }
         }
 
-        private static PrintRequest? ResolveJob(string jobId)
+        private static PrintRequest? ResolveJob(PrintRequest request)
         {
             try
             {
-                var apiBase = Environment.GetEnvironmentVariable("PEASYPRINT_API_BASE");
                 var apiKey = Environment.GetEnvironmentVariable("PEASYPRINT_API_KEY");
-                if (string.IsNullOrWhiteSpace(apiBase))
-                {
-                    throw new InvalidOperationException("PEASYPRINT_API_BASE not set");
-                }
                 var http = new System.Net.Http.HttpClient();
-                var client = new JobClient(http, new Uri(apiBase));
-                var resolved = client.FetchJobAsync(jobId, apiKey, CancellationToken.None).GetAwaiter().GetResult();
+                var client = new JobClient(http, null);
+
+                // Highest priority: direct jobUrl
+                if (request.JobUrl != null)
+                {
+                    var resolvedFromUrl = client.FetchJobByUrlAsync(request.JobUrl, apiKey, CancellationToken.None).GetAwaiter().GetResult();
+                    return resolvedFromUrl;
+                }
+
+                // Build API base precedence: request.ApiBase -> settings override -> env -> default
+                var settings = SettingsStore.Load();
+                var apiBase = request.ApiBase
+                    ?? settings.ApiBaseOverride
+                    ?? Environment.GetEnvironmentVariable("PEASYPRINT_API_BASE")
+                    ?? DEFAULT_API_BASE;
+
+                var clientWithBase = new JobClient(http, new Uri(apiBase));
+                var resolved = clientWithBase.FetchJobAsync(request.JobId!, apiKey, CancellationToken.None).GetAwaiter().GetResult();
                 return resolved;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to fetch job: {ex.Message}", "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"Failed to fetch job: {ex.Message}", "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
         }
 
-        private static (PrintDialog dialog, PrintTicket ticket) CreatePrefilledDialog(PrintRequest request, Settings settings)
+        private static (System.Windows.Controls.PrintDialog dialog, PrintTicket ticket) CreatePrefilledDialog(PrintRequest request, Settings settings)
         {
-            var dialog = new PrintDialog();
+            var dialog = new System.Windows.Controls.PrintDialog();
 
             var ticket = dialog.PrintTicket ?? new PrintTicket();
             ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
@@ -143,6 +155,8 @@ namespace PeasyPrint.Helper
     {
         public string? JobId { get; init; }
         public Uri? FileUrl { get; init; }
+        public Uri? JobUrl { get; init; }
+        public string? ApiBase { get; init; }
         public int NumberOfCopies { get; init; } = 1;
         public bool IsColor { get; init; } = true;
     }
@@ -183,6 +197,8 @@ namespace PeasyPrint.Helper
             {
                 JobId = dict.GetValueOrDefault("jobId"),
                 FileUrl = dict.TryGetValue("file", out var file) && Uri.TryCreate(file, UriKind.Absolute, out var uri) ? uri : null,
+                JobUrl = dict.TryGetValue("jobUrl", out var jobUrl) && Uri.TryCreate(jobUrl, UriKind.Absolute, out var jobUri) ? jobUri : null,
+                ApiBase = dict.GetValueOrDefault("api"),
                 NumberOfCopies = dict.TryGetValue("copies", out var copiesStr) && int.TryParse(copiesStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out var copies) ? Math.Max(1, copies) : 1,
                 IsColor = dict.TryGetValue("color", out var colorStr) ? !string.Equals(colorStr, "bw", StringComparison.OrdinalIgnoreCase) && !string.Equals(colorStr, "blackwhite", StringComparison.OrdinalIgnoreCase) && !string.Equals(colorStr, "grayscale", StringComparison.OrdinalIgnoreCase) ? bool.TryParse(colorStr, out var colorBool) ? colorBool : true : false : true
             };
@@ -197,6 +213,8 @@ namespace PeasyPrint.Helper
             {
                 JobId = query.GetValueOrDefault("jobId"),
                 FileUrl = query.TryGetValue("file", out var file) && Uri.TryCreate(file, UriKind.Absolute, out var parsed) ? parsed : null,
+                JobUrl = query.TryGetValue("jobUrl", out var jobUrl) && Uri.TryCreate(jobUrl, UriKind.Absolute, out var parsedJob) ? parsedJob : null,
+                ApiBase = query.GetValueOrDefault("api"),
                 NumberOfCopies = query.TryGetValue("copies", out var copiesStr) && int.TryParse(copiesStr, out var copies) ? Math.Max(1, copies) : 1,
                 IsColor = query.TryGetValue("color", out var colorStr) ? !string.Equals(colorStr, "bw", StringComparison.OrdinalIgnoreCase) && !string.Equals(colorStr, "blackwhite", StringComparison.OrdinalIgnoreCase) && !string.Equals(colorStr, "grayscale", StringComparison.OrdinalIgnoreCase) ? bool.TryParse(colorStr, out var colorBool) ? colorBool : true : false : true
             };
