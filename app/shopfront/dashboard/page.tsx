@@ -15,6 +15,8 @@ import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { useOrderAlerts } from '@/hooks/useOrderAlerts';
 import { useTabAttention } from '@/hooks/useTabAttention';
+import { useIdle } from '@/hooks/useIdle';
+import { triggerPeasyPrint, isWindows } from '@/lib/utils/peasyPrint';
 
 export default function ShopfrontDashboardPage() {
   const { user } = useAuthStore();
@@ -42,17 +44,20 @@ export default function ShopfrontDashboardPage() {
 
   // Alerts: chime on new orders, loop when overdue and idle/unfocused
   const isOpen = (currentShop as any)?.isOpen !== false; // default to true if undefined
+  const idleMs = 20000;
   const { enable: enableSound, enabled: soundEnabled } = useOrderAlerts({
     getOrders: () => (orders as any).filter((o: any) => o.status === 'processing' || o.status === 'printing'),
     pendingThresholdMs: 120000,
-    idleMs: 20000,
+    idleMs,
     muted: !isOpen,
   });
 
   // Blink tab title when there are pending orders and the tab is hidden/idle
-  useTabAttention((orders as any).some((o: any) => o.status === 'processing' || o.status === 'printing'), {
-    message: 'New orders waiting',
-    intervalMs: 1200,
+  const { isIdle } = useIdle(idleMs);
+  const hasPending = (orders as any).some((o: any) => o.status === 'processing' || o.status === 'printing');
+  useTabAttention(isOpen && hasPending && isIdle, {
+    message: 'NEW ORDERS WAITING',
+    intervalMs: 500,
   });
 
   // Removed early return to ensure hooks below run on every render
@@ -212,6 +217,24 @@ export default function ShopfrontDashboardPage() {
                       ) : (
                         <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
                           <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {isWindows() && (
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const jobId = (o as any).id as string;
+                            if (!jobId) return;
+                            triggerPeasyPrint(jobId, {
+                              onMissingHelper: () => {
+                                alert('PeasyPrint Helper not detected. Please install it, then click Print again.');
+                              }
+                            });
+                          }}
+                        >
+                          Print
                         </Button>
                       )}
                       <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); void cancelOrder((o as any).id, o); }}>
