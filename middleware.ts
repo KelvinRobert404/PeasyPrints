@@ -22,10 +22,11 @@ export default clerkMiddleware(async (auth, req) => {
     pathname.startsWith('/_next') ||
     pathname.startsWith('/images') ||
     pathname.startsWith('/fonts') ||
+    pathname.startsWith('/sounds') ||
     pathname === '/sw.js' ||
     pathname === '/manifest.json' ||
     pathname === '/favicon.ico' ||
-    /\.(png|jpg|jpeg|gif|svg|webp|avif|ico)$/.test(pathname);
+    /\.(png|jpg|jpeg|gif|svg|webp|avif|ico|mp3|wav|ogg)$/.test(pathname);
   if (isStaticAssetRequest) {
     return NextResponse.next();
   }
