@@ -15,6 +15,7 @@ import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { useOrderAlerts } from '@/hooks/useOrderAlerts';
 import { useTabAttention } from '@/hooks/useTabAttention';
+import { useIdle } from '@/hooks/useIdle';
 import { triggerPeasyPrint, isWindows } from '@/lib/utils/peasyPrint';
 
 export default function ShopfrontDashboardPage() {
@@ -43,17 +44,20 @@ export default function ShopfrontDashboardPage() {
 
   // Alerts: chime on new orders, loop when overdue and idle/unfocused
   const isOpen = (currentShop as any)?.isOpen !== false; // default to true if undefined
+  const idleMs = 20000;
   const { enable: enableSound, enabled: soundEnabled } = useOrderAlerts({
     getOrders: () => (orders as any).filter((o: any) => o.status === 'processing' || o.status === 'printing'),
     pendingThresholdMs: 120000,
-    idleMs: 20000,
+    idleMs,
     muted: !isOpen,
   });
 
   // Blink tab title when there are pending orders and the tab is hidden/idle
-  useTabAttention((orders as any).some((o: any) => o.status === 'processing' || o.status === 'printing'), {
-    message: 'New orders waiting',
-    intervalMs: 1200,
+  const { isIdle } = useIdle(idleMs);
+  const hasPending = (orders as any).some((o: any) => o.status === 'processing' || o.status === 'printing');
+  useTabAttention(isOpen && hasPending && isIdle, {
+    message: 'NEW ORDERS WAITING',
+    intervalMs: 500,
   });
 
   // Removed early return to ensure hooks below run on every render
