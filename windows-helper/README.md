@@ -2,6 +2,8 @@
 
 A small Windows helper app that opens the native Windows Print dialog prefilled with A4, copies, and color/BW from a custom URL like `peasyprint://print?jobId=...`.
 
+See the full guide: `docs/windows-print-helper.md`.
+
 ## Build prerequisites
 
 - Windows 10/11
