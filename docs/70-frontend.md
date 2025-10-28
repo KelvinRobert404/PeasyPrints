@@ -8,6 +8,7 @@ Frontend structure, UI primitives, PDF integration, and state stores.
 - `(auth)/login`, `(auth)/register`, `(auth)/otp`
 - `/dashboard`, `/shops`, `/shops/[shopId]`, `/upload`, `/orders`, `/profile`
 - `/shopfront/*` for shop operations
+- `/godview` for master admin dashboard (feature-flagged)
 
 ### Design system
 - Tailwind tokens (spacing, color), shadcn/ui components (`button`, `card`, `input`, `dialog`, `skeleton`, `badge`, etc.).
@@ -98,10 +99,37 @@ interface ShopState {
 }
 ```
 
+```ts
+// godviewStore (admin)
+interface GodviewState {
+  shops: Shop[];
+  orders: OrderDoc[];
+  pendingOrders: OrderDoc[];
+  historyOrders: OrderDoc[];
+  selectedShopIds: string[];
+  statusFilter: 'all' | 'processing' | 'printing' | 'printed' | 'collected' | 'completed' | 'cancelled';
+  searchText: string;
+  subscribe(): () => void;                 // Firestore listeners
+  pollSnapshot(passphrase: string): () => void; // Server polling mode
+  toggleShopOpen(shopId: string, open: boolean): Promise<void>;
+  bulkToggleShops(shopIds: string[], open: boolean): Promise<void>;
+  updateOrderStatus(orderId: string, status: OrderDoc['status']): Promise<void>;
+  setOrderEmergency(orderId: string, emergency: boolean): Promise<void>;
+  cancelOrder(order: OrderDoc): Promise<void>;
+}
+```
+
 ### Loading/error states & optimistic updates
 - Upload: optimistic page count; pricing recalculates on each edit via `calculateTotalCost`; `PrintUpgrades` toggles `emergency`/`afterDark` with mutual exclusivity and shop timing gating.
 - Orders: server is source-of-truth; no optimistic status flips; wait for Firestore ack.
 ### Upload and configuration flow (customer)
+### Godview UI overview
+- KPIs: online shops, queue size, recent orders count, selected shops
+- Tabs: Queue (processing/printing/printed), All Orders, Shops, History
+- Filters: by shop, status, and free text (id/user/phone/shop)
+- Actions: advance status, toggle urgent, cancel (mirrors to history), bulk shop open/close (confirm dialogs)
+- Responsive: horizontal scroll on small screens; columns hidden under breakpoints
+
 - `PrintConfigurator.tsx`: controls `paperSize`, `printColor`, `printFormat`, `copies`, `binding`; disables unavailable options based on `shopPricing`.
 - `PrintUpgrades.tsx`: toggles `emergency` and `afterDark` (mutually exclusive; `afterDark` only when shop is closed). Prices for upgrades come from `shopPricing.services`.
 - `PriceSummary.tsx`: shows per-page rate, binding cost, rush/afterDark add-ons, and total for the selected `settings` and `pageCount`.

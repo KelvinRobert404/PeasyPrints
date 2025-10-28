@@ -4,6 +4,7 @@ Shopfront lifecycle, real-time subscriptions, and reconciliation.
 ### At a glance
 - Firebase Auth gating; Shop’s UID == `shops/{id}`.
 - Real-time listeners for queues and history mirroring.
+ - Shop open/close toggle updates `shops/{id}.isOpen`.
 
 ### Session lifecycle
 - On mount, check Firebase Auth; redirect to `/shopfront/login` if unauthenticated.
@@ -35,6 +36,10 @@ sequenceDiagram
 - Shop updates `pricing` nested map on `shops/{uid}`.
 - Persist via `updateDoc` with server timestamps.
 
+### Open/close status
+- Top bar shows current shop name and open/close button.
+- `updateOpenStatus(isOpen)` writes `shops/{id}.isOpen` and `updatedAt`.
+
 ### Order display (print configuration)
 - Queue and history cards surface persisted `printSettings` and totals for the operator:
   - Badges: `paperSize`, `printFormat`, `printColor`
@@ -45,6 +50,7 @@ sequenceDiagram
 ### Permissions
 - Shop admins: full access to own shop doc and orders.
 - Staff (Assumption): read-only queue; status updates only (TODO: add staff role and claims).
+ - Admins (godview) can override shop writes and order status via custom claims.
 
 ### TODO
 - Implement staff roles via custom claims or a `shop_members` subcollection.

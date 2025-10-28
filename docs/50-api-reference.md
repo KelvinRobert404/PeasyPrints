@@ -7,6 +7,24 @@ Contract for all Next.js route handlers.
 
 ---
 
+#### GET /api/godview/snapshot
+- Auth: Passphrase header `x-godview-passphrase: <string>` or `?pass=<string>`
+- Runtime: Node (Firebase Admin)
+- Response:
+```ts
+type GodviewSnapshot = {
+  shops: any[];
+  orders: any[];            // latest 500 orders
+  pendingOrders: any[];     // processing/printing/printed
+  historyOrders: any[];     // latest 500 history entries
+  serverTime: number;       // ms since epoch
+}
+```
+- Errors: 401 (invalid passphrase), 500 (server not configured)
+- Notes: Intended for internal monitoring; read-only aggregation.
+
+---
+
 #### POST /api/storage/upload
 - Auth: Clerk session required (recommend validating on client/server)
 - Runtime: Node

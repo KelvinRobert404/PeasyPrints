@@ -2,15 +2,18 @@
 Hardened auth, rules, and payment verification.
 
 ### At a glance
-- Clerk-guarded routes; Firebase custom token bridge.
+- Clerk-guarded routes (optional); Firebase custom token bridge.
 - Production-grade Firestore & Storage rules.
 - Razorpay verification with replay protection.
+ - Godview passphrase-only mode (dev) served via server API snapshot.
 
 ### Clerk guard (middleware)
 ```ts
 // Guard excerpt — see docs/10-architecture.md for full listing
 export default clerkMiddleware((auth, req) => { /* ... */ });
 ```
+
+Public routes include `/godview(.*)` and `/api/godview/*` to enable passphrase mode without login during development.
 
 ### Custom token mint endpoint (server)
 ```ts
@@ -70,17 +73,25 @@ service cloud.firestore {
                    && request.time == request.resource.data.updatedAt;
     }
 
-    // Shop documents: only shop owner (uid == shopId) can manage profile/pricing
+    // Shop documents: only shop owner (uid == shopId) can manage profile/pricing; admins can override
     match /shops/{shopId} {
+      function isAdmin() {
+        return isSignedIn() && (
+          request.auth.token.admin == true ||
+          request.auth.token.role == 'super_admin' ||
+          (request.auth.token.roles != null && 'SUPER_ADMIN' in request.auth.token.roles)
+        );
+      }
       allow read: if true;
-      allow write: if isSignedIn() && request.auth.uid == shopId;
+      allow write: if (isSignedIn() && request.auth.uid == shopId) || isAdmin();
     }
 
-    // Orders: Read own orders or orders for own shop
+    // Orders: Read own orders or orders for own shop; admins read globally
     match /orders/{orderId} {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
-        resource.data.shopId == request.auth.uid
+        resource.data.shopId == request.auth.uid ||
+        isAdmin()
       );
 
       // STRICT: prefer server-only writes via Admin SDK (rules bypassed).
@@ -93,28 +104,35 @@ service cloud.firestore {
         && request.resource.data.status == 'pending'
         && request.time == request.resource.data.timestamp;
 
-      // Status updates by shop only
+      // Status updates by shop or admin
       allow update: if isSignedIn()
-        && resource.data.shopId == request.auth.uid
+        && (resource.data.shopId == request.auth.uid || isAdmin())
         && request.resource.data.keys().hasOnly(resource.data.keys())
         && request.resource.data.status in ['processing','printing','printed','collected','completed','cancelled'];
 
       allow delete: if false;
     }
 
-    // History: read by involved user/shop; writes by shop (completion/cancel)
+    // History: read by involved user/shop/admin; writes by shop/admin (completion/cancel)
     match /history/{historyId} {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
-        resource.data.shopId == request.auth.uid
+        resource.data.shopId == request.auth.uid ||
+        isAdmin()
       );
-      allow create: if isSignedIn() && request.resource.data.shopId == request.auth.uid;
+      allow create: if isSignedIn() && (request.resource.data.shopId == request.auth.uid || isAdmin());
       allow update, delete: if false;
     }
 
     // Payouts: read by shop; create by shop
     match /payouts/{payoutId} {
       allow read, create: if isSignedIn() && request.resource.data.shopId == request.auth.uid;
+      allow update, delete: if false;
+    }
+    // Admin action audit log
+    match /admin_actions/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
       allow update, delete: if false;
     }
   }
@@ -181,10 +199,16 @@ export async function POST(req: NextRequest) {
 - Client cannot mint Firebase token; server mints custom token based on Clerk session.
 - Orders integrity risk if client writes orders: mitigate via server-created orders and payment ledger.
 - Storage upload endpoint uses Admin SDK; validate content type and size; sanitize filename.
+- Godview passphrase mode is gated server-side on a shared secret; intended for internal use only.
 
 ### Secrets and rotation
 - Store secrets in Vercel project settings; rotate Razorpay and Clerk keys quarterly.
 - Maintain audit logs of token minting and admin-side writes (Cloud Logging).
+
+### Godview passphrase mode
+- Public routes for `/godview` and `/api/godview/snapshot` allow UI access without sign-in.
+- Server endpoint validates `x-godview-passphrase` (or `?pass=`) against `NEXT_PUBLIC_GODVIEW_PASSPHRASE`.
+- Snapshot returns aggregated data for read-only monitoring; no write actions are exposed.
 
 ### TODO
 - Enforce server-only order creation post-verify; remove client create ability.

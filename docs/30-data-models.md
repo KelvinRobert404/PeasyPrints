@@ -2,7 +2,7 @@
 Canonical types, example documents, and indexes.
 
 ### At a glance
-- Strongly-typed models for shops, orders, history, payouts.
+- Strongly-typed models for shops, orders, history, payouts, and admin actions.
 - Example docs to seed environments.
 - Complete indexes for core queries.
 
@@ -111,6 +111,14 @@ export interface Payout {
   shopId: string;
   amount: number;
   createdAt: any;
+}
+
+export interface AdminActionLog {
+  id?: string;
+  action: string;           // e.g., 'shop_toggle', 'order_status_update'
+  details: Record<string, any>;
+  actorId: string;          // uid
+  createdAt: any;           // Firestore timestamp
 }
 ```
 
@@ -240,8 +248,10 @@ export interface Payout {
 - Orders mirrored to `history` upon completion/cancellation with `orderId` and `historyTimestamp`.
 - Retain `orders` 90 days; archive to `history` only after terminal status.
 - Payouts persist audit trail.
+ - Admin actions: log all godview administrative writes for auditability.
 
 ### TODO
 - Define TTL/archive policy for large `history` collections (BigQuery export or scheduled archive).
+ - Partition `admin_actions` by month for listing performance on long-lived systems.
 
 
