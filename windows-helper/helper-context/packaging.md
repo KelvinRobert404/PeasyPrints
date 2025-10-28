@@ -16,6 +16,3 @@ Install steps on a Windows PC:
 3. Optional: create `%LOCALAPPDATA%\PeasyPrint\settings.json` with `{ "preferredPrinterNameSubstring": "Canon" }`.
 4. Set `PEASYPRINT_API_BASE` (PowerShell): `$env:PEASYPRINT_API_BASE="https://your-api"`.
 5. Launch a test: `peasyprint://print?file=https%3A%2F%2Fexample.com%2Fsample.pdf&copies=2&color=color` or jobId flow.
-
-
-
