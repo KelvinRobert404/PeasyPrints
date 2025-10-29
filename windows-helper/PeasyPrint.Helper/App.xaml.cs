@@ -56,7 +56,16 @@ namespace PeasyPrint.Helper
                 // If we need to resolve job details
                 if (!request.FileUrl.HasValue() && (!string.IsNullOrWhiteSpace(request.JobId) || request.JobUrl != null))
                 {
+                    ProgressWindow? pw = null;
+                    try
+                    {
+                        pw = new ProgressWindow("Fetching print job…");
+                        pw.Topmost = true;
+                        pw.Show();
+                    }
+                    catch { }
                     var resolved = ResolveJob(request);
+                    try { pw?.Close(); } catch { }
                     request = resolved ?? request;
                 }
 
