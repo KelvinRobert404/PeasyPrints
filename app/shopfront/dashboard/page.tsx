@@ -225,13 +225,23 @@ export default function ShopfrontDashboardPage() {
                           variant="success"
                           onClick={(e) => {
                             e.stopPropagation();
-                            const jobId = (o as any).id as string;
-                            if (!jobId) return;
-                            triggerPeasyPrint(jobId, {
-                              onMissingHelper: () => {
-                                alert('PeasyPrint Helper not detected. Please install it, then click Print again.');
+                            // Build deep link directly from order URLs to avoid server resolution
+                            try {
+                              const printColor = o.printSettings?.printColor === 'Color' ? 'color' : 'bw';
+                              const copies = Math.max(o.printSettings?.copies ?? 1, 1);
+                              const fileUrl = (o as any).splitFiles
+                                ? (printColor === 'color' ? (o as any).splitFiles?.colorUrl : (o as any).splitFiles?.bwUrl)
+                                : (o as any).fileUrl;
+                              if (!fileUrl) {
+                                alert('No file URL on this order.');
+                                return;
                               }
-                            });
+                              const enc = encodeURIComponent(fileUrl);
+                              const deeplink = `peasyprint://print?file=${enc}&copies=${copies}&color=${printColor}`;
+                              window.location.href = deeplink;
+                            } catch {
+                              alert('Failed to launch PeasyPrint link.');
+                            }
                           }}
                         >
                           Print
