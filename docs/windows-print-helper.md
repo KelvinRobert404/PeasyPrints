@@ -40,10 +40,13 @@ Outputs:
 2) Double-click `peasyprint-protocol.reg` and accept the prompt.
    - This registers the `peasyprint://` protocol pointing to your `PeasyPrint.Helper.exe`.
 3) Optional settings file: create `%LOCALAPPDATA%\PeasyPrint\settings.json` with fields shown below.
-4) Optional environment variables (PowerShell):
+4) Backend API key for the helper (recommended):
+   - Double-click `peasyprint-api-key.reg` (sets `PEASYPRINT_API_KEY` for current user), or
+   - Run `setup-peasyprint-env.ps1` (sets it and restarts Explorer), or
+   - Manual PowerShell: `[Environment]::SetEnvironmentVariable("PEASYPRINT_API_KEY","<token>","User")`
+5) Optional environment variables (PowerShell):
    - `$env:PEASYPRINT_API_BASE="https://<your-api-base>"`
-   - `$env:PEASYPRINT_API_KEY="<bearer-token-if-required>"`
-5) Test:
+6) Test:
    - `peasyprint://print?file=https%3A%2F%2Fexample.com%2Fsample.pdf&copies=2&color=color`
 
 ### Settings

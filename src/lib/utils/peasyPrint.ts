@@ -20,7 +20,7 @@ export function isWindows(): boolean {
 const PROD_API_BASE = 'https://theswoop.club/api';
 
 export function triggerPeasyPrint(jobId: string, opts: PeasyPrintOptions = {}): void {
-  const { timeoutMs = 1200, installUrl, onMissingHelper, onLaunched } = opts;
+  const { timeoutMs = 3000, installUrl, onMissingHelper, onLaunched } = opts;
 
   if (!jobId) return;
   if (typeof window === 'undefined') return;
@@ -34,30 +34,42 @@ export function triggerPeasyPrint(jobId: string, opts: PeasyPrintOptions = {}): 
   const jobUrl = `${PROD_API_BASE}/print-jobs/${encodeURIComponent(jobId)}`;
   const url = `peasyprint://print?jobUrl=${encodeURIComponent(jobUrl)}`;
 
-  // Kick off protocol launch (must be in direct response to a user gesture for best compatibility)
+  // Heuristics: consider launch successful if the tab gets hidden/blurred soon after triggering
+  let handled = false;
+  const markHandled = () => { handled = true; };
+  const onVisibility = () => { if (document.hidden) markHandled(); };
+  const onBlur = () => { markHandled(); };
+  window.addEventListener('blur', onBlur, { once: true });
+  document.addEventListener('visibilitychange', onVisibility, { once: true });
+
   try {
-    // Using location.href is broadly compatible across Edge/Chrome
-    window.location.href = url;
-    onLaunched?.();
+    // Prefer anchor click for better compatibility with some Chromium builds
+    const a = document.createElement('a');
+    a.href = url;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    window.setTimeout(() => { try { document.body.removeChild(a); } catch {} }, 0);
   } catch {
-    // ignore and rely on timeout fallback
+    try {
+      window.location.href = url;
+    } catch {
+      // ignore and rely on timeout fallback
+    }
   }
 
-  // Fallback: if helper is not installed, the browser won't hand off; show install prompt
-  const start = Date.now();
-  window.setTimeout(() => {
-    const elapsed = Date.now() - start;
-    if (elapsed < timeoutMs + 100) {
-      // Likely no helper; offer install
+  const timer = window.setTimeout(() => {
+    if (!handled) {
       if (installUrl) {
-        try {
-          window.open(installUrl, '_blank');
-        } catch {
-          // best-effort only
-        }
+        try { window.open(installUrl, '_blank'); } catch {}
       }
       onMissingHelper?.();
+    } else {
+      onLaunched?.();
     }
+    // cleanup listeners
+    try { document.removeEventListener('visibilitychange', onVisibility as any); } catch {}
+    try { window.removeEventListener('blur', onBlur as any); } catch {}
   }, timeoutMs);
 }
 

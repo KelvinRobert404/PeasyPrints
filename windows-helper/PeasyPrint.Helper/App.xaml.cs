@@ -119,12 +119,6 @@ namespace PeasyPrint.Helper
         {
             var dialog = new System.Windows.Controls.PrintDialog();
 
-            var ticket = dialog.PrintTicket ?? new PrintTicket();
-            ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
-            ticket.CopyCount = request.NumberOfCopies;
-            ticket.OutputColor = request.IsColor ? OutputColor.Color : OutputColor.Grayscale;
-            dialog.PrintTicket = ticket;
-
             // Try to preselect printer by role first (color vs BW), then fallback to preferred substring
             var roleSubstring = request.IsColor ? settings.ColorPrinterNameSubstring : settings.BwPrinterNameSubstring;
             if (!string.IsNullOrWhiteSpace(roleSubstring) || !string.IsNullOrWhiteSpace(settings.PreferredPrinterNameSubstring))
@@ -147,6 +141,14 @@ namespace PeasyPrint.Helper
                     // ignore and leave default printer
                 }
             }
+
+            // IMPORTANT: Apply ticket AFTER selecting the target PrintQueue, otherwise defaults may override our values
+            var ticket = dialog.PrintTicket ?? new PrintTicket();
+            ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
+            ticket.CopyCount = Math.Max(1, request.NumberOfCopies);
+            ticket.OutputColor = request.IsColor ? OutputColor.Color : OutputColor.Grayscale;
+            dialog.PrintTicket = ticket;
+
             return (dialog, ticket);
         }
     }
