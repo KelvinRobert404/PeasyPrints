@@ -4,6 +4,8 @@ using System.Globalization;
 using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PeasyPrint.Helper
 {
@@ -53,45 +55,59 @@ namespace PeasyPrint.Helper
                     return;
                 }
 
-                // If we need to resolve job details
-                if (!request.FileUrl.HasValue() && (!string.IsNullOrWhiteSpace(request.JobId) || request.JobUrl != null))
+                // Defer job resolution to async flow below so UI remains responsive
+
+                // Hand over the rest of the flow to an async continuation so the UI can paint
+                Dispatcher.InvokeAsync(async () =>
                 {
-                    ProgressWindow? pw = null;
                     try
                     {
-                        pw = new ProgressWindow("Fetching print job…");
-                        pw.Topmost = true;
-                        pw.Show();
+                        // If we need to resolve job details
+                        if (!request.FileUrl.HasValue() && (!string.IsNullOrWhiteSpace(request.JobId) || request.JobUrl != null))
+                        {
+                            ProgressWindow? pw = null;
+                            try
+                            {
+                                pw = new ProgressWindow("Fetching print job…");
+                                pw.Topmost = true;
+                                pw.Show();
+                            }
+                            catch { }
+                            var resolved = await ResolveJobAsync(request);
+                            try { pw?.Close(); } catch { }
+                            request = resolved ?? request;
+                        }
+
+                        var settings = SettingsStore.Load();
+
+                        // Show dialog with defaults
+                        var (printDialog, ticket) = CreatePrefilledDialog(request, settings);
+                        var confirmed = printDialog.ShowDialog();
+                        if (confirmed == true && request.FileUrl.HasValue())
+                        {
+                            // Render and print the PDF using the chosen printer
+                            var pdfService = new PdfPrintService();
+                            await pdfService.PrintWithDialogAsync(request.FileUrl!, printDialog, ticket);
+                        }
                     }
-                    catch { }
-                    var resolved = ResolveJob(request);
-                    try { pw?.Close(); } catch { }
-                    request = resolved ?? request;
-                }
-
-                var settings = SettingsStore.Load();
-
-                // Show dialog with defaults
-                var (printDialog, ticket) = CreatePrefilledDialog(request, settings);
-                var confirmed = printDialog.ShowDialog();
-                if (confirmed == true && request.FileUrl.HasValue())
-                {
-                    // Render and print the PDF using the chosen printer
-                    var pdfService = new PdfPrintService();
-                    pdfService.PrintWithDialogAsync(request.FileUrl!, printDialog, ticket).GetAwaiter().GetResult();
-                }
+                    catch (Exception ex2)
+                    {
+                        System.Windows.MessageBox.Show(ex2.Message, "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                    finally
+                    {
+                        Shutdown(0);
+                    }
+                });
+                return;
             }
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show(ex.Message, "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally
-            {
-                Shutdown(0);
-            }
         }
 
-        private static PrintRequest? ResolveJob(PrintRequest request)
+        private static async Task<PrintRequest?> ResolveJobAsync(PrintRequest request)
         {
             try
             {
@@ -102,8 +118,7 @@ namespace PeasyPrint.Helper
                 // Highest priority: direct jobUrl
                 if (request.JobUrl != null)
                 {
-                    var resolvedFromUrl = client.FetchJobByUrlAsync(request.JobUrl, apiKey, CancellationToken.None).GetAwaiter().GetResult();
-                    return resolvedFromUrl;
+                    return await client.FetchJobByUrlAsync(request.JobUrl, apiKey, CancellationToken.None);
                 }
 
                 // Build API base precedence: request.ApiBase -> settings override -> env -> default
@@ -114,8 +129,7 @@ namespace PeasyPrint.Helper
                     ?? DEFAULT_API_BASE;
 
                 var clientWithBase = new JobClient(http, new Uri(apiBase));
-                var resolved = clientWithBase.FetchJobAsync(request.JobId!, apiKey, CancellationToken.None).GetAwaiter().GetResult();
-                return resolved;
+                return await clientWithBase.FetchJobAsync(request.JobId!, apiKey, CancellationToken.None);
             }
             catch (Exception ex)
             {
@@ -152,13 +166,43 @@ namespace PeasyPrint.Helper
             }
 
             // IMPORTANT: Apply ticket AFTER selecting the target PrintQueue, otherwise defaults may override our values
-            var ticket = dialog.PrintTicket ?? new PrintTicket();
-            ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
-            ticket.CopyCount = Math.Max(1, request.NumberOfCopies);
-            ticket.OutputColor = request.IsColor ? OutputColor.Color : OutputColor.Grayscale;
-            dialog.PrintTicket = ticket;
+            var desired = new PrintTicket
+            {
+                PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4),
+                CopyCount = Math.Max(1, request.NumberOfCopies),
+                OutputColor = request.IsColor ? OutputColor.Color : OutputColor.Grayscale
+            };
 
-            return (dialog, ticket);
+            PrintTicket finalTicket = desired;
+            try
+            {
+                if (dialog.PrintQueue != null)
+                {
+                    var baseTicket = dialog.PrintQueue.UserPrintTicket ?? dialog.PrintQueue.DefaultPrintTicket;
+                    var merge = dialog.PrintQueue.MergeAndValidatePrintTicket(baseTicket, desired);
+                    var validated = merge.ValidatedPrintTicket;
+                    if (validated != null)
+                    {
+                        finalTicket = validated;
+                    }
+
+                    // If the queue supports copies, ensure the value sticks
+                    try
+                    {
+                        var caps = dialog.PrintQueue.GetPrintCapabilities(finalTicket);
+                        if (caps?.MaxCopyCount.HasValue == true && caps.MaxCopyCount.Value >= desired.CopyCount)
+                        {
+                            finalTicket.CopyCount = desired.CopyCount;
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
+            dialog.PrintTicket = finalTicket;
+
+            return (dialog, finalTicket);
         }
     }
 

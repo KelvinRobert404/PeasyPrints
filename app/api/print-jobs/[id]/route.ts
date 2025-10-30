@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import admin from 'firebase-admin'
 
-let adminInitialized = false
 function ensureAdminInit() {
-  if (adminInitialized) return
+  if (admin.apps && admin.apps.length > 0) return
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n')
@@ -13,7 +12,6 @@ function ensureAdminInit() {
   admin.initializeApp({
     credential: admin.credential.cert({ projectId, clientEmail, privateKey })
   })
-  adminInitialized = true
 }
 
 function unauthorized(message = 'Unauthorized') {
@@ -31,7 +29,7 @@ function notFound(message = 'Not Found') {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Optional Bearer token auth for the helper
     const expected = process.env.PEASYPRINT_API_KEY
@@ -45,8 +43,22 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       }
     }
 
-    const jobId = params?.id
+    const { id: jobId } = await params
     if (!jobId) return badRequest('Missing job id')
+
+    // Dev fallback: if Firebase Admin envs are not present, return a test payload for local E2E
+    const hasAdminEnvs = Boolean(
+      process.env.FIREBASE_ADMIN_PROJECT_ID &&
+      process.env.FIREBASE_ADMIN_CLIENT_EMAIL &&
+      process.env.FIREBASE_ADMIN_PRIVATE_KEY
+    )
+    if (!hasAdminEnvs) {
+      console.warn('[print-jobs] Using dev fallback response; Firebase Admin envs missing')
+      const fallbackUrl = process.env.PEASYPRINT_DEV_FILE_URL || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+      const res = NextResponse.json({ fileUrl: fallbackUrl, copies: 1, isColor: true })
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
 
     ensureAdminInit()
 
@@ -91,7 +103,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     res.headers.set('Cache-Control', 'no-store')
     return res
   } catch (e: any) {
-    return NextResponse.json({ error: 'Failed to fetch print job' }, { status: 500 })
+    const message = process.env.NODE_ENV !== 'production' ? (e?.stack || e?.message || String(e)) : 'Failed to fetch print job'
+    console.error('[print-jobs] Error:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 

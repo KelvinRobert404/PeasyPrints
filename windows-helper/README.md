@@ -15,7 +15,7 @@ See the full guide: `docs/windows-print-helper.md`.
   - `PeasyPrint.Helper.exe --file=https://example.com/sample.pdf --copies=2 --color=true`
   - `peasyprint://print?file=https%3A%2F%2Fexample.com%2Fsample.pdf&copies=2&color=bw`
 
-Printing pipeline for PDF will be implemented next; current build shows the Windows dialog with prefilled options.
+PDF printing pipeline is implemented: PDFs are rendered via WinRT -> XPS. The print job name is set from the source file name when available (fallback: `PeasyPrint Job`). Some drivers may ignore requested `CopyCount`.
 
 ## Settings
 
@@ -28,11 +28,22 @@ Printing pipeline for PDF will be implemented next; current build shows the Wind
 ## Install (ZIP)
 
 1. Unzip the published folder (or the generated zip) to a permanent location, e.g. `C:\Program Files\PeasyPrint\PeasyPrint.Helper`.
-2. Double-click `peasyprint-protocol.reg` to register the `peasyprint://` protocol.
+2. Register the `peasyprint://` protocol to the publish EXE (recommended):
+
+```powershell
+$pubExe = 'C:\\Path\\To\\PeasyPrint.Helper\\bin\\Release\\net8.0-windows10.0.19041.0\\win-x64\\publish\\PeasyPrint.Helper.exe'
+$base = 'HKCU:\\Software\\Classes\\peasyprint'
+New-Item -Path $base -Force | Out-Null
+Set-ItemProperty -Path $base -Name '(default)' -Value 'URL:PeasyPrint Protocol' -Type String -Force
+New-ItemProperty -Path $base -Name 'URL Protocol' -Value '' -PropertyType String -Force
+New-Item -Path "$base\\shell\\open\\command" -Force | Out-Null
+Set-ItemProperty -Path "$base\\shell\\open\\command" -Name '(default)' -Value ("`"$pubExe`" `"%1`"") -Type String -Force
+```
+
 3. Set backend auth API key (pick one):
    - Double-click `peasyprint-api-key.reg` (user-scoped env var), or
    - Run `setup-peasyprint-env.ps1` (sets it and restarts Explorer), or
    - Manual PowerShell: `[Environment]::SetEnvironmentVariable("PEASYPRINT_API_KEY","<token>","User")`
 4. Optional: set API base override with PowerShell: `$env:PEASYPRINT_API_BASE="https://<your-api-base>"`.
-5. Test launch: `peasyprint://print?file=https%3A%2F%2Fexample.com%2Fsample.pdf&copies=2&color=bw`.
+5. Test launch: `peasyprint://settings` and `peasyprint://print?file=https%3A%2F%2Fexample.com%2Fsample.pdf&copies=2&color=bw`.
 

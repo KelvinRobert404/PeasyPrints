@@ -30,6 +30,22 @@ namespace PeasyPrint.Helper
             }
 
             var pdfBytes = await FileDownloader.DownloadAsync(fileUrl);
+
+            // Optional debug: save the downloaded PDF to disk if PEASYPRINT_SAVE_DOWNLOADED is set
+            try
+            {
+                var saveFlag = Environment.GetEnvironmentVariable("PEASYPRINT_SAVE_DOWNLOADED");
+                if (!string.IsNullOrWhiteSpace(saveFlag) && !string.Equals(saveFlag, "0", StringComparison.OrdinalIgnoreCase) && !string.Equals(saveFlag, "false", StringComparison.OrdinalIgnoreCase))
+                {
+                    var baseDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PeasyPrint", "debug");
+                    Directory.CreateDirectory(baseDir);
+                    var originalName = System.IO.Path.GetFileName(Uri.UnescapeDataString(fileUrl.AbsolutePath));
+                    var safeName = string.IsNullOrWhiteSpace(originalName) ? "downloaded.pdf" : originalName;
+                    var outPath = System.IO.Path.Combine(baseDir, $"{DateTime.Now:yyyyMMdd-HHmmss}-{safeName}");
+                    System.IO.File.WriteAllBytes(outPath, pdfBytes);
+                }
+            }
+            catch { }
             using var pdfStream = new MemoryStream(pdfBytes, writable: false);
 
             var fixedDoc = await RenderPdfToFixedDocumentAsync(pdfStream);
@@ -41,9 +57,11 @@ namespace PeasyPrint.Helper
                 throw new InvalidOperationException("No print queue selected");
             }
 
-            var writer = PrintQueue.CreateXpsDocumentWriter(queue);
-            // Write using the ticket set on the dialog
-            writer.Write(fixedDoc.DocumentPaginator, ticket);
+			// Use the PrintDialog's PrintDocument to ensure driver UI (e.g., Microsoft Print to PDF Save As) is shown reliably
+			printDialog.PrintTicket = ticket;
+			var baseName = System.IO.Path.GetFileName(Uri.UnescapeDataString(fileUrl.AbsolutePath));
+			var jobName = string.IsNullOrWhiteSpace(baseName) ? "PeasyPrint Job" : baseName;
+			printDialog.PrintDocument(fixedDoc.DocumentPaginator, jobName);
         }
 
         private static async Task<FixedDocument> RenderPdfToFixedDocumentAsync(Stream pdfStream)

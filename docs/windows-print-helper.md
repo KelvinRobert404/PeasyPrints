@@ -14,14 +14,23 @@ This document explains what the Windows Helper does, how to build/package/instal
 - .NET 8 SDK (Desktop) installed
 
 ### Building locally
-From repository root:
+From repository root (preferred):
 
 ```powershell
-# Build Release (self-contained publish handled by packaging script)
-dotnet build windows-helper/PeasyPrint.Helper/PeasyPrint.Helper.csproj -c Release
+# Build + package + generate protocol files
+windows-helper\scripts\package.ps1 -Configuration Release -Runtime win-x64
+```
 
-# Or publish directly for win-x64 self-contained
-dotnet publish windows-helper/PeasyPrint.Helper/PeasyPrint.Helper.csproj -c Release -r win-x64 --self-contained true
+This produces:
+- `windows-helper/dist/PeasyPrint.Helper.zip`
+- `windows-helper/PeasyPrint.Helper/bin/Release/net8.0-windows10.0.19041.0/win-x64/publish` (canonical publish folder)
+
+Notes:
+- Prefer wiring the protocol directly to the EXE under the publish folder (path above).
+- If you need to build manually for diagnostics:
+
+```powershell
+dotnet publish windows-helper/PeasyPrint.Helper/PeasyPrint.Helper.csproj -c Release -r win-x64 --self-contained false
 ```
 
 ### Packaging (recommended)
@@ -37,9 +46,23 @@ Outputs:
 
 ### Installing on a new Windows PC
 1) Unzip `PeasyPrint.Helper.zip` anywhere (e.g., `C:\Program Files\PeasyPrint\PeasyPrint.Helper`).
-2) Double-click `peasyprint-protocol.reg` and accept the prompt.
-   - This registers the `peasyprint://` protocol pointing to your `PeasyPrint.Helper.exe`.
-3) Optional settings file: create `%LOCALAPPDATA%\PeasyPrint\settings.json` with fields shown below.
+2) Register the `peasyprint://` protocol to the publish EXE (recommended):
+
+```powershell
+$pubExe = 'C:\\Path\\To\\PeasyPrint.Helper\\bin\\Release\\net8.0-windows10.0.19041.0\\win-x64\\publish\\PeasyPrint.Helper.exe'
+$base = 'HKCU:\\Software\\Classes\\peasyprint'
+New-Item -Path $base -Force | Out-Null
+Set-ItemProperty -Path $base -Name '(default)' -Value 'URL:PeasyPrint Protocol' -Type String -Force
+New-ItemProperty -Path $base -Name 'URL Protocol' -Value '' -PropertyType String -Force
+New-Item -Path "$base\\shell\\open\\command" -Force | Out-Null
+Set-ItemProperty -Path "$base\\shell\\open\\command" -Name '(default)' -Value ("`"$pubExe`" `"%1`"") -Type String -Force
+# Apply without reboot
+Stop-Process -Name explorer -Force; Start-Process explorer.exe
+```
+
+Alternatively, double‑click the generated `peasyprint-protocol.reg` inside the publish folder to register to that exact path.
+
+3) Optional settings file: create `%LOCALAPPDATA%/PeasyPrint/settings.json` with fields shown below.
 4) Backend API key for the helper (recommended):
    - Double-click `peasyprint-api-key.reg` (sets `PEASYPRINT_API_KEY` for current user), or
    - Run `setup-peasyprint-env.ps1` (sets it and restarts Explorer), or
@@ -47,6 +70,7 @@ Outputs:
 5) Optional environment variables (PowerShell):
    - `$env:PEASYPRINT_API_BASE="https://<your-api-base>"`
 6) Test:
+   - `peasyprint://settings`
    - `peasyprint://print?file=https%3A%2F%2Fexample.com%2Fsample.pdf&copies=2&color=color`
 
 ### Settings
@@ -149,6 +173,15 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 - Protocol not opening the app: Re-run `peasyprint-protocol.reg` and ensure the EXE path in the file matches the actual location.
 - Print dialog shows but nothing prints: Ensure the PDF is reachable (open the `fileUrl` in a browser), and that the selected printer is online.
 - API 401/403: Set or update `PEASYPRINT_API_KEY` environment variable on the machine.
+- “Application not found” when launching peasyprint://:
+  - Verify registry: `HKCU:\Software\Classes\peasyprint` has `(default) = URL:PeasyPrint Protocol` and `URL Protocol = ''`
+  - Verify `HKCU:\Software\Classes\peasyprint\shell\open\command` points to a real EXE path (no `..` segments)
+  - Restart Explorer (or sign out/in): `Stop-Process -Name explorer -Force; Start-Process explorer.exe`
+- Copies not prefilled: Some drivers ignore `CopyCount` (e.g., PDF). Use a hardware printer to validate. The dialog prefill merges a validated `PrintTicket`, but capabilities may limit copies.
+
+### Queue job name
+- The helper sets the print job name to the source file name derived from the `fileUrl` when available; otherwise it falls back to `PeasyPrint Job`.
+- Many drivers will display this as the job name; “Microsoft Print to PDF” typically uses it as the default Save‑As filename.
 
 ### Where the logic lives (code pointers)
 - Argument parsing and launch flow: `windows-helper/PeasyPrint.Helper/App.xaml.cs`
