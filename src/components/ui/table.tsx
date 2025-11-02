@@ -21,8 +21,8 @@ export function TableHead({ children, className }: { children?: React.ReactNode,
   return <th className={cn("px-3 py-2 font-medium", className)}>{children}</th>; 
 }
 
-export function TableCell({ children, className }: { children?: React.ReactNode, className?: string }) { 
-  return <td className={cn("px-3 py-2", className)}>{children}</td>; 
+export function TableCell({ children, className, ...props }: React.ComponentPropsWithoutRef<'td'>) { 
+  return <td className={cn("px-3 py-2", className)} {...props}>{children}</td>; 
 }
 
 

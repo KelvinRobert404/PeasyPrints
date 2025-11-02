@@ -211,13 +211,13 @@ export function BillingSummary() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {payoutRequests.map((r) => {
+              {payoutRequests.map((r: { id: string; amount: number; status: 'requested' | 'processing' | 'paid' | 'cancelled'; expectedAt?: any; requestedAt: any }) => {
                 const expected = (r as any).expectedAt?.toDate?.() ? (r as any).expectedAt.toDate() : (r as any).expectedAt ? new Date((r as any).expectedAt) : null;
                 return (
                   <TableRow key={r.id}>
                     <TableCell>₹{r.amount}</TableCell>
                     <TableCell>
-                      <Badge variant={r.status === 'paid' ? 'success' : r.status === 'processing' ? 'secondary' : 'outline'}>{r.status}</Badge>
+                    <Badge variant={r.status === 'paid' ? 'default' : r.status === 'processing' ? 'secondary' : 'outline'}>{r.status}</Badge>
                     </TableCell>
                     <TableCell>{expected ? expected.toLocaleString() : '-'}</TableCell>
                     <TableCell className="text-right">
