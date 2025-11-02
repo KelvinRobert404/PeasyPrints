@@ -8,26 +8,27 @@ Param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "[1/5] Checking .NET SDK..." -ForegroundColor Cyan
-try {
-    $dotnetVersion = (& dotnet --version)
-    Write-Host "Found .NET SDK: $dotnetVersion" -ForegroundColor Green
-} catch {
-    # Fallback: try user-scoped install at %USERPROFILE%\.dotnet
-    $userDotnet = Join-Path $env:USERPROFILE ".dotnet\dotnet.exe"
-    if (Test-Path $userDotnet) {
-        $env:PATH = (Split-Path $userDotnet -Parent) + ";" + $env:PATH
-        try {
-            $dotnetVersion = (& dotnet --version)
-            Write-Host "Found .NET SDK (user): $dotnetVersion" -ForegroundColor Green
-        } catch {
-            Write-Error ".NET SDK not found. Please install .NET 8 SDK and re-run."
-            exit 1
+$localDotnet = Join-Path $env:LocalAppData "Microsoft\dotnet\dotnet.exe"
+$userDotnet  = Join-Path $env:USERPROFILE ".dotnet\dotnet.exe"
+$candidates = @($localDotnet, $userDotnet, "dotnet")
+$dotnetExe = $null
+$dotnetVersion = $null
+foreach ($exe in $candidates) {
+    try {
+        if ($exe -ne "dotnet" -and -not (Test-Path $exe)) { continue }
+        $ver = & $exe --version 2>$null
+        if ($LASTEXITCODE -eq 0 -and $ver) {
+            $dotnetExe = $exe
+            $dotnetVersion = $ver
+            break
         }
-    } else {
-        Write-Error ".NET SDK not found. Please install .NET 8 SDK and re-run."
-        exit 1
-    }
+    } catch { }
 }
+if (-not $dotnetExe) {
+    Write-Error ".NET SDK not found. Please install .NET 8 SDK and re-run."
+    exit 1
+}
+Write-Host "Found .NET SDK: $dotnetVersion ($dotnetExe)" -ForegroundColor Green
 
 $projectPath = Join-Path $PSScriptRoot "..\PeasyPrint.Helper\PeasyPrint.Helper.csproj"
 if (-not (Test-Path $projectPath)) {
@@ -36,7 +37,7 @@ if (-not (Test-Path $projectPath)) {
 }
 
 Write-Host "[2/5] Publishing helper..." -ForegroundColor Cyan
-& dotnet publish $projectPath -c $Configuration -r $Runtime --self-contained:$SelfContained | Write-Output
+& $dotnetExe publish $projectPath -c $Configuration -r $Runtime --self-contained:$SelfContained | Write-Output
 
 $tfm = "net8.0-windows10.0.19041.0"
 $publishDir = Join-Path $PSScriptRoot "..\PeasyPrint.Helper\bin\$Configuration\$tfm\$Runtime\publish"
