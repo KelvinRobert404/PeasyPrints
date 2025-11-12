@@ -10,6 +10,7 @@ export interface ShopfrontHistoryTableProps {
   orders: (OrderDoc & { id?: string; orderId?: string })[];
   onUndoCollected?: (order: any) => void;
   onUndoCancelled?: (order: any) => void;
+  showUndo?: boolean;
 }
 
 function coerceDate(input: any): Date | null {
@@ -23,13 +24,13 @@ function formatDate(date: Date): string {
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 }
 
-export function ShopfrontHistoryTable({ orders, onUndoCollected, onUndoCancelled }: ShopfrontHistoryTableProps) {
+export function ShopfrontHistoryTable({ orders, onUndoCollected, onUndoCancelled, showUndo = true }: ShopfrontHistoryTableProps) {
   return (
     <Table className="bg-white">
-      <TableHeader>
+      <TableHeader className="sticky top-0 z-10 bg-white">
         <TableRow>
           <TableHead className="px-3">Customer • Document</TableHead>
-          <TableHead className="px-3 hidden md:table-cell">Settings</TableHead>
+          <TableHead className="px-3 hidden md:table-cell">Configuration</TableHead>
           <TableHead className="px-3">Status</TableHead>
           <TableHead className="px-3 hidden sm:table-cell">Date</TableHead>
           <TableHead className="px-3 hidden sm:table-cell text-right">Total</TableHead>
@@ -73,10 +74,10 @@ export function ShopfrontHistoryTable({ orders, onUndoCollected, onUndoCancelled
               <TableCell className="px-3 hidden sm:table-cell text-right">₹{Number(o.totalCost ?? 0).toFixed(0)}</TableCell>
               <TableCell className="px-3">
                 <div className="flex flex-wrap gap-2 justify-end">
-                  {o.status === 'completed' && (
+                  {showUndo && o.status === 'completed' && (
                     <Button size="sm" variant="outline" onClick={() => onUndoCollected?.(o)}>Undo Collected</Button>
                   )}
-                  {o.status === 'cancelled' && (
+                  {showUndo && o.status === 'cancelled' && (
                     <Button size="sm" variant="outline" onClick={() => onUndoCancelled?.(o)}>Undo Cancelled</Button>
                   )}
                 </div>
