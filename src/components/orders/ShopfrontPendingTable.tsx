@@ -5,6 +5,7 @@ import type { OrderDoc } from '@/types/models';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ExternalLink, Printer, X, Check, RotateCcw } from 'lucide-react';
 
 export interface ShopfrontPendingTableProps {
   orders: (OrderDoc & { id?: string })[];
@@ -33,13 +34,10 @@ function coerceDate(input: any): Date | null {
 export function ShopfrontPendingTable({ orders, isWindows, onPrint, onCancel, onMarkPrinted, onRevertToProcessing, onCollected }: ShopfrontPendingTableProps) {
   return (
     <Table className="bg-white">
-      <TableHeader>
+      <TableHeader className="sticky top-0 z-10 bg-white shadow-sm">
         <TableRow>
           <TableHead className="px-3">Customer • Document</TableHead>
-          <TableHead className="px-3 hidden md:table-cell">Settings</TableHead>
-          <TableHead className="px-3">Status</TableHead>
-          <TableHead className="px-3 hidden sm:table-cell">Time</TableHead>
-          <TableHead className="px-3 hidden sm:table-cell text-right">Total</TableHead>
+          <TableHead className="px-3 hidden md:table-cell">Configuration</TableHead>
           <TableHead className="px-3 text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -50,65 +48,95 @@ export function ShopfrontPendingTable({ orders, isWindows, onPrint, onCancel, on
             return d ? formatTime(d) : '';
           })();
           const isPrinted = o.status === 'printed';
+          const ps = o.printSettings as any;
+          const copiesNum = Number(ps?.copies ?? 1);
+          const pagesNum = Number(o.totalPages ?? 0);
+          const copiesLabel = `${copiesNum} ${copiesNum === 1 ? 'copy' : 'copies'}`;
+          const pagesLabel = `${pagesNum} ${pagesNum === 1 ? 'page' : 'pages'}`;
+          const blueSummary = `${time}${time ? ' • ' : ''}${copiesLabel} • ${pagesLabel} • ₹${Number(o.totalCost ?? 0).toFixed(0)}`;
+          const greenSummary = (() => {
+            const diff: string[] = [];
+            if (ps?.paperSize && ps.paperSize !== 'A4') diff.push(String(ps.paperSize));
+            if (ps?.printFormat === 'Double-Sided') diff.push('DS'); // SS is default
+            if (ps?.printColor && ps.printColor !== 'Black & White') diff.push('Color'); // BW is default
+            return diff.length ? diff.join(' • ') : 'Normal';
+          })();
+          const greenClass = greenSummary === 'Normal'
+            ? 'bg-black/10 text-black border-black/20'
+            : 'bg-green-600/10 text-green-700 border-green-600/20';
           return (
-            <TableRow key={o.id ?? `${o.userId}-${String(o.timestamp)}`} className={`align-top ${o.emergency ? 'bg-red-50' : ''}`}>
+            <TableRow
+              key={o.id ?? `${o.userId}-${String(o.timestamp)}`}
+              className={`align-middle ${o.emergency ? 'border-l-4 border-red-400' : ''}`}
+              tabIndex={0}
+              role="row"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  if (isWindows) onPrint?.(o);
+                  else if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer');
+                }
+                if (e.key === 'Enter' && e.shiftKey) {
+                  if ((o as any).status !== 'printed') onMarkPrinted?.(o);
+                  else onRevertToProcessing?.(o);
+                }
+              }}
+            >
               <TableCell className="px-3">
-                <div className="font-medium truncate max-w-[280px]">{o.userName} • {o.fileName}</div>
-                <div className="mt-1 flex flex-wrap gap-1 text-xs sm:hidden">
-                  <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
-                  <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
-                  <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
-                    {o.printSettings?.printColor}
-                  </Badge>
-                </div>
-              </TableCell>
-              <TableCell className="px-3 hidden md:table-cell">
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
-                  <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
-                  <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
-                    {o.printSettings?.printColor}
-                  </Badge>
-                  <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
-                </div>
-              </TableCell>
-              <TableCell className="px-3">
+                <div className="font-semibold text-gray-900 truncate max-w-[280px]">{o.userName}</div>
                 <div className="flex items-center gap-2">
-                  {o.emergency && <Badge variant="destructive">URGENT</Badge>}
-                  {!(o.status === 'processing' || o.status === 'printing' || o.status === 'printed') && (
-                    <Badge variant="secondary">{o.status}</Badge>
-                  )}
+                  <div className="truncate max-w-[240px]" title={o.fileName}>{o.fileName}</div>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 hidden sm:inline-flex" title="Click to open file" aria-label="Open file" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="sm:hidden mt-1 text-xs text-gray-600 flex items-center gap-2">
+                  <Badge variant="secondary">{o.status}</Badge>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1 text-xs sm:hidden">
+                  <Badge className={`whitespace-nowrap ${greenClass} text-sm px-3 py-1`}>{greenSummary}</Badge>
+                  <Badge className="whitespace-nowrap bg-blue-600/10 text-blue-700 border-blue-600/20 text-sm px-3 py-1">{blueSummary}</Badge>
                 </div>
               </TableCell>
-              <TableCell className="px-3 hidden sm:table-cell text-gray-700">{time}</TableCell>
-              <TableCell className="px-3 hidden sm:table-cell text-right">₹{Number(o.totalCost ?? 0).toFixed(0)}</TableCell>
-              <TableCell className="px-3">
-                <div className="flex flex-wrap gap-2 justify-end">
+              <TableCell className="px-3 hidden md:table-cell align-middle">
+                <div className="flex flex-wrap items-center gap-1 text-xs">
+                  <Badge className={`whitespace-nowrap ${greenClass} text-sm px-3 py-1`}>{greenSummary}</Badge>
+                  <Badge className="whitespace-nowrap bg-blue-600/10 text-blue-700 border-blue-600/20 text-sm px-3 py-1">{blueSummary}</Badge>
+                </div>
+              </TableCell>
+              {/* Time column removed; time is included in condensed badge */}
+              <TableCell className="px-3 align-middle">
+                <div className="flex flex-wrap items-center gap-2 justify-end">
                   {o.splitFiles ? (
                     <>
                       {o.fileUrl && (
-                        <Button size="sm" variant="outline" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>Original</Button>
+                        <Button size="sm" className="h-8 px-2" variant="outline" title="Open original file" aria-label="Open original file" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>Original</Button>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => { const url = (o as any).splitFiles?.bwUrl; if (url) window.open(url, '_blank', 'noopener,noreferrer'); }}>B&W</Button>
-                      <Button size="sm" variant="outline" onClick={() => { const url = (o as any).splitFiles?.colorUrl; if (url) window.open(url, '_blank', 'noopener,noreferrer'); }}>Color</Button>
+                      <Button size="sm" className="h-8 px-2" variant="outline" title="Open black and white file" aria-label="Open black and white file" onClick={() => { const url = (o as any).splitFiles?.bwUrl; if (url) window.open(url, '_blank', 'noopener,noreferrer'); }}>B&W</Button>
+                      <Button size="sm" className="h-8 px-2" variant="outline" title="Open color file" aria-label="Open color file" onClick={() => { const url = (o as any).splitFiles?.colorUrl; if (url) window.open(url, '_blank', 'noopener,noreferrer'); }}>Color</Button>
                     </>
-                  ) : (
-                    <Button size="sm" variant="ghost" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>Open</Button>
-                  )}
+                  ) : null}
                   {isWindows && (
-                    <Button size="sm" variant="success" onClick={() => onPrint?.(o)}>Print</Button>
-                  )}
-                  <Button size="sm" variant="destructive" onClick={() => onCancel?.(o)}>Cancel</Button>
-                  {!isPrinted ? (
-                    <Button size="sm" variant="secondary" onClick={() => onMarkPrinted?.(o)}>Printed</Button>
-                  ) : (
-                    <Button size="sm" variant="outline" onClick={() => onRevertToProcessing?.(o)}>Undo Printed</Button>
+                    <Button size="sm" variant="success" title="Click to print" aria-label="Print" onClick={() => onPrint?.(o)}>
+                      <Printer className="h-4 w-4" />
+                    </Button>
                   )}
                   {!isPrinted ? (
-                    <Button size="sm" disabled>Collected</Button>
+                    <Button size="sm" variant="secondary" title="Mark as printed" aria-label="Mark as printed" onClick={() => onMarkPrinted?.(o)}>
+                      <Check className="h-4 w-4" />
+                    </Button>
                   ) : (
-                    <Button size="sm" onClick={() => onCollected?.(o)}>Collected</Button>
+                    <Button size="sm" variant="outline" title="Undo printed" aria-label="Undo printed" onClick={() => onRevertToProcessing?.(o)}>
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
                   )}
+                  {!isPrinted ? (
+                    <Button size="sm" disabled title="Mark as collected">Collected</Button>
+                  ) : (
+                    <Button size="sm" title="Click when customer collects" aria-label="Mark as collected" onClick={() => onCollected?.(o)}>Collected</Button>
+                  )}
+                  <Button size="sm" variant="destructive" title="Cancel this order" aria-label="Cancel order" onClick={() => onCancel?.(o)}>
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
