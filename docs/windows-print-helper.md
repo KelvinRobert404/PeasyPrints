@@ -10,10 +10,9 @@ This document explains what the Windows Helper does, how to build/package/instal
   - System tray mode: `PeasyPrint.Helper.exe --tray` (right-click icon → Settings)
 
 ### Prerequisites
-- Windows 10/11 for Modern helper (or Windows 7 for Legacy)
+- Windows 10/11
 - For building installers locally:
-  - .NET 8 SDK for Modern
-  - MSBuild/.NET Framework toolchain for Legacy
+  - .NET 8 SDK
   - Inno Setup 6 (optional, for compiling .iss)
 
 ### Building locally
@@ -36,8 +35,8 @@ Notes:
 dotnet publish windows-helper/PeasyPrint.Helper/PeasyPrint.Helper.csproj -c Release -r win-x64 --self-contained false
 ```
 
-### Installers (single-file)
-Build both Modern (Win10/11) and Legacy (Win7) installers:
+### Installer (single-file, Windows 10/11)
+Build the Modern installer:
 
 ```powershell
 pwsh windows-helper\scripts\package-all.ps1 -Configuration Release -Runtime win-x64 -SelfContained $true -ApiKey "<YOUR_TOKEN>"
@@ -45,19 +44,17 @@ pwsh windows-helper\scripts\package-all.ps1 -Configuration Release -Runtime win-
 
 Outputs:
 - Modern app folder: `windows-helper/PeasyPrint.Helper/app`
-- Legacy app folder: `windows-helper/PeasyPrint.Helper.Legacy/app`
 - Modern ZIP: `windows-helper/dist/PeasyPrint.Helper.zip`
-- Installers: compiled via Inno if ISCC.exe is found
+- Installer: compiled via Inno if ISCC.exe is found
 
 Notes:
 - To build only the Modern ZIP/app, run `windows-helper\scripts\package.ps1`.
-- For Legacy, place `windows-helper/installer/files/SumatraPDF.exe` before compiling the installer.
 
 ### Installing on a new Windows PC
-Preferred: use the single-file installer (Modern for Win10/11, Legacy for Win7) and follow the prompts to set `PEASYPRINT_API_KEY`.
+Preferred: use the single-file installer (Win10/11) and follow the prompts to set `PEASYPRINT_API_KEY`.
 
-Alternative (ZIP for Modern helper):
-1) Unzip `PeasyPrint.Helper.zip` anywhere (e.g., `C:\Program Files\PeasyPrint\PeasyPrint.Helper`).
+Alternative (ZIP):
+1) Unzip `PeasyPrint.Helper.zip` anywhere (e.g., `C:\\Program Files\\PeasyPrint\\PeasyPrint.Helper`).
 2) Register the `peasyprint://` protocol to the publish EXE (recommended):
 
 ```powershell
@@ -186,8 +183,8 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 - Print dialog shows but nothing prints: Ensure the PDF is reachable (open the `fileUrl` in a browser), and that the selected printer is online.
 - API 401/403: Set or update `PEASYPRINT_API_KEY` environment variable on the machine.
 - “Application not found” when launching peasyprint://:
-  - Verify registry: `HKCU:\Software\Classes\peasyprint` has `(default) = URL:PeasyPrint Protocol` and `URL Protocol = ''`
-  - Verify `HKCU:\Software\Classes\peasyprint\shell\open\command` points to a real EXE path (no `..` segments)
+  - Verify registry: `HKCU:\\Software\\Classes\\peasyprint` has `(default) = URL:PeasyPrint Protocol` and `URL Protocol = ''`
+  - Verify `HKCU:\\Software\\Classes\\peasyprint\\shell\\open\\command` points to a real EXE path (no `..` segments)
   - Restart Explorer (or sign out/in): `Stop-Process -Name explorer -Force; Start-Process explorer.exe`
 - Copies not prefilled: Some drivers ignore `CopyCount` (e.g., PDF). Use a hardware printer to validate. The dialog prefill merges a validated `PrintTicket`, but capabilities may limit copies.
 
