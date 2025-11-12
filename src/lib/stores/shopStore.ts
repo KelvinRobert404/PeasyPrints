@@ -25,6 +25,8 @@ interface ShopState {
   pendingOrders: OrderDoc[];
   historyOrders: OrderDoc[];
   receivableAmount: number;
+  payoutRequests: Array<{ id: string; amount: number; status: 'requested'|'processing'|'paid'|'cancelled'; expectedAt?: any; requestedAt: any }>;
+  payouts: Array<{ id: string; amount: number; createdAt: any }>;
 
   fetchShopData: (uid: string) => Promise<void>;
   fetchOrders: (shopId: string) => Promise<() => void>;
@@ -38,6 +40,10 @@ interface ShopState {
   cancelOrder: (orderId: string, order: OrderDoc) => Promise<void>;
   updatePricing: (pricing: ShopPricing) => Promise<void>;
   updateOpenStatus: (isOpen: boolean) => Promise<void>;
+  subscribePayoutRequests: (shopId: string) => Promise<() => void>;
+  subscribePayouts: (shopId: string) => Promise<() => void>;
+  requestPayout: (amount: number) => Promise<void>;
+  confirmPayoutSettlement: (requestId: string, amount: number) => Promise<void>;
 }
 
 export const useShopStore = create<ShopState>()(
@@ -47,6 +53,8 @@ export const useShopStore = create<ShopState>()(
     pendingOrders: [],
     historyOrders: [],
     receivableAmount: 0,
+    payoutRequests: [],
+    payouts: [],
 
     fetchShopData: async (uid: string) => {
       const ref = doc(db, 'shops', uid);
@@ -210,6 +218,68 @@ export const useShopStore = create<ShopState>()(
       const ref = doc(db, 'shops', shop.id);
       await updateDoc(ref, { isOpen, updatedAt: serverTimestamp() as any });
       set((s) => { if (s.currentShop) s.currentShop.isOpen = isOpen; });
+    },
+
+    subscribePayoutRequests: async (shopId: string) => {
+      const qReq = query(
+        collection(db, 'payout_requests'),
+        where('shopId', '==', shopId),
+        orderBy('requestedAt', 'desc')
+      );
+      const unsub = onSnapshot(qReq, (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as any[];
+        set((s) => { s.payoutRequests = list as any; });
+      });
+      return () => { unsub(); };
+    },
+
+    subscribePayouts: async (shopId: string) => {
+      const qP = query(
+        collection(db, 'payouts'),
+        where('shopId', '==', shopId),
+        orderBy('createdAt', 'desc')
+      );
+      const unsub = onSnapshot(qP, (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as any[];
+        set((s) => { s.payouts = list as any; });
+      });
+      return () => { unsub(); };
+    },
+
+    requestPayout: async (amount: number) => {
+      const shop = get().currentShop;
+      if (!shop) return;
+      const safeAmount = Math.max(0, Math.floor(Number(amount)));
+      if (!safeAmount) return;
+      const ref = doc(collection(db, 'payout_requests'));
+      await setDoc(ref, {
+        shopId: shop.id,
+        amount: safeAmount,
+        status: 'requested',
+        requestedAt: serverTimestamp() as any,
+        updatedAt: serverTimestamp() as any
+      } as any);
+    },
+
+    confirmPayoutSettlement: async (requestId: string, amount: number) => {
+      const shop = get().currentShop;
+      if (!shop) return;
+      const safeAmount = Math.max(0, Math.floor(Number(amount)));
+      const payoutRef = doc(collection(db, 'payouts'));
+      await setDoc(payoutRef, {
+        shopId: shop.id,
+        amount: safeAmount,
+        requestId,
+        createdAt: serverTimestamp() as any
+      } as any);
+      try {
+        const shopRef = doc(db, 'shops', shop.id);
+        const snap = await getDoc(shopRef);
+        const prev = Number(snap.data()?.receivableAmount ?? 0);
+        const next = Math.max(0, prev - safeAmount);
+        await updateDoc(shopRef, { receivableAmount: next, updatedAt: serverTimestamp() as any });
+        set((s) => { s.receivableAmount = next; });
+      } catch {}
     }
   }))
 );

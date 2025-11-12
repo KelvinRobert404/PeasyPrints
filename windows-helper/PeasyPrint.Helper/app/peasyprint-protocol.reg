@@ -1,0 +1,12 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\peasyprint]
+@="URL:PeasyPrint Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\peasyprint\shell]
+
+[HKEY_CLASSES_ROOT\peasyprint\shell\open]
+
+[HKEY_CLASSES_ROOT\peasyprint\shell\open\command]
+@="\"C:\\\\Users\\\\kelvi\\\\PeasyPrints\\\\windows-helper\\\\scripts\\\\..\\\\PeasyPrint.Helper\\\\bin\\\\Release\\\\net8.0-windows10.0.19041.0\\\\win-x64\\\\publish\\\\PeasyPrint.Helper.exe\" \"%1\""

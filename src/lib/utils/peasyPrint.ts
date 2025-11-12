@@ -73,4 +73,3 @@ export function triggerPeasyPrint(jobId: string, opts: PeasyPrintOptions = {}): 
   }, timeoutMs);
 }
 
-

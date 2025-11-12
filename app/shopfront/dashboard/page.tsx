@@ -17,6 +17,9 @@ import { useOrderAlerts } from '@/hooks/useOrderAlerts';
 import { useTabAttention } from '@/hooks/useTabAttention';
 import { useIdle } from '@/hooks/useIdle';
 import { triggerPeasyPrint, isWindows } from '@/lib/utils/peasyPrint';
+import { ShopfrontPendingTable } from '@/components/orders/ShopfrontPendingTable';
+import { ShopfrontHistoryTable } from '@/components/orders/ShopfrontHistoryTable';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function ShopfrontDashboardPage() {
   const { user } = useAuthStore();
@@ -193,227 +196,86 @@ export default function ShopfrontDashboardPage() {
       </div>
 
       <div className="space-y-2">
-        <div className="text-sm text-gray-500">Pending Orders</div>
-        {pendingOrders.length === 0 ? (
-          <Card className="border-0 shadow-sm"><CardContent>No pending orders</CardContent></Card>
-        ) : (
-          <div className="space-y-3">
-            {pendingOrders.map((o) => (
-              <div key={(o as any).id} className="flex items-stretch gap-2">
-                <Card className={`flex-1 border ${o.emergency ? 'emergency-order' : ''}`}>
-                  <CardContent className="py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate font-medium">{o.userName} • {o.fileName}</div>
-                      </div>
-                      {o.splitFiles ? (
-                        <div className="flex items-center gap-1">
-                          {o.fileUrl && (
-                            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>Original</Button>
-                          )}
-                          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.open((o as any).splitFiles?.bwUrl, '_blank', 'noopener,noreferrer'); }}>B&W</Button>
-                          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.open((o as any).splitFiles?.colorUrl, '_blank', 'noopener,noreferrer'); }}>Color</Button>
-                        </div>
-                      ) : (
-                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {isWindows() && (
-                        <Button
-                          size="sm"
-                          variant="success"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Build deep link directly from order URLs to avoid server resolution
-                            try {
-                              const printColor = o.printSettings?.printColor === 'Color' ? 'color' : 'bw';
-                              const copies = Math.max(o.printSettings?.copies ?? 1, 1);
-                              const fileUrl = (o as any).splitFiles
-                                ? (printColor === 'color' ? (o as any).splitFiles?.colorUrl : (o as any).splitFiles?.bwUrl)
-                                : (o as any).fileUrl;
-                              if (!fileUrl) {
-                                alert('No file URL on this order.');
-                                return;
-                              }
-                              const enc = encodeURIComponent(fileUrl);
-                              const deeplink = `peasyprint://print?file=${enc}&copies=${copies}&color=${printColor}`;
-                              window.location.href = deeplink;
-                            } catch {
-                              alert('Failed to launch PeasyPrint link.');
-                            }
-                          }}
-                        >
-                          Print
-                        </Button>
-                      )}
-                      <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); void cancelOrder((o as any).id, o); }}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                      {o.emergency && <Badge variant="destructive">URGENT</Badge>}
-                      {!(o.status === 'processing' || o.status === 'printing' || o.status === 'printed') && (
-                        <Badge variant="secondary">{o.status}</Badge>
-                      )}
-                    </div>
-                    {/* Label badges inline */}
-                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                      {(() => { const p = getDateLabelParts(o.timestamp); return (
-                        <Badge variant="outline" className="font-bold bg-blue-50 text-blue-700 border-blue-200">{p.time}</Badge>
-                      ); })()}
-                      <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
-                      <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
-                      <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
-                        {o.printSettings?.printColor}
-                      </Badge>
-                      <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
-                      <Badge variant="secondary">₹{o.totalCost}</Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-                <div className="flex flex-col gap-2 self-stretch w-28">
-                  {o.status !== 'printed' ? (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="flex-1 h-auto min-h-[48px]"
-                      onClick={() => { if (!((o as any).id)) return; void markPrinted((o as any).id); }}
-                    >
-                      Printed
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 h-auto min-h-[48px]"
-                      onClick={() => { if (!((o as any).id)) return; void revertToProcessing((o as any).id); }}
-                    >
-                      Undo Printed
-                    </Button>
-                  )}
-                  {o.status !== 'printed' ? (
-                    <Button size="sm" disabled className="flex-1 h-auto min-h-[48px]">
-                      Collected
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      className="flex-1 h-auto min-h-[48px]"
-                      onClick={async () => {
-                        if (!((o as any).id)) return;
-                        await completeOrder((o as any).id, o as any);
-                        setRange(null);
-                        setSelectedDate(toLocalYMD(new Date()));
-                        setHistoryOpen(true);
-                        setFilterOpen(true);
-                        setTimeout(() => setHistoryOpen(false), 5000);
-                      }}
-                    >
-                      Collected
-                    </Button>
-                  )}
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">Orders</div>
+        </div>
+        <Tabs defaultValue="pending">
+          <TabsList>
+            <TabsTrigger value="pending">Pending</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="pending">
+            {pendingOrders.length === 0 ? (
+              <Card className="border-0 shadow-sm"><CardContent>No pending orders</CardContent></Card>
+            ) : (
+              <div className="max-h-[65vh] overflow-y-auto pr-1">
+                <ShopfrontPendingTable
+                  orders={pendingOrders as any}
+                  isWindows={isWindows()}
+                  onPrint={(o) => { const jobId = (o as any).id as string; if (!jobId) return; triggerPeasyPrint(jobId, { onMissingHelper: () => { alert('PeasyPrint Helper not detected. Please install it, then click Print again.'); } }); }}
+                  onCancel={(o) => { if (!((o as any).id)) return; void cancelOrder((o as any).id, o as any); }}
+                  onMarkPrinted={(o) => { if (!((o as any).id)) return; void markPrinted((o as any).id); }}
+                  onRevertToProcessing={(o) => { if (!((o as any).id)) return; void revertToProcessing((o as any).id); }}
+                  onCollected={async (o) => {
+                    if (!((o as any).id)) return;
+                    await completeOrder((o as any).id, o as any);
+                    setRange(null);
+                    setSelectedDate(toLocalYMD(new Date()));
+                    setFilterOpen(true);
+                  }}
+                />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="history">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-gray-500">Filters</div>
+              <Button size="sm" variant="outline" onClick={() => setFilterOpen((v) => !v)}>Toggle</Button>
+            </div>
+            {filterOpen && (
+              <div className="mt-2 p-3 border rounded bg-white space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="date"
+                      value={range ? range.start : selectedDate}
+                      onChange={(e) => range ? setRange({ start: e.target.value, end: range.end }) : setSelectedDate(e.target.value)}
+                      className="text-xs border rounded px-2 py-1"
+                    />
+                    <span className="text-xs text-gray-500">to</span>
+                    <input
+                      type="date"
+                      value={range ? range.end : selectedDate}
+                      onChange={(e) => setRange({ start: range ? range.start : selectedDate, end: e.target.value })}
+                      className="text-xs border rounded px-2 py-1"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="text-xs underline" onClick={() => { const d=new Date(); setRange(null); setSelectedDate(toLocalYMD(d)); }}>Today</button>
+                  <button className="text-xs underline" onClick={() => { const d=new Date(); d.setDate(d.getDate()-1); setRange(null); setSelectedDate(toLocalYMD(d)); }}>Yesterday</button>
+                  <button className="text-xs underline" onClick={() => { const end=new Date(); const start=new Date(); start.setDate(start.getDate()-6); setRange({ start: toLocalYMD(start), end: toLocalYMD(end) }); }}>Last 7 days</button>
+                  <button className="text-xs underline" onClick={() => setRange(null)}>Single day</button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500">History</div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setFilterOpen((v) => !v)}>Filter</Button>
-            <button className="text-xs text-blue-600" onClick={() => setHistoryOpen((v) => !v)}>
-              {historyOpen ? 'Hide' : 'Show'}
-            </button>
-          </div>
-        </div>
-        {filterOpen && (
-          <div className="mt-2 p-3 border rounded bg-white space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <input
-                  type="date"
-                  value={range ? range.start : selectedDate}
-                  onChange={(e) => range ? setRange({ start: e.target.value, end: range.end }) : setSelectedDate(e.target.value)}
-                  className="text-xs border rounded px-2 py-1"
-                />
-                <span className="text-xs text-gray-500">to</span>
-                <input
-                  type="date"
-                  value={range ? range.end : selectedDate}
-                  onChange={(e) => setRange({ start: range ? range.start : selectedDate, end: e.target.value })}
-                  className="text-xs border rounded px-2 py-1"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="text-xs underline" onClick={() => { const d=new Date(); setRange(null); setSelectedDate(toLocalYMD(d)); }}>Today</button>
-              <button className="text-xs underline" onClick={() => { const d=new Date(); d.setDate(d.getDate()-1); setRange(null); setSelectedDate(toLocalYMD(d)); }}>Yesterday</button>
-              <button className="text-xs underline" onClick={() => { const end=new Date(); const start=new Date(); start.setDate(start.getDate()-6); setRange({ start: toLocalYMD(start), end: toLocalYMD(end) }); }}>Last 7 days</button>
-              <button className="text-xs underline" onClick={() => setRange(null)}>Single day</button>
-            </div>
-          </div>
-        )}
-        {historyOpen && (
-          <div className="space-y-3">
-            {filteredHistoryByDate.length === 0 ? (
-              <Card className="border-0 shadow-sm"><CardContent>No history for selected date</CardContent></Card>
-            ) : (
-              filteredHistoryByDate.map((o: any) => (
-                <Card key={o.id} className={`border ${o.status === 'cancelled' ? 'opacity-60' : ''}`}>
-                  <CardContent className="py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate font-medium">{o.userName} • {o.fileName}</div>
-                      </div>
-                      {o.splitFiles ? (
-                        <div className="flex items-center gap-1">
-                          {o.fileUrl && (
-                            <Button size="sm" variant="outline" onClick={() => { window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>Original</Button>
-                          )}
-                          <Button size="sm" variant="outline" onClick={() => { window.open((o as any).splitFiles?.bwUrl, '_blank', 'noopener,noreferrer'); }}>B&W</Button>
-                          <Button size="sm" variant="outline" onClick={() => { window.open((o as any).splitFiles?.colorUrl, '_blank', 'noopener,noreferrer'); }}>Color</Button>
-                        </div>
-                      ) : (
-                        <Button size="sm" variant="ghost" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {o.status === 'completed' && (
-                        <Button size="sm" variant="outline" onClick={() => { void undoCollected(o.orderId, o); }}>
-                          Undo Collected
-                        </Button>
-                      )}
-                      {o.status === 'cancelled' && (
-                        <Button size="sm" variant="outline" onClick={() => { void undoCancelled(o.orderId, o); }}>
-                          Undo Cancelled
-                        </Button>
-                      )}
-                      {o.emergency && <Badge variant="destructive">URGENT</Badge>}
-                      {o.status !== 'completed' && (
-                        <Badge variant="secondary">{o.status}</Badge>
-                      )}
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                      {o.jobType && (
-                        <Badge variant="secondary">{o.jobType}</Badge>
-                      )}
-                      <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
-                      <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
-                      <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
-                        {o.printSettings?.printColor}
-                      </Badge>
-                      <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
-                      <Badge variant="secondary">₹{o.totalCost}</Badge>
-                    </div>
-                    
-                  </CardContent>
-                </Card>
-              ))
             )}
-          </div>
-        )}
+            <div className="space-y-3 mt-3">
+              {filteredHistoryByDate.length === 0 ? (
+                <Card className="border-0 shadow-sm"><CardContent>No history for selected date</CardContent></Card>
+              ) : (
+                <div className="max-h-[65vh] overflow-y-auto pr-1">
+                  <ShopfrontHistoryTable
+                    orders={filteredHistoryByDate as any}
+                    onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
+                    onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+                  />
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <div className="h-4" />

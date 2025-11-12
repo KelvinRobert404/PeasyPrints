@@ -90,6 +90,7 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
   }, [signedIn, shopChecked]);
   const items = [
     { href: '/shopfront', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/shopfront/billing', label: 'Billing', icon: DollarSign },
     { href: '/shopfront/profile', label: 'Profile', icon: Store },
     { href: '/shopfront/settings', label: 'Settings', icon: Wallet },
     { href: '/shopfront/updates', label: 'Updates', icon: History }

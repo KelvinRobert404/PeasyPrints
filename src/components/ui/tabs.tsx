@@ -7,25 +7,25 @@ export function Tabs({ defaultValue, children, className }: { defaultValue: stri
     <div className={className} data-tabs>
       {React.Children.map(children, (child: any) => {
         if (!child) return child;
-        return React.cloneElement(child, { value, setValue });
+        return React.cloneElement(child, { activeValue: value, setValue });
       })}
     </div>
   );
 }
 
-export function TabsList({ children, className, value, setValue }: any) {
-  return <div className={cn('inline-grid rounded-md bg-gray-100 p-1 text-sm', className)}>{React.Children.map(children, (child: any) => React.cloneElement(child, { value, setValue }))}</div>;
+export function TabsList({ children, className, activeValue, setValue }: any) {
+  return <div className={cn('inline-grid rounded-md bg-gray-100 p-1 text-sm', className)}>{React.Children.map(children, (child: any) => React.cloneElement(child, { activeValue, setValue }))}</div>;
 }
 
-export function TabsTrigger({ value: v, children, value, setValue }: any) {
-  const active = value === v;
+export function TabsTrigger({ value: v, children, activeValue, setValue }: any) {
+  const active = activeValue === v;
   return (
     <button onClick={() => setValue(v)} className={cn('px-3 py-1 rounded-md', active ? 'bg-white shadow' : 'opacity-70 hover:opacity-100')}>{children}</button>
   );
 }
 
-export function TabsContent({ value: v, children, value }: any) {
-  if (value !== v) return null;
+export function TabsContent({ value: v, children, activeValue }: any) {
+  if (activeValue !== v) return null;
   return <div className="mt-4">{children}</div>;
 }
 
