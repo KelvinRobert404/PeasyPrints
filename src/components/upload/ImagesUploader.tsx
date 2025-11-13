@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { ImagesLayoutPreview } from '@/components/upload/ImagesLayoutPreview';
+import { Image as ImageIcon, Plus } from 'lucide-react';
 
 const ACCEPT = ['image/png', 'image/jpeg'];
 const MAX_IMAGE_MB = 8;
 
 export function ImagesUploader() {
-  const { images, setImages, imagesPages, setImagesPages, settings, setSettings, imagesScale, setImagesScale } = useUploadStore();
+  const { images, setImages, imagesPages, settings, imagesScale } = useUploadStore();
   const [overflow, setOverflow] = useState(false);
 
   useEffect(() => {
@@ -68,14 +70,11 @@ export function ImagesUploader() {
     return () => { cancelled = true; };
   }, [images, imagesPages, settings.paperSize, imagesScale]);
 
-  // No auto page increment on scale; user controls Pages explicitly
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  function onFilesSelected(filesList: FileList | null) {
-    if (!filesList) return;
+  const onDrop = (accepted: File[]) => {
     const valid: File[] = [];
-    for (const f of Array.from(filesList)) {
+    for (const f of accepted) {
       if (!ACCEPT.includes(f.type)) {
         setError('Only PNG and JPG are supported');
         continue;
@@ -90,73 +89,43 @@ export function ImagesUploader() {
       setError(null);
       setImages(valid);
     }
-  }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    multiple: true,
+    accept: { 'image/*': ['.png', '.jpg', '.jpeg'] }
+  });
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          className="h-10 rounded-md bg-blue-600 text-white px-3"
-        >
-          Select Images
-        </button>
-        <input
-          ref={inputRef}
-          type="file"
-          accept={ACCEPT.join(',')}
-          multiple
-          className="hidden"
-          onChange={(e) => onFilesSelected(e.currentTarget.files)}
-        />
-        <div className="text-xs text-gray-600">PNG/JPG only • A3/A4 • Auto layout</div>
+      <div
+        {...getRootProps()}
+        className="rounded-2xl bg-gray-100 p-4 text-center text-sm cursor-pointer select-none"
+      >
+        <input {...getInputProps()} />
+        {images && images.length > 0 ? (
+          <div className="overflow-hidden rounded-xl border bg-white">
+            <div className="h-64 overflow-auto">
+              <ImagesLayoutPreview />
+            </div>
+            <div className="px-3 py-2 text-xs text-gray-600 text-left border-t">
+              {images.length} image{images.length > 1 ? 's' : ''} selected
+            </div>
+          </div>
+        ) : isDragActive ? (
+          <div className="text-gray-600">Drop images here...</div>
+        ) : (
+          <div className="text-gray-600 flex flex-col items-center justify-center gap-2 py-6">
+            <ImageIcon className="w-8 h-8 text-gray-400" />
+            <div className="font-medium">Select Images</div>
+            <div className="text-xs flex items-center gap-1"><Plus className="w-3 h-3" /> Tap to add or drag & drop</div>
+          </div>
+        )}
       </div>
       {error && <div className="text-xs text-red-600">{error}</div>}
 
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">Pages</label>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="h-8 w-8 rounded bg-white border"
-            onClick={() => setImagesPages(Math.max(1, imagesPages - 1))}
-          >
-            −
-          </button>
-          <div className="w-10 text-center text-sm font-semibold">{imagesPages}</div>
-          <button
-            type="button"
-            className="h-8 w-8 rounded bg-white border"
-            onClick={() => setImagesPages(Math.min(5, imagesPages + 1))}
-          >
-            +
-          </button>
-        </div>
-      </div>
-
-      {/* spacing fixed at 0.5cm by default; control removed */}
-
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">Image size</label>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="h-8 w-8 rounded bg-white border"
-            onClick={() => setImagesScale(Math.max(0.5, Math.round((imagesScale - 0.1) * 10) / 10))}
-          >
-            −
-          </button>
-          <div className="w-10 text-center text-sm font-semibold">{Math.round(imagesScale * 100)}%</div>
-          <button
-            type="button"
-            className="h-8 w-8 rounded bg-white border"
-            onClick={() => setImagesScale(Math.min(2.0, Math.round((imagesScale + 0.1) * 10) / 10))}
-          >
-            +
-          </button>
-        </div>
-      </div>
+      {/* Controls moved to Customize in Print Configuration */}
 
       {/* Precise overflow warning */}
       {overflow && (
@@ -165,7 +134,7 @@ export function ImagesUploader() {
         </div>
       )}
 
-      <ImagesLayoutPreview />
+      {/* Keep preview within the dropzone when images exist */}
     </div>
   );
 }
