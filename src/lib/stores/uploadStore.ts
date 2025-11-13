@@ -125,12 +125,17 @@ export const useUploadStore = create<UploadState>()(
 
     setImages: (files) => {
       set((s) => {
+        // Combined mode stays on 'PDF' for selector purposes; clear any selected PDF
+        if (s.jobType !== 'Assignment') {
+          s.jobType = 'PDF';
+        }
+        s.file = null;
+        s.fileUrl = null;
+        s.pageRotations = [];
         s.images = files;
         // Recompute page count for Images mode
-        if (s.jobType === 'Images') {
-          const target = Math.min(Math.max(s.imagesPages || 1, 1), 5);
-          s.pageCount = target;
-        }
+        const target = Math.min(Math.max(s.imagesPages || 1, 1), 5);
+        s.pageCount = target;
       });
       get().recalc();
     },
@@ -138,9 +143,7 @@ export const useUploadStore = create<UploadState>()(
     setImagesPages: (n) => {
       set((s) => {
         s.imagesPages = Math.min(Math.max(Number(n) || 1, 1), 5);
-        if (s.jobType === 'Images') {
-          s.pageCount = s.imagesPages;
-        }
+        s.pageCount = s.jobType === 'Images' ? s.imagesPages : s.pageCount;
       });
       get().recalc();
     },
@@ -207,10 +210,13 @@ export const useUploadStore = create<UploadState>()(
       try {
         // Only count pages for PDF/Assignment modes
         const { jobType } = get();
-        if (jobType === 'Images') {
-          set((s) => { s.loading = false; s.error = 'Unexpected file upload in Images mode'; });
-          return;
-        }
+        // Switch to PDF mode unless explicitly in Assignment
+        set((s) => {
+          if (jobType !== 'Assignment') {
+            s.jobType = 'PDF';
+          }
+          s.images = [];
+        });
         const buf = await file.arrayBuffer();
         const pdf = await PDFDocument.load(buf);
         const pages = pdf.getPageCount();
@@ -240,8 +246,9 @@ export const useUploadStore = create<UploadState>()(
     },
 
     recalc: () => {
-      const { settings, pageCount, shopPricing, jobType, imagesPages } = get();
-      const effectivePages = jobType === 'Images' ? Math.min(Math.max(imagesPages || 1, 1), 5) : pageCount;
+      const { settings, pageCount, shopPricing, images, imagesPages } = get();
+      const hasImages = (images?.length || 0) > 0;
+      const effectivePages = hasImages ? Math.min(Math.max(imagesPages || 1, 1), 5) : pageCount;
       const effectivePricing: ShopPricing | undefined = shopPricing ?? (() => {
         // Fallback to legacy defaults from pricingStore if shop pricing not loaded
         try {
@@ -273,7 +280,7 @@ export const useUploadStore = create<UploadState>()(
       })();
       const { total } = calculateTotalCost(settings, effectivePages, effectivePricing);
       set((s) => { s.totalCost = total; });
-      captureEvent('pricing_recalculated', { totalPages: effectivePages, totalCost: total, printSettings: settings, jobType });
+      captureEvent('pricing_recalculated', { totalPages: effectivePages, totalCost: total, printSettings: settings, jobType: get().jobType });
     },
 
     reset: () => {
