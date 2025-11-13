@@ -55,7 +55,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
     let preparedSingle: { blob: Blob; name: string } | null = null;
     let preparedSplit: { bw: Blob; color: Blob } | null = null;
     try {
-      if (jobType === 'Images') {
+      if ((images?.length || 0) > 0) {
         const pdfBytes = await imagesToPdf(images, imagesPages, settings.paperSize, imagesGapCm, imagesScale);
         const date = new Date();
         const y = date.getFullYear();
@@ -96,8 +96,8 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
       alert('Failed to prepare file for upload. Please reselect your file.');
       return;
     }
-    const hasPdf = jobType !== 'Images' && !!file;
-    const hasImages = jobType === 'Images' && images.length > 0;
+    const hasPdf = !!file;
+    const hasImages = (images?.length || 0) > 0;
     if (!isClerkLoaded || !clerkUser || (!hasPdf && !hasImages) || pageCount === 0 || totalCost <= 0) return;
     setLoading(true);
     try {
@@ -201,7 +201,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
                 shopName: shopName || '',
                 userName: clerkUser.fullName || clerkUser.username || clerkUser.phoneNumbers?.[0]?.phoneNumber || clerkUser.emailAddresses?.[0]?.emailAddress || 'User',
                 fileUrl,
-                fileName: hasPdf ? file!.name : (jobType === 'Images' ? 'images.pdf' : 'document.pdf'),
+                fileName: hasPdf ? file!.name : (hasImages ? 'images.pdf' : 'document.pdf'),
                 totalPages: pageCount,
                 printSettings: settings,
                 jobType,
@@ -244,8 +244,8 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
   };
 
   const handleCheckout = () => {
-    const hasPdf = jobType !== 'Images' && !!file;
-    const hasImages = jobType === 'Images' && images.length > 0;
+    const hasPdf = !!file;
+    const hasImages = (images?.length || 0) > 0;
     if (jobType === 'Assignment' && assignmentMode === 'Mixed' && !assignmentConfirmed) {
       alert('Please confirm color page selection before checkout.');
       return;
@@ -280,8 +280,8 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
       <button
         onClick={handleCheckout}
         disabled={(() => {
-          const hasPdf = jobType !== 'Images' && !!file;
-          const hasImages = jobType === 'Images' && images.length > 0;
+          const hasPdf = !!file;
+          const hasImages = (images?.length || 0) > 0;
           return loading || (!hasPdf && !hasImages) || totalCost <= 0 || !isClerkLoaded || !clerkUser;
         })()}
         className="w-full h-14 bg-blue-600 text-white rounded-xl disabled:opacity-50 font-quinn text-[24px]"
@@ -303,7 +303,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
             </div>
           )}
           <div className="max-h-[60vh] overflow-auto border rounded p-2 bg-white">
-            {jobType === 'Images' ? <ImagesLayoutPreview /> : <PdfPreviewer />}
+            {(images?.length || 0) > 0 ? <ImagesLayoutPreview /> : <PdfPreviewer />}
           </div>
           <div className="flex justify-end gap-2">
             <button type="button" className="h-10 px-3 rounded-md border bg-white" onClick={() => setPreviewOpen(false)}>Cancel</button>
