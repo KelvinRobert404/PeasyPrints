@@ -3,9 +3,8 @@
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { cn } from '@/lib/utils/cn';
 
-const options: Array<{ key: 'PDF' | 'Images' | 'Assignment'; label: string }> = [
-  { key: 'PDF', label: 'PDF' },
-  { key: 'Images', label: 'Images' },
+const options: Array<{ key: 'PDF' | 'Assignment'; label: string }> = [
+  { key: 'PDF', label: 'PDF/Images' },
   { key: 'Assignment', label: 'Assignments' },
 ];
 

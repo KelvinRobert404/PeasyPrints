@@ -22,7 +22,7 @@ import haptics from '@/lib/utils/haptics';
 
 export default function UploadEntryPage() {
   const { shops, subscribe } = useShopsStore();
-  const { setShopPricing, jobType } = useUploadStore();
+  const { setShopPricing, jobType, file, images } = useUploadStore();
   const [selectedShopId, setSelectedShopId] = useState<string>('');
   
 
@@ -101,7 +101,7 @@ export default function UploadEntryPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <main className="flex-1 overflow-y-auto p-4 pb-24 space-y-4">
+      <main className="flex-1 overflow-y-auto p-4 pb-0 md:pb-10 space-y-4">
         <Card>
           <CardContent className="pt-3">
             <div className="relative">
@@ -190,7 +190,7 @@ export default function UploadEntryPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">What are you printing?</CardTitle>
+            <CardTitle className="text-base">What are we printing today?</CardTitle>
           </CardHeader>
           <CardContent>
             <UmbrellaSelector />
@@ -201,15 +201,24 @@ export default function UploadEntryPage() {
           <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
             <CardHeader>
               <CardTitle className="text-base">
-                {jobType === 'PDF' && 'Select PDF'}
-                {jobType === 'Images' && 'Select Images'}
-                {jobType === 'Assignment' && 'Select Assignment PDF'}
+                {jobType === 'Assignment' ? 'Select Assignment PDF' : 'Select PDF or Images'}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {jobType === 'PDF' && <FileDropzone />}
-              {jobType === 'Images' && <ImagesUploader />}
-              {jobType === 'Assignment' && <FileDropzone />}
+              {jobType === 'Assignment' ? (
+                <FileDropzone />
+              ) : (() => {
+                const hasPdf = Boolean(file);
+                const hasImages = Boolean(images && images.length > 0);
+                if (hasPdf) return <FileDropzone />;
+                if (hasImages) return <ImagesUploader />;
+                return (
+                  <div className="grid grid-cols-2 gap-2">
+                    <FileDropzone />
+                    <ImagesUploader />
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
           {disabled && (
