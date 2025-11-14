@@ -17,7 +17,9 @@ export function isWindows(): boolean {
   return /Windows NT/i.test(navigator.userAgent);
 }
 
-const PROD_API_BASE = 'https://www.theswoop.club/api';
+const PROD_API_BASE = typeof window !== 'undefined' && window.location?.origin
+  ? `${window.location.origin}/api`
+  : 'https://theswoop.club/api';
 
 export function triggerPeasyPrint(jobId: string, opts: PeasyPrintOptions = {}): void {
   const { timeoutMs = 3000, installUrl, onMissingHelper, onLaunched } = opts;

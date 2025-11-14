@@ -26,6 +26,10 @@ MinVersion=10.0
 WizardStyle=modern
 SetupLogging=yes
 SetupIconFile=branding\\swoop.ico
+CloseApplications=yes
+CloseApplicationsFilter=peasyprint.helper.exe
+RestartApplications=no
+AppMutex=Global\PeasyPrint.Helper
 
 ; Optional: enable when you have a code signing setup
 ; SignTool=osslsigncode sign -pkcs12 "certs\\codesign.pfx" -pass "${PASSWORD}" -n "{#AppName}" -in "$f" -out "$f-signed"&osslsigncode attach-signature -in "$f" -out "$f" -sigin "$f-signed" -nest

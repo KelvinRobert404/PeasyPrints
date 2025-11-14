@@ -12,12 +12,21 @@ namespace PeasyPrint.Helper
     public partial class App : System.Windows.Application
     {
         private const string DEFAULT_API_BASE = "https://theswoop.club/api";
+        private static System.Threading.Mutex? singleInstanceMutex;
         protected override void OnStartup(StartupEventArgs e)
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             try
             {
+                bool createdNew;
+                singleInstanceMutex = new System.Threading.Mutex(true, "Global\\PeasyPrint.Helper", out createdNew);
+                if (!createdNew)
+                {
+                    // Another instance is already running; exit immediately
+                    Shutdown(0);
+                    return;
+                }
                 var args = Environment.GetCommandLineArgs();
                 // Tray mode: keep running in system tray
                 if (Array.Exists(args, a => string.Equals(a, "--tray", StringComparison.OrdinalIgnoreCase)))
@@ -104,6 +113,7 @@ namespace PeasyPrint.Helper
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show(ex.Message, "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(1);
             }
         }
 
