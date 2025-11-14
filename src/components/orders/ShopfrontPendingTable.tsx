@@ -53,15 +53,17 @@ export function ShopfrontPendingTable({ orders, isWindows, onPrint, onCancel, on
           const pagesNum = Number(o.totalPages ?? 0);
           const copiesLabel = `${copiesNum} ${copiesNum === 1 ? 'copy' : 'copies'}`;
           const pagesLabel = `${pagesNum} ${pagesNum === 1 ? 'page' : 'pages'}`;
-          const blueSummary = `${time}${time ? ' • ' : ''}${copiesLabel} • ${pagesLabel} • ₹${Number(o.totalCost ?? 0).toFixed(0)}`;
-          const greenSummary = (() => {
-            const diff: string[] = [];
-            if (ps?.paperSize && ps.paperSize !== 'A4') diff.push(String(ps.paperSize));
-            if (ps?.printFormat === 'Double-Sided') diff.push('DS'); // SS is default
-            if (ps?.printColor && ps.printColor !== 'Black & White') diff.push('Color'); // BW is default
-            return diff.length ? diff.join(' • ') : 'Normal';
+          const blueSummary = `${copiesLabel} • ${pagesLabel} • ₹${Number(o.totalCost ?? 0).toFixed(0)}`;
+          const { greenSummary, isNormal } = (() => {
+            const diffs: string[] = [];
+            if (ps?.paperSize && ps.paperSize !== 'A4') diffs.push(String(ps.paperSize));
+            if (ps?.printFormat === 'Double-Sided') diffs.push('DS'); // SS is default
+            if (ps?.printColor && ps.printColor !== 'Black & White') diffs.push('Color'); // BW is default
+            const normalOrDiff = diffs.length ? diffs.join(' • ') : 'Normal';
+            const summary = time ? `${time} • ${normalOrDiff}` : normalOrDiff;
+            return { greenSummary: summary, isNormal: diffs.length === 0 };
           })();
-          const greenClass = greenSummary === 'Normal'
+          const greenClass = isNormal
             ? 'bg-black/10 text-black border-black/20'
             : 'bg-green-600/10 text-green-700 border-green-600/20';
           return (
