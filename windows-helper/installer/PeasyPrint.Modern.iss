@@ -50,10 +50,10 @@ Filename: "{app}\\{#AppExeName}"; Parameters: "--tray"; Description: "Launch in 
 ; Protocol registration: peasyprint://
 Root: HKCR; Subkey: "peasyprint"; ValueType: string; ValueName: ""; ValueData: "URL:PeasyPrint Protocol"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "peasyprint"; ValueType: string; ValueName: "URL Protocol"; ValueData: "";
-Root: HKCR; Subkey: "peasyprint\\shell\\open\\command"; ValueType: string; ValueName: ""; ValueData: '"{app}\\{#AppExeName}" "%1"'; Flags: uninsdeletekey
+Root: HKCR; Subkey: "peasyprint\\shell\\open\\command"; ValueType: string; ValueName: ""; ValueData: """{app}\\{#AppExeName}"" ""%1"""; Flags: uninsdeletekey
 
 ; Auto-start (all users) if selected
-Root: HKLM; Subkey: "Software\\Microsoft\\Windows\\CurrentVersion\\Run"; ValueType: string; ValueName: "PeasyPrintHelper"; ValueData: '"{app}\\{#AppExeName}" --tray'; Tasks: autoStart; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\\Microsoft\\Windows\\CurrentVersion\\Run"; ValueType: string; ValueName: "PeasyPrintHelper"; ValueData: """{app}\\{#AppExeName}"" --tray"; Tasks: autoStart; Flags: uninsdeletevalue
 
 ; Environment variables (user-scoped)
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "PEASYPRINT_API_KEY"; ValueData: "{code:GetApiKey}"; Flags: uninsdeletevalue
