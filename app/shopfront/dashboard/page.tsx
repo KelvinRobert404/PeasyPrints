@@ -125,11 +125,9 @@ export default function ShopfrontDashboardPage() {
     const s = q.toLowerCase();
     return String(o.userName || '').toLowerCase().includes(s) || String(o.fileName || '').toLowerCase().includes(s);
   }
-  // Day-only datasets for Pending/Completed/Cancelled (today)
+  // Day-only datasets for Completed/Cancelled (today). Pending shows ALL.
   const today = new Date();
-  const pendingTodayBase = useMemo(() => (pendingOrders as any).filter((o: any) => {
-    const d = coerceDate(o.timestamp); return !!d && isSameDay(d, today);
-  }), [pendingOrders]);
+  const pendingBase = useMemo(() => (pendingOrders as any), [pendingOrders]);
   const historyTodayBase = useMemo(() => (historyOrders as any).filter((o: any) => {
     // Prefer historyTimestamp if present, else timestamp
     const d = coerceDate((o as any).historyTimestamp || o.timestamp); return !!d && isSameDay(d as Date, today);
@@ -137,7 +135,7 @@ export default function ShopfrontDashboardPage() {
   const completedTodayBase = useMemo(() => historyTodayBase.filter((o: any) => o.status === 'completed'), [historyTodayBase]);
   const cancelledTodayBase = useMemo(() => historyTodayBase.filter((o: any) => o.status === 'cancelled'), [historyTodayBase]);
 
-  const pendingToday = useMemo(() => pendingTodayBase.filter((o: any) => matchesQuery(o, search)), [pendingTodayBase, search]);
+  const pendingAll = useMemo(() => pendingBase.filter((o: any) => matchesQuery(o, search)), [pendingBase, search]);
   const completedToday = useMemo(() => completedTodayBase.filter((o: any) => matchesQuery(o, search)), [completedTodayBase, search]);
   const cancelledToday = useMemo(() => cancelledTodayBase.filter((o: any) => matchesQuery(o, search)), [cancelledTodayBase, search]);
 
@@ -150,6 +148,7 @@ export default function ShopfrontDashboardPage() {
   const [historyFilterOpen, setHistoryFilterOpen] = useState(false);
   const [historyRange, setHistoryRange] = useState<{ start: string; end: string }>(last7);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [helperOpen, setHelperOpen] = useState(false);
   useEffect(() => {
     if (!statusMessage) return;
     const id = setTimeout(() => setStatusMessage(null), 2000);
@@ -180,7 +179,7 @@ export default function ShopfrontDashboardPage() {
       const rangeLabel = historyRange.start === historyRange.end ? fmt(sd) : `${fmt(sd)}–${fmt(ed)}`;
       return <div className="text-xs text-gray-500">Showing {historyFiltered.length} of {historyInRangeBase.length} • {rangeLabel}</div>;
     }
-    return <div className="text-xs text-gray-500">Showing {pendingToday.length} of {pendingTodayBase.length}</div>;
+    return <div className="text-xs text-gray-500">Showing {pendingAll.length} of {pendingBase.length}</div>;
   }
   function OrdersHeaderBar({ activeValue, setValue }: any) {
     return (
@@ -188,7 +187,7 @@ export default function ShopfrontDashboardPage() {
         <TabsList variant="underline" className="flex-1" activeValue={activeValue} setValue={setValue}>
           <TabsTrigger value="pending">
             <span>Pending</span>
-            <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-900 px-1 text-xs text-white">{pendingTodayBase.length}</span>
+            <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-900 px-1 text-xs text-white">{pendingBase.length}</span>
           </TabsTrigger>
           <TabsTrigger value="completed">
             <span>Completed</span>
@@ -313,11 +312,7 @@ export default function ShopfrontDashboardPage() {
         </div>
         <Tabs defaultValue="pending">
           <OrdersHeaderBar />
-          {statusMessage && (
-            <div aria-live="polite" className="mt-2">
-              <Card className="border-0"><CardContent className="py-2 text-sm">{statusMessage}</CardContent></Card>
-            </div>
-          )}
+          {/* Inline status removed; see bottom toast below */}
           {searchOpen && (
             <div className="mt-2">
               <input
@@ -339,14 +334,22 @@ export default function ShopfrontDashboardPage() {
           )}
 
           <TabsContent value="pending">
-            {pendingToday.length === 0 ? (
+            {pendingAll.length === 0 ? (
               <Card className="border-0 shadow-sm"><CardContent>No pending orders today</CardContent></Card>
             ) : (
               <div className="max-h-[65vh] overflow-y-auto pr-1">
                 <ShopfrontPendingTable
-                  orders={pendingToday as any}
+                  orders={pendingAll as any}
                   isWindows={isWindows()}
-                  onPrint={(o) => { const jobId = (o as any).id as string; if (!jobId) return; triggerPeasyPrint(jobId, { onMissingHelper: () => { alert('PeasyPrint Helper not detected. Please install it, then click Print again.'); } }); setStatusMessage('Sent to printer'); }}
+                  onPrint={(o) => {
+                    const jobId = (o as any).id as string; if (!jobId) return;
+                    triggerPeasyPrint(jobId, {
+                      onMissingHelper: () => { setHelperOpen(true); }
+                    });
+                    // Optics: show connection then sending status
+                    setStatusMessage('Connecting to the printer…');
+                    setTimeout(() => setStatusMessage('Sending file to printer…'), 800);
+                  }}
                   onCancel={(o) => { if (!((o as any).id)) return; if (!confirm('Cancel this order?')) return; void cancelOrder((o as any).id, o as any); setStatusMessage('Order cancelled'); }}
                   onMarkPrinted={(o) => { if (!((o as any).id)) return; void markPrinted((o as any).id); setStatusMessage('Marked as printed'); }}
                   onRevertToProcessing={(o) => { if (!((o as any).id)) return; void revertToProcessing((o as any).id); setStatusMessage('Reverted to processing'); }}
@@ -436,6 +439,35 @@ export default function ShopfrontDashboardPage() {
             </div>
           </TabsContent>
         </Tabs>
+      </div>
+
+      {/* Helper missing dialog */}
+      <Dialog open={helperOpen} onOpenChange={setHelperOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>PeasyPrint Helper required</DialogTitle>
+            <DialogDescription>
+              PeasyPrint Helper was not detected on this computer. Install it once, then click Print again.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2">
+            <p className="text-sm text-gray-600">Download the installer from the Helper page.</p>
+          </div>
+          <DialogFooter>
+            <Link href="/helper" className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500">
+              Open Helper page
+            </Link>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bottom toast notification */}
+      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
+        {statusMessage && (
+          <div className="pointer-events-auto rounded-md bg-black text-white shadow-lg px-4 py-2 text-sm transition-all duration-300 ease-out">
+            {statusMessage}
+          </div>
+        )}
       </div>
 
       <div className="h-4" />
