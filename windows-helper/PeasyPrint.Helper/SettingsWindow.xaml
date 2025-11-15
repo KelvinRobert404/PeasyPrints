@@ -1,7 +1,7 @@
 <Window x:Class="PeasyPrint.Helper.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PeasyPrint Settings — build 1" Height="260" Width="500" WindowStartupLocation="CenterScreen">
+        Title="PeasyPrint Settings — v1.0.1" Height="260" Width="500" WindowStartupLocation="CenterScreen">
   <Grid Margin="16">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />

@@ -8,6 +8,9 @@
     <Nullable>enable</Nullable>
     <AssemblyName>PeasyPrint.Helper</AssemblyName>
     <RootNamespace>PeasyPrint.Helper</RootNamespace>
+    <Version>1.0.1</Version>
+    <FileVersion>1.0.1.0</FileVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
