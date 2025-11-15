@@ -30,20 +30,32 @@ namespace PeasyPrint.Helper
                 throw new InvalidOperationException("API base is not set");
             }
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(apiBaseUri, $"/print-jobs/{Uri.EscapeDataString(jobId)}"));
+            var requestUri = new Uri(apiBaseUri, $"/print-jobs/{Uri.EscapeDataString(jobId)}");
+            using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
             if (!string.IsNullOrWhiteSpace(apiKey))
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
             }
 
             using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            var dto = await JsonSerializer.DeserializeAsync<PrintJobDto>(stream, new JsonSerializerOptions
+            if (!response.IsSuccessStatusCode)
             {
-                PropertyNameCaseInsensitive = true
-            }, cancellationToken);
+                var body = await response.Content.ReadAsStringAsync();
+                var snippet = body?.Length > 200 ? body.Substring(0, 200) + "…" : body;
+                throw new InvalidOperationException($"HTTP {(int)response.StatusCode} {response.ReasonPhrase}: {snippet}");
+            }
+
+            var text = await response.Content.ReadAsStringAsync();
+            PrintJobDto? dto;
+            try
+            {
+                dto = JsonSerializer.Deserialize<PrintJobDto>(text, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (JsonException je)
+            {
+                var preview = text?.Length > 200 ? text.Substring(0, 200) + "…" : text;
+                throw new InvalidOperationException($"Invalid JSON from {requestUri}: {je.Message}. First bytes: {preview}");
+            }
 
             if (dto == null)
             {
@@ -73,13 +85,24 @@ namespace PeasyPrint.Helper
             }
 
             using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            var dto = await JsonSerializer.DeserializeAsync<PrintJobDto>(stream, new JsonSerializerOptions
+            if (!response.IsSuccessStatusCode)
             {
-                PropertyNameCaseInsensitive = true
-            }, cancellationToken);
+                var body = await response.Content.ReadAsStringAsync();
+                var snippet = body?.Length > 200 ? body.Substring(0, 200) + "…" : body;
+                throw new InvalidOperationException($"HTTP {(int)response.StatusCode} {response.ReasonPhrase}: {snippet}");
+            }
+
+            var text = await response.Content.ReadAsStringAsync();
+            PrintJobDto? dto;
+            try
+            {
+                dto = JsonSerializer.Deserialize<PrintJobDto>(text, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (JsonException je)
+            {
+                var preview = text?.Length > 200 ? text.Substring(0, 200) + "…" : text;
+                throw new InvalidOperationException($"Invalid JSON from {jobUrl}: {je.Message}. First bytes: {preview}");
+            }
 
             if (dto == null || dto.FileUrl == null)
             {
