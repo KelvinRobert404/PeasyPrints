@@ -5,13 +5,15 @@ import type { OrderDoc } from '@/types/models';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
+type StatusLike = OrderDoc['status'] | 'printed_ready';
+
 export interface OrderRowProps {
-  order: OrderDoc & { status?: OrderDoc['status'] | 'printed_ready' };
+  order: OrderDoc & { status?: StatusLike };
   density?: 'regular' | 'compact';
   onClick?: (order: OrderDoc) => void;
 }
 
-function statusToBadgeVariant(status: OrderRowProps['order']['status']): 'default' | 'secondary' | 'destructive' | 'outline' {
+function statusToBadgeVariant(status: StatusLike | undefined): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
     case 'printed':
     case 'completed':
@@ -39,20 +41,21 @@ function formatDate(ts: any) {
 
 export const OrderRow = React.memo(function OrderRow({ order, density = 'regular', onClick }: OrderRowProps) {
   const rowPadding = density === 'compact' ? 'py-1.5' : 'py-2.5';
+  const statusLike = (order.status ?? '') as StatusLike;
   return (
-    <TableRow className={`cursor-pointer hover:bg-gray-50 ${rowPadding}`} onClick={() => onClick?.(order)}>
-      <TableCell className="px-3">
+    <TableRow className={`cursor-pointer hover:bg-gray-50 ${rowPadding}`}>
+      <TableCell className="px-3" onClick={() => onClick?.(order)}>
         <div className="font-medium text-gray-900 truncate max-w-[220px]">{order.fileName}</div>
         <div className="text-xs text-gray-500 sm:hidden truncate max-w-[220px]">{order.shopName}</div>
       </TableCell>
-      <TableCell className="px-3 hidden sm:table-cell text-gray-700">{order.shopName}</TableCell>
-      <TableCell className="px-3">
-        <Badge variant={statusToBadgeVariant(order.status)}>
-          {order.status === 'printed_ready' ? 'Ready' : String(order.status ?? '').replace('_', ' ')}
+      <TableCell className="px-3 hidden sm:table-cell text-gray-700" onClick={() => onClick?.(order)}>{order.shopName}</TableCell>
+      <TableCell className="px-3" onClick={() => onClick?.(order)}>
+        <Badge variant={statusToBadgeVariant(statusLike)}>
+          {statusLike === 'printed_ready' ? 'Ready' : String(order.status ?? '').replace('_', ' ')}
         </Badge>
       </TableCell>
-      <TableCell className="px-3 hidden md:table-cell text-gray-700">{formatDate(order.timestamp)}</TableCell>
-      <TableCell className="px-3 hidden sm:table-cell text-right text-gray-900">₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
+      <TableCell className="px-3 hidden md:table-cell text-gray-700" onClick={() => onClick?.(order)}>{formatDate(order.timestamp)}</TableCell>
+      <TableCell className="px-3 hidden sm:table-cell text-right text-gray-900" onClick={() => onClick?.(order)}>₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
     </TableRow>
   );
 });

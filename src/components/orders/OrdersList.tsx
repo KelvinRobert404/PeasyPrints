@@ -98,20 +98,19 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
             {todayOrders.map((order) => (
               <TableRow key={order.id ?? `${order.userId}-${order.timestamp}`}
                 className={`cursor-pointer hover:bg-gray-50 ${rowPadding}`}
-                onClick={() => onOrderClick?.(order)}
               >
-                <TableCell className="px-3">
+                <TableCell className="px-3" onClick={() => onOrderClick?.(order)}>
                   <div className="font-medium text-gray-900 truncate max-w-[220px]">{order.fileName}</div>
                   <div className="text-xs text-gray-500 sm:hidden truncate max-w-[220px]">{order.shopName}</div>
                 </TableCell>
-                <TableCell className="px-3 hidden sm:table-cell text-gray-700">{order.shopName}</TableCell>
-                <TableCell className="px-3">
+                <TableCell className="px-3 hidden sm:table-cell text-gray-700" onClick={() => onOrderClick?.(order)}>{order.shopName}</TableCell>
+                <TableCell className="px-3" onClick={() => onOrderClick?.(order)}>
                   <Badge variant={statusToBadgeVariant((order as any).status)}>
                     {((order as any).status === 'printed_ready') ? 'Ready' : String(order.status).replace('_', ' ')}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-3 hidden md:table-cell text-gray-700">{formatDate(order.timestamp)}</TableCell>
-                <TableCell className="px-3 hidden sm:table-cell text-right text-gray-900">₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
+                <TableCell className="px-3 hidden md:table-cell text-gray-700" onClick={() => onOrderClick?.(order)}>{formatDate(order.timestamp)}</TableCell>
+                <TableCell className="px-3 hidden sm:table-cell text-right text-gray-900" onClick={() => onOrderClick?.(order)}>₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -137,20 +136,19 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
             {olderOrders.map((order) => (
               <TableRow key={order.id ?? `${order.userId}-${order.timestamp}-older`}
                 className={`cursor-pointer hover:bg-gray-50 ${rowPadding}`}
-                onClick={() => onOrderClick?.(order)}
               >
-                <TableCell className="px-3">
+                <TableCell className="px-3" onClick={() => onOrderClick?.(order)}>
                   <div className="font-medium text-gray-900 truncate max-w-[220px]">{order.fileName}</div>
                   <div className="text-xs text-gray-500 sm:hidden truncate max-w-[220px]">{order.shopName}</div>
                 </TableCell>
-                <TableCell className="px-3 hidden sm:table-cell text-gray-700">{order.shopName}</TableCell>
-                <TableCell className="px-3">
+                <TableCell className="px-3 hidden sm:table-cell text-gray-700" onClick={() => onOrderClick?.(order)}>{order.shopName}</TableCell>
+                <TableCell className="px-3" onClick={() => onOrderClick?.(order)}>
                   <Badge variant={statusToBadgeVariant((order as any).status)}>
                     {((order as any).status === 'printed_ready') ? 'Ready' : String(order.status).replace('_', ' ')}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-3 hidden md:table-cell text-gray-700">{formatDate(order.timestamp)}</TableCell>
-                <TableCell className="px-3 hidden sm:table-cell text-right text-gray-900">₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
+                <TableCell className="px-3 hidden md:table-cell text-gray-700" onClick={() => onOrderClick?.(order)}>{formatDate(order.timestamp)}</TableCell>
+                <TableCell className="px-3 hidden sm:table-cell text-right text-gray-900" onClick={() => onOrderClick?.(order)}>₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

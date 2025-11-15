@@ -70,33 +70,36 @@ export function ShopfrontPendingTable({ orders, isWindows, onPrint, onCancel, on
             <TableRow
               key={o.id ?? `${o.userId}-${String(o.timestamp)}`}
               className={`align-middle ${o.emergency ? 'border-l-4 border-red-400' : ''}`}
-              tabIndex={0}
-              role="row"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  if (isWindows) onPrint?.(o);
-                  else if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer');
-                }
-                if (e.key === 'Enter' && e.shiftKey) {
-                  if ((o as any).status !== 'printed') onMarkPrinted?.(o);
-                  else onRevertToProcessing?.(o);
-                }
-              }}
             >
               <TableCell className="px-3">
-                <div className="font-semibold text-gray-900 truncate max-w-[280px]">{o.userName}</div>
-                <div className="flex items-center gap-2">
-                  <div className="truncate max-w-[240px]" title={o.fileName}>{o.fileName}</div>
-                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 hidden sm:inline-flex" title="Click to open file" aria-label="Open file" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="sm:hidden mt-1 text-xs text-gray-600 flex items-center gap-2">
-                  <Badge variant="secondary">{o.status}</Badge>
-                </div>
-                <div className="mt-1 flex flex-wrap gap-1 text-xs sm:hidden">
-                  <Badge className={`whitespace-nowrap ${greenClass} text-sm px-3 py-1`}>{greenSummary}</Badge>
-                  <Badge className="whitespace-nowrap bg-blue-600/10 text-blue-700 border-blue-600/20 text-sm px-3 py-1">{blueSummary}</Badge>
+                <div
+                  tabIndex={0}
+                  role="button"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (isWindows) onPrint?.(o);
+                      else if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer');
+                    }
+                    if (e.key === 'Enter' && e.shiftKey) {
+                      if ((o as any).status !== 'printed') onMarkPrinted?.(o);
+                      else onRevertToProcessing?.(o);
+                    }
+                  }}
+                >
+                  <div className="font-semibold text-gray-900 truncate max-w-[280px]">{o.userName}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="truncate max-w-[240px]" title={o.fileName}>{o.fileName}</div>
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 hidden sm:inline-flex" title="Click to open file" aria-label="Open file" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="sm:hidden mt-1 text-xs text-gray-600 flex items-center gap-2">
+                    <Badge variant="secondary">{o.status}</Badge>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-1 text-xs sm:hidden">
+                    <Badge className={`whitespace-nowrap ${greenClass} text-sm px-3 py-1`}>{greenSummary}</Badge>
+                    <Badge className="whitespace-nowrap bg-blue-600/10 text-blue-700 border-blue-600/20 text-sm px-3 py-1">{blueSummary}</Badge>
+                  </div>
                 </div>
               </TableCell>
               <TableCell className="px-3 hidden md:table-cell align-middle">

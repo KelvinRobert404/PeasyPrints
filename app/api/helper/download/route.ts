@@ -11,7 +11,7 @@ export async function GET() {
   try {
     // Prefer the installer EXE if present
     const exeData = await fs.readFile(exePath)
-    return new NextResponse(exeData, {
+    return new NextResponse(new Uint8Array(exeData), {
       headers: {
         'Content-Type': 'application/octet-stream',
         'Content-Disposition': 'attachment; filename="PeasyHelper-Win10.exe"',
@@ -23,7 +23,7 @@ export async function GET() {
   try {
     // Fallback to ZIP if EXE is not available
     const zipData = await fs.readFile(zipPath)
-    return new NextResponse(zipData, {
+    return new NextResponse(new Uint8Array(zipData), {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': 'attachment; filename="PeasyPrint.Helper.zip"',
