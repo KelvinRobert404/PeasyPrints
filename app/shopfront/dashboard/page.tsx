@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { ExternalLink, X, Eye, EyeOff } from 'lucide-react';
+import { ExternalLink, X, Eye, EyeOff, Search, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
@@ -17,6 +17,9 @@ import { useOrderAlerts } from '@/hooks/useOrderAlerts';
 import { useTabAttention } from '@/hooks/useTabAttention';
 import { useIdle } from '@/hooks/useIdle';
 import { triggerPeasyPrint, isWindows } from '@/lib/utils/peasyPrint';
+import { ShopfrontPendingTable } from '@/components/orders/ShopfrontPendingTable';
+import { ShopfrontHistoryTable } from '@/components/orders/ShopfrontHistoryTable';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function ShopfrontDashboardPage() {
   const { user } = useAuthStore();
@@ -84,7 +87,16 @@ export default function ShopfrontDashboardPage() {
   }, [historyOrders, selectedDate, range]);
 
   const totalOrders = orders.length;
+  // Counts for badges (day-only for status tabs)
   const pendingCount = pendingOrders.length;
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchRaw, setSearchRaw] = useState('');
+  const [search, setSearch] = useState('');
+  const searchInputRef = useState<HTMLInputElement | null>(null)[0] as any;
+  useEffect(() => {
+    const id = setTimeout(() => setSearch(searchRaw.trim()), 300);
+    return () => clearTimeout(id);
+  }, [searchRaw]);
   const [showRevenue, setShowRevenue] = useState<boolean>(() => {
     try { const v = localStorage.getItem('sf_showRevenue'); return v === null ? true : v === '1'; } catch { return true; }
   });
@@ -103,6 +115,108 @@ export default function ShopfrontDashboardPage() {
       .reduce((sum: number, o: any) => sum + Number(o.totalCost || 0), 0);
   }, [historyOrders]);
   const availableBalance = (currentShop as any)?.receivableAmount ?? 0;
+
+  // Helpers for day/range checks
+  function isSameDay(a: Date, b: Date): boolean {
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+  function matchesQuery(o: any, q: string): boolean {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return String(o.userName || '').toLowerCase().includes(s) || String(o.fileName || '').toLowerCase().includes(s);
+  }
+  // Day-only datasets for Completed/Cancelled (today). Pending shows ALL.
+  const today = new Date();
+  const pendingBase = useMemo(() => (pendingOrders as any), [pendingOrders]);
+  const historyTodayBase = useMemo(() => (historyOrders as any).filter((o: any) => {
+    // Prefer historyTimestamp if present, else timestamp
+    const d = coerceDate((o as any).historyTimestamp || o.timestamp); return !!d && isSameDay(d as Date, today);
+  }), [historyOrders]);
+  const completedTodayBase = useMemo(() => historyTodayBase.filter((o: any) => o.status === 'completed'), [historyTodayBase]);
+  const cancelledTodayBase = useMemo(() => historyTodayBase.filter((o: any) => o.status === 'cancelled'), [historyTodayBase]);
+
+  const pendingAll = useMemo(() => pendingBase.filter((o: any) => matchesQuery(o, search)), [pendingBase, search]);
+  const completedToday = useMemo(() => completedTodayBase.filter((o: any) => matchesQuery(o, search)), [completedTodayBase, search]);
+  const cancelledToday = useMemo(() => cancelledTodayBase.filter((o: any) => matchesQuery(o, search)), [cancelledTodayBase, search]);
+
+  const completedTodayCount = completedTodayBase.length;
+  const cancelledTodayCount = cancelledTodayBase.length;
+
+  // History tab: separate range and filter (default last 7 days)
+  function toYMD(d: Date) { return toLocalYMD(d); }
+  const last7 = (() => { const end = new Date(); const start = new Date(); start.setDate(start.getDate()-6); return { start: toYMD(start), end: toYMD(end) }; })();
+  const [historyFilterOpen, setHistoryFilterOpen] = useState(false);
+  const [historyRange, setHistoryRange] = useState<{ start: string; end: string }>(last7);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [helperOpen, setHelperOpen] = useState(false);
+  useEffect(() => {
+    if (!statusMessage) return;
+    const id = setTimeout(() => setStatusMessage(null), 2000);
+    return () => clearTimeout(id);
+  }, [statusMessage]);
+  const historyInRangeBase = useMemo(() => {
+    const start = new Date(historyRange.start + 'T00:00:00');
+    const end = new Date(historyRange.end + 'T23:59:59');
+    return (historyOrders as any).filter((o: any) => {
+      const d = coerceDate((o as any).historyTimestamp || o.timestamp); if (!d) return false;
+      return d >= start && d <= end;
+    });
+  }, [historyOrders, historyRange]);
+  const historyFiltered = useMemo(() => historyInRangeBase.filter((o: any) => matchesQuery(o, search)), [historyInRangeBase, search]);
+
+  // Header helpers to combine tabs + meta on a single top row
+  function OrdersHeaderShowing({ activeValue }: any) {
+    if (activeValue === 'completed') {
+      return <div className="text-xs text-gray-500">Showing {completedToday.length} of {completedTodayCount}</div>;
+    }
+    if (activeValue === 'cancelled') {
+      return <div className="text-xs text-gray-500">Showing {cancelledToday.length} of {cancelledTodayCount}</div>;
+    }
+    if (activeValue === 'history') {
+      const sd = new Date(historyRange.start + 'T00:00:00');
+      const ed = new Date(historyRange.end + 'T00:00:00');
+      const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: '2-digit' });
+      const rangeLabel = historyRange.start === historyRange.end ? fmt(sd) : `${fmt(sd)}–${fmt(ed)}`;
+      return <div className="text-xs text-gray-500">Showing {historyFiltered.length} of {historyInRangeBase.length} • {rangeLabel}</div>;
+    }
+    return <div className="text-xs text-gray-500">Showing {pendingAll.length} of {pendingBase.length}</div>;
+  }
+  function OrdersHeaderBar({ activeValue, setValue }: any) {
+    return (
+      <div className="flex items-center justify-between">
+        <TabsList variant="underline" className="flex-1" activeValue={activeValue} setValue={setValue}>
+          <TabsTrigger value="pending">
+            <span>Pending</span>
+            <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-900 px-1 text-xs text-white">{pendingBase.length}</span>
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            <span>Completed</span>
+            <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-900 px-1 text-xs text-white">{completedTodayCount}</span>
+          </TabsTrigger>
+          <TabsTrigger value="cancelled">
+            <span>Cancelled</span>
+            <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-900 px-1 text-xs text-white">{cancelledTodayCount}</span>
+          </TabsTrigger>
+          <TabsTrigger value="history">
+            <span>History</span>
+            <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-900 px-1 text-xs text-white">{historyInRangeBase.length}</span>
+          </TabsTrigger>
+        </TabsList>
+        <div className="flex items-center gap-3 ml-3">
+          <div aria-live="polite"><OrdersHeaderShowing activeValue={activeValue} /></div>
+          <button aria-label="Search" className="p-2 rounded hover:bg-gray-100" onClick={() => setSearchOpen((v) => !v)}>
+            <Search className="h-4 w-4" />
+          </button>
+          {(activeValue === 'history' || activeValue === 'completed') && (
+            <button aria-label="Filters" className="p-2 rounded hover:bg-gray-100" onClick={() => setHistoryFilterOpen((v) => !v)}>
+              <Filter className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
 
   function coerceDate(input: any): Date | null {
     const d: Date | null = input?.toDate?.() ? input.toDate() : (input ? new Date(input) : null);
@@ -193,215 +307,165 @@ export default function ShopfrontDashboardPage() {
       </div>
 
       <div className="space-y-2">
-        <div className="text-sm text-gray-500">Pending Orders</div>
-        {pendingOrders.length === 0 ? (
-          <Card className="border-0 shadow-sm"><CardContent>No pending orders</CardContent></Card>
-        ) : (
-          <div className="space-y-3">
-            {pendingOrders.map((o) => (
-              <div key={(o as any).id} className="flex items-stretch gap-2">
-                <Card className={`flex-1 border ${o.emergency ? 'emergency-order' : ''}`}>
-                  <CardContent className="py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate font-medium">{o.userName} • {o.fileName}</div>
-                      </div>
-                      {o.splitFiles ? (
-                        <div className="flex items-center gap-1">
-                          {o.fileUrl && (
-                            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>Original</Button>
-                          )}
-                          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.open((o as any).splitFiles?.bwUrl, '_blank', 'noopener,noreferrer'); }}>B&W</Button>
-                          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); window.open((o as any).splitFiles?.colorUrl, '_blank', 'noopener,noreferrer'); }}>Color</Button>
-                        </div>
-                      ) : (
-                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {isWindows() && (
-                        <Button
-                          size="sm"
-                          variant="success"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const jobId = (o as any).id as string;
-                            if (!jobId) return;
-                            triggerPeasyPrint(jobId, {
-                              onMissingHelper: () => {
-                                alert('PeasyPrint Helper not detected. Please install it, then click Print again.');
-                              }
-                            });
-                          }}
-                        >
-                          Print
-                        </Button>
-                      )}
-                      <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); void cancelOrder((o as any).id, o); }}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                      {o.emergency && <Badge variant="destructive">URGENT</Badge>}
-                      {!(o.status === 'processing' || o.status === 'printing' || o.status === 'printed') && (
-                        <Badge variant="secondary">{o.status}</Badge>
-                      )}
-                    </div>
-                    {/* Label badges inline */}
-                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                      {(() => { const p = getDateLabelParts(o.timestamp); return (
-                        <Badge variant="outline" className="font-bold bg-blue-50 text-blue-700 border-blue-200">{p.time}</Badge>
-                      ); })()}
-                      <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
-                      <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
-                      <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
-                        {o.printSettings?.printColor}
-                      </Badge>
-                      <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
-                      <Badge variant="secondary">₹{o.totalCost}</Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-                <div className="flex flex-col gap-2 self-stretch w-28">
-                  {o.status !== 'printed' ? (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="flex-1 h-auto min-h-[48px]"
-                      onClick={() => { if (!((o as any).id)) return; void markPrinted((o as any).id); }}
-                    >
-                      Printed
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 h-auto min-h-[48px]"
-                      onClick={() => { if (!((o as any).id)) return; void revertToProcessing((o as any).id); }}
-                    >
-                      Undo Printed
-                    </Button>
-                  )}
-                  {o.status !== 'printed' ? (
-                    <Button size="sm" disabled className="flex-1 h-auto min-h-[48px]">
-                      Collected
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      className="flex-1 h-auto min-h-[48px]"
-                      onClick={async () => {
-                        if (!((o as any).id)) return;
-                        await completeOrder((o as any).id, o as any);
-                        setRange(null);
-                        setSelectedDate(toLocalYMD(new Date()));
-                        setHistoryOpen(true);
-                        setFilterOpen(true);
-                        setTimeout(() => setHistoryOpen(false), 5000);
-                      }}
-                    >
-                      Collected
-                    </Button>
-                  )}
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">Orders</div>
+        </div>
+        <Tabs defaultValue="pending">
+          <OrdersHeaderBar />
+          {/* Inline status removed; see bottom toast below */}
+          {searchOpen && (
+            <div className="mt-2">
+              <input
+                ref={(el) => { if (el && document.activeElement !== el) el.focus(); }}
+                value={searchRaw}
+                onChange={(e) => setSearchRaw(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setSearchRaw('');
+                    setSearch('');
+                    (e.currentTarget as HTMLInputElement).blur();
+                  }
+                }}
+                placeholder="Search name or file…"
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
+              <div className="mt-1 text-xs text-gray-500">{search ? 'Filtered' : 'Type to filter orders'}</div>
+            </div>
+          )}
+
+          <TabsContent value="pending">
+            {pendingAll.length === 0 ? (
+              <Card className="border-0 shadow-sm"><CardContent>No pending orders today</CardContent></Card>
+            ) : (
+              <div className="max-h-[65vh] overflow-y-auto pr-1">
+                <ShopfrontPendingTable
+                  orders={pendingAll as any}
+                  isWindows={isWindows()}
+                  onPrint={(o) => {
+                    const jobId = (o as any).id as string; if (!jobId) return;
+                    triggerPeasyPrint(jobId, {
+                      onMissingHelper: () => { setHelperOpen(true); }
+                    });
+                    // Optics: show connection then sending status
+                    setStatusMessage('Connecting to the printer…');
+                    setTimeout(() => setStatusMessage('Sending file to printer…'), 800);
+                  }}
+                  onCancel={(o) => { if (!((o as any).id)) return; if (!confirm('Cancel this order?')) return; void cancelOrder((o as any).id, o as any); setStatusMessage('Order cancelled'); }}
+                  onMarkPrinted={(o) => { if (!((o as any).id)) return; void markPrinted((o as any).id); setStatusMessage('Marked as printed'); }}
+                  onRevertToProcessing={(o) => { if (!((o as any).id)) return; void revertToProcessing((o as any).id); setStatusMessage('Reverted to processing'); }}
+                  onCollected={async (o) => {
+                    if (!((o as any).id)) return;
+                    await completeOrder((o as any).id, o as any);
+                    setStatusMessage('Marked as collected');
+                  }}
+                />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="completed">
+            <div className="space-y-3 mt-3">
+              {completedToday.length === 0 ? (
+                <Card className="border-0 shadow-sm"><CardContent>No completed orders today</CardContent></Card>
+              ) : (
+                <div className="max-h-[65vh] overflow-y-auto pr-1">
+                  <ShopfrontHistoryTable
+                    orders={completedToday as any}
+                    onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
+                    onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+                  />
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="cancelled">
+            <div className="space-y-3 mt-3">
+              {cancelledToday.length === 0 ? (
+                <Card className="border-0 shadow-sm"><CardContent>No cancelled orders today</CardContent></Card>
+              ) : (
+                <div className="max-h-[65vh] overflow-y-auto pr-1">
+                  <ShopfrontHistoryTable
+                    orders={cancelledToday as any}
+                    onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
+                    onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+                  />
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="history">
+            {historyFilterOpen && (
+              <div className="mt-2 p-3 border rounded bg-white space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="date"
+                      value={historyRange.start}
+                      onChange={(e) => setHistoryRange({ start: e.target.value, end: historyRange.end })}
+                      className="text-xs border rounded px-2 py-1"
+                    />
+                    <span className="text-xs text-gray-500">to</span>
+                    <input
+                      type="date"
+                      value={historyRange.end}
+                      onChange={(e) => setHistoryRange({ start: historyRange.start, end: e.target.value })}
+                      className="text-xs border rounded px-2 py-1"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="text-xs underline" onClick={() => { const d=new Date(); setHistoryRange({ start: toLocalYMD(d), end: toLocalYMD(d) }); }}>Today</button>
+                  <button className="text-xs underline" onClick={() => { const d=new Date(); d.setDate(d.getDate()-1); const y=toLocalYMD(d); setHistoryRange({ start: y, end: y }); }}>Yesterday</button>
+                  <button className="text-xs underline" onClick={() => { const end=new Date(); const start=new Date(); start.setDate(start.getDate()-6); setHistoryRange({ start: toLocalYMD(start), end: toLocalYMD(end) }); }}>Last 7 days</button>
+                  <button className="text-xs underline" onClick={() => { const d=new Date(); setHistoryRange({ start: toLocalYMD(d), end: toLocalYMD(d) }); }}>Single day</button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            )}
+            <div className="space-y-3 mt-3">
+              {historyFiltered.length === 0 ? (
+                <Card className="border-0 shadow-sm"><CardContent>No orders in selected range</CardContent></Card>
+              ) : (
+                <div className="max-h-[65vh] overflow-y-auto pr-1">
+                  <ShopfrontHistoryTable
+                    orders={historyFiltered as any}
+                    showUndo={false}
+                    onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
+                    onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+                  />
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500">History</div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setFilterOpen((v) => !v)}>Filter</Button>
-            <button className="text-xs text-blue-600" onClick={() => setHistoryOpen((v) => !v)}>
-              {historyOpen ? 'Hide' : 'Show'}
-            </button>
+      {/* Helper missing dialog */}
+      <Dialog open={helperOpen} onOpenChange={setHelperOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>PeasyPrint Helper required</DialogTitle>
+            <DialogDescription>
+              PeasyPrint Helper was not detected on this computer. Install it once, then click Print again.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2">
+            <p className="text-sm text-gray-600">Download the installer from the Helper page.</p>
           </div>
-        </div>
-        {filterOpen && (
-          <div className="mt-2 p-3 border rounded bg-white space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <input
-                  type="date"
-                  value={range ? range.start : selectedDate}
-                  onChange={(e) => range ? setRange({ start: e.target.value, end: range.end }) : setSelectedDate(e.target.value)}
-                  className="text-xs border rounded px-2 py-1"
-                />
-                <span className="text-xs text-gray-500">to</span>
-                <input
-                  type="date"
-                  value={range ? range.end : selectedDate}
-                  onChange={(e) => setRange({ start: range ? range.start : selectedDate, end: e.target.value })}
-                  className="text-xs border rounded px-2 py-1"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="text-xs underline" onClick={() => { const d=new Date(); setRange(null); setSelectedDate(toLocalYMD(d)); }}>Today</button>
-              <button className="text-xs underline" onClick={() => { const d=new Date(); d.setDate(d.getDate()-1); setRange(null); setSelectedDate(toLocalYMD(d)); }}>Yesterday</button>
-              <button className="text-xs underline" onClick={() => { const end=new Date(); const start=new Date(); start.setDate(start.getDate()-6); setRange({ start: toLocalYMD(start), end: toLocalYMD(end) }); }}>Last 7 days</button>
-              <button className="text-xs underline" onClick={() => setRange(null)}>Single day</button>
-            </div>
-          </div>
-        )}
-        {historyOpen && (
-          <div className="space-y-3">
-            {filteredHistoryByDate.length === 0 ? (
-              <Card className="border-0 shadow-sm"><CardContent>No history for selected date</CardContent></Card>
-            ) : (
-              filteredHistoryByDate.map((o: any) => (
-                <Card key={o.id} className={`border ${o.status === 'cancelled' ? 'opacity-60' : ''}`}>
-                  <CardContent className="py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate font-medium">{o.userName} • {o.fileName}</div>
-                      </div>
-                      {o.splitFiles ? (
-                        <div className="flex items-center gap-1">
-                          {o.fileUrl && (
-                            <Button size="sm" variant="outline" onClick={() => { window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>Original</Button>
-                          )}
-                          <Button size="sm" variant="outline" onClick={() => { window.open((o as any).splitFiles?.bwUrl, '_blank', 'noopener,noreferrer'); }}>B&W</Button>
-                          <Button size="sm" variant="outline" onClick={() => { window.open((o as any).splitFiles?.colorUrl, '_blank', 'noopener,noreferrer'); }}>Color</Button>
-                        </div>
-                      ) : (
-                        <Button size="sm" variant="ghost" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {o.status === 'completed' && (
-                        <Button size="sm" variant="outline" onClick={() => { void undoCollected(o.orderId, o); }}>
-                          Undo Collected
-                        </Button>
-                      )}
-                      {o.status === 'cancelled' && (
-                        <Button size="sm" variant="outline" onClick={() => { void undoCancelled(o.orderId, o); }}>
-                          Undo Cancelled
-                        </Button>
-                      )}
-                      {o.emergency && <Badge variant="destructive">URGENT</Badge>}
-                      {o.status !== 'completed' && (
-                        <Badge variant="secondary">{o.status}</Badge>
-                      )}
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                      {o.jobType && (
-                        <Badge variant="secondary">{o.jobType}</Badge>
-                      )}
-                      <Badge variant="outline">{o.printSettings?.paperSize}</Badge>
-                      <Badge variant="outline">{o.printSettings?.printFormat}</Badge>
-                      <Badge className={o.printSettings?.printColor === 'Black & White' ? 'bg-green-600/10 text-green-700 border-green-600/20' : 'bg-blue-600/10 text-blue-700 border-blue-600/20'}>
-                        {o.printSettings?.printColor}
-                      </Badge>
-                      <Badge variant="outline">{o.printSettings?.copies} copies • {o.totalPages} pages</Badge>
-                      <Badge variant="secondary">₹{o.totalCost}</Badge>
-                    </div>
-                    
-                  </CardContent>
-                </Card>
-              ))
-            )}
+          <DialogFooter>
+            <Link href="/helper" className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500">
+              Open Helper page
+            </Link>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bottom toast notification */}
+      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
+        {statusMessage && (
+          <div className="pointer-events-auto rounded-md bg-black text-white shadow-lg px-4 py-2 text-sm transition-all duration-300 ease-out">
+            {statusMessage}
           </div>
         )}
       </div>

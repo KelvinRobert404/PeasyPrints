@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { AnnouncementCarousel } from '@/components/AnnouncementCarousel';
+import { BottomNavigation } from '@/components/layout/BottomNavigation';
 
 export default function IndexPage() {
   function showToast(message: string) {
@@ -81,6 +82,7 @@ export default function IndexPage() {
       </div>
 
       {/* announcements carousel (moved to hero) */}
+      <BottomNavigation />
     </div>
   );
 }

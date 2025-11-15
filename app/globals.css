@@ -4,7 +4,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f9fafb; /* Tailwind gray-50 to avoid white strip at bottom */
   --foreground: #0a0a0a;
   --muted: #f5f5f5;
   --border: #e5e7eb;
@@ -34,6 +34,7 @@
 @layer base {
   * { @apply border-border; }
   html, body { height: 100%; }
+  html { background-color: var(--background); }
   body { @apply bg-background text-foreground; }
 }
 

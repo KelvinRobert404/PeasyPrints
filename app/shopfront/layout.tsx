@@ -20,6 +20,7 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const { currentShop, fetchShopData, updateOpenStatus } = useShopStore();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [now, setNow] = useState<Date>(new Date());
   const [shopChecked, setShopChecked] = useState(false);
   useEffect(() => {
@@ -101,7 +102,17 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
       {/* Single top navbar spanning full width */}
       <div className="sticky top-0 z-20 bg-blue-600 text-white">
         <div className="h-12 px-4 flex items-center justify-between gap-3">
-          <span className="font-quinn text-3xl">SWOOP</span>
+          <div className="flex items-center gap-2">
+            <button
+              aria-label="Toggle sidebar"
+              className="rounded hover:bg-white/10 p-1.5"
+              onClick={() => setSidebarCollapsed((v) => !v)}
+              title={sidebarCollapsed ? 'Expand menu' : 'Collapse menu'}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <span className="font-quinn text-3xl">SWOOP</span>
+          </div>
           {signedIn && shopChecked ? (
             <div className="flex items-center gap-2 ml-auto">
               {currentShop ? (
@@ -133,7 +144,7 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
 
       {/* Main content with sidebar below navbar */}
       <div className="flex flex-1">
-        <aside className="hidden md:flex md:w-52 md:flex-col md:border-r md:border-gray-300 md:bg-white">
+        <aside className={`hidden md:flex ${sidebarCollapsed ? 'md:w-16' : 'md:w-52'} md:flex-col md:border-r md:border-gray-300 md:bg-white`}>
           <nav className="flex-1 p-2 space-y-1">
             {items.map((it) => {
               const Icon = it.icon;
@@ -142,16 +153,18 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
                 : Boolean(pathname?.startsWith(it.href));
               const isDashboard = it.href === '/shopfront';
               return (
-                <Link key={it.href} href={it.href} className="block">
+                <Link key={it.href} href={it.href} className="block" title={sidebarCollapsed ? it.label : undefined}>
                   <div
-                    className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+                    className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-2'} rounded-md px-3 py-2 text-sm transition-colors ${
                       active
                         ? 'bg-blue-50 text-blue-700 border border-blue-200'
                         : 'hover:bg-blue-50 hover:text-blue-700'
                     } ${!active && isDashboard && hasNewOrder ? 'animate-pulse' : ''}`}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span className="font-medium">{isDashboard && hasNewOrder && !active ? 'Dashboard • New' : it.label}</span>
+                    <Icon className="h-5 w-5" />
+                    {!sidebarCollapsed && (
+                      <span className="font-medium">{isDashboard && hasNewOrder && !active ? 'Dashboard • New' : it.label}</span>
+                    )}
                   </div>
                 </Link>
               );
@@ -166,7 +179,7 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="flex-1 overflow-y-auto relative">
-          <main className="container mx-auto max-w-7xl p-4">{signedIn == null ? null : children}</main>
+          <main className="w-full pl-[10px] pr-[5px] pt-[10px]">{signedIn == null ? null : children}</main>
           {signedIn && currentShop && currentShop.isOpen === false && (
             <ClosedOverlay onOpenNow={() => updateOpenStatus(true)} />
           )}

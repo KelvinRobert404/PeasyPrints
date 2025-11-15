@@ -1,0 +1,18 @@
+Windows Registry Editor Version 5.00
+
+; Template for registering peasyprint:// protocol
+; The installer should replace the EXE path below with the actual installed path
+
+[HKEY_CLASSES_ROOT\peasyprint]
+@="URL:PeasyPrint Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\peasyprint\shell]
+
+[HKEY_CLASSES_ROOT\peasyprint\shell\open]
+
+[HKEY_CLASSES_ROOT\peasyprint\shell\open\command]
+@="\"C:\\Program Files\\PeasyPrint\\PeasyPrint.Helper\\PeasyPrint.Helper.exe\" \"%1\""
+
+
+

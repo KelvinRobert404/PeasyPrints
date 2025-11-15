@@ -54,6 +54,11 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
+  // Allow print-jobs API (it validates with its own Bearer token)
+  if (pathname.startsWith('/api/print-jobs')) {
+    return NextResponse.next();
+  }
+
   if (!isPublicRoute(req)) {
     if (!userId) {
       const signInUrl = new URL('/login', req.url);
