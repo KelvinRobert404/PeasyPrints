@@ -1,18 +1,22 @@
-# Packaging helper locally
+# Packaging helper locally (Modern, v1.0.1)
 
-Run from project root in PowerShell:
+From repo root (PowerShell):
 
 ```powershell
-pwsh windows-helper\scripts\package.ps1
+# Build app + ZIP only
+powershell -NoProfile -ExecutionPolicy Bypass -File .\windows-helper\scripts\package.ps1 -Configuration Release -Runtime win-x64
+
+# Build app + ZIP and compile installer (if ISCC is installed)
+powershell -NoProfile -ExecutionPolicy Bypass -File .\windows-helper\scripts\package-all.ps1 -Configuration Release -Runtime win-x64 -SelfContained $true -ApiKey "<YOUR_TOKEN>"
 ```
 
 Outputs:
-- `windows-helper/dist/PeasyPrint.Helper.zip` (publish folder + protocol `.reg`)
-- `windows-helper/PeasyPrint.Helper/bin/Release/net8.0-windows/win-x64/publish/peasyprint-protocol.reg`
+- App: `windows-helper/PeasyPrint.Helper/app`
+- ZIP: `windows-helper/dist/PeasyPrint.Helper.zip`
+- Installer: `windows-helper/installer/PeasyHelper-Win10.exe`
 
-Install steps on a Windows PC:
-1. Unzip `PeasyPrint.Helper.zip` anywhere.
-2. Double-click `peasyprint-protocol.reg` (accept prompt) to register `peasyprint://`.
-3. Optional: create `%LOCALAPPDATA%\PeasyPrint\settings.json` with `{ "preferredPrinterNameSubstring": "Canon" }`.
-4. Set `PEASYPRINT_API_BASE` (PowerShell): `$env:PEASYPRINT_API_BASE="https://your-api"`.
-5. Launch a test: `peasyprint://print?file=https%3A%2F%2Fexample.com%2Fsample.pdf&copies=2&color=color` or jobId flow.
+Manual install (ZIP):
+1) Unzip `PeasyPrint.Helper.zip` anywhere (e.g., `C:\Program Files\PeasyPrint\PeasyPrint.Helper`).
+2) Register protocol (either `peasyprint-protocol.reg` or the Inno installer).
+3) Set `PEASYPRINT_API_KEY` for the user.
+4) Test: `peasyprint://print?file=...` or `peasyprint://settings`.

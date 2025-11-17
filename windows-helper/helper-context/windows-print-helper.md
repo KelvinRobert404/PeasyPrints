@@ -47,6 +47,11 @@ Outputs:
 - Modern ZIP: `windows-helper/dist/PeasyPrint.Helper.zip`
 - Installer: compiled via Inno if ISCC.exe is found
 
+Download in app:
+- The site exposes `GET /api/helper/download` and a `/helper` page with a “Download Helper” button; this serves the installer EXE if present, otherwise the ZIP.
+
+Current version: v1.0.1
+
 Notes:
 - To build only the Modern ZIP/app, run `windows-helper\scripts\package.ps1`.
 

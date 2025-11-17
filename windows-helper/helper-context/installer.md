@@ -1,8 +1,15 @@
-# Installer notes (temporary)
+# Installer notes (Inno Setup, v1.0.1)
 
-- The MSI should:
-  - Install `PeasyPrint.Helper.exe` under `C:\Program Files\PeasyPrint\PeasyPrint.Helper\`.
-  - Register custom URL protocol `peasyprint://` pointing to the helper exe with `"%1"` arg.
-  - Optionally add Start Menu entry and enable auto-update.
+- Script: `windows-helper/installer/PeasyPrint.Modern.iss`
+- Output: `windows-helper/installer/PeasyHelper-Win10.exe`
+- Behavior:
+  - Installs to `C:\Program Files\PeasyPrint\PeasyPrint.Helper\`
+  - Registers `peasyprint://` protocol to `PeasyPrint.Helper.exe "%1"`
+  - Optional auto-start task (tray mode)
+  - Closes running helper processes on upgrade (Restart Manager)
+  - Single-instance lock (`AppMutex=Global\PeasyPrint.Helper`)
+  - Prompts for `PEASYPRINT_API_KEY` (and optional `PEASYPRINT_API_BASE`)
 
-- During development, you can register the protocol manually by editing and importing `peasyprint-protocol.reg` (update the EXE path first).
+Dev notes:
+- You can still register the protocol manually via the generated `peasyprint-protocol.reg` under the publish/app folder.
+- The web app exposes a download endpoint at `/api/helper/download` that serves the installer EXE when present (ZIP fallback).
