@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { useShopsStore } from '@/lib/stores/shopsStore';
 import { ShopPricingTable } from '@/components/shops/ShopPricingTable';
 
@@ -33,7 +32,6 @@ export default function ShopDetailsPage() {
           Upload PDF for this Shop
         </button>
       </main>
-      <BottomNavigation />
     </div>
   );
 }

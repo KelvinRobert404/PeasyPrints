@@ -3,7 +3,6 @@
 export const dynamic = 'force-dynamic';
 
 import { useEffect } from 'react';
-import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { useShopsStore } from '@/lib/stores/shopsStore';
 import { useRouter } from 'next/navigation';
 import { ShopCard } from '@/components/shops/ShopCard';
@@ -38,7 +37,6 @@ export default function ShopsPage() {
           </CardContent>
         </Card>
       </main>
-      <BottomNavigation />
     </div>
   );
 }

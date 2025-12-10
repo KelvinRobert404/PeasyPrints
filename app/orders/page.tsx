@@ -3,7 +3,6 @@
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useMemo, useState } from 'react';
-import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { useOrdersStore } from '@/lib/stores/ordersStore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { OrderCard } from '@/components/orders/OrderCard';
@@ -64,7 +63,6 @@ export default function OrdersPage() {
           </>
         )}
       </main>
-      <BottomNavigation />
     </div>
   );
 }
