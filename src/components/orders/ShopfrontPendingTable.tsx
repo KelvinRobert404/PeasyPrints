@@ -151,7 +151,4 @@ export function ShopfrontPendingTable({ orders, isWindows, onPrint, onCancel, on
     </Table>
   );
 }
-
 export default ShopfrontPendingTable;
-
-

@@ -20,7 +20,7 @@ function coerceDate(input: any): Date | null {
 }
 
 function formatDate(date: Date): string {
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 }
 
@@ -91,5 +91,3 @@ export function ShopfrontHistoryTable({ orders, onUndoCollected, onUndoCancelled
 }
 
 export default ShopfrontHistoryTable;
-
-

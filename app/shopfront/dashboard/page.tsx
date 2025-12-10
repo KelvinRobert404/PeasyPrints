@@ -100,10 +100,10 @@ export default function ShopfrontDashboardPage() {
   const [showRevenue, setShowRevenue] = useState<boolean>(() => {
     try { const v = localStorage.getItem('sf_showRevenue'); return v === null ? true : v === '1'; } catch { return true; }
   });
-  useEffect(() => { try { localStorage.setItem('sf_showRevenue', showRevenue ? '1' : '0'); } catch {} }, [showRevenue]);
+  useEffect(() => { try { localStorage.setItem('sf_showRevenue', showRevenue ? '1' : '0'); } catch { } }, [showRevenue]);
   const todaysRevenue = useMemo(() => {
-    const start = new Date(); start.setHours(0,0,0,0);
-    const end = new Date(); end.setHours(23,59,59,999);
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const end = new Date(); end.setHours(23, 59, 59, 999);
     return historyOrders
       .filter((o: any) => o.status === 'completed')
       .filter((o: any) => { const d = coerceDate(o.historyTimestamp || o.timestamp); return !!d && d >= start && d <= end; })
@@ -144,7 +144,7 @@ export default function ShopfrontDashboardPage() {
 
   // History tab: separate range and filter (default last 7 days)
   function toYMD(d: Date) { return toLocalYMD(d); }
-  const last7 = (() => { const end = new Date(); const start = new Date(); start.setDate(start.getDate()-6); return { start: toYMD(start), end: toYMD(end) }; })();
+  const last7 = (() => { const end = new Date(); const start = new Date(); start.setDate(start.getDate() - 6); return { start: toYMD(start), end: toYMD(end) }; })();
   const [historyFilterOpen, setHistoryFilterOpen] = useState(false);
   const [historyRange, setHistoryRange] = useState<{ start: string; end: string }>(last7);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -233,7 +233,7 @@ export default function ShopfrontDashboardPage() {
     return `${h}:${String(m).padStart(2, '0')}${suffix}`;
   }
 
-  function getDateLabelParts(input: any): { label?: 'Today'|'Yesterday'; formattedDate?: string; time: string } {
+  function getDateLabelParts(input: any): { label?: 'Today' | 'Yesterday'; formattedDate?: string; time: string } {
     const date = coerceDate(input);
     if (!date) return { time: '' };
     const now = new Date();
@@ -245,99 +245,156 @@ export default function ShopfrontDashboardPage() {
     const isYesterday = startOfGiven.getTime() === startOfYesterday.getTime();
     if (isToday) return { label: 'Today', time: formatTime(date) };
     if (isYesterday) return { label: 'Yesterday', time: formatTime(date) };
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return { formattedDate: `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}` , time: formatTime(date) };
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return { formattedDate: `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`, time: formatTime(date) };
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {!user ? (
-        <div className="space-y-3">
-          <Skeleton className="h-10 w-40" />
-          <Skeleton className="h-24 w-full" />
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
+          </div>
+          <Skeleton className="h-96 w-full rounded-2xl" />
         </div>
       ) : null}
-      <div className="flex items-center justify-between">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-500">Total Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalOrders}</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-500">Pending Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingCount}</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-500">Today's Revenue</CardTitle>
-                <button aria-label={showRevenue ? 'Hide revenue' : 'Show revenue'} onClick={() => setShowRevenue((v) => !v)} className="text-gray-500 hover:text-gray-800">
-                  {showRevenue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Orders */}
+        <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Orders</p>
+                <div className="mt-2 text-3xl font-bold font-quinn text-gray-900">{totalOrders}</div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{showRevenue ? `₹${todaysRevenue}` : '••••'}</div>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-gray-500">Total Revenue</CardTitle>
-                <button aria-label={showRevenue ? 'Hide revenue' : 'Show revenue'} onClick={() => setShowRevenue((v) => !v)} className="text-gray-500 hover:text-gray-800">
-                  {showRevenue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+              <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{showRevenue ? `₹${totalRevenue}` : '••••'}</div>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="ml-3" />
-        {/* Sound auto-enables; no manual button needed */}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pending Orders */}
+        <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</p>
+                <div className="mt-2 text-3xl font-bold font-quinn text-blue-600">{pendingCount}</div>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Today's Revenue */}
+        <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-shadow duration-200 relative overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between relative z-10">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Today's Revenue</p>
+                  <button onClick={() => setShowRevenue(!showRevenue)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                    {showRevenue ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  </button>
+                </div>
+                <div className="mt-2 text-3xl font-bold font-quinn text-emerald-600 truncate">
+                  {showRevenue ? `₹${todaysRevenue}` : '••••'}
+                </div>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+            </div>
+            <div className="absolute -bottom-6 -right-6 h-24 w-24 rounded-full bg-emerald-50/50" />
+          </CardContent>
+        </Card>
+
+        {/* Total Revenue */}
+        <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Revenue</p>
+                  <button onClick={() => setShowRevenue(!showRevenue)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                    {showRevenue ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  </button>
+                </div>
+                <div className="mt-2 text-3xl font-bold font-quinn text-gray-900 truncate">
+                  {showRevenue ? `₹${totalRevenue}` : '••••'}
+                </div>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500">Orders</div>
-        </div>
-        <Tabs defaultValue="pending">
-          <OrdersHeaderBar />
-          {/* Inline status removed; see bottom toast below */}
-          {searchOpen && (
-            <div className="mt-2">
-              <input
-                ref={(el) => { if (el && document.activeElement !== el) el.focus(); }}
-                value={searchRaw}
-                onChange={(e) => setSearchRaw(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    setSearchRaw('');
-                    setSearch('');
-                    (e.currentTarget as HTMLInputElement).blur();
-                  }
-                }}
-                placeholder="Search name or file…"
-                className="w-full border rounded px-3 py-2 text-sm"
-              />
-              <div className="mt-1 text-xs text-gray-500">{search ? 'Filtered' : 'Type to filter orders'}</div>
-            </div>
-          )}
+      <div className="space-y-4">
+        <Tabs defaultValue="pending" className="w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <TabsList className="bg-white p-1 rounded-xl shadow-sm border border-gray-100 inline-flex h-auto">
+              <TabsTrigger
+                value="pending"
+                className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none transition-all"
+              >
+                Pending <span className="ml-2 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-xs font-bold">{pendingBase.length}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="completed"
+                className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:shadow-none transition-all"
+              >
+                Completed <span className="ml-2 bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full text-xs font-bold">{completedTodayCount}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="cancelled"
+                className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-red-50 data-[state=active]:text-red-700 data-[state=active]:shadow-none transition-all"
+              >
+                Cancelled <span className="ml-2 bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full text-xs font-bold">{cancelledTodayCount}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="history"
+                className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700 data-[state=active]:shadow-none transition-all"
+              >
+                History <span className="ml-2 bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full text-xs font-bold">{historyInRangeBase.length}</span>
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="pending">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  value={searchRaw}
+                  onChange={(e) => setSearchRaw(e.target.value)}
+                  placeholder="Search orders..."
+                  className="h-9 w-64 rounded-lg border border-gray-200 bg-white pl-9 pr-3 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                />
+              </div>
+              <OrdersHeaderShowing activeValue={'pending'} /> {/* Placeholder aid for showing counts */}
+            </div>
+          </div>
+
+          <TabsContent value="pending" className="mt-0">
             {pendingAll.length === 0 ? (
-              <Card className="border-0 shadow-sm"><CardContent>No pending orders today</CardContent></Card>
+              <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 py-16 text-center">
+                <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center mb-3">
+                  <svg className="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h3 className="text-base font-semibold text-gray-900">All caught up!</h3>
+                <p className="mt-1 text-sm text-gray-500">No pending orders at the moment.</p>
+              </div>
             ) : (
-              <div className="max-h-[65vh] overflow-y-auto pr-1">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <ShopfrontPendingTable
                   orders={pendingAll as any}
                   isWindows={isWindows()}
@@ -346,9 +403,8 @@ export default function ShopfrontDashboardPage() {
                     triggerPeasyPrint(jobId, {
                       onMissingHelper: () => { setHelperOpen(true); }
                     });
-                    // Optics: show connection then sending status
-                    setStatusMessage('Connecting to the printer…');
-                    setTimeout(() => setStatusMessage('Sending file to printer…'), 800);
+                    setStatusMessage('Connecting to printer...');
+                    setTimeout(() => setStatusMessage('Sending file...'), 800);
                   }}
                   onCancel={(o) => { if (!((o as any).id)) return; if (!confirm('Cancel this order?')) return; void cancelOrder((o as any).id, o as any); setStatusMessage('Order cancelled'); }}
                   onMarkPrinted={(o) => { if (!((o as any).id)) return; void markPrinted((o as any).id); setStatusMessage('Marked as printed'); }}
@@ -363,78 +419,75 @@ export default function ShopfrontDashboardPage() {
             )}
           </TabsContent>
 
-          <TabsContent value="completed">
-            <div className="space-y-3 mt-3">
-              {completedToday.length === 0 ? (
-                <Card className="border-0 shadow-sm"><CardContent>No completed orders today</CardContent></Card>
-              ) : (
-                <div className="max-h-[65vh] overflow-y-auto pr-1">
-                  <ShopfrontHistoryTable
-                    orders={completedToday as any}
-                    onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
-                    onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
-                  />
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="cancelled">
-            <div className="space-y-3 mt-3">
-              {cancelledToday.length === 0 ? (
-                <Card className="border-0 shadow-sm"><CardContent>No cancelled orders today</CardContent></Card>
-              ) : (
-                <div className="max-h-[65vh] overflow-y-auto pr-1">
-                  <ShopfrontHistoryTable
-                    orders={cancelledToday as any}
-                    onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
-                    onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
-                  />
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="history">
-            {historyFilterOpen && (
-              <div className="mt-2 p-3 border rounded bg-white space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="date"
-                      value={historyRange.start}
-                      onChange={(e) => setHistoryRange({ start: e.target.value, end: historyRange.end })}
-                      className="text-xs border rounded px-2 py-1"
-                    />
-                    <span className="text-xs text-gray-500">to</span>
-                    <input
-                      type="date"
-                      value={historyRange.end}
-                      onChange={(e) => setHistoryRange({ start: historyRange.start, end: e.target.value })}
-                      className="text-xs border rounded px-2 py-1"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="text-xs underline" onClick={() => { const d=new Date(); setHistoryRange({ start: toLocalYMD(d), end: toLocalYMD(d) }); }}>Today</button>
-                  <button className="text-xs underline" onClick={() => { const d=new Date(); d.setDate(d.getDate()-1); const y=toLocalYMD(d); setHistoryRange({ start: y, end: y }); }}>Yesterday</button>
-                  <button className="text-xs underline" onClick={() => { const end=new Date(); const start=new Date(); start.setDate(start.getDate()-6); setHistoryRange({ start: toLocalYMD(start), end: toLocalYMD(end) }); }}>Last 7 days</button>
-                  <button className="text-xs underline" onClick={() => { const d=new Date(); setHistoryRange({ start: toLocalYMD(d), end: toLocalYMD(d) }); }}>Single day</button>
-                </div>
+          <TabsContent value="completed" className="mt-0">
+            {completedToday.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 py-16 text-center">
+                <p className="text-sm text-gray-500">No completed orders yet today.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <ShopfrontHistoryTable
+                  orders={completedToday as any}
+                  onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
+                  onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+                />
               </div>
             )}
-            <div className="space-y-3 mt-3">
-              {historyFiltered.length === 0 ? (
-                <Card className="border-0 shadow-sm"><CardContent>No orders in selected range</CardContent></Card>
-              ) : (
-                <div className="max-h-[65vh] overflow-y-auto pr-1">
-                  <ShopfrontHistoryTable
-                    orders={historyFiltered as any}
-                    showUndo={false}
-                    onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
-                    onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+          </TabsContent>
+
+          <TabsContent value="cancelled" className="mt-0">
+            {cancelledToday.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 py-16 text-center">
+                <p className="text-sm text-gray-500">No cancelled orders today.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <ShopfrontHistoryTable
+                  orders={cancelledToday as any}
+                  onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
+                  onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+                />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-0">
+            {/* Keeping existing history filter logic but wrapping in improved container if needed. 
+                For brevity, reusing existing but ensuring it's cleaner. 
+            */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden p-4">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Range:</span>
+                  <input
+                    type="date"
+                    value={historyRange.start}
+                    onChange={(e) => setHistoryRange({ start: e.target.value, end: historyRange.end })}
+                    className="text-sm border rounded-lg px-2 py-1.5 bg-gray-50"
+                  />
+                  <span className="text-gray-400">-</span>
+                  <input
+                    type="date"
+                    value={historyRange.end}
+                    onChange={(e) => setHistoryRange({ start: historyRange.start, end: e.target.value })}
+                    className="text-sm border rounded-lg px-2 py-1.5 bg-gray-50"
                   />
                 </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => { const d = new Date(); setHistoryRange({ start: toLocalYMD(d), end: toLocalYMD(d) }); }}>Today</Button>
+                  <Button variant="outline" size="sm" onClick={() => { const end = new Date(); const start = new Date(); start.setDate(start.getDate() - 6); setHistoryRange({ start: toLocalYMD(start), end: toLocalYMD(end) }); }}>Last 7 Days</Button>
+                </div>
+              </div>
+
+              {historyFiltered.length === 0 ? (
+                <div className="text-center py-10 text-gray-500 text-sm">No orders found in this range.</div>
+              ) : (
+                <ShopfrontHistoryTable
+                  orders={historyFiltered as any}
+                  showUndo={false}
+                  onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
+                  onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+                />
               )}
             </div>
           </TabsContent>
@@ -450,21 +503,19 @@ export default function ShopfrontDashboardPage() {
               PeasyPrint Helper was not detected on this computer. Install it once, then click Print again.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-2">
-            <p className="text-sm text-gray-600">Download the installer from the Helper page.</p>
-          </div>
-          <DialogFooter>
-            <Link href="/helper" className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500">
-              Open Helper page
+          <div className="mt-2 text-center">
+            <Link href="/helper">
+              <Button size="lg" className="w-full">Download Helper</Button>
             </Link>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Bottom toast notification */}
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
         {statusMessage && (
-          <div className="pointer-events-auto rounded-md bg-black text-white shadow-lg px-4 py-2 text-sm transition-all duration-300 ease-out">
+          <div className="pointer-events-auto rounded-full bg-gray-900 text-white shadow-xl px-6 py-3 text-sm font-medium flex items-center gap-2 animate-in slide-in-from-bottom-5 fade-in duration-300">
+            <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             {statusMessage}
           </div>
         )}
