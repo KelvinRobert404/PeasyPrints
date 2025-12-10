@@ -13,7 +13,9 @@ export type PrintFormat = 'Single-Sided' | 'Double-Sided';
 export type PrintColor = 'Black & White' | 'Color';
 export type PaperSize = 'A3' | 'A4';
 
-export interface ShopPricing {
+export interface PricingTier {
+  minPages: number;
+  maxPages: number;
   a4: {
     singleBW: number;
     doubleBW: number;
@@ -26,6 +28,18 @@ export interface ShopPricing {
     singleColor: number;
     doubleColor: number;
   };
+}
+
+export interface ShopPricing {
+  // Legacy base pricing (optional/fallback)
+  a4?: {
+    singleBW: number;
+    // ...
+  };
+  a3?: {
+    singleBW: number;
+    // ...
+  };
   services: {
     softBinding?: number;
     hardBinding?: number;
@@ -33,84 +47,7 @@ export interface ShopPricing {
     afterDark?: number;
     spiralBinding?: number;
   };
-}
-
-export interface UserProfile {
-  id: string; // uid
-  username: string;
-  phoneNumber?: string | null;
-  email?: string | null;
-  createdAt: any; // Firestore timestamp
-  updatedAt: any; // Firestore timestamp
-}
-
-export interface Shop {
-  id: string;
-  name: string;
-  address: string;
-  timing?: string;
-  openingTime?: string;
-  closingTime?: string;
-  logoUrl?: string;
-  pricing?: ShopPricing;
-  isOpen?: boolean;
-  receivableAmount?: number;
-  createdAt?: any;
-  updatedAt?: any;
-  email?: string;
-  phone?: string;
-}
-
-export interface PrintSettings {
-  paperSize: PaperSize;
-  printFormat: PrintFormat;
-  printColor: PrintColor;
-  orientation: 'Vertical' | 'Horizontal';
-  binding?: 'Soft Binding' | 'Spiral Binding' | 'Hard Binding' | '';
-  copies: number;
-  customMessage?: string;
-  vinylColor?: string;
-  extraColorPages?: number;
-  emergency?: boolean;
-  afterDark?: boolean;
-}
-
-export interface PricingDetails {
-  basePricePerPage: number;
-  bindingCost: number;
-  emergencyCost: number;
-  afterDarkCost?: number;
-  commission: number;
-}
-
-export interface OrderDoc {
-  id?: string;
-  userId: string;
-  shopId: string;
-  shopName: string;
-  userName: string;
-  fileName: string;
-  fileUrl: string;
-  totalPages: number;
-  totalCost: number;
-  status: 'pending' | 'processing' | 'printing' | 'printed' | 'collected' | 'completed' | 'cancelled';
-  timestamp: any; // Firestore timestamp
-  emergency: boolean;
-  afterDark?: boolean;
-  printSettings: PrintSettings;
-  pricingDetails: PricingDetails;
-}
-
-export interface HistoryDoc extends OrderDoc {
-  orderId: string;
-  historyTimestamp: any;
-}
-
-export interface Payout {
-  id?: string;
-  shopId: string;
-  amount: number;
-  createdAt: any;
+  tiers?: PricingTier[]; // Unified pricing system
 }
 ```
 
@@ -137,9 +74,21 @@ export interface Payout {
   "isOpen": true,
   "logoUrl": "https://.../shop_logos/abc.jpg",
   "pricing": {
-    "a4": { "singleBW": 2, "doubleBW": 3, "singleColor": 10, "doubleColor": 18 },
-    "a3": { "singleBW": 4, "doubleBW": 6, "singleColor": 20, "doubleColor": 36 },
-    "services": { "softBinding": 50, "spiralBinding": 70, "emergency": 30 }
+    "services": { "softBinding": 50, "spiralBinding": 70, "emergency": 30 },
+    "tiers": [
+      {
+        "minPages": 1,
+        "maxPages": 10,
+        "a4": { "singleBW": 2, "doubleBW": 3, "singleColor": 10, "doubleColor": 18 },
+        "a3": { "singleBW": 4, "doubleBW": 6, "singleColor": 20, "doubleColor": 36 }
+      },
+      {
+        "minPages": 11,
+        "maxPages": 100,
+        "a4": { "singleBW": 1.5, "doubleBW": 2.5, "singleColor": 9, "doubleColor": 16 },
+        "a3": { "singleBW": 3, "doubleBW": 5, "singleColor": 18, "doubleColor": 32 }
+      }
+    ]
   },
   "receivableAmount": 1200,
   "createdAt": { "_seconds": 1710001000, "_nanoseconds": 0 },

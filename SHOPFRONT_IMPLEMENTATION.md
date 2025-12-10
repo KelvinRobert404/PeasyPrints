@@ -14,8 +14,7 @@ app/shopfront/
 ├── register/page.tsx   # Shop registration
 ├── dashboard/page.tsx  # Main dashboard with order queue
 ├── history/page.tsx    # Order history and revenue
-├── pricing/page.tsx    # Pricing configuration
-├── profile/page.tsx    # Shop profile management
+├── profile/page.tsx    # Shop profile & Unified Pricing configuration
 └── withdraw/page.tsx   # Earnings withdrawal
 ```
 
@@ -265,7 +264,7 @@ interface Shop {
   address: string;
   timing?: string;
   logoUrl?: string;
-  pricing?: ShopPricing;
+  pricing?: { tiers: PricingTier[], services: any }; // Unified Pricing
   receivableAmount: number;
   email?: string;
   phone?: string;

@@ -34,11 +34,10 @@ export interface PricingOutput {
 ### Deterministic examples
 | Case | Input | Expected total |
 | --- | --- | --- |
-| A4 BW double, 120 pages, 1 copy, spiral | pages=120, A4, Double, BW, copies=1, binding=Spiral | 120/2 sides × 3 + 70 = 70 + (60×3)= 250 → 250.00 |
-| A4 Color single, 10 pages, 2 copies, no binding | pages=10, A4, Single, Color, copies=2 | 20×10=200.00 |
-| A3 BW single, 5 pages, emergency | pages=5, A3, Single, BW, emergency | (5×4)+30=50.00 |
+| A4 BW double, 120 pages, 1 copy, spiral | pages=120, tier match (100-200), price=1.5 | 120/2 sides × 1.5 + 70 = 70 + 90 = 160.00 |
+| A4 Color single, 5 pages, 2 copies | pages=5, tier match (1-10), price=10 | 20×10=200.00 |
 
-Note: numbers assume sample shop pricing: A4 Double BW=3, A4 Spiral=70, A4 Single Color=10, A3 Single BW=4, emergency=30.
+Note: Numbers assume sample shop pricing with Unified Tiers. The engine prioritizes finding a matching tier for the page count. If found, it uses the specific price for that configuration (Size/Color/Format) defined in that tier. Fallback to base pricing occurs only if no tier matches.
 
 ### Rounding and tax
 - Totals rounded to 2 decimals using bankers rounding.

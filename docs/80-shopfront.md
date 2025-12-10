@@ -32,8 +32,10 @@ sequenceDiagram
 ```
 
 ### Pricing management
-- Shop updates `pricing` nested map on `shops/{uid}`.
+- Consolidated within **Shop Management > Profile**.
+- Shop updates `pricing` (including Unified Tiers) on `shops/{uid}`.
 - Persist via `updateDoc` with server timestamps.
+- **Master Pricing Table**: Configures detailed prices per tier (Page Range × Variant).
 
 ### Order display (print configuration)
 - Queue and history cards surface persisted `printSettings` and totals for the operator:
