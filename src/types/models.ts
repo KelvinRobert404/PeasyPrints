@@ -4,7 +4,10 @@ export type PaperSize = 'A3' | 'A4';
 
 export type PrintJobType = 'PDF' | 'Images' | 'Assignment';
 
-export interface ShopPricing {
+export interface PricingTier {
+  minPages: number;
+  maxPages: number;
+  // Full pricing configuration for this tier
   a4: {
     singleBW: number;
     doubleBW: number;
@@ -17,6 +20,23 @@ export interface ShopPricing {
     singleColor: number;
     doubleColor: number;
   };
+}
+
+export interface ShopPricing {
+  // Legacy fields kept optional for backwards compatibility during migration,
+  // but unified "tiers" is now the source of truth if present.
+  a4?: {
+    singleBW: number;
+    doubleBW: number;
+    singleColor: number;
+    doubleColor: number;
+  };
+  a3?: {
+    singleBW: number;
+    doubleBW: number;
+    singleColor: number;
+    doubleColor: number;
+  };
   services: {
     softBinding?: number;
     hardBinding?: number;
@@ -24,6 +44,8 @@ export interface ShopPricing {
     afterDark?: number;
     spiralBinding?: number;
   };
+  // Unified tier-based pricing (overrides flat per-page pricing)
+  tiers?: PricingTier[];
 }
 
 export interface Shop {

@@ -20,9 +20,35 @@ export function calculateTotalCost(
   const isA4 = settings.paperSize === 'A4';
   const priceTable = isA4 ? shopPricing.a4 : shopPricing.a3;
 
-  const perPage = settings.printColor === 'Color'
-    ? (settings.printFormat === 'Double-Sided' ? priceTable.doubleColor : priceTable.singleColor)
-    : (settings.printFormat === 'Double-Sided' ? priceTable.doubleBW : priceTable.singleBW);
+  // Check if unified tier pricing is available
+  let perPage: number;
+
+  // Try to find a matching tier first
+  if (shopPricing.tiers && shopPricing.tiers.length > 0) {
+    const applicableTier = shopPricing.tiers.find(
+      tier => pageCount >= tier.minPages && pageCount <= tier.maxPages
+    );
+
+    if (applicableTier) {
+      // Use the specific price from the tier for this config
+      const tierTable = isA4 ? applicableTier.a4 : applicableTier.a3;
+      perPage = settings.printColor === 'Color'
+        ? (settings.printFormat === 'Double-Sided' ? tierTable.doubleColor : tierTable.singleColor)
+        : (settings.printFormat === 'Double-Sided' ? tierTable.doubleBW : tierTable.singleBW);
+    } else {
+      // If no tier matches (e.g. page count out of range), use base pricing as fallback
+      // or if not available, try to find the last tier (highest page count)
+      // For now, consistent fallback to base pricing if present
+      perPage = settings.printColor === 'Color'
+        ? (settings.printFormat === 'Double-Sided' ? priceTable?.doubleColor : priceTable?.singleColor)
+        : (settings.printFormat === 'Double-Sided' ? priceTable?.doubleBW : priceTable?.singleBW);
+    }
+  } else {
+    // Legacy/Base pricing fallback
+    perPage = settings.printColor === 'Color'
+      ? (settings.printFormat === 'Double-Sided' ? priceTable?.doubleColor : priceTable?.singleColor)
+      : (settings.printFormat === 'Double-Sided' ? priceTable?.doubleBW : priceTable?.singleBW);
+  }
 
   // Treat 0/undefined as unavailable for safety (UI should already disable)
   const safePerPage = Number(perPage ?? 0) <= 0 ? 0 : Number(perPage);
