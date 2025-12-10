@@ -22,3 +22,28 @@ export async function uploadPdfAndGetUrl(userId: string, file: File): Promise<st
     return getDownloadURL(task.snapshot.ref);
   }
 }
+
+// Generic image upload for marketplace listing images
+export async function uploadListingImage(userId: string, file: File): Promise<string> {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const allowed = ['jpg', 'jpeg', 'png', 'webp'];
+  if (!allowed.includes(ext)) {
+    throw new Error('Only JPG, PNG, or WEBP images are allowed');
+  }
+  const maxBytes = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxBytes) {
+    throw new Error('Image too large (max 5MB)');
+  }
+
+  const filePath = `listing_images/${userId}/${Date.now()}-${file.name}`;
+  const storageRef = ref(storage, filePath);
+  const task = uploadBytesResumable(storageRef, file, {
+    contentType: file.type || 'image/jpeg',
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    task.on('state_changed', () => {}, reject, () => resolve());
+  });
+
+  return getDownloadURL(task.snapshot.ref);
+}

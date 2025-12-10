@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { AnnouncementCarousel } from '@/components/AnnouncementCarousel';
-import { BottomNavigation } from '@/components/layout/BottomNavigation';
 
 export default function IndexPage() {
   function showToast(message: string) {
@@ -55,11 +54,9 @@ export default function IndexPage() {
 
         {/* marketplace */}
         <Link
-          href="/shops"
-          onClick={(e) => { e.preventDefault(); showToast('Coming Soon'); }}
+          href="/marketplace"
           className="rounded-2xl bg-neutral-800 h-full flex flex-col items-center justify-center gap-3 active:scale-[0.99] transition relative"
         >
-          <span className="absolute top-3 left-1/2 -translate-x-1/2 inline-flex items-center h-5 px-2 rounded-full border border-white/40 text-white text-[10px] uppercase tracking-wide opacity-90">COMING SOON</span>
           <img className="tint-rose" src="/images/origami.png" alt="Marketplace" width={55} height={55} />
           <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[22px] tracking-wide font-semibold font-quinn" style={{ color: 'var(--marketplace)' }}>marketplace</span>
         </Link>
@@ -81,8 +78,6 @@ export default function IndexPage() {
         </Link>
       </div>
 
-      {/* announcements carousel (moved to hero) */}
-      <BottomNavigation />
     </div>
   );
 }

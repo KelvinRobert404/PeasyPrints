@@ -85,3 +85,34 @@ export interface OrderDoc {
   printSettings: PrintSettings;
   pricingDetails: PricingDetails;
 }
+
+// Marketplace types
+
+export type ListingCategory = 'student' | 'housing' | 'tickets';
+
+export type ListingStatus = 'pending_moderation' | 'active' | 'hidden' | 'removed';
+
+export interface ListingLocation {
+  lat: number;
+  lng: number;
+  area: string; // e.g. "Kothanur"
+}
+
+export interface Listing {
+  id: string;
+  category: ListingCategory;
+  status: ListingStatus;
+  collegeName: string; // e.g. "Kristu Jayanti College"
+  title: string;
+  description?: string;
+  price?: number; // item price / monthly rent / per-ticket
+  images: string[]; // up to 3 image URLs
+  tags: string[]; // boolean-like attributes rendered as pills
+  whatsappAllowed: boolean;
+  whatsappNumber?: string;
+  createdAt: any; // Firestore Timestamp
+  authorId: string;
+  authorName?: string;
+  authorVerified: boolean;
+  location: ListingLocation;
+}

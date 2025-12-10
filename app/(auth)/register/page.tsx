@@ -3,7 +3,6 @@
 export const dynamic = 'force-dynamic';
 
 import { useAuthStore } from '@/lib/stores/authStore';
-import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PhoneRegister } from '@/components/auth/PhoneRegister';
@@ -42,7 +41,6 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
       </main>
-      <BottomNavigation />
     </div>
   );
 }
