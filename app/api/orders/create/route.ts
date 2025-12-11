@@ -15,17 +15,17 @@ const CreateOrderSchema = z.object({
   fileName: z.string().min(1),
   totalPages: z.number().int().positive(),
   printSettings: z.object({
-    paperSize: z.enum(['A3','A4']),
-    printFormat: z.enum(['Single-Sided','Double-Sided']),
-    printColor: z.enum(['Black & White','Color']),
-    orientation: z.enum(['Vertical','Horizontal']),
-    binding: z.enum(['Soft Binding','Spiral Binding','Hard Binding','']).optional().default(''),
+    paperSize: z.enum(['A3', 'A4']),
+    printFormat: z.enum(['Single-Sided', 'Double-Sided']),
+    printColor: z.enum(['Black & White', 'Color']),
+    orientation: z.enum(['Vertical', 'Horizontal']),
+    binding: z.enum(['Soft Binding', 'Spiral Binding', 'Hard Binding', '']).optional().default(''),
     copies: z.number().int().positive(),
     extraColorPages: z.number().int().min(0).optional().default(0),
     emergency: z.boolean().optional().default(false),
     afterDark: z.boolean().optional().default(false)
   }),
-  jobType: z.enum(['PDF','Images','Assignment']).optional(),
+  jobType: z.enum(['PDF', 'Images', 'Assignment']).optional(),
   splitFiles: z.object({ bwUrl: z.string().url(), colorUrl: z.string().url() }).optional(),
   assignment: z.object({ colorPages: z.array(z.number().int().positive()) }).optional()
 })
@@ -105,7 +105,8 @@ export async function POST(req: NextRequest) {
     const base = (basePagesCost + bindingCost + (printSettings.printColor === 'Black & White' ? extraColorDelta : 0)) * copies
     const emergencyCost = printSettings.emergency ? emergencyUnit : 0
     const afterDarkCost = printSettings.afterDark ? afterDarkUnit : 0
-    const totalCost = base + emergencyCost + afterDarkCost
+    const convenienceFee = pricing.convenienceFee ?? 0
+    const totalCost = base + emergencyCost + afterDarkCost + convenienceFee
 
     const orderDoc: any = {
       userId,
@@ -126,7 +127,8 @@ export async function POST(req: NextRequest) {
         bindingCost,
         emergencyCost,
         afterDarkCost,
-        commission: 0
+        commission: 0,
+        convenienceFee
       }
     }
 

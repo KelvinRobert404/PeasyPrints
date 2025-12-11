@@ -10,7 +10,8 @@ export function calculateTotalCost(
     bindingCost: 0,
     emergencyCost: 0,
     afterDarkCost: 0,
-    commission: 0
+    commission: 0,
+    convenienceFee: 0
   };
 
   if (!shopPricing) {
@@ -40,21 +41,21 @@ export function calculateTotalCost(
       // or if not available, try to find the last tier (highest page count)
       // For now, consistent fallback to base pricing if present
       perPage = settings.printColor === 'Color'
-        ? (settings.printFormat === 'Double-Sided' ? priceTable?.doubleColor : priceTable?.singleColor)
-        : (settings.printFormat === 'Double-Sided' ? priceTable?.doubleBW : priceTable?.singleBW);
+        ? (settings.printFormat === 'Double-Sided' ? (priceTable?.doubleColor ?? 0) : (priceTable?.singleColor ?? 0))
+        : (settings.printFormat === 'Double-Sided' ? (priceTable?.doubleBW ?? 0) : (priceTable?.singleBW ?? 0));
     }
   } else {
     // Legacy/Base pricing fallback
     perPage = settings.printColor === 'Color'
-      ? (settings.printFormat === 'Double-Sided' ? priceTable?.doubleColor : priceTable?.singleColor)
-      : (settings.printFormat === 'Double-Sided' ? priceTable?.doubleBW : priceTable?.singleBW);
+      ? (settings.printFormat === 'Double-Sided' ? (priceTable?.doubleColor ?? 0) : (priceTable?.singleColor ?? 0))
+      : (settings.printFormat === 'Double-Sided' ? (priceTable?.doubleBW ?? 0) : (priceTable?.singleBW ?? 0));
   }
 
   // Treat 0/undefined as unavailable for safety (UI should already disable)
   const safePerPage = Number(perPage ?? 0) <= 0 ? 0 : Number(perPage);
 
-  const bwPerPage = (settings.printFormat === 'Double-Sided' ? priceTable.doubleBW : priceTable.singleBW);
-  const colorPerPage = (settings.printFormat === 'Double-Sided' ? priceTable.doubleColor : priceTable.singleColor);
+  const bwPerPage = (settings.printFormat === 'Double-Sided' ? (priceTable?.doubleBW ?? 0) : (priceTable?.singleBW ?? 0));
+  const colorPerPage = (settings.printFormat === 'Double-Sided' ? (priceTable?.doubleColor ?? 0) : (priceTable?.singleColor ?? 0));
 
   const extraColorPages = settings.extraColorPages ?? 0;
   const extraColorDelta = Math.max(Number(colorPerPage ?? 0) - Number(bwPerPage ?? 0), 0) * extraColorPages;
@@ -78,14 +79,30 @@ export function calculateTotalCost(
   const emergencyCost = settings.emergency ? emergencyUnit : 0;
   const afterDarkCost = settings.afterDark ? afterDarkUnit : 0;
 
-  const total = base + emergencyCost + afterDarkCost;
+  let convenienceFee = Number(shopPricing.convenienceFee ?? 0);
+
+  // Tiered convenience fee logic
+  if (shopPricing.convenienceFeeTiers && shopPricing.convenienceFeeTiers.length > 0) {
+    const matchingTier = shopPricing.convenienceFeeTiers.find(
+      t => pageCount >= t.minPages && pageCount <= t.maxPages
+    );
+    if (matchingTier) {
+      convenienceFee = matchingTier.fee;
+    } else {
+      // Optional: logic for what to do if page count exceeds all defined tiers (e.g. use highest tier or flat fee)
+      // For now, fallback to flat fee if no tier matches
+    }
+  }
+
+  const total = base + emergencyCost + afterDarkCost + convenienceFee;
 
   const details: PricingDetails = {
     basePricePerPage: perPage,
     bindingCost,
     emergencyCost,
     afterDarkCost,
-    commission: 0
+    commission: 0,
+    convenienceFee
   };
 
   return { total, details };

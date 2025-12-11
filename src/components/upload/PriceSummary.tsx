@@ -1,10 +1,12 @@
 'use client';
 
 import { useUploadStore } from '@/lib/stores/uploadStore';
+import { useCouponStore } from '@/lib/stores/couponsStore';
 import { useMemo } from 'react';
 
 export function PriceSummary() {
   const { totalCost, pageCount, settings, shopPricing, jobType, assignmentMode, assignmentColorPages } = useUploadStore();
+  const { appliedCoupon, discount: couponDiscount } = useCouponStore();
 
   const breakdown = useMemo(() => {
     if (!shopPricing) {
@@ -15,6 +17,7 @@ export function PriceSummary() {
         extraColorSurcharge: 0,
         rushCost: 0,
         afterDarkCost: 0,
+        convenienceFee: 0,
         copies: settings.copies || 1,
         assignment: null as null | { bwPages: number; colorPages: number; bwSubtotal: number; colorSubtotal: number }
       };
@@ -24,11 +27,11 @@ export function PriceSummary() {
     const table = isA4 ? shopPricing.a4 : shopPricing.a3;
 
     const perPage = settings.printColor === 'Color'
-      ? (settings.printFormat === 'Double-Sided' ? table.doubleColor : table.singleColor)
-      : (settings.printFormat === 'Double-Sided' ? table.doubleBW : table.singleBW);
+      ? (settings.printFormat === 'Double-Sided' ? (table?.doubleColor ?? 0) : (table?.singleColor ?? 0))
+      : (settings.printFormat === 'Double-Sided' ? (table?.doubleBW ?? 0) : (table?.singleBW ?? 0));
 
-    const bwPerPage = (settings.printFormat === 'Double-Sided' ? table.doubleBW : table.singleBW);
-    const colorPerPage = (settings.printFormat === 'Double-Sided' ? table.doubleColor : table.singleColor);
+    const bwPerPage = (settings.printFormat === 'Double-Sided' ? (table?.doubleBW ?? 0) : (table?.singleBW ?? 0));
+    const colorPerPage = (settings.printFormat === 'Double-Sided' ? (table?.doubleColor ?? 0) : (table?.singleColor ?? 0));
 
     const copies = Math.max(settings.copies || 1, 1);
     const basePagesCostSingle = perPage * pageCount;
@@ -50,6 +53,7 @@ export function PriceSummary() {
     const afterDarkUnit = shopPricing.services.afterDark ?? rushUnit ?? 0;
     const rushCost = settings.emergency ? rushUnit : 0;
     const afterDarkCost = settings.afterDark ? afterDarkUnit : 0;
+    const convenienceFee = shopPricing.convenienceFee ?? 0;
 
     let assignment: null | { bwPages: number; colorPages: number; bwSubtotal: number; colorSubtotal: number } = null;
     if (jobType === 'Assignment') {
@@ -67,12 +71,14 @@ export function PriceSummary() {
       extraColorSurcharge,
       rushCost,
       afterDarkCost,
+      convenienceFee,
       copies,
       assignment
     };
   }, [shopPricing, settings, pageCount, jobType, assignmentMode, assignmentColorPages]);
 
-  const total = totalCost;
+  const subtotal = totalCost;
+  const finalTotal = Math.max(subtotal - couponDiscount, 0);
 
   return (
     <div className="space-y-2 text-sm">
@@ -96,7 +102,22 @@ export function PriceSummary() {
       {breakdown.afterDarkCost > 0 && (
         <div className="flex justify-between"><span>After dark</span><span>₹{breakdown.afterDarkCost}</span></div>
       )}
-      <div className="flex justify-between font-semibold"><span>Total</span><span>₹{total}</span></div>
+      {breakdown.convenienceFee > 0 && (
+        <div className="flex justify-between"><span>Service Fee</span><span>₹{breakdown.convenienceFee}</span></div>
+      )}
+      {appliedCoupon && couponDiscount > 0 && (
+        <div className="flex justify-between text-green-600">
+          <span>Coupon ({appliedCoupon.code})</span>
+          <span>-₹{couponDiscount}</span>
+        </div>
+      )}
+      <div className="flex justify-between font-semibold border-t pt-2">
+        <span>Total</span>
+        <span className={appliedCoupon ? 'text-green-600' : ''}>
+          ₹{appliedCoupon ? finalTotal : subtotal}
+        </span>
+      </div>
     </div>
   );
 }
+

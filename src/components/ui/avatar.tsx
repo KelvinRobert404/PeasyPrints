@@ -8,8 +8,8 @@ export function AvatarImage({ src, alt }: { src?: string; alt?: string }) {
   if (!src) return null;
   return <img src={src} alt={alt} className="h-full w-full object-cover" />;
 }
-export function AvatarFallback({ children }: { children?: React.ReactNode }) {
-  return <div className="text-gray-500">{children}</div>;
+export function AvatarFallback({ children, className }: { children?: React.ReactNode; className?: string }) {
+  return <div className={cn("text-gray-500", className)}>{children}</div>;
 }
 
 

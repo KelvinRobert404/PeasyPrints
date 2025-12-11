@@ -10,7 +10,9 @@ export function RootShell({ children }: { children: ReactNode }) {
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/otp';
   const isPickup = pathname?.startsWith('/orders/') && pathname?.includes('/pickup');
 
-  if (isShopfront) {
+  const isGodview = pathname?.startsWith('/godview');
+
+  if (isShopfront || isGodview) {
     return (
       <div className="min-h-screen bg-gray-100">
         {children}
