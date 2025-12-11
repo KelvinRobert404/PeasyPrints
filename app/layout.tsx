@@ -61,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="stylesheet" href="https://use.typekit.net/vex5zkw.css" />
       </head>
-      <body className={`${Quinn.variable} font-[coolvetica]`}>
+      <body className={`${Quinn.variable} font-sans antialiased`}>
         <ClerkProvider
           signInUrl="/login"
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
