@@ -7,8 +7,10 @@
   "targets": {
     ".NETCoreApp,Version=v8.0": {},
     ".NETCoreApp,Version=v8.0/win-x64": {
-      "PeasyPrint.Helper/1.0.1": {
+      "PeasyPrint.Helper/2.0.0": {
         "dependencies": {
+          "PdfiumViewer": "2.13.0",
+          "PdfiumViewer.Native.x86_64.v8-xfa": "2018.4.8.256",
           "runtimepack.Microsoft.NETCore.App.Runtime.win-x64": "8.0.21",
           "runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64": "8.0.21",
           "runtimepack.Microsoft.Windows.SDK.NET.Ref": "10.0.19041.56"
@@ -973,11 +975,25 @@
             "fileVersion": "2.2.0.48161"
           }
         }
-      }
+      },
+      "PdfiumViewer/2.13.0": {
+        "runtime": {
+          "lib/net20/PdfiumViewer.dll": {
+            "assemblyVersion": "2.13.0.0",
+            "fileVersion": "2.13.0.0"
+          }
+        },
+        "resources": {
+          "lib/net20/nl/PdfiumViewer.resources.dll": {
+            "locale": "nl"
+          }
+        }
+      },
+      "PdfiumViewer.Native.x86_64.v8-xfa/2018.4.8.256": {}
     }
   },
   "libraries": {
-    "PeasyPrint.Helper/1.0.1": {
+    "PeasyPrint.Helper/2.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -996,6 +1012,20 @@
       "type": "runtimepack",
       "serviceable": false,
       "sha512": ""
+    },
+    "PdfiumViewer/2.13.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Nw4owBmJzDVXoMRjCnqPbET07CPOawwhcNjt+PyRaSxONN9bsFF+cm9kcMsDLEAEaxsiDJo5jls8bCQjvjidkA==",
+      "path": "pdfiumviewer/2.13.0",
+      "hashPath": "pdfiumviewer.2.13.0.nupkg.sha512"
+    },
+    "PdfiumViewer.Native.x86_64.v8-xfa/2018.4.8.256": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-0RQwmLMPKOHBRqRK+NPMR2H5EQ4KlYO+LnT3Y2lByVUa5/JTPCMswL46JEXX+/MAfJtCpS2PzJvy6QzpH2nuIw==",
+      "path": "pdfiumviewer.native.x86_64.v8-xfa/2018.4.8.256",
+      "hashPath": "pdfiumviewer.native.x86_64.v8-xfa.2018.4.8.256.nupkg.sha512"
     }
   },
   "runtimes": {

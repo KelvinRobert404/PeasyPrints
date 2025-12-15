@@ -25,9 +25,10 @@ namespace PeasyPrint.Helper
                     return loaded ?? new Settings();
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore, use defaults
+                Logger.Error("Failed to load settings", ex);
+                // Use defaults
             }
 
             return new Settings();

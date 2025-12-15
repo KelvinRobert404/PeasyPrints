@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Net.Http;
 using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,10 +13,21 @@ namespace PeasyPrint.Helper
     public partial class App : System.Windows.Application
     {
         private const string DEFAULT_API_BASE = "https://theswoop.club/api";
+        
+        // Shared HttpClient - prevents socket exhaustion
+        private static readonly HttpClient SharedHttpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(60)
+        };
+        
         private static System.Threading.Mutex? singleInstanceMutex;
+        private static CancellationTokenSource? _cts;
+        
         protected override void OnStartup(StartupEventArgs e)
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            var version = typeof(App).Assembly.GetName().Version?.ToString() ?? "unknown";
+            Logger.Info($"PeasyPrint Helper v{version} starting");
 
             try
             {
@@ -23,14 +35,17 @@ namespace PeasyPrint.Helper
                 singleInstanceMutex = new System.Threading.Mutex(true, "Global\\PeasyPrint.Helper", out createdNew);
                 if (!createdNew)
                 {
-                    // Another instance is already running; exit immediately
+                    Logger.Info("Another instance already running, exiting");
                     Shutdown(0);
                     return;
                 }
+                
                 var args = Environment.GetCommandLineArgs();
+                
                 // Tray mode: keep running in system tray
                 if (Array.Exists(args, a => string.Equals(a, "--tray", StringComparison.OrdinalIgnoreCase)))
                 {
+                    Logger.Info("Starting in tray mode");
                     System.Windows.Forms.Application.EnableVisualStyles();
                     using var tray = new Tray();
                     System.Windows.Forms.Application.Run();
@@ -41,6 +56,7 @@ namespace PeasyPrint.Helper
                 // Open settings UI if requested
                 if (Array.Exists(args, a => a.StartsWith("peasyprint://settings", StringComparison.OrdinalIgnoreCase)))
                 {
+                    Logger.Info("Opening settings window");
                     new SettingsWindow(SettingsStore.Load()).ShowDialog();
                     Shutdown(0);
                     return;
@@ -49,6 +65,7 @@ namespace PeasyPrint.Helper
                 // If launched with no parameters, open Settings by default (standalone app UX)
                 if (args.Length <= 1)
                 {
+                    Logger.Info("No arguments, opening settings window");
                     new SettingsWindow(SettingsStore.Load()).ShowDialog();
                     Shutdown(0);
                     return;
@@ -58,13 +75,17 @@ namespace PeasyPrint.Helper
 
                 if (request == null)
                 {
-                    // Fallback to Settings if arguments are not recognized
+                    Logger.Warn("Could not parse arguments, opening settings");
                     new SettingsWindow(SettingsStore.Load()).ShowDialog();
                     Shutdown(0);
                     return;
                 }
 
-                // Defer job resolution to async flow below so UI remains responsive
+                Logger.Info($"Parsed request: JobId={request.JobId}, FileUrl={request.FileUrl}, IsColor={request.IsColor}, Copies={request.NumberOfCopies}");
+
+                // Create cancellation token for the print flow
+                _cts = new CancellationTokenSource();
+                var cancellationToken = _cts.Token;
 
                 // Hand over the rest of the flow to an async continuation so the UI can paint
                 Dispatcher.InvokeAsync(async () =>
@@ -81,9 +102,19 @@ namespace PeasyPrint.Helper
                                 pw.Topmost = true;
                                 pw.Show();
                             }
-                            catch { }
-                            var resolved = await ResolveJobAsync(request);
-                            try { pw?.Close(); } catch { }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("Failed to show progress window", ex);
+                            }
+                            
+                            var resolved = await ResolveJobAsync(request, cancellationToken);
+                            
+                            try { pw?.Close(); } 
+                            catch (Exception ex)
+                            {
+                                Logger.Error("Failed to close progress window", ex);
+                            }
+                            
                             request = resolved ?? request;
                         }
 
@@ -92,19 +123,27 @@ namespace PeasyPrint.Helper
                         // Show dialog with defaults
                         var (printDialog, ticket) = CreatePrefilledDialog(request, settings);
                         var confirmed = printDialog.ShowDialog();
+                        
                         if (confirmed == true && request.FileUrl.HasValue())
                         {
-                            // Render and print the PDF using the chosen printer
+                            Logger.Info($"User confirmed print, sending to printer: {printDialog.PrintQueue?.FullName}");
                             var pdfService = new PdfPrintService();
-                            await pdfService.PrintWithDialogAsync(request.FileUrl!, printDialog, ticket);
+                            await pdfService.PrintWithDialogAsync(request.FileUrl!, printDialog, ticket, cancellationToken);
+                            Logger.Info("Print job completed");
+                        }
+                        else
+                        {
+                            Logger.Info("Print cancelled by user");
                         }
                     }
                     catch (Exception ex2)
                     {
+                        Logger.Error("Print flow failed", ex2);
                         System.Windows.MessageBox.Show(ex2.Message, "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                     finally
                     {
+                        _cts?.Dispose();
                         Shutdown(0);
                     }
                 });
@@ -112,23 +151,25 @@ namespace PeasyPrint.Helper
             }
             catch (Exception ex)
             {
+                Logger.Error("Startup failed", ex);
                 System.Windows.MessageBox.Show(ex.Message, "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
             }
         }
 
-        private static async Task<PrintRequest?> ResolveJobAsync(PrintRequest request)
+        private static async Task<PrintRequest?> ResolveJobAsync(PrintRequest request, CancellationToken cancellationToken)
         {
             try
             {
+                Logger.Info("Resolving job details...");
                 var apiKey = Environment.GetEnvironmentVariable("PEASYPRINT_API_KEY");
-                var http = new System.Net.Http.HttpClient();
-                var client = new JobClient(http, null);
+                var client = new JobClient(SharedHttpClient, null);
 
                 // Highest priority: direct jobUrl
                 if (request.JobUrl != null)
                 {
-                    return await client.FetchJobByUrlAsync(request.JobUrl, apiKey, CancellationToken.None);
+                    Logger.Info($"Fetching job by URL: {request.JobUrl}");
+                    return await client.FetchJobByUrlAsync(request.JobUrl, apiKey, cancellationToken);
                 }
 
                 // Build API base precedence: request.ApiBase -> settings override -> env -> default
@@ -138,11 +179,13 @@ namespace PeasyPrint.Helper
                     ?? Environment.GetEnvironmentVariable("PEASYPRINT_API_BASE")
                     ?? DEFAULT_API_BASE;
 
-                var clientWithBase = new JobClient(http, new Uri(apiBase));
-                return await clientWithBase.FetchJobAsync(request.JobId!, apiKey, CancellationToken.None);
+                Logger.Info($"Fetching job by ID: {request.JobId} from {apiBase}");
+                var clientWithBase = new JobClient(SharedHttpClient, new Uri(apiBase));
+                return await clientWithBase.FetchJobAsync(request.JobId!, apiKey, cancellationToken);
             }
             catch (Exception ex)
             {
+                Logger.Error("Job resolution failed", ex);
                 System.Windows.MessageBox.Show($"Failed to fetch job: {ex.Message}", "PeasyPrint Helper", MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
@@ -165,13 +208,15 @@ namespace PeasyPrint.Helper
                         if (!string.IsNullOrWhiteSpace(target) && queue.FullName.IndexOf(target, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             dialog.PrintQueue = queue;
+                            Logger.Info($"Preselected printer: {queue.FullName}");
                             break;
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // ignore and leave default printer
+                    Logger.Error("Failed to preselect printer", ex);
+                    // Leave default printer
                 }
             }
 
@@ -205,10 +250,16 @@ namespace PeasyPrint.Helper
                             finalTicket.CopyCount = desired.CopyCount;
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("Failed to validate copy count", ex);
+                    }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.Error("Failed to merge print ticket", ex);
+            }
 
             dialog.PrintTicket = finalTicket;
 
@@ -265,7 +316,7 @@ namespace PeasyPrint.Helper
                 JobUrl = dict.TryGetValue("jobUrl", out var jobUrl) && Uri.TryCreate(jobUrl, UriKind.Absolute, out var jobUri) ? jobUri : null,
                 ApiBase = dict.GetValueOrDefault("api"),
                 NumberOfCopies = dict.TryGetValue("copies", out var copiesStr) && int.TryParse(copiesStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out var copies) ? Math.Max(1, copies) : 1,
-                IsColor = dict.TryGetValue("color", out var colorStr) ? !string.Equals(colorStr, "bw", StringComparison.OrdinalIgnoreCase) && !string.Equals(colorStr, "blackwhite", StringComparison.OrdinalIgnoreCase) && !string.Equals(colorStr, "grayscale", StringComparison.OrdinalIgnoreCase) ? bool.TryParse(colorStr, out var colorBool) ? colorBool : true : false : true
+                IsColor = ParseColorFlag(dict.GetValueOrDefault("color"))
             };
         }
 
@@ -281,8 +332,36 @@ namespace PeasyPrint.Helper
                 JobUrl = query.TryGetValue("jobUrl", out var jobUrl) && Uri.TryCreate(jobUrl, UriKind.Absolute, out var parsedJob) ? parsedJob : null,
                 ApiBase = query.GetValueOrDefault("api"),
                 NumberOfCopies = query.TryGetValue("copies", out var copiesStr) && int.TryParse(copiesStr, out var copies) ? Math.Max(1, copies) : 1,
-                IsColor = query.TryGetValue("color", out var colorStr) ? !string.Equals(colorStr, "bw", StringComparison.OrdinalIgnoreCase) && !string.Equals(colorStr, "blackwhite", StringComparison.OrdinalIgnoreCase) && !string.Equals(colorStr, "grayscale", StringComparison.OrdinalIgnoreCase) ? bool.TryParse(colorStr, out var colorBool) ? colorBool : true : false : true
+                IsColor = ParseColorFlag(query.GetValueOrDefault("color"))
             };
+        }
+
+        /// <summary>
+        /// Parses the color flag from query parameter.
+        /// Returns true for color, false for grayscale/BW.
+        /// </summary>
+        private static bool ParseColorFlag(string? colorStr)
+        {
+            if (string.IsNullOrWhiteSpace(colorStr))
+            {
+                return true; // Default to color
+            }
+
+            // Check for explicit BW/grayscale values
+            if (string.Equals(colorStr, "bw", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(colorStr, "blackwhite", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(colorStr, "grayscale", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            // Try parsing as boolean
+            if (bool.TryParse(colorStr, out var colorBool))
+            {
+                return colorBool;
+            }
+
+            return true; // Default to color
         }
 
         private static Dictionary<string, string> ToDictionary(string[] args)
@@ -332,5 +411,3 @@ namespace PeasyPrint.Helper
         }
     }
 }
-
-

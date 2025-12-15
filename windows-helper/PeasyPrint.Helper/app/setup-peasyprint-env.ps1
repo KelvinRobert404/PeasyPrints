@@ -1,4 +1,4 @@
-﻿[Environment]::SetEnvironmentVariable("PEASYPRINT_API_KEY","YOUR_SECURE_TOKEN","User")
+﻿[Environment]::SetEnvironmentVariable("PEASYPRINT_API_KEY","swoopisgood","User")
 Write-Host "Set PEASYPRINT_API_KEY for current user." -ForegroundColor Green
 try {
   Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue

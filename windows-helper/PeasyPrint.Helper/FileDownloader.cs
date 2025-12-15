@@ -7,7 +7,10 @@ namespace PeasyPrint.Helper
 {
     internal static class FileDownloader
     {
-        private static readonly HttpClient SharedClient = new HttpClient();
+        private static readonly HttpClient SharedClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(120) // 2 min timeout for large PDFs
+        };
 
         public static async Task<byte[]> DownloadAsync(Uri uri, CancellationToken cancellationToken = default)
         {
