@@ -34,7 +34,8 @@ export const useShopsStore = create<ShopsState>()(
             closingTime: data.closingTime,
             logoUrl: data.logoUrl,
             pricing,
-            isOpen: data.isOpen
+            isOpen: data.isOpen,
+            collegeId: data.collegeId,
           } as Shop;
         });
         set((s) => { s.shops = shops; s.loading = false; });

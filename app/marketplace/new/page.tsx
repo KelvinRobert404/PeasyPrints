@@ -208,8 +208,8 @@ export default function NewListingPage() {
                   category === 'housing'
                     ? 'Price (₹ per month)'
                     : category === 'tickets'
-                    ? 'Price (₹ per ticket)'
-                    : 'Price (₹)'
+                      ? 'Price (₹ per ticket)'
+                      : 'Price (₹)'
                 }
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
