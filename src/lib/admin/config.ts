@@ -7,7 +7,7 @@
 
 export const ADMIN_EMAILS: string[] = [
     // Add admin emails here - these users will have access to /godview
-    'kelvinrobert404@gmail.com',
+    'kelvinrobert091@gmail.com',
     'siyonmaster008@gmail.com',
 ];
 
