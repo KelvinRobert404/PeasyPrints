@@ -1,18 +1,29 @@
 /* Hide horizontal scrollbar visuals but keep scroll functionality */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @import "tailwindcss";
 
 :root {
-  --background: #f9fafb; /* Tailwind gray-50 to avoid white strip at bottom */
+  --background: #f9fafb;
+  /* Tailwind gray-50 to avoid white strip at bottom */
   --foreground: #0a0a0a;
   --muted: #f5f5f5;
   --border: #e5e7eb;
   --ring: #2563eb;
   /* Homepage heading color tokens (replace with exact Figma hex) */
-  --peasyprints: #FCF6B1; /* Figma */
-  --canteen: #3EDA46; /* Figma */
-  --marketplace: #FF4D4D; /* Figma */
+  --peasyprints: #FCF6B1;
+  /* Figma */
+  --canteen: #3EDA46;
+  /* Figma */
+  --marketplace: #FF4D4D;
+  /* Figma */
 }
 
 .dark {
@@ -32,25 +43,64 @@
 }
 
 @layer base {
-  * { @apply border-border; }
-  html, body { height: 100%; }
-  html { background-color: var(--background); }
-  body { @apply bg-background text-foreground; }
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  html {
+    background-color: var(--background);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
-/* Quinn loaded via next/font/local → exposes CSS variable */
-.font-quinn { font-family: var(--font-quinn), 'Geist Sans', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; }
+/* Plus Jakarta Sans as default body font, Quinn for display/branding */
+.font-sans {
+  font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+.font-quinn {
+  font-family: var(--font-quinn), var(--font-plus-jakarta), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+}
 
 /* Emergency order blink */
 @keyframes pulse-red {
-  0%, 100% { background-color: rgb(254 226 226); border-color: rgb(239 68 68); }
-  50% { background-color: rgb(255 255 255); border-color: rgb(239 68 68); }
+
+  0%,
+  100% {
+    background-color: rgb(254 226 226);
+    border-color: rgb(239 68 68);
+  }
+
+  50% {
+    background-color: rgb(255 255 255);
+    border-color: rgb(239 68 68);
+  }
 }
-.emergency-order { animation: pulse-red 1s ease-in-out infinite; }
+
+.emergency-order {
+  animation: pulse-red 1s ease-in-out infinite;
+}
 
 @layer utilities {
+
   /* Visual tints for PNG icons to match Figma colors */
-  .tint-yellow { filter: invert(86%) sepia(67%) saturate(740%) hue-rotate(1deg) brightness(105%) contrast(102%); }
-  .tint-green { filter: invert(64%) sepia(56%) saturate(478%) hue-rotate(72deg) brightness(90%) contrast(92%); }
-  .tint-rose { filter: invert(53%) sepia(64%) saturate(548%) hue-rotate(326deg) brightness(99%) contrast(98%); }
+  .tint-yellow {
+    filter: invert(86%) sepia(67%) saturate(740%) hue-rotate(1deg) brightness(105%) contrast(102%);
+  }
+
+  .tint-green {
+    filter: invert(64%) sepia(56%) saturate(478%) hue-rotate(72deg) brightness(90%) contrast(92%);
+  }
+
+  .tint-rose {
+    filter: invert(53%) sepia(64%) saturate(548%) hue-rotate(326deg) brightness(99%) contrast(98%);
+  }
 }

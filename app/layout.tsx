@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { assertRequiredEnvInProd } from '@/lib/utils/env';
 import localFont from 'next/font/local';
+import { Plus_Jakarta_Sans, Outfit } from 'next/font/google';
 import Script from 'next/script';
 
 const Quinn = localFont({
@@ -10,6 +11,20 @@ const Quinn = localFont({
   style: 'normal',
   display: 'swap',
   variable: '--font-quinn'
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-plus-jakarta'
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-outfit'
 });
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { RootShell } from '@/components/layout/RootShell';
@@ -61,7 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="stylesheet" href="https://use.typekit.net/vex5zkw.css" />
       </head>
-      <body className={`${Quinn.variable} font-sans antialiased`}>
+      <body className={`${Quinn.variable} ${plusJakarta.variable} ${outfit.variable} font-sans antialiased`}>
         <ClerkProvider
           signInUrl="/login"
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
