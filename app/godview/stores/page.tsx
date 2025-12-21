@@ -6,15 +6,23 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { Store, Clock, MapPin, Edit2, Check, X, Loader2 } from 'lucide-react';
-import type { Shop } from '@/types/models';
+import { Store, Clock, MapPin, Edit2, Check, X, Loader2, GraduationCap } from 'lucide-react';
+import type { Shop, College } from '@/types/models';
 import { cn } from '@/lib/utils/cn';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 export default function StoresPage() {
     const [shops, setShops] = useState<Shop[]>([]);
+    const [colleges, setColleges] = useState<College[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [editForm, setEditForm] = useState<Partial<Shop>>({});
+    const [editForm, setEditForm] = useState<Partial<Shop & { collegeId: string }>>({});
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
@@ -29,6 +37,23 @@ export default function StoresPage() {
         return () => unsub();
     }, []);
 
+    // Fetch colleges
+    useEffect(() => {
+        const unsub = onSnapshot(collection(db, 'colleges'), (snap) => {
+            const list = snap.docs.map((d) => ({
+                id: d.id,
+                ...d.data(),
+            })) as College[];
+            setColleges(list);
+        });
+        return () => unsub();
+    }, []);
+
+    const getCollegeName = (collegeId?: string) => {
+        if (!collegeId) return null;
+        return colleges.find(c => c.id === collegeId)?.name || null;
+    };
+
     const startEdit = (shop: Shop) => {
         setEditingId(shop.id);
         setEditForm({
@@ -36,6 +61,7 @@ export default function StoresPage() {
             address: shop.address,
             openingTime: shop.openingTime || '',
             closingTime: shop.closingTime || '',
+            collegeId: shop.collegeId || '',
         });
     };
 
@@ -54,6 +80,7 @@ export default function StoresPage() {
                 openingTime: editForm.openingTime,
                 closingTime: editForm.closingTime,
                 timing: `${editForm.openingTime} - ${editForm.closingTime}`,
+                collegeId: editForm.collegeId || null,
             });
             setEditingId(null);
             setEditForm({});
@@ -87,8 +114,9 @@ export default function StoresPage() {
 
             <div className="flex-1 rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden flex flex-col">
                 <div className="grid grid-cols-12 gap-4 border-b border-zinc-100 bg-zinc-50/50 px-4 py-2 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">
-                    <div className="col-span-3 pl-8">Store Name</div>
-                    <div className="col-span-4">Address</div>
+                    <div className="col-span-2 pl-8">Store Name</div>
+                    <div className="col-span-3">Address</div>
+                    <div className="col-span-2">College</div>
                     <div className="col-span-2">Timings</div>
                     <div className="col-span-1">Status</div>
                     <div className="col-span-1">Fee</div>
@@ -109,6 +137,7 @@ export default function StoresPage() {
                         <div className="divide-y divide-zinc-50">
                             {shops.map((shop) => {
                                 const isEditing = editingId === shop.id;
+                                const collegeName = getCollegeName(shop.collegeId);
                                 return (
                                     <div
                                         key={shop.id}
@@ -122,7 +151,7 @@ export default function StoresPage() {
                                         )}
 
                                         {/* Name */}
-                                        <div className="col-span-3 pl-4 flex items-center gap-3">
+                                        <div className="col-span-2 pl-4 flex items-center gap-3">
                                             <div className="flex h-7 w-7 items-center justify-center rounded bg-zinc-100 text-zinc-500 border border-zinc-200/50 text-[10px] font-bold">
                                                 {shop.name.charAt(0)}
                                             </div>
@@ -138,7 +167,7 @@ export default function StoresPage() {
                                         </div>
 
                                         {/* Address */}
-                                        <div className="col-span-4 flex items-center gap-2 text-zinc-600">
+                                        <div className="col-span-3 flex items-center gap-2 text-zinc-600">
                                             <MapPin className="h-3 w-3 text-zinc-400 flex-shrink-0" />
                                             {isEditing ? (
                                                 <Input
@@ -148,6 +177,34 @@ export default function StoresPage() {
                                                 />
                                             ) : (
                                                 <span className="truncate">{shop.address || 'No address'}</span>
+                                            )}
+                                        </div>
+
+                                        {/* College */}
+                                        <div className="col-span-2 flex items-center gap-2 text-zinc-600">
+                                            {isEditing ? (
+                                                <Select
+                                                    value={editForm.collegeId || ''}
+                                                    onValueChange={(value) => setEditForm({ ...editForm, collegeId: value })}
+                                                >
+                                                    <SelectTrigger className="h-7 text-xs">
+                                                        <SelectValue placeholder="Select college" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {colleges.map((college) => (
+                                                            <SelectItem key={college.id} value={college.id}>
+                                                                {college.shortName || college.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            ) : collegeName ? (
+                                                <Badge variant="outline" className="gap-1 text-[10px] font-normal">
+                                                    <GraduationCap className="h-2.5 w-2.5" />
+                                                    {collegeName}
+                                                </Badge>
+                                            ) : (
+                                                <span className="text-zinc-400 text-xs">Not assigned</span>
                                             )}
                                         </div>
 

@@ -2,8 +2,8 @@
 
 import { UserButton } from '@clerk/nextjs';
 import { MapPin } from 'lucide-react';
-import { useState } from 'react';
-import { useCollegeStore, COLLEGES } from '@/lib/stores/collegeStore';
+import { useState, useEffect } from 'react';
+import { useCollegeStore, useCollegeNames } from '@/lib/stores/collegeStore';
 import Link from 'next/link';
 
 export function SwoopNavbar() {
@@ -34,8 +34,16 @@ export function SwoopNavbar() {
 }
 
 function CollegeSelector() {
-  const { selectedCollege, setSelectedCollege } = useCollegeStore();
+  const { selectedCollege, setSelectedCollege, subscribe } = useCollegeStore();
+  const collegeNames = useCollegeNames();
   const [open, setOpen] = useState(false);
+
+  // Subscribe to colleges on mount
+  useEffect(() => {
+    const unsub = subscribe();
+    return () => unsub();
+  }, [subscribe]);
+
   return (
     <div className="relative">
       <button
@@ -46,9 +54,9 @@ function CollegeSelector() {
         <span className="truncate max-w-[100px]">{selectedCollege}</span>
       </button>
       {open && (
-        <div className="absolute z-10 mt-2 w-64 rounded-lg border bg-white">
-          <ul className="max-h-64 overflow-auto py-1 text-[5px]">
-            {COLLEGES.map((c) => (
+        <div className="absolute z-10 mt-2 w-64 rounded-lg border bg-white shadow-lg">
+          <ul className="max-h-64 overflow-auto py-1 text-sm text-black">
+            {collegeNames.map((c) => (
               <li key={c}>
                 <button
                   className="w-full text-left px-3 py-2 hover:bg-gray-100"
@@ -67,5 +75,3 @@ function CollegeSelector() {
     </div>
   );
 }
-
-

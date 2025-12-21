@@ -13,6 +13,9 @@ const navigation = [
 export function BottomNavigation() {
   const pathname = usePathname();
 
+  // Do not render on homepage
+  if (pathname === '/') return null;
+
   return (
     <nav className="fixed bottom-[calc(env(safe-area-inset-bottom)_+_2px)] left-1/2 -translate-x-1/2 z-50">
       <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 backdrop-blur px-4 py-2 shadow-lg">
