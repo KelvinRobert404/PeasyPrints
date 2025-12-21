@@ -67,6 +67,8 @@ export interface Shop {
   pricing?: ShopPricing;
   // Whether the storefront is open for customers
   isOpen?: boolean;
+  // College this shop belongs to
+  collegeId?: string;
 }
 
 export interface PrintSettings {
@@ -187,4 +189,13 @@ export interface MarketplaceUser {
   verifiedBy?: string; // Admin email
   createdAt: any; // Firestore Timestamp
   listingsCount?: number;
+}
+
+// College types
+
+export interface College {
+  id: string;
+  name: string;
+  shortName?: string;
+  createdAt: any; // Firestore Timestamp
 }
