@@ -17,19 +17,34 @@ import { useUploadStore } from '@/lib/stores/uploadStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useCollegeStore, COLLEGES } from '@/lib/stores/collegeStore';
+import { useCollegeStore } from '@/lib/stores/collegeStore';
 import haptics from '@/lib/utils/haptics';
 
 export default function UploadEntryPage() {
   const { shops, subscribe } = useShopsStore();
   const { setShopPricing, jobType, file, images } = useUploadStore();
+  const { selectedCollege, colleges, subscribe: subscribeColleges } = useCollegeStore();
   const [selectedShopId, setSelectedShopId] = useState<string>('');
-  
+
 
   useEffect(() => {
     const unsub = subscribe();
     return () => unsub();
   }, [subscribe]);
+
+  // Subscribe to colleges
+  useEffect(() => {
+    const unsub = subscribeColleges();
+    return () => unsub();
+  }, [subscribeColleges]);
+
+  // Filter shops by selected college
+  const filteredShops = useMemo(() => {
+    // Find the college ID for the selected college name
+    const selectedCollegeObj = colleges.find(c => c.name === selectedCollege);
+    if (!selectedCollegeObj) return shops; // Show all if no college selected
+    return shops.filter(s => s.collegeId === selectedCollegeObj.id);
+  }, [shops, colleges, selectedCollege]);
 
   const selectedShop = useMemo(() => shops.find((s) => s.id === selectedShopId), [shops, selectedShopId]);
 
@@ -90,18 +105,18 @@ export default function UploadEntryPage() {
 
   function nudgeSelectShop() {
     // Show toast and auto-scroll to the shops scroller
-    try { haptics.warn(); } catch {}
+    try { haptics.warn(); } catch { }
     setToast('Select a shop first to continue.');
     try {
       scrollerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } catch {}
+    } catch { }
     // Auto-hide after 2.5s
     window.setTimeout(() => setToast(''), 2500);
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <main className="flex-1 overflow-y-auto p-4 pb-0 md:pb-10 space-y-4">
+    <div className="min-h-screen flex flex-col bg-gray-50 font-outfit">
+      <main className="flex-1 overflow-y-auto p-4 pb-24 md:pb-10 space-y-4">
         <Card>
           <CardContent className="pt-3">
             <div className="relative">
@@ -110,7 +125,7 @@ export default function UploadEntryPage() {
                 onScroll={updateScrollIndicators}
                 className="grid grid-flow-col auto-cols-[25%] gap-2 overflow-x-auto snap-x py-1 no-scrollbar"
               >
-                {[...shops]
+                {[...filteredShops]
                   .sort((a, b) => Number(Boolean(b.isOpen)) - Number(Boolean(a.isOpen)))
                   .map((s) => {
                     const isSelected = selectedShopId === s.id;
@@ -142,7 +157,7 @@ export default function UploadEntryPage() {
                         <div className="px-1 w-full min-w-0">
                           <div className="text-xs font-semibold w-full line-clamp-2 leading-tight">{s.name}</div>
                         </div>
-                        
+
                       </button>
                     );
                   })}

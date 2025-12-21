@@ -96,78 +96,80 @@ export function PrintConfigurator() {
         <div className="space-y-4">
           {/* Paper Size */}
           <div className="grid grid-cols-2 gap-3">
-        {(['A3', 'A4'] as const).map((size) => {
-          const unavailable = isUnavailablePaper(size);
-          return (
-          <button
-            key={size}
-            className={cn(
-              'h-16 rounded-2xl border text-xl font-extrabold font-quinn',
-              settings.paperSize === size ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
-              unavailable ? 'opacity-60 cursor-not-allowed' : ''
-            )}
-            onClick={unavailable ? undefined : toggle('paperSize', size)}
-            disabled={unavailable}
-          >
-            <div className="px-3 w-full flex flex-col items-center text-center">
-              <div>{size}</div>
-              {shopPricing && unavailable && (
-                <div className="mt-1">
-                  <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge>
-                </div>
-              )}
-            </div>
-          </button>
-        );})}
+            {(['A3', 'A4'] as const).map((size) => {
+              const unavailable = isUnavailablePaper(size);
+              return (
+                <button
+                  key={size}
+                  className={cn(
+                    'h-16 rounded-2xl border text-xl font-extrabold font-quinn',
+                    settings.paperSize === size ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
+                    unavailable ? 'opacity-60 cursor-not-allowed' : ''
+                  )}
+                  onClick={unavailable ? undefined : toggle('paperSize', size)}
+                  disabled={unavailable}
+                >
+                  <div className="px-3 w-full flex flex-col items-center text-center">
+                    <div>{size}</div>
+                    {shopPricing && unavailable && (
+                      <div className="mt-1">
+                        <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {/* Color */}
           <div className="grid grid-cols-2 gap-3">
-        {(['Black & White', 'Color'] as const).map((color) => {
-          const unavailable = isUnavailableColor(color);
-          return (
-          <button
-            key={color}
-            className={cn(
-              'h-12 rounded-xl border text-xs font-semibold',
-              settings.printColor === color ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
-              unavailable ? 'opacity-60 cursor-not-allowed' : ''
-            )}
-            onClick={unavailable ? undefined : toggle('printColor', color)}
-            disabled={unavailable}
-          >
-            {color === 'Black & White' ? 'black & white' : 'colour'}
-          </button>
-        );})}
+            {(['Black & White', 'Color'] as const).map((color) => {
+              const unavailable = isUnavailableColor(color);
+              return (
+                <button
+                  key={color}
+                  className={cn(
+                    'h-12 rounded-xl border text-xs font-semibold',
+                    settings.printColor === color ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
+                    unavailable ? 'opacity-60 cursor-not-allowed' : ''
+                  )}
+                  onClick={unavailable ? undefined : toggle('printColor', color)}
+                  disabled={unavailable}
+                >
+                  {color === 'Black & White' ? 'black & white' : 'colour'}
+                </button>
+              );
+            })}
           </div>
 
           {/* Format (hidden when images present) */}
           {(images?.length || 0) === 0 && (
             <div className="grid grid-cols-2 gap-3">
-          {(['Single-Sided', 'Double-Sided'] as const).map((format) => {
-            const unavailable = isUnavailableFormat(format);
-            return (
-              <button
-                key={format}
-                className={cn(
-                  'h-12 rounded-xl border text-xs font-semibold',
-                  settings.printFormat === format ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
-                  unavailable ? 'opacity-60 cursor-not-allowed' : ''
-                )}
-                onClick={unavailable ? undefined : toggle('printFormat', format)}
-                disabled={unavailable}
-              >
-                <div className="px-3 w-full flex flex-col items-center text-center">
-                  <div>{format === 'Single-Sided' ? 'single-sided' : 'double-sided'}</div>
-                  {shopPricing && unavailable && (
-                    <div className="mt-1">
-                      <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge>
+              {(['Single-Sided', 'Double-Sided'] as const).map((format) => {
+                const unavailable = isUnavailableFormat(format);
+                return (
+                  <button
+                    key={format}
+                    className={cn(
+                      'h-12 rounded-xl border text-xs font-semibold',
+                      settings.printFormat === format ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
+                      unavailable ? 'opacity-60 cursor-not-allowed' : ''
+                    )}
+                    onClick={unavailable ? undefined : toggle('printFormat', format)}
+                    disabled={unavailable}
+                  >
+                    <div className="px-3 w-full flex flex-col items-center text-center">
+                      <div>{format === 'Single-Sided' ? 'single-sided' : 'double-sided'}</div>
+                      {shopPricing && unavailable && (
+                        <div className="mt-1">
+                          <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -180,10 +182,10 @@ export function PrintConfigurator() {
                 onChange={(e) => setSettings({ binding: e.target.value as any })}
               >
                 <option value="">No Binding</option>
-                {(['Soft Binding','Spiral Binding','Hard Binding'] as const).map((label) => {
+                {(['Soft Binding', 'Spiral Binding', 'Hard Binding'] as const).map((label) => {
                   const price = label === 'Soft Binding' ? shopPricing?.services.softBinding
                     : label === 'Spiral Binding' ? shopPricing?.services.spiralBinding
-                    : shopPricing?.services.hardBinding;
+                      : shopPricing?.services.hardBinding;
                   const unavailable = shopPricing ? Number(price ?? 0) <= 0 : false;
                   return (
                     <option key={label} value={label} disabled={unavailable}>

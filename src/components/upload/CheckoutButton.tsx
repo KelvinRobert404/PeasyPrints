@@ -105,7 +105,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
       try {
         const enabled = await isFeatureEnabled('record_checkout');
         if (enabled) await startSessionRecording();
-      } catch {}
+      } catch { }
       capture('checkout_clicked', {
         userId: clerkUser.id,
         shopId,
@@ -170,8 +170,8 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
             let fileUrl = '';
             let splitUrls: { bwUrl: string; colorUrl: string; originalUrl?: string } | null = null;
             if (preparedSplit) {
-              const bwFile = new File([ (preparedSplit as any).bw ], 'bw.pdf', { type: 'application/pdf' });
-              const colorFile = new File([ (preparedSplit as any).color ], 'color.pdf', { type: 'application/pdf' });
+              const bwFile = new File([(preparedSplit as any).bw], 'bw.pdf', { type: 'application/pdf' });
+              const colorFile = new File([(preparedSplit as any).color], 'color.pdf', { type: 'application/pdf' });
               const originalBlob: Blob | undefined = (preparedSplit as any).original;
               const uploads: Promise<string>[] = [
                 uploadPdfAndGetUrl(uid, bwFile),
@@ -239,7 +239,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
       capture('error', { error: e?.message || 'Checkout failed' });
     } finally {
       setLoading(false);
-      try { await stopSessionRecording(); } catch {}
+      try { await stopSessionRecording(); } catch { }
     }
   };
 
@@ -261,7 +261,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         job_type: jobType,
         page_count: pageCount
       });
-    } catch {}
+    } catch { }
     setPreviewOpen(true);
   };
 
@@ -321,7 +321,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         </DialogContent>
       </Dialog>
 
-      <Dialog open={processing} onOpenChange={() => {}} dismissible={false}>
+      <Dialog open={processing} onOpenChange={() => { }} dismissible={false}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Processing payment</DialogTitle>
