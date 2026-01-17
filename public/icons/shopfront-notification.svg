@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" fill="url(#grad)"/>
+  <g fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Printer body -->
+    <path d="M18 40V48C18 49.5 19 50 20 50H44C45 50 46 49.5 46 48V40"/>
+    <!-- Printer top -->
+    <rect x="14" y="26" width="36" height="18" rx="2" fill="#fff" fill-opacity="0.2"/>
+    <!-- Paper input -->
+    <path d="M22 26V18C22 16.5 23 16 24 16H40C41 16 42 16.5 42 18V26"/>
+    <!-- Paper output -->
+    <rect x="22" y="36" width="20" height="10" rx="1" fill="#fff"/>
+    <!-- Print lines -->
+    <line x1="26" y1="40" x2="38" y2="40" stroke="#3B82F6" stroke-width="2"/>
+    <line x1="26" y1="43" x2="34" y2="43" stroke="#3B82F6" stroke-width="2"/>
+  </g>
+  <!-- Notification dot -->
+  <circle cx="52" cy="12" r="8" fill="#EF4444"/>
+</svg>
