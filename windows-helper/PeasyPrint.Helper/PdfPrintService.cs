@@ -33,7 +33,8 @@ namespace PeasyPrint.Helper
             using var pdfDoc = PdfDocument.Load(pdfStream);
 
             // Create a PrintDocument that renders PDF vectors directly (no rasterization)
-            using var printDoc = pdfDoc.CreatePrintDocument();
+            // Use ShrinkToMargin to fit content within printer's hard margins and prevent clipping
+            using var printDoc = pdfDoc.CreatePrintDocument(PdfPrintMode.ShrinkToMargin);
 
             // Apply settings from the WPF PrintDialog
             ConfigurePrintDocument(printDoc, wpfDialog, ticket);

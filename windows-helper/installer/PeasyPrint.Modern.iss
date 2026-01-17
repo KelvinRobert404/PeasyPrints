@@ -1,6 +1,6 @@
 #define AppName "PeasyPrint Helper"
 #define AppPublisher "PeasyPrints"
-#define AppVersion "1.0.1"
+#define AppVersion "2.0.0"
 #define AppExeName "PeasyPrint.Helper.exe"
 
 ; Source folder produced by packaging script: windows-helper/PeasyPrint.Helper/app
