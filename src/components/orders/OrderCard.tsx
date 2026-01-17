@@ -1,48 +1,68 @@
 import Link from 'next/link';
 import { haptics } from '@/lib/utils/haptics';
 import type { OrderDoc } from '@/types/models';
-import { Card } from '@/components/ui/card';
-
-function isToday(timestamp: any) {
-  try {
-    const d = (timestamp?.toDate ? timestamp.toDate() : new Date(timestamp)) as Date;
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
-  } catch {
-    return false;
-  }
-}
 
 function formatDate(timestamp: any) {
   try {
     const d = (timestamp?.toDate ? timestamp.toDate() : new Date(timestamp)) as Date;
-    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
   } catch {
     return '';
   }
 }
 
+function getStatusStyle(status: string) {
+  switch (status?.toLowerCase()) {
+    case 'completed':
+      return 'bg-emerald-50 text-emerald-700';
+    case 'ready':
+      return 'bg-blue-50 text-blue-700';
+    case 'cancelled':
+      return 'bg-red-50 text-red-600';
+    case 'printing':
+    case 'processing':
+      return 'bg-amber-50 text-amber-700';
+    default:
+      return 'bg-gray-100 text-gray-600';
+  }
+}
+
 export function OrderCard({ order }: { order: OrderDoc }) {
-  const showCta = isToday(order.timestamp);
   const href = order.id ? `/orders/${order.id}/pickup` : undefined;
+  const isActive = ['pending', 'processing', 'printing', 'ready'].includes(order.status?.toLowerCase() || '');
+
   const content = (
-    <Card className="bg-white border border-black rounded-2xl p-5 mb-3">
-      <div className="flex items-start justify-between">
-        <div className="text-black">
-          <div className="font-semibold text-[14px] leading-none mb-1">{order.shopName}</div>
-          <div className="text-[12px] text-gray-700">{order.fileName}</div>
+    <div className={`
+      bg-white border rounded-xl p-4
+      ${isActive ? 'border-blue-200' : 'border-gray-200'}
+      active:bg-gray-50 transition-colors
+    `}>
+      <div className="flex items-start justify-between gap-3">
+        {/* Left: Shop & File */}
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-[15px] text-gray-900 truncate">{order.shopName}</div>
+          <div className="text-sm text-gray-500 truncate mt-0.5">{order.fileName}</div>
         </div>
-        <div className="text-[12px] text-black text-bold text-right">
-          <div className="capitalize">{order.status}</div>
-          <div className="text-[10px]">{formatDate(order.timestamp)}</div>
+
+        {/* Right: Status & Date */}
+        <div className="flex flex-col items-end gap-1">
+          <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium capitalize ${getStatusStyle(order.status)}`}>
+            {order.status}
+          </span>
+          <span className="text-[11px] text-gray-400">{formatDate(order.timestamp)}</span>
         </div>
       </div>
-      {showCta && (
-        <div className="mt-2 text-[10px] uppercase font-bold text-black">
-          Ready to collect? Click here for your pickup screen.
+
+      {/* CTA for active orders */}
+      {isActive && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600">
+            <span className="material-symbols-rounded text-sm">qr_code_2</span>
+            Tap to view pickup code
+          </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 
   return href ? (

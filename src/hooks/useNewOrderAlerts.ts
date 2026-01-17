@@ -18,7 +18,7 @@ export function useNewOrderAlerts(opts: UseNewOrderAlertsOptions) {
     try {
       const v = Number(localStorage.getItem('sf_last_seen_order_ts') || 0);
       latestTsRef.current = Number.isFinite(v) ? v : 0;
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export function useNewOrderAlerts(opts: UseNewOrderAlertsOptions) {
       if (!ts) return;
       if (ts > latestTsRef.current) {
         latestTsRef.current = ts;
-        try { localStorage.setItem('sf_last_seen_order_ts', String(ts)); } catch {}
+        try { localStorage.setItem('sf_last_seen_order_ts', String(ts)); } catch { }
         setHasNewOrder(true);
         // Always notify once on new order, regardless of visibility
         notifyNewOrder();
@@ -59,13 +59,14 @@ export function useNewOrderAlerts(opts: UseNewOrderAlertsOptions) {
         const n = new Notification('New order', {
           body: 'Tap to open Dashboard',
           tag: 'shopfront-new-order',
+          icon: '/icons/shopfront-notification.svg',
         });
         n.onclick = () => {
           window.focus();
           window.location.href = '/shopfront';
           n.close();
         };
-      } catch {}
+      } catch { }
     };
     if (Notification.permission === 'granted') {
       send();
