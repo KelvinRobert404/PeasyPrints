@@ -21,6 +21,7 @@ import {
     Settings,
     IndianRupee,
     GraduationCap,
+    Image,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -29,6 +30,7 @@ import { Input } from '@/components/ui/input';
 
 const NAV_ITEMS = [
     { href: '/godview', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/godview/announcements', label: 'Announcements', icon: Image },
     { href: '/godview/orders', label: 'Orders', icon: ShoppingCart },
     { href: '/godview/stores', label: 'Stores', icon: Store },
     { href: '/godview/colleges', label: 'Colleges', icon: GraduationCap },
