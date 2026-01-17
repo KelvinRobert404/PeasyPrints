@@ -116,6 +116,14 @@ export default function UploadEntryPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 font-outfit">
+      {/* Navbar */}
+      <div className="bg-blue-600 px-4 py-3 flex items-center gap-3">
+        <a href="/" className="text-white active:opacity-70">
+          <span className="material-symbols-rounded text-2xl">arrow_back</span>
+        </a>
+        <h1 className="text-lg font-semibold text-white">Print</h1>
+      </div>
+
       <main className="flex-1 overflow-y-auto p-4 pb-24 md:pb-10 space-y-4">
         <Card>
           <CardContent className="pt-3">

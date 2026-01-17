@@ -75,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="stylesheet" href="https://use.typekit.net/vex5zkw.css" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
       </head>
       <body className={`${Quinn.variable} ${plusJakarta.variable} ${outfit.variable} font-sans antialiased`}>
         <ClerkProvider
