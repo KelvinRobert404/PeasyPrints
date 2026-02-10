@@ -14,14 +14,14 @@ export function RootShell({ children }: { children: ReactNode }) {
 
   if (isShopfront || isGodview) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-surface">
         {children}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center">
+    <div className="min-h-screen bg-surface flex justify-center">
       <div className="w-full max-w-[428px] bg-white shadow-lg min-h-screen flex flex-col">
         {!isAuthPage && !isPickup && <SwoopNavbar />}
         {children}

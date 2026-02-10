@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 export const runtime = 'nodejs';
 
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
+  themeColor: '#f8fafc',
   viewportFit: 'cover'
 };
 
