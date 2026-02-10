@@ -41,7 +41,6 @@ export function AnnouncementCarousel({ heightClass = 'h-24', outerClassName = 'p
   }, [images.length]);
 
   const hasImages = images.length > 0;
-  const current = useMemo(() => images[index] ?? null, [images, index]);
 
   if (!hasImages) {
     return null;
@@ -60,15 +59,18 @@ export function AnnouncementCarousel({ heightClass = 'h-24', outerClassName = 'p
           />)
         )}
 
+        {/* Gradient overlay for legibility */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+
         {/* dots */}
         {images.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1.5">
             {images.map((_, i) => (
               <button
                 key={i}
                 aria-label={`Go to slide ${i + 1}`}
                 onClick={() => setIndex(i)}
-                className={`h-1.5 rounded-full transition-all ${i === index ? 'w-4 bg-white' : 'w-2 bg-white/50'}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? 'w-5 bg-white' : 'w-2 bg-white/50 hover:bg-white/70'}`}
               />
             ))}
           </div>
@@ -79,5 +81,3 @@ export function AnnouncementCarousel({ heightClass = 'h-24', outerClassName = 'p
 }
 
 export default AnnouncementCarousel;
-
-
