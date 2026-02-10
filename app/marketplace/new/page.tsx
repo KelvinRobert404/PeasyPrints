@@ -165,15 +165,26 @@ export default function NewListingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-gray-900 pb-4">
-      <header className="px-[5px] pt-3 pb-2">
-        <h1 className="text-xl font-semibold font-quinn tracking-wide text-gray-900">new listing</h1>
-        <p className="text-[11px] text-gray-500">
-          Share something with Kristu Jayanti students
-        </p>
+    <div className="min-h-screen flex flex-col bg-surface pb-4">
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
+            <span className="material-symbols-rounded text-xl text-text-primary">arrow_back</span>
+          </button>
+          <div>
+            <h1 className="text-[16px] font-bold text-text-primary">New Listing</h1>
+            <p className="text-[12px] text-text-secondary">
+              Share something with students
+            </p>
+          </div>
+        </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-[5px]">
+      <main className="flex-1 overflow-y-auto px-4 pt-4">
         <Card>
           <CardContent className="p-4 space-y-4">
             {/* Category pills */}
@@ -184,9 +195,9 @@ export default function NewListingPage() {
                   type="button"
                   onClick={() => setCategory(cat.id)}
                   className={cn(
-                    'flex-1 rounded-full px-3 py-2 text-[11px] font-medium transition-colors',
+                    'flex-1 rounded-full px-3 py-2 text-[12px] font-medium transition-colors',
                     category === cat.id
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-primary text-white'
                       : 'text-gray-700'
                   )}
                 >
@@ -331,16 +342,14 @@ export default function NewListingPage() {
               <p className="text-[11px] text-red-600">{error}</p>
             )}
 
-            <Button
+            <button
               type="submit"
-              variant="success"
-              size="lg"
-              className="w-full mt-2"
+              className="w-full mt-2 flex items-center justify-center gap-2 py-3.5 bg-primary text-white text-[14px] font-medium rounded-xl hover:bg-primary-dark active:scale-[0.98] transition-all shadow-sm disabled:opacity-50"
               disabled={submitting}
               onClick={handleSubmit}
             >
               {submitting ? 'Creating…' : 'Create listing'}
-            </Button>
+            </button>
           </CardContent>
         </Card>
       </main>
