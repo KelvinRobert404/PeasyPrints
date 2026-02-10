@@ -3,70 +3,77 @@
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
 import { AnnouncementCarousel } from '@/components/AnnouncementCarousel';
 
-// Wise-style List Item Navigation Component - Neutral colors
-function NavigationItem({
+// Service card for the 2x2 grid
+function ServiceCard({
   href,
   icon,
   title,
   description,
+  tintColor,
+  iconColor,
   badge,
   disabled = false,
   onClick,
+  staggerClass = '',
 }: {
   href: string;
   icon: string;
   title: string;
   description: string;
+  tintColor: string;
+  iconColor: string;
   badge?: string;
   disabled?: boolean;
   onClick?: () => void;
+  staggerClass?: string;
 }) {
   const content = (
     <div
       className={`
-        group flex items-center gap-4 px-4 py-4
-        bg-white
-        border-b border-gray-100 last:border-b-0
-        transition-colors duration-150
-        ${disabled ? 'opacity-50' : 'hover:bg-gray-50 active:bg-gray-100'}
+        animate-fade-up ${staggerClass}
+        group relative flex flex-col gap-3 p-4
+        bg-white rounded-2xl
+        border border-gray-100
+        shadow-[0_1px_3px_rgba(0,0,0,0.04)]
+        transition-all duration-200
+        ${disabled ? 'opacity-60' : 'hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]'}
       `}
     >
-      {/* Icon Container - Neutral gray style */}
-      <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition-colors">
-        <span className="material-symbols-rounded text-gray-700 text-2xl">
+      {/* Badge */}
+      {badge && (
+        <span className="absolute top-3 right-3 px-2 py-0.5 text-[10px] font-semibold text-text-muted bg-gray-100 rounded-full uppercase tracking-wide">
+          {badge}
+        </span>
+      )}
+
+      {/* Icon */}
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105"
+        style={{ backgroundColor: tintColor }}
+      >
+        <span className="material-symbols-rounded text-xl" style={{ color: iconColor }}>
           {icon}
         </span>
       </div>
 
-      {/* Text Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className="text-[15px] font-semibold text-gray-900 leading-tight">
-            {title}
-          </h3>
-          {badge && (
-            <span className="px-2 py-0.5 text-[10px] font-medium text-gray-500 bg-gray-100 rounded-full uppercase tracking-wide">
-              {badge}
-            </span>
-          )}
-        </div>
-        <p className="text-sm text-gray-500 mt-0.5 leading-snug">
+      {/* Text */}
+      <div>
+        <h3 className="text-[15px] font-semibold text-text-primary leading-tight">
+          {title}
+        </h3>
+        <p className="text-[13px] text-text-secondary mt-0.5 leading-snug">
           {description}
         </p>
       </div>
-
-      {/* Chevron - Wise style */}
-      <span className={`material-symbols-rounded text-gray-300 text-xl transition-all duration-150 ${!disabled && 'group-hover:translate-x-0.5 group-hover:text-gray-500'}`}>
-        chevron_right
-      </span>
     </div>
   );
 
   if (disabled && onClick) {
     return (
-      <button type="button" onClick={onClick} className="w-full text-left">
+      <button type="button" onClick={onClick} className="text-left">
         {content}
       </button>
     );
@@ -83,38 +90,7 @@ function NavigationItem({
   );
 }
 
-// Wise-style Secondary Neutral Button
-function QuickActionButton({
-  href,
-  icon,
-  label,
-}: {
-  href: string;
-  icon: string;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="
-        inline-flex items-center gap-2 px-4 py-2.5
-        bg-white hover:bg-gray-50 active:bg-gray-100
-        border border-gray-200 hover:border-gray-300
-        rounded-full
-        text-sm font-medium text-gray-700
-        transition-all duration-150
-        shadow-sm
-      "
-    >
-      <span className="material-symbols-rounded text-lg text-gray-500">
-        {icon}
-      </span>
-      {label}
-    </Link>
-  );
-}
-
-// Service definitions
+// Service definitions with color tints
 const SERVICES = [
   {
     id: 'print',
@@ -122,6 +98,8 @@ const SERVICES = [
     icon: 'print',
     title: 'Print',
     description: 'Documents & assignments',
+    tintColor: 'var(--tint-print)',
+    iconColor: '#6366f1',
     enabled: true,
   },
   {
@@ -130,6 +108,8 @@ const SERVICES = [
     icon: 'storefront',
     title: 'Marketplace',
     description: 'Buy & sell with peers',
+    tintColor: 'var(--tint-marketplace)',
+    iconColor: '#f43f5e',
     enabled: true,
   },
   {
@@ -138,6 +118,8 @@ const SERVICES = [
     icon: 'restaurant',
     title: 'Canteen',
     description: 'Food & beverages',
+    tintColor: 'var(--tint-canteen)',
+    iconColor: '#10b981',
     enabled: false,
     badge: 'Soon',
   },
@@ -147,18 +129,24 @@ const SERVICES = [
     icon: 'support_agent',
     title: 'Support',
     description: 'Get help anytime',
+    tintColor: 'var(--tint-support)',
+    iconColor: '#f59e0b',
     enabled: true,
   },
 ];
 
-// Quick actions
-const QUICK_ACTIONS = [
-  { id: 'orders', href: '/orders', icon: 'package_2', label: 'Orders' },
-  { id: 'profile', href: '/profile', icon: 'person', label: 'Profile' },
-  { id: 'help', href: '/contact', icon: 'help', label: 'Help' },
-];
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export default function IndexPage() {
+  const { user } = useUser();
+  const firstName = user?.firstName || '';
+  const greeting = getGreeting();
+
   function showToast(message: string) {
     try {
       const el = document.createElement('div');
@@ -183,56 +171,77 @@ export default function IndexPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f7f7f7]">
-      {/* Announcement Carousel - more neutral background */}
+    <div className="min-h-screen flex flex-col bg-surface">
+      {/* Announcement Carousel */}
       <AnnouncementCarousel
-        heightClass="h-40"
+        heightClass="h-44"
         outerClassName="px-4 pt-3"
         backgroundClass="bg-gray-100 rounded-2xl"
       />
 
-      {/* Header - Wise style clean typography */}
-      <div className="px-4 pt-5 pb-3">
-        <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-          What would you like to do?
+      {/* Greeting */}
+      <div className="px-4 pt-5 pb-1 animate-fade-up">
+        <h1 className="text-xl font-bold text-text-primary tracking-tight">
+          {greeting}{firstName ? `, ${firstName}` : ''} 👋
         </h1>
+        <p className="text-[13px] text-text-secondary mt-0.5">
+          What would you like to do today?
+        </p>
       </div>
 
-      {/* Services Card - Wise List Item Navigation style */}
-      <div className="px-4">
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200/60">
-          {SERVICES.map((service) => (
-            <NavigationItem
+      {/* Services — 2×2 Grid */}
+      <div className="px-4 pt-4">
+        <div className="grid grid-cols-2 gap-3">
+          {SERVICES.map((service, i) => (
+            <ServiceCard
               key={service.id}
               href={service.href}
               icon={service.icon}
               title={service.title}
               description={service.description}
+              tintColor={service.tintColor}
+              iconColor={service.iconColor}
               badge={service.badge}
               disabled={!service.enabled}
+              staggerClass={`stagger-${i + 1}`}
               onClick={!service.enabled ? () => showToast('Coming soon') : undefined}
             />
           ))}
         </div>
       </div>
 
-      {/* Quick Actions - Wise Secondary Neutral style */}
-      <div className="px-4 pt-5">
-        <div className="flex flex-wrap gap-2">
-          {QUICK_ACTIONS.map((action) => (
-            <QuickActionButton
-              key={action.id}
-              href={action.href}
-              icon={action.icon}
-              label={action.label}
-            />
-          ))}
-        </div>
+      {/* Recent Activity / Orders shortcut */}
+      <div className="px-4 pt-5 animate-fade-up stagger-4">
+        <Link
+          href="/orders"
+          className="
+            flex items-center gap-3 px-4 py-3.5
+            bg-white rounded-2xl
+            border border-gray-100
+            shadow-[0_1px_3px_rgba(0,0,0,0.04)]
+            hover:shadow-md hover:-translate-y-0.5
+            active:scale-[0.99]
+            transition-all duration-200
+          "
+        >
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <span className="material-symbols-rounded text-lg text-primary">
+              package_2
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-[14px] font-semibold text-text-primary">My Orders</h3>
+            <p className="text-[12px] text-text-secondary">Track your prints & purchases</p>
+          </div>
+          <span className="material-symbols-rounded text-text-muted text-xl">
+            chevron_right
+          </span>
+        </Link>
       </div>
 
-      {/* Footer - Wise style subtle informational */}
+      {/* Footer */}
       <div className="mt-auto px-4 pb-5 pt-6">
-        <p className="text-center text-sm text-gray-400">
+        <p className="text-center text-[12px] text-text-muted">
           🎓 Built for students, by students
         </p>
       </div>
