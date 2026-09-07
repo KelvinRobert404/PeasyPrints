@@ -21,7 +21,7 @@ const PROD_API_BASE = typeof window !== 'undefined' && window.location?.origin
   ? `${window.location.origin}/api`
   : 'https://theswoop.club/api';
 
-export function triggerPeasyPrint(jobId: string, opts: PeasyPrintOptions = {}): void {
+export async function triggerPeasyPrint(jobId: string, opts: PeasyPrintOptions = {}): Promise<void> {
   const { timeoutMs = 3000, installUrl, onMissingHelper, onLaunched } = opts;
 
   if (!jobId) return;
@@ -32,8 +32,18 @@ export function triggerPeasyPrint(jobId: string, opts: PeasyPrintOptions = {}): 
     return;
   }
 
-  // Prefer jobUrl so the helper needs no local API configuration
-  const jobUrl = `${PROD_API_BASE}/print-jobs/${encodeURIComponent(jobId)}`;
+  // Prefer jobUrl so the helper needs no local API configuration.
+  let data: { ticket?: string; error?: string } = {};
+  try {
+    const response = await fetch(`/api/print-jobs/${encodeURIComponent(jobId)}/ticket`, { method: 'POST' });
+    data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ticket) throw new Error(data.error || 'Unable to create a print ticket');
+  } catch (error) {
+    console.error('Unable to launch PeasyPrint helper:', error);
+    onMissingHelper?.();
+    return;
+  }
+  const jobUrl = `${PROD_API_BASE}/print-jobs/${encodeURIComponent(jobId)}?ticket=${encodeURIComponent(data.ticket)}`;
   const url = `peasyprint://print?jobUrl=${encodeURIComponent(jobUrl)}`;
 
   // Heuristics: consider launch successful if the tab gets hidden/blurred soon after triggering

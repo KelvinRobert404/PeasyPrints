@@ -1,43 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth as clerkAuth } from '@clerk/nextjs/server';
-import admin from 'firebase-admin';
 import crypto from 'crypto';
 import { isAllowedOrigin } from '@/lib/utils/origin';
+import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
+import { getAdminBucket } from '@/lib/firebase/admin';
 
 export const runtime = 'nodejs';
 
-let adminInitialized = false;
-function ensureAdminInit() {
-  if (adminInitialized) return;
-  // Avoid duplicate initializeApp during dev HMR
-  // @ts-ignore
-  if ((admin as any).apps && (admin as any).apps.length > 0) {
-    adminInitialized = true;
-    return;
-  }
-  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
-  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`;
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Missing Firebase Admin envs');
-  }
-  admin.initializeApp({
-    credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
-    storageBucket: storageBucket || undefined
-  });
-  adminInitialized = true;
-}
-
 export async function POST(req: NextRequest) {
   try {
-    ensureAdminInit();
-
     // Require authenticated session and ignore client-supplied userId
     const { userId } = await clerkAuth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const rate = await checkRateLimit('pdf-upload', userId, 12, 600);
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
 
     // Basic CSRF protection for same-site/allowlisted requests
     if (!isAllowedOrigin(req.url, req.headers.get('origin'), req.headers.get('x-forwarded-host'), req.headers.get('x-forwarded-proto'))) {
@@ -53,13 +31,12 @@ export async function POST(req: NextRequest) {
     const file = form.get('file') as unknown as File | null;
     if (!file) return NextResponse.json({ error: 'Missing file' }, { status: 400 });
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    // Restrict to PDF by extension and content-type; generate safe server-side filename
+    // Reject on metadata before allocating a second in-memory copy. The platform
+    // request-body limit is enforced separately at the edge.
     const ext = (file.name?.split('.').pop() || 'pdf').toLowerCase();
     const mime = (file as any).type || '';
     const maxBytes = 25 * 1024 * 1024; // 25MB limit
-    if (buffer.length > maxBytes) {
+    if (file.size > maxBytes) {
       return NextResponse.json({ error: 'File too large' }, { status: 413 });
     }
     if (ext !== 'pdf' && !file.name?.toLowerCase().endsWith('.pdf')) {
@@ -68,30 +45,25 @@ export async function POST(req: NextRequest) {
     if (mime && mime !== 'application/pdf') {
       return NextResponse.json({ error: 'Invalid content type' }, { status: 400 });
     }
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    if (buffer.length < 5 || buffer.subarray(0, 5).toString('ascii') !== '%PDF-') {
+      return NextResponse.json({ error: 'File content is not a valid PDF' }, { status: 400 });
+    }
     const safeName = `${crypto.randomUUID()}.pdf`;
     const path = `uploads/${userId}/${safeName}`;
 
-    const defaultBucket = (admin.app().options.storageBucket as string) || '';
-    // Resolve effective bucket from env or app options
-    const envBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || defaultBucket;
-    const bucket = admin.storage().bucket(envBucket);
-    const gcsFile = bucket.file(path);
-    const downloadToken = crypto.randomUUID();
+    const gcsFile = getAdminBucket().file(path);
     await gcsFile.save(buffer, {
       contentType: 'application/pdf',
       resumable: false,
       public: false,
-      metadata: {
-        // Custom metadata for Firebase Storage token-based access
-        metadata: { firebaseStorageDownloadTokens: downloadToken }
-      }
+      metadata: { cacheControl: 'private,no-store', metadata: { ownerId: userId } }
     });
 
-    // Return a stable Firebase media URL (rules allow public reads under /uploads)
-    const bucketName = envBucket;
-    const encodedPath = encodeURIComponent(path);
-    const url = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media&token=${downloadToken}`;
-    const res = NextResponse.json({ url, path });
+    // Persist only the private object path. Authorized download endpoints issue
+    // short-lived signed URLs when a customer or shop needs the document.
+    const res = NextResponse.json({ path });
     res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (e: any) {

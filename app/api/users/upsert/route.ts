@@ -1,28 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth as clerkAuth, clerkClient } from '@clerk/nextjs/server';
-import admin from 'firebase-admin';
-
-let adminInitialized = false;
-function ensureAdminInit() {
-  if (adminInitialized) return;
-  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Missing Firebase Admin envs');
-  }
-  admin.initializeApp({
-    credential: admin.credential.cert({ projectId, clientEmail, privateKey })
-  });
-  adminInitialized = true;
-}
+import { FieldValue } from 'firebase-admin/firestore';
+import { getAdminDb } from '@/lib/firebase/admin';
 
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await clerkAuth();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    ensureAdminInit();
 
     const client = await clerkClient();
     const user = await client.users.getUser(userId);
@@ -34,13 +18,13 @@ export async function POST(req: NextRequest) {
       username,
       phoneNumber,
       email,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
-    const ref = admin.firestore().collection('users').doc(userId);
+    const ref = getAdminDb().collection('users').doc(userId);
     const snap = await ref.get();
     if (!snap.exists) {
-      payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+      payload.createdAt = FieldValue.serverTimestamp();
     }
     await ref.set(payload, { merge: true });
     return NextResponse.json({ ok: true });

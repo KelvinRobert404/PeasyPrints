@@ -6,6 +6,10 @@ import posthog from 'posthog-js';
 
 let posthogInitialized = false;
 
+function hasAnalyticsConsent() {
+  return typeof window !== 'undefined' && window.localStorage.getItem('peasy_analytics_consent') === 'granted';
+}
+
 function getPosthog(): any {
   try {
     if (typeof window !== 'undefined') {
@@ -21,6 +25,7 @@ function getPosthog(): any {
 function ensurePosthogInit(): void {
   if (posthogInitialized) return;
   if (typeof window === 'undefined') return;
+  if (!hasAnalyticsConsent()) return;
 
   try {
     const wph = (window as any).posthog;
