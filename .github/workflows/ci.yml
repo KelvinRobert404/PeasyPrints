@@ -1,0 +1,63 @@
+name: Production readiness
+
+on:
+  pull_request:
+  push:
+    branches: [main, "codex/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_ALLOWED_ORIGINS: https://example.test
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZHVtbXkuY2xlcmsuYWNjb3VudHMuZGV2JA==
+      CLERK_SECRET_KEY: sk_test_dummy
+      NEXT_PUBLIC_FIREBASE_API_KEY: dummy
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: dummy.firebaseapp.com
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: demo-peasyprints
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: demo-peasyprints.appspot.com
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456"
+      NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456:web:dummy"
+      FIREBASE_ADMIN_PROJECT_ID: demo-peasyprints
+      FIREBASE_ADMIN_CLIENT_EMAIL: ci@example.iam.gserviceaccount.com
+      FIREBASE_ADMIN_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\ndummy\n-----END PRIVATE KEY-----\n"
+      RAZORPAY_KEY_ID: rzp_test_dummy
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: rzp_test_dummy
+      RAZORPAY_KEY_SECRET: ci-only-not-a-production-secret-razorpay
+      RAZORPAY_WEBHOOK_SECRET: ci-only-not-a-production-secret-webhook
+      ADMIN_EMAILS: admin@example.test
+      CRON_SECRET: ci-only-not-a-production-secret-0001
+      VIDEO_WORKER_TOKEN: ci-only-not-a-production-secret-0002
+      CAMPUS_ACCOUNT_HOOK_TOKEN: ci-only-not-a-production-secret-0003
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Compile Firebase rules in emulators
+        run: npx --yes firebase-tools@15.4.0 emulators:exec --project demo-peasyprints --only firestore,storage "npm run test:rules"
+      - run: npm run build
+
+  windows-helper:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet build windows-helper/PeasyPrint.Helper/PeasyPrint.Helper.csproj --configuration Release

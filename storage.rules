@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // All campus images, private verification cards and render artifacts travel
+    // through short-lived server URLs. No Firebase client receives direct access.
+    match /campus_media/{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    match /campus_verification/{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    match /campus_render_packs/{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

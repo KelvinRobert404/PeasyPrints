@@ -3,7 +3,7 @@
 
 if (typeof window !== 'undefined') {
 	const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string | undefined;
-	if (key) {
+	if (key && window.localStorage.getItem('peasy_analytics_consent') === 'granted') {
 		let shouldBootstrap = true;
 		try {
 			const wph = (window as any).posthog;

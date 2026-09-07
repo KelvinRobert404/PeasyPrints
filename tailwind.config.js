@@ -7,9 +7,11 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        outfit: ['var(--font-outfit)', 'sans-serif'],
+        poppins: ['"Product Sans"', 'sans-serif'],
+        display: ['"Product Sans"', 'sans-serif'],
         quinn: ['var(--font-quinn)', 'sans-serif'],
-        'plus-jakarta': ['var(--font-plus-jakarta)', 'sans-serif'],
+        dmSans: ['var(--font-dm-sans)', 'sans-serif'],
+        sans: ['var(--font-dm-sans)', 'sans-serif'],
       },
       screens: {
         mobile: '428px',

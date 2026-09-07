@@ -6,9 +6,35 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    // Campus products are server-only. Firebase Admin validates Clerk sessions,
+    // college membership, audience entitlement, lifecycle and field projection.
+    match /{collection}/{document} {
+      allow read, write: if false
+        && collection in [
+          'college_configs',
+          'campus_memberships',
+          'campus_verification_requests',
+          'campus_admin_audit',
+          'marketplace_listings',
+          'housing_posts',
+          'campus_contact_requests',
+          'campus_saves',
+          'campus_content_reports',
+          'campus_private_profiles',
+          'campus_media',
+          'campus_serial_reservations',
+          'campus_serial_metrics',
+          'campus_render_packs'
+        ];
+    }
+
     // Users can only manage their own profile with limited fields
     match /users/{userId} {
-      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
       allow write: if isSignedIn() && request.auth.uid == userId
                    && request.resource.data.keys().hasOnly(['username','phoneNumber','email','updatedAt','createdAt'])
                    && request.time == request.resource.data.updatedAt;
@@ -17,43 +43,67 @@ service cloud.firestore {
     // Shops: public read; owner-managed writes
     match /shops/{shopId} {
       allow read: if true;
-      allow write: if isSignedIn() && request.auth.uid == shopId;
+      allow create: if isAdmin() || (isSignedIn()
+        && request.auth.uid == shopId
+        && request.resource.data.keys().hasOnly([
+          'name', 'address', 'phone', 'phoneNumber', 'email', 'timing', 'openingTime',
+          'closingTime', 'logoUrl', 'pricing', 'isOpen', 'collegeId',
+          'receivableAmount', 'reservedPayoutAmount', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.receivableAmount == 0
+        && request.resource.data.reservedPayoutAmount == 0);
+      allow update: if isAdmin() || (isSignedIn()
+        && request.auth.uid == shopId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'address', 'timing', 'openingTime', 'closingTime', 'logoUrl',
+          'pricing', 'isOpen', 'collegeId', 'phone', 'phoneNumber', 'email', 'updatedAt'
+        ]));
+      allow delete: if false;
     }
 
     // Orders
     match /orders/{orderId} {
       // Read own orders or orders for own shop
-      allow read: if isSignedIn() && (
+      allow read: if isAdmin() || (isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.shopId == request.auth.uid
-      );
+      ));
 
       // Creation must be done server-side via Admin SDK; disallow client create
       allow create: if false;
 
-      // Status updates: only the shop that owns the order may update status
-      allow update: if isSignedIn()
-        && resource.data.shopId == request.auth.uid
-        && request.resource.data.keys().hasOnly(resource.data.keys())
-        && request.resource.data.status in ['processing','printing','printed','collected','completed','cancelled'];
+      // Fulfilment and ledger changes are transactionally applied by server APIs.
+      allow update: if false;
 
       allow delete: if false;
     }
 
     // History mirror: created by shop, readable by involved principals
     match /history/{historyId} {
-      allow read: if isSignedIn() && (
+      allow read: if isAdmin() || (isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.shopId == request.auth.uid
-      );
-      allow create: if isSignedIn() && request.resource.data.shopId == request.auth.uid;
-      allow update, delete: if false;
+      ));
+      allow create, update, delete: if false;
     }
 
     // Payout records: created/read by shop owner
     match /payouts/{payoutId} {
-      allow read, create: if isSignedIn() && request.resource.data.shopId == request.auth.uid;
-      allow update, delete: if false;
+      allow read: if isAdmin() || (isSignedIn() && resource.data.shopId == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    match /payout_requests/{requestId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.shopId == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    // Legacy Godview collections remain client-readable only for tokens minted
+    // with the server-side admin claim. Campus administration uses server APIs.
+    match /{collection}/{document} {
+      allow read, write: if isAdmin() && collection in [
+        'colleges', 'coupons', 'announcements', 'listings', 'marketplace_users'
+      ];
     }
   }
 }
