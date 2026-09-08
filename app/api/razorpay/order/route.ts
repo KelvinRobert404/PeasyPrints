@@ -1,108 +1,96 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth as clerkAuth } from '@clerk/nextjs/server';
-import admin from 'firebase-admin';
+import { auth } from '@clerk/nextjs/server';
 import crypto from 'crypto';
+import { CheckoutQuoteSchema } from '@/lib/checkout/schema';
+import { createServerQuote } from '@/lib/checkout/pricing';
+import { getAdminDb } from '@/lib/firebase/admin';
 import { captureServerEvent } from '@/lib/posthog/server';
 import { isAllowedOrigin } from '@/lib/utils/origin';
+import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
+  const { userId } = await auth();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const rate = await checkRateLimit('payment-intent', userId, 10, 300);
+  if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
+  if (!isAllowedOrigin(request.url, request.headers.get('origin'), request.headers.get('x-forwarded-host'), request.headers.get('x-forwarded-proto'))) {
+    return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
+  }
+
+  const idempotencyKey = request.headers.get('idempotency-key');
+  if (!idempotencyKey || idempotencyKey.length < 16 || idempotencyKey.length > 200) {
+    return NextResponse.json({ error: 'A valid idempotency key is required' }, { status: 400 });
+  }
+
   try {
-    // Initialize Admin SDK (safe across HMR)
-    // @ts-ignore
-    if (!(admin as any).apps || (admin as any).apps.length === 0) {
-      const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
-      const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-      const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
-      if (!projectId || !clientEmail || !privateKey) {
-        return NextResponse.json({ error: 'Server is not configured' }, { status: 500 });
+    const parsed = CheckoutQuoteSchema.safeParse(await request.json());
+    if (!parsed.success) return NextResponse.json({ error: 'Invalid checkout configuration' }, { status: 400 });
+
+    const db = getAdminDb();
+    const shop = await db.collection('shops').doc(parsed.data.shopId).get();
+    if (!shop.exists || !shop.data()?.pricing) return NextResponse.json({ error: 'Shop pricing unavailable' }, { status: 400 });
+    if (shop.data()?.isOpen === false) return NextResponse.json({ error: 'This shop is currently closed' }, { status: 409 });
+
+    const quote = createServerQuote(parsed.data, shop.data()!.pricing);
+    const idHash = crypto.createHash('sha256').update(`${userId}:${idempotencyKey}`).digest('hex');
+    const idempotencyRef = db.collection('payment_idempotency').doc(idHash);
+    const existing = await idempotencyRef.get();
+    if (existing.exists) {
+      const data = existing.data()!;
+      if (data.userId !== userId) return NextResponse.json({ error: 'Invalid idempotency key' }, { status: 409 });
+      if (data.razorpayOrder) {
+        return NextResponse.json({ order: data.razorpayOrder, quote: data.quote }, { headers: { 'Cache-Control': 'no-store' } });
       }
-      admin.initializeApp({ credential: admin.credential.cert({ projectId, clientEmail, privateKey }) });
+      return NextResponse.json({ error: 'Checkout creation is already in progress' }, { status: 409 });
     }
 
-    // Require authenticated session
-    const { userId } = await clerkAuth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    await idempotencyRef.create({ userId, state: 'creating', createdAt: new Date() });
+    try {
+      const keyId = process.env.RAZORPAY_KEY_ID;
+      const keySecret = process.env.RAZORPAY_KEY_SECRET;
+      if (!keyId || !keySecret) throw new Error('Razorpay is not configured');
 
-    // Basic CSRF protection for same-site/allowlisted requests
-    if (!isAllowedOrigin(req.url, req.headers.get('origin'), req.headers.get('x-forwarded-host'), req.headers.get('x-forwarded-proto'))) {
-      return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
-    }
-
-    const body = await req.json();
-    const { amount, currency = 'INR', receipt } = body as { amount: number; currency?: string; receipt?: string };
-
-    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
-      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
-    }
-
-    // Idempotency support (optional)
-    const idempotencyKey = req.headers.get('idempotency-key') || undefined;
-    const idHash = idempotencyKey ? crypto.createHash('sha256').update(`${userId}:${idempotencyKey}`).digest('hex') : undefined;
-    if (idHash) {
-      try {
-        const paymentsRef = admin.firestore().collection('payments');
-        const existingSnap = await paymentsRef
-          .where('userId', '==', userId)
-          .where('idempotencyKeyHash', '==', idHash)
-          .limit(1)
-          .get();
-        if (!existingSnap.empty) {
-          const doc = existingSnap.docs[0];
-          const data = doc.data();
-          if (data?.razorpay_order) {
-            const res = NextResponse.json({ order: data.razorpay_order });
-            res.headers.set('Cache-Control', 'no-store');
-            return res;
-          }
-        }
-      } catch {}
-    }
-
-    const keyId = process.env.RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-    if (keyId && keySecret) {
       const Razorpay = (await import('razorpay')).default;
       const instance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-      const order = await instance.orders.create({
-        amount: Math.round(amount * 100),
-        currency,
-        receipt: receipt || `rcpt_${Date.now()}`
+      const razorpayOrder = await instance.orders.create({
+        amount: quote.amountPaise,
+        currency: quote.currency,
+        receipt: `pp_${idHash.slice(0, 24)}`,
+        notes: { userId, shopId: parsed.data.shopId },
       });
-      // Persist a payment intent document keyed by Razorpay order id
-      try {
-        const paymentsRef = admin.firestore().collection('payments');
-        const payload = {
-          userId,
-          amount,
-          currency,
-          receipt: order.receipt || null,
-          status: 'created',
-          razorpay_order_id: order.id,
-          razorpay_order: order,
-          idempotencyKeyHash: idHash || null,
-          createdAt: admin.firestore.FieldValue.serverTimestamp()
-        } as any;
-        await paymentsRef.doc(order.id).set(payload, { merge: true });
-      } catch {}
-      // Server-side analytics (no PII)
-      captureServerEvent({
-        event: 'razorpay_order_created',
-        distinctId: userId,
-        properties: { razorpay_order_id: order.id, amount, currency },
-      });
-      const res = NextResponse.json({ order });
-      res.headers.set('Cache-Control', 'no-store');
-      return res;
-    }
 
-    // No secrets configured → do not create a mock order (it causes checkout failure). Surface error.
-    return NextResponse.json({ error: 'Server is not configured' }, { status: 500 });
-  } catch (e: any) {
-    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+      const payment = {
+      userId,
+      shopId: parsed.data.shopId,
+      shopName: shop.data()!.name || '',
+      quoteInput: parsed.data,
+      quote,
+      amount: quote.amount,
+      amountPaise: quote.amountPaise,
+      currency: quote.currency,
+      status: 'created',
+      razorpayOrderId: razorpayOrder.id,
+      idempotencyKeyHash: idHash,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+      const batch = db.batch();
+      batch.set(db.collection('payments').doc(razorpayOrder.id), payment);
+      batch.set(idempotencyRef, { state: 'created', razorpayOrder, quote, updatedAt: new Date() }, { merge: true });
+      await batch.commit();
+
+      captureServerEvent({ event: 'razorpay_order_created', distinctId: userId, properties: { razorpay_order_id: razorpayOrder.id, amount: quote.amount, shopId: parsed.data.shopId } });
+      return NextResponse.json({ order: razorpayOrder, quote }, { headers: { 'Cache-Control': 'no-store' } });
+    } catch (error) {
+      // A provider failure must not poison this idempotency key forever.
+      await idempotencyRef.delete().catch(() => undefined);
+      throw error;
+    }
+  } catch (error) {
+    captureServerEvent({ event: 'order_creation_failed', distinctId: userId, properties: { stage: 'payment_intent', error: String((error as Error)?.message || error) } });
+    return NextResponse.json({ error: 'Failed to create checkout' }, { status: 500 });
   }
 }
