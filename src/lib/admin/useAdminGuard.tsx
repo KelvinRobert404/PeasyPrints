@@ -3,7 +3,6 @@
 import { useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { isAdminEmail } from './config';
 
 interface AdminGuardState {
     isAdmin: boolean;
@@ -30,18 +29,21 @@ export function useAdminGuard(redirectOnFail = true): AdminGuardState {
     useEffect(() => {
         if (!isLoaded) return;
 
-        const email = user?.primaryEmailAddress?.emailAddress ?? null;
-        const isAdmin = isAdminEmail(email);
-
-        setState({
-            isAdmin,
-            loading: false,
-            email,
-        });
-
-        if (!isAdmin && redirectOnFail) {
-            router.replace('/');
-        }
+        let cancelled = false;
+        void fetch('/api/admin/session', { cache: 'no-store' })
+            .then(async (response) => ({ response, data: await response.json().catch(() => ({})) }))
+            .then(({ response, data }) => {
+                if (cancelled) return;
+                const isAdmin = response.ok && data.isAdmin === true;
+                setState({ isAdmin, loading: false, email: data.email || null });
+                if (!isAdmin && redirectOnFail) router.replace('/');
+            })
+            .catch(() => {
+                if (cancelled) return;
+                setState({ isAdmin: false, loading: false, email: null });
+                if (redirectOnFail) router.replace('/');
+            });
+        return () => { cancelled = true; };
     }, [isLoaded, user, redirectOnFail, router]);
 
     return state;

@@ -5,15 +5,12 @@ import { immer } from 'zustand/middleware/immer';
 import { db } from '@/lib/firebase/config';
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
-  getDocs,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
-  setDoc,
   updateDoc,
   where
 } from 'firebase/firestore';
@@ -43,7 +40,16 @@ interface ShopState {
   subscribePayoutRequests: (shopId: string) => Promise<() => void>;
   subscribePayouts: (shopId: string) => Promise<() => void>;
   requestPayout: (amount: number) => Promise<void>;
-  confirmPayoutSettlement: (requestId: string, amount: number) => Promise<void>;
+}
+
+async function mutateOrder(orderId: string, action: string) {
+  const response = await fetch(`/api/shopfront/orders/${encodeURIComponent(orderId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'Order update failed');
 }
 
 export const useShopStore = create<ShopState>()(
@@ -122,86 +128,36 @@ export const useShopStore = create<ShopState>()(
     },
 
     updateOrderStatus: async (orderId, status) => {
-      const ref = doc(db, 'orders', orderId);
-      await updateDoc(ref, { status, updatedAt: serverTimestamp() as any });
+      const action = status === 'completed' ? 'complete' : status === 'cancelled' ? 'cancel' : status;
+      await mutateOrder(orderId, action);
     },
 
     markPrinted: async (orderId) => {
-      const ref = doc(db, 'orders', orderId);
-      await updateDoc(ref, { status: 'printed', updatedAt: serverTimestamp() as any });
+      await mutateOrder(orderId, 'printed');
     },
 
     markCollected: async (orderId) => {
-      const ref = doc(db, 'orders', orderId);
-      await updateDoc(ref, { status: 'collected', updatedAt: serverTimestamp() as any });
+      await mutateOrder(orderId, 'complete');
     },
 
     revertToProcessing: async (orderId) => {
-      const ref = doc(db, 'orders', orderId);
-      await updateDoc(ref, { status: 'processing', updatedAt: serverTimestamp() as any });
+      await mutateOrder(orderId, 'processing');
     },
 
-    undoCollected: async (orderId, order) => {
-      // Remove matching history entry if exists and revert status, adjusting receivable
-      try {
-        const q = query(collection(db, 'history'), where('orderId', '==', orderId), where('status', '==', 'completed'));
-        const snap = await getDocs(q);
-        for (const d of snap.docs) {
-          await deleteDoc(doc(db, 'history', d.id));
-        }
-      } catch {}
-      const ref = doc(db, 'orders', orderId);
-      await updateDoc(ref, { status: 'printed', updatedAt: serverTimestamp() as any });
-      // Adjust receivable amount back
-      try {
-        const shopRef = doc(db, 'shops', order.shopId);
-        const snap = await getDoc(shopRef);
-        const prev = Number(snap.data()?.receivableAmount ?? 0);
-        const next = Math.max(0, prev - Number(order.totalCost ?? 0));
-        await updateDoc(shopRef, { receivableAmount: next, updatedAt: serverTimestamp() as any });
-        set((s) => { s.receivableAmount = next; });
-      } catch {}
+    undoCollected: async (orderId, _order) => {
+      await mutateOrder(orderId, 'undo_complete');
     },
 
-    undoCancelled: async (orderId, order) => {
-      // Remove matching cancelled history entries and revert status back to processing
-      try {
-        const q = query(collection(db, 'history'), where('orderId', '==', orderId), where('status', '==', 'cancelled'));
-        const snap = await getDocs(q);
-        for (const d of snap.docs) {
-          await deleteDoc(doc(db, 'history', d.id));
-        }
-      } catch {}
-      const ref = doc(db, 'orders', orderId);
-      await updateDoc(ref, { status: 'processing', updatedAt: serverTimestamp() as any });
+    undoCancelled: async (orderId, _order) => {
+      await mutateOrder(orderId, 'undo_cancel');
     },
 
-    completeOrder: async (orderId, order) => {
-      const ref = doc(db, 'orders', orderId);
-      const historyRef = doc(collection(db, 'history'));
-      // Mirror to history with historyTimestamp
-      const completedPayload = { ...order, status: 'completed', shopId: order.shopId, orderId: orderId, historyTimestamp: serverTimestamp(), fileUrl: order.fileUrl } as any;
-      await setDoc(historyRef, completedPayload);
-      await updateDoc(ref, { status: 'completed' });
-      // Update receivableAmount on shop
-      const shopId = order.shopId;
-      try {
-        const shopRef = doc(db, 'shops', shopId);
-        const snap = await getDoc(shopRef);
-        const prev = Number(snap.data()?.receivableAmount ?? 0);
-        const next = prev + Number(order.totalCost ?? 0);
-        await updateDoc(shopRef, { receivableAmount: next, updatedAt: serverTimestamp() as any });
-        set((s) => { s.receivableAmount = next; });
-      } catch {}
+    completeOrder: async (orderId, _order) => {
+      await mutateOrder(orderId, 'complete');
     },
 
-    cancelOrder: async (orderId, order) => {
-      const ref = doc(db, 'orders', orderId);
-      const historyRef = doc(collection(db, 'history'));
-      const cancelledPayload = { ...order, status: 'cancelled', shopId: order.shopId, orderId: orderId, historyTimestamp: serverTimestamp(), fileUrl: order.fileUrl } as any;
-      await setDoc(historyRef, cancelledPayload);
-      await updateDoc(ref, { status: 'cancelled' });
-      // No receivable update on cancel
+    cancelOrder: async (orderId, _order) => {
+      await mutateOrder(orderId, 'cancel');
     },
 
     updatePricing: async (pricing) => {
@@ -251,35 +207,11 @@ export const useShopStore = create<ShopState>()(
       if (!shop) return;
       const safeAmount = Math.max(0, Math.floor(Number(amount)));
       if (!safeAmount) return;
-      const ref = doc(collection(db, 'payout_requests'));
-      await setDoc(ref, {
-        shopId: shop.id,
-        amount: safeAmount,
-        status: 'requested',
-        requestedAt: serverTimestamp() as any,
-        updatedAt: serverTimestamp() as any
-      } as any);
-    },
-
-    confirmPayoutSettlement: async (requestId: string, amount: number) => {
-      const shop = get().currentShop;
-      if (!shop) return;
-      const safeAmount = Math.max(0, Math.floor(Number(amount)));
-      const payoutRef = doc(collection(db, 'payouts'));
-      await setDoc(payoutRef, {
-        shopId: shop.id,
-        amount: safeAmount,
-        requestId,
-        createdAt: serverTimestamp() as any
-      } as any);
-      try {
-        const shopRef = doc(db, 'shops', shop.id);
-        const snap = await getDoc(shopRef);
-        const prev = Number(snap.data()?.receivableAmount ?? 0);
-        const next = Math.max(0, prev - safeAmount);
-        await updateDoc(shopRef, { receivableAmount: next, updatedAt: serverTimestamp() as any });
-        set((s) => { s.receivableAmount = next; });
-      } catch {}
+      const response = await fetch('/api/shopfront/payouts', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: safeAmount })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Payout request failed');
     }
   }))
 );
