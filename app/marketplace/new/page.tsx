@@ -1,360 +1,90 @@
-"use client";
+'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
-import type { ListingCategory, Listing, ListingStatus } from '@/types/models';
-import { useCollegeStore } from '@/lib/stores/collegeStore';
-import { uploadListingImage } from '@/lib/firebase/storageUpload';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils/cn';
+import { CampusGate } from '@/components/campus/CampusGate';
+import { CampusHeader } from '@/components/campus/CampusHeader';
+import { MARKETPLACE_CATEGORIES, MARKETPLACE_CATEGORY_LABELS } from '@/lib/campus/constants';
+import type { CampusAudience, MarketplacePostType } from '@/types/campus';
 
-const CATEGORIES: { id: ListingCategory; label: string }[] = [
-  { id: 'student', label: 'Student Listings' },
-  { id: 'housing', label: 'Roommates & Housing' },
-  { id: 'tickets', label: 'Tickets' },
-];
-
-const TAG_CONFIG: Record<ListingCategory, { key: string; label: string }[]> = {
-  student: [
-    { key: 'negotiable', label: 'Negotiable' },
-    { key: 'on_campus_pickup', label: 'On campus pickup' },
-    { key: 'good_condition', label: 'Good condition' },
-    { key: 'includes_notes', label: 'Includes notes' },
-  ],
-  housing: [
-    { key: 'furnished', label: 'Furnished' },
-    { key: 'wifi_included', label: 'WiFi included' },
-    { key: 'attached_bath', label: 'Attached bathroom' },
-    { key: 'same_gender_only', label: 'Same gender only' },
-  ],
-  tickets: [
-    { key: 'on_campus_event', label: 'On campus event' },
-    { key: 'tonight', label: 'Happening tonight' },
-    { key: 'transferable', label: 'Transferable' },
-    { key: 'group_discount', label: 'Group discount' },
-  ],
-};
-
-export default function NewListingPage() {
+export default function NewMarketplaceListingPage() {
   const router = useRouter();
-  const { user } = useUser();
-  const { selectedCollege } = useCollegeStore();
-
-  const [category, setCategory] = useState<ListingCategory>('student');
+  const [audience, setAudience] = useState<CampusAudience>('campus');
+  const [postType, setPostType] = useState<MarketplacePostType>('sell');
+  const [category, setCategory] = useState<(typeof MARKETPLACE_CATEGORIES)[number]>('books_notes');
   const [title, setTitle] = useState('');
-  const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
-  const [tagsState, setTagsState] = useState<Record<string, boolean>>({});
-  const [whatsappAllowed, setWhatsappAllowed] = useState(false);
-  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [price, setPrice] = useState('');
+  const [condition, setCondition] = useState('Good');
+  const [negotiable, setNegotiable] = useState(false);
+  const [pickupPoints, setPickupPoints] = useState<Array<{ id: string; label: string }>>([]);
+  const [pickupPointId, setPickupPointId] = useState('');
   const [area, setArea] = useState('');
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [images, setImages] = useState<File[]>([]);
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
-  const activeTags = useMemo(
-    () => TAG_CONFIG[category],
-    [category]
-  );
+  useEffect(() => {
+    const nextAudience = new URLSearchParams(window.location.search).get('audience') === 'girls' ? 'girls' : 'campus';
+    setAudience(nextAudience);
+    fetch('/api/campus/config').then((response) => response.json()).then((data) => setPickupPoints(data.pickupPoints || [])).catch(() => undefined);
+  }, []);
 
-  const handleTagToggle = (key: string) => {
-    setTagsState((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
-  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setImages(files.slice(0, 3));
-  };
-
-  const handleUseLocation = () => {
-    if (!navigator.geolocation) {
-      setError('Location not supported on this device');
-      return;
-    }
-    setError(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      },
-      () => {
-        setError('Unable to get current location');
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (!user) {
-      router.push('/login?redirect_url=/marketplace/new');
-      return;
-    }
-    if (!title.trim()) {
-      setError('Please add a title');
-      return;
-    }
-    if (!area.trim()) {
-      setError('Please add the area/location name');
-      return;
-    }
-    if (!coords) {
-      setError('Please set your current location');
-      return;
-    }
-
-    setSubmitting(true);
+  const submit = async (event: FormEvent) => {
+    event.preventDefault(); setSubmitting(true); setError('');
     try {
-      const priceNumber = price ? Number(price) : undefined;
-      if (price && Number.isNaN(priceNumber)) {
-        throw new Error('Price must be a number');
+      const images: string[] = [];
+      for (const file of files.slice(0, 5)) {
+        const form = new FormData(); form.append('file', file); form.append('audience', audience);
+        const upload = await fetch('/api/campus/media', { method: 'POST', body: form });
+        const uploaded = await upload.json();
+        if (!upload.ok) throw new Error(uploaded.error || 'Image upload failed');
+        images.push(uploaded.url);
       }
-
-      const imageUrls: string[] = [];
-      for (const file of images.slice(0, 3)) {
-        const url = await uploadListingImage(user.id, file);
-        imageUrls.push(url);
-      }
-
-      const selectedTags = activeTags
-        .filter((t) => tagsState[t.key])
-        .map((t) => t.label);
-
-      const status: ListingStatus = 'pending_moderation';
-
-      const payload: Omit<Listing, 'id'> = {
-        category,
-        status,
-        collegeName: selectedCollege,
-        title: title.trim(),
-        description: description.trim() || undefined,
-        price: priceNumber,
-        images: imageUrls,
-        tags: selectedTags,
-        whatsappAllowed,
-        whatsappNumber: whatsappAllowed && whatsappNumber.trim() ? whatsappNumber.trim() : undefined,
-        createdAt: serverTimestamp() as any,
-        authorId: user.id,
-        authorName: user.fullName || user.primaryEmailAddress?.emailAddress?.split('@')[0],
-        authorVerified: false,
-        location: {
-          lat: coords.lat,
-          lng: coords.lng,
-          area: area.trim(),
-        },
-      };
-
-      const ref = await addDoc(collection(db, 'listings'), payload);
-      router.replace(`/marketplace/${ref.id}`);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to create listing');
-      setSubmitting(false);
-      return;
-    }
-
-    setSubmitting(false);
+      const pickup = pickupPoints.find((item) => item.id === pickupPointId);
+      const endpoint = audience === 'girls' ? '/api/girls-space/marketplace' : '/api/marketplace/listings';
+      const response = await fetch(endpoint, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audience, postType, category, title, description, price: price ? Number(price) : null, condition: condition || null, negotiable, images, pickupPointId: pickup?.id || null, pickupLabel: pickup?.label || null, area: area || null, whatsappNumber, promotionEligible: audience === 'campus' }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not publish listing');
+      router.replace(`${audience === 'girls' ? '/girls-space/marketplace' : '/marketplace'}/${data.id}`);
+    } catch (cause: any) { setError(cause.message || 'Could not publish listing'); setSubmitting(false); }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface pb-4">
-      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors"
-          >
-            <span className="material-symbols-rounded text-xl text-text-primary">arrow_back</span>
-          </button>
-          <div>
-            <h1 className="text-[16px] font-bold text-text-primary">New Listing</h1>
-            <p className="text-[12px] text-text-secondary">
-              Share something with students
-            </p>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1 overflow-y-auto px-4 pt-4">
-        <Card>
-          <CardContent className="p-4 space-y-4">
-            {/* Category pills */}
-            <div className="inline-flex rounded-full bg-gray-100 p-1 w-full">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setCategory(cat.id)}
-                  className={cn(
-                    'flex-1 rounded-full px-3 py-2 text-[12px] font-medium transition-colors',
-                    category === cat.id
-                      ? 'bg-primary text-white'
-                      : 'text-gray-700'
-                  )}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Title & price */}
-            <div className="space-y-2">
-              <Input
-                placeholder="Title (e.g. 2nd year Economics book)"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="h-11 text-sm"
-              />
-              <Input
-                placeholder={
-                  category === 'housing'
-                    ? 'Price (₹ per month)'
-                    : category === 'tickets'
-                      ? 'Price (₹ per ticket)'
-                      : 'Price (₹)'
-                }
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="h-11 text-sm"
-                inputMode="numeric"
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <textarea
-                placeholder="Description (optional)"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full min-h-[80px] rounded-md bg-white border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              />
-            </div>
-
-            {/* Tags */}
-            <div className="space-y-1">
-              <p className="text-[11px] text-gray-500">Details</p>
-              <div className="flex flex-wrap gap-1">
-                {activeTags.map((tag) => {
-                  const active = !!tagsState[tag.key];
-                  return (
-                    <button
-                      key={tag.key}
-                      type="button"
-                      onClick={() => handleTagToggle(tag.key)}
-                      className={cn(
-                        'px-2.5 py-1 rounded-full text-[11px] border text-left',
-                        active
-                          ? 'bg-emerald-600/90 border-emerald-500 text-white'
-                          : 'bg-white border-gray-300 text-gray-700'
-                      )}
-                    >
-                      {tag.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Location */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] text-gray-500">Location</p>
-                <button
-                  type="button"
-                  onClick={handleUseLocation}
-                  className="text-[11px] text-blue-400 underline-offset-2 underline"
-                >
-                  Use my current location
-                </button>
-              </div>
-              <Input
-                placeholder="Area / locality (e.g. Kothanur)"
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                className="h-11 text-sm"
-              />
-              {coords && (
-                <p className="text-[11px] text-emerald-600">
-                  Location set
-                </p>
-              )}
-            </div>
-
-            {/* Images */}
-            <div className="space-y-1">
-              <p className="text-[11px] text-gray-500">Images (up to 3)</p>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImagesChange}
-                className="block w-full text-[11px] text-gray-600"
-              />
-              {images.length > 0 && (
-                <p className="text-[11px] text-gray-500">
-                  {images.length} image{images.length > 1 ? 's' : ''} selected
-                </p>
-              )}
-            </div>
-
-            {/* WhatsApp */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-gray-500">
-                  Allow WhatsApp contact for this listing
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setWhatsappAllowed((v) => !v)}
-                  className={cn(
-                    'w-10 h-6 rounded-full flex items-center px-1 transition-colors',
-                    whatsappAllowed ? 'bg-emerald-500' : 'bg-gray-300'
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'w-4 h-4 rounded-full bg-white transform transition-transform',
-                      whatsappAllowed ? 'translate-x-4' : 'translate-x-0'
-                    )}
-                  />
-                </button>
-              </div>
-              {whatsappAllowed && (
-                <Input
-                  placeholder="WhatsApp number (with country code, e.g. 91...)"
-                  value={whatsappNumber}
-                  onChange={(e) => setWhatsappNumber(e.target.value)}
-                  className="h-11 text-sm"
-                />
-              )}
-            </div>
-
-            {error && (
-              <p className="text-[11px] text-red-600">{error}</p>
-            )}
-
-            <button
-              type="submit"
-              className="w-full mt-2 flex items-center justify-center gap-2 py-3.5 bg-primary text-white text-[14px] font-medium rounded-xl hover:bg-primary-dark active:scale-[0.98] transition-all shadow-sm disabled:opacity-50"
-              disabled={submitting}
-              onClick={handleSubmit}
-            >
-              {submitting ? 'Creating…' : 'Create listing'}
-            </button>
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+    <CampusGate girlsOnly={audience === 'girls'}>
+      <div className="min-h-screen bg-[#f4f5f7] pb-10">
+        <CampusHeader title="New marketplace post" eyebrow={audience === 'girls' ? 'Girls’ Space' : 'KJU Marketplace'} accent={audience === 'girls' ? '#c23b73' : '#ff5c35'} />
+        <form onSubmit={submit} className="mx-auto max-w-xl space-y-4 px-4 pt-4">
+          <section className="rounded-[28px] bg-white p-4">
+            <p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-400">What are you posting?</p>
+            <div className="grid grid-cols-3 gap-2">{(['sell', 'wanted', 'free'] as const).map((type) => <button type="button" key={type} onClick={() => setPostType(type)} className={`campus-press rounded-2xl px-3 py-3 text-xs font-extrabold capitalize ${postType === type ? 'bg-black text-white' : 'bg-[#f4f5f7] text-zinc-600'}`}>{type}</button>)}</div>
+          </section>
+          <section className="space-y-4 rounded-[28px] bg-white p-4">
+            <Field label="Title"><input required minLength={4} maxLength={90} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="What should campus know?" className="campus-input" /></Field>
+            <Field label="Category"><select value={category} onChange={(event) => setCategory(event.target.value as (typeof MARKETPLACE_CATEGORIES)[number])} className="campus-input">{MARKETPLACE_CATEGORIES.map((item) => <option key={item} value={item}>{MARKETPLACE_CATEGORY_LABELS[item]}</option>)}</select></Field>
+            <Field label="Description"><textarea required minLength={8} maxLength={1200} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Condition, edition, size, what’s included…" className="campus-input min-h-28 resize-none py-3" /></Field>
+            {postType !== 'free' ? <Field label={postType === 'wanted' ? 'Your budget' : 'Price'}><input inputMode="numeric" min="0" type="number" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="₹ 0" className="campus-input" /></Field> : null}
+            {postType === 'sell' ? <div className="grid grid-cols-2 gap-3"><Field label="Condition"><select value={condition} onChange={(event) => setCondition(event.target.value)} className="campus-input"><option>Like new</option><option>Good</option><option>Used</option><option>Needs repair</option></select></Field><label className="flex items-end"><span className="flex h-12 w-full items-center justify-between rounded-2xl bg-[#f4f5f7] px-4 text-xs font-extrabold">Negotiable<input type="checkbox" checked={negotiable} onChange={(event) => setNegotiable(event.target.checked)} className="h-4 w-4 accent-black" /></span></label></div> : null}
+          </section>
+          <section className="space-y-4 rounded-[28px] bg-white p-4">
+            <Field label="Safe campus pickup"><select value={pickupPointId} onChange={(event) => setPickupPointId(event.target.value)} className="campus-input"><option value="">Choose a campus spot</option>{pickupPoints.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></Field>
+            <Field label="Approximate off-campus area (optional)"><input value={area} onChange={(event) => setArea(event.target.value)} placeholder="Kothanur" className="campus-input" /></Field>
+            <Field label="WhatsApp number"><input required inputMode="tel" value={whatsappNumber} onChange={(event) => setWhatsappNumber(event.target.value)} placeholder="91… (shared only after approval)" className="campus-input" /></Field>
+          </section>
+          <section className="rounded-[28px] bg-white p-4"><Field label="Photos (up to 5)"><input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(event) => setFiles(Array.from(event.target.files || []).slice(0, 5))} className="block w-full rounded-2xl bg-[#f4f5f7] p-3 text-xs font-bold" /></Field>{files.length ? <p className="mt-2 text-xs font-bold text-zinc-500">{files.length} photo{files.length === 1 ? '' : 's'} ready</p> : null}</section>
+          <p className="px-2 text-[11px] font-semibold leading-5 text-zinc-500">Campus posts may be featured in PeasyPrints public promotional material. You can turn promotion off later. Girls’ Space posts are never publicly promoted.</p>
+          {error ? <div role="alert" className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div> : null}
+          <button disabled={submitting} className="campus-press h-14 w-full rounded-2xl bg-black text-sm font-extrabold text-white disabled:opacity-50">{submitting ? 'Publishing…' : 'Publish to campus'}</button>
+        </form>
+      </div>
+    </CampusGate>
   );
 }
 
-
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <label className="block"><span className="mb-2 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-zinc-400">{label}</span>{children}</label>;
+}
