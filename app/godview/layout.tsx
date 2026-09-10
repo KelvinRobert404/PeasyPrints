@@ -22,6 +22,8 @@ import {
     IndianRupee,
     GraduationCap,
     Image,
+    Film,
+    ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -35,9 +37,11 @@ const NAV_ITEMS = [
     { href: '/godview/stores', label: 'Stores', icon: Store },
     { href: '/godview/colleges', label: 'Colleges', icon: GraduationCap },
     { href: '/godview/fees', label: 'Fees', icon: IndianRupee },
+    { href: '/godview/payouts', label: 'Payouts', icon: DollarSign },
     { href: '/godview/coupons', label: 'Coupons', icon: Tag },
-    { href: '/godview/users', label: 'Verifications', icon: Users },
-    { href: '/godview/listings', label: 'Moderation', icon: FileCheck },
+    { href: '/godview/campus', label: 'Campus Trust', icon: ShieldCheck },
+    { href: '/godview/campus-content', label: 'Campus Content', icon: FileCheck },
+    { href: '/godview/reels', label: 'Reel Packs', icon: Film },
 ];
 
 function SidebarContent({ collapsed, email }: { collapsed?: boolean; email?: string | null }) {
@@ -76,7 +80,7 @@ function SidebarContent({ collapsed, email }: { collapsed?: boolean; email?: str
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-all duration-200 ${isActive
+                                className={`group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 ${isActive
                                     ? 'bg-white/10 text-zinc-50 shadow-sm'
                                     : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
                                     } ${collapsed ? 'justify-center px-2' : ''}`}
@@ -174,7 +178,7 @@ export default function GodviewLayout({ children }: { children: ReactNode }) {
 
             {/* Desktop Sidebar */}
             <aside
-                className={`hidden lg:flex fixed inset-y-0 left-0 z-30 flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${collapsed ? 'w-[60px]' : 'w-[240px]'
+                className={`hidden lg:flex fixed inset-y-0 left-0 z-30 flex-col transition-[width] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${collapsed ? 'w-[60px]' : 'w-[240px]'
                     }`}
             >
                 <div className="relative flex h-full flex-col bg-zinc-950">
@@ -183,7 +187,7 @@ export default function GodviewLayout({ children }: { children: ReactNode }) {
                     {/* Minimal Collapse Toggle */}
                     <button
                         onClick={() => setCollapsed(!collapsed)}
-                        className="group absolute -right-3 top-4 flex h-6 w-6 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 shadow-sm hover:text-zinc-600 hover:border-zinc-300 transition-all opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100 lg:group-hover:opacity-100"
+                        className="group absolute -right-3 top-4 flex h-6 w-6 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 shadow-sm hover:text-zinc-600 hover:border-zinc-300 transition-[opacity,color,border-color] duration-150 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100 lg:group-hover:opacity-100"
                     >
                         {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
                     </button>
@@ -195,7 +199,7 @@ export default function GodviewLayout({ children }: { children: ReactNode }) {
 
             {/* Main Content */}
             <main
-                className={`flex-1 transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${collapsed ? 'lg:ml-[60px]' : 'lg:ml-[240px]'
+                className={`flex-1 transition-[margin] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${collapsed ? 'lg:ml-[60px]' : 'lg:ml-[240px]'
                     } pt-12 lg:pt-0`}
             >
                 {/* Desktop Top Bar */}
@@ -211,7 +215,7 @@ export default function GodviewLayout({ children }: { children: ReactNode }) {
                             <input
                                 type="text"
                                 placeholder="Search..."
-                                className="h-8 w-64 rounded-md border border-zinc-200 bg-zinc-50 pl-8 pr-3 text-xs text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-zinc-100/50 transition-all"
+                                className="h-8 w-64 rounded-md border border-zinc-200 bg-zinc-50 pl-8 pr-3 text-xs text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-zinc-100/50 transition-[background-color,border-color,box-shadow] duration-150"
                             />
                             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                                 <kbd className="inline-flex h-4 items-center rounded border border-zinc-200 bg-white px-1 text-[10px] font-medium text-zinc-400">⌘</kbd>

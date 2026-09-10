@@ -400,7 +400,7 @@ export default function ShopfrontDashboardPage() {
                   isWindows={isWindows()}
                   onPrint={(o) => {
                     const jobId = (o as any).id as string; if (!jobId) return;
-                    triggerPeasyPrint(jobId, {
+                    void triggerPeasyPrint(jobId, {
                       onMissingHelper: () => { setHelperOpen(true); }
                     });
                     setStatusMessage('Connecting to printer...');

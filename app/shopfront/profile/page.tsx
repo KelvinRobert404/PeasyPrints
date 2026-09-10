@@ -84,24 +84,15 @@ export default function ShopfrontProfilePage() {
 
         try {
             setLoading(true);
-            const idToken = await auth.currentUser?.getIdToken();
-            if (!idToken) return;
-
-            const bucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string;
-            const objectName = encodeURIComponent(`shop_logos/${user.uid}.jpg`);
-            const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${objectName}`;
-
-            await fetch(url, {
+            const form = new FormData();
+            form.set('file', file);
+            const response = await fetch(`/api/shops/${encodeURIComponent(user.uid)}/logo`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/octet-stream',
-                    'Authorization': `Bearer ${idToken}`
-                },
-                body: await file.arrayBuffer()
+                body: form
             });
-
-            const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${objectName}?alt=media`;
-            setLogoUrl(publicUrl);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Logo upload failed');
+            setLogoUrl(data.logoUrl);
         } catch (error) {
             console.error('Logo upload failed:', error);
         } finally {

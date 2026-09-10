@@ -30,18 +30,12 @@ export default function ShopfrontRegisterPage() {
       if (!uid) throw new Error('Please sign in first');
       let logoUrl: string | undefined = undefined;
       if (logoFile) {
-        const idToken = await auth.currentUser?.getIdToken();
-        if (idToken) {
-          const bucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string;
-          const objectName = encodeURIComponent(`shop_logos/${uid}.jpg`);
-          const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${objectName}`;
-          await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/octet-stream', 'Authorization': `Bearer ${idToken}` },
-            body: await logoFile.arrayBuffer()
-          });
-          logoUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${objectName}?alt=media`;
-        }
+        const form = new FormData();
+        form.set('file', logoFile);
+        const response = await fetch(`/api/shops/${encodeURIComponent(uid)}/logo`, { method: 'POST', body: form });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Logo upload failed');
+        logoUrl = data.logoUrl;
       }
       const timing = `${openingTime} to ${closingTime}`;
       await setDoc(doc(db, 'shops', uid), {
@@ -49,6 +43,7 @@ export default function ShopfrontRegisterPage() {
         openingTime, closingTime, timing,
         logoUrl,
         receivableAmount: 0,
+        reservedPayoutAmount: 0,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       }, { merge: true });

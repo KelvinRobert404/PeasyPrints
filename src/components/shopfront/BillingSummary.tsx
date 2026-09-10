@@ -13,7 +13,7 @@ function toLocalMonthYear(d: Date) {
 }
 
 export function BillingSummary() {
-  const { historyOrders, orders, payouts, receivableAmount, payoutRequests, requestPayout, confirmPayoutSettlement } = useShopStore() as any;
+  const { historyOrders, orders, payouts, receivableAmount, payoutRequests, requestPayout } = useShopStore() as any;
   const [month, setMonth] = useState<string>(() => toLocalMonthYear(new Date()));
   const [payoutAmount, setPayoutAmount] = useState<string>('');
   const [payoutOpen, setPayoutOpen] = useState<boolean>(false);
@@ -221,11 +221,7 @@ export function BillingSummary() {
                     </TableCell>
                     <TableCell>{expected ? expected.toLocaleString() : '-'}</TableCell>
                     <TableCell className="text-right">
-                      {r.status === 'paid' ? (
-                        <Button size="sm" onClick={() => { void confirmPayoutSettlement(r.id, r.amount); }}>Confirm received</Button>
-                      ) : (
-                        <span className="text-xs text-gray-500">—</span>
-                      )}
+                      <span className="text-xs text-gray-500">Managed by PeasyPrints</span>
                     </TableCell>
                   </TableRow>
                 );

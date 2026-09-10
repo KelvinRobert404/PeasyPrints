@@ -31,12 +31,13 @@ export function Sheet({
 export function SheetTrigger({ asChild, children, className }: { asChild?: boolean; children?: React.ReactNode; className?: string }) {
   const ctx = React.useContext(SheetContext)!;
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as any, {
-      onClick: (e: any) => {
-        children.props.onClick?.(e);
+    const child = children as React.ReactElement<{ onClick?: (event: React.MouseEvent) => void; className?: string }>;
+    return React.cloneElement(child, {
+      onClick: (event: React.MouseEvent) => {
+        child.props.onClick?.(event);
         ctx.setOpen(true);
       },
-      className: cn(className, children.props.className)
+      className: cn(className, child.props.className)
     });
   }
   return <button className={className} onClick={() => ctx.setOpen(true)}>{children}</button>;
