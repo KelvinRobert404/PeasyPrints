@@ -11,30 +11,48 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --muted: #f1f5f9;
-  --border: #e2e8f0;
-  --ring: #6366f1;
-
-  /* Brand palette */
-  --primary: #6366f1;
-  --primary-light: #818cf8;
-  --primary-dark: #4f46e5;
-  --secondary: #8b5cf6;
-  --surface: #f8fafc;
+  /* Brand palette - Revolut / 3-Color Constraint */
+  --background: #f4f5f7;
+  /* Very light grey for app structural background to show depth */
+  --surface: #f4f5f7;
   --card: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  /* Pure white cards */
+  --foreground: #000000;
+  /* Solid black for text and icons */
+  --border: #eef0f3;
+  /* Extremely subtle borders */
+  --muted: #F3F4F6;
+  --ring: #2563EB;
+  --primary: #0055FF;
+  /* Swoop Blue focus ring */
+
+  --primary-light: #3B82F6;
+  --primary-dark: #1D4ED8;
+
+  --secondary: #000000;
+  --text-primary: #000000;
+  --text-secondary: #52525B;
+  /* Zinc 600 */
+  --text-muted: #A1A1AA;
+  /* Zinc 400 */
   --success: #10b981;
   --marketplace-accent: #f43f5e;
 
-  /* Service card tints */
-  --tint-print: #eef2ff;
-  --tint-marketplace: #fff1f2;
-  --tint-canteen: #ecfdf5;
-  --tint-support: #fffbeb;
+  /* Receipt language — global theme */
+  --cream: #FCF6B1;
+  /* Paper yellow for names, numerals, stat chips */
+  --ink: #101828;
+  /* Near-black navy for receipt slabs */
+  --royal: #0055FF;
+  /* Field blue */
+  --go: #22C55E;
+  /* Status green, reserved for state words */
+
+  /* Service list tints (Minimalist, gray-based) */
+  --tint-print: #f3f4f6;
+  --tint-marketplace: #f3f4f6;
+  --tint-canteen: #f3f4f6;
+  --tint-support: #f3f4f6;
 
   /* Legacy Figma tokens – kept for compatibility */
   --peasyprints: #FCF6B1;
@@ -43,20 +61,29 @@
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --muted: #1e293b;
-  --border: #334155;
-  --ring: #818cf8;
-  --primary: #818cf8;
-  --primary-light: #a5b4fc;
-  --primary-dark: #6366f1;
+  --background: #000000;
+  /* Deep AMOLED black */
+  --surface: #000000;
+  --card: #111111;
+  /* High contrast dark gray */
+  --foreground: #FAFAFA;
+  /* Off white text */
+  --border: #27272A;
+  --muted: #18181B;
+  --ring: #FAFAFA;
+
+  --primary: #FAFAFA;
+  /* Primary buttons solid white */
+  --primary-light: #F4F4F5;
+  --primary-dark: #E4E4E7;
+
+  --accent-electric: #818CF8;
+  --accent-glow: rgba(129, 140, 248, 0.15);
+
   --secondary: #a78bfa;
-  --surface: #0f172a;
-  --card: #1e293b;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #FAFAFA;
+  --text-secondary: #A1A1AA;
+  --text-muted: #52525B;
 }
 
 @theme inline {
@@ -76,6 +103,12 @@
   --color-text-muted: var(--text-muted);
   --color-success: var(--success);
   --color-marketplace-accent: var(--marketplace-accent);
+  --color-cream: var(--cream);
+  --color-ink: var(--ink);
+  --color-royal: var(--royal);
+  --color-go: var(--go);
+  --color-accent-electric: var(--accent-electric);
+  --color-accent-glow: var(--accent-glow);
 }
 
 @layer base {
@@ -97,13 +130,26 @@
   }
 }
 
-/* Plus Jakarta Sans as default body font, Quinn for display/branding */
+/* DM Sans for incredibly clean, geometric, tight small body copy */
 .font-sans {
-  font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
+/* Google Sans (via Product Sans CDN) for loud, soft, punchy display headings - RETIRED, use font-quinn */
+
 .font-quinn {
-  font-family: var(--font-quinn), var(--font-plus-jakarta), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-quinn), var(--font-poppins), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+/* Coolvetica secondary face — always regular weight, never caps */
+.font-coolvetica {
+  font-family: "Coolvetica", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-weight: 400;
+}
+
+/* Poster face for hero names, numerals, and status words */
+.font-poster {
+  font-family: var(--font-poster), "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Emergency order blink */
@@ -131,6 +177,7 @@
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -141,16 +188,50 @@
   animation: fade-up 0.4s ease-out both;
 }
 
+/* Dropdown entrance — subtle */
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-drop-in {
+  animation: drop-in 0.16s ease-out both;
+  transform-origin: top center;
+}
+
 /* Stagger delays for grid items */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+
+.stagger-4 {
+  animation-delay: 0.2s;
+}
 
 /* Skeleton shimmer */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .skeleton {
@@ -161,6 +242,34 @@
 }
 
 @layer utilities {
+
+  .campus-press {
+    transition: transform 150ms cubic-bezier(0.2, 0, 0, 1), box-shadow 150ms ease, border-color 150ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .campus-press:active {
+    transform: scale(0.97);
+  }
+
+  .campus-input {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid rgb(0 0 0 / 0.08);
+    border-radius: 16px;
+    background: white;
+    padding: 0.75rem 1rem;
+    color: #111827;
+    font-size: 0.875rem;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .campus-input:focus-visible {
+    border-color: #0055ff;
+    box-shadow: 0 0 0 3px rgb(0 85 255 / 0.12);
+  }
 
   /* Visual tints for PNG icons to match Figma colors */
   .tint-yellow {
@@ -173,5 +282,21 @@
 
   .tint-rose {
     filter: invert(53%) sepia(64%) saturate(548%) hue-rotate(326deg) brightness(99%) contrast(98%);
+  }
+}
+
+/* Material Symbols retired in favor of Lucide — class kept as no-op guard */
+.material-symbols-rounded {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

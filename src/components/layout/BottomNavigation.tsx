@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Store, FileText } from 'lucide-react';
+import { FileText, House } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const navigation = [
-  { name: 'Home', href: '/', icon: Store },
+  { name: 'Home', href: '/', icon: House },
   { name: 'Orders', href: '/orders', icon: FileText },
 ];
 
@@ -17,8 +17,8 @@ export function BottomNavigation() {
   if (pathname === '/') return null;
 
   return (
-    <nav className="fixed bottom-[calc(env(safe-area-inset-bottom)_+_2px)] left-1/2 -translate-x-1/2 z-50">
-      <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 backdrop-blur px-4 py-2 shadow-lg">
+    <nav className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)_+_12px)] z-50 mx-auto w-full max-w-[428px] px-4">
+      <div className="pointer-events-auto flex items-center gap-1 rounded-[20px] bg-ink p-1.5 shadow-[0_16px_48px_rgba(0,0,0,0.35)]">
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -27,11 +27,11 @@ export function BottomNavigation() {
               key={item.name}
               href={item.href}
               className={cn(
-                'inline-flex flex-col items-center justify-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors',
-                isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700 hover:text-gray-900'
+                'campus-press flex flex-1 items-center justify-center gap-2 rounded-2xl py-2.5 text-[13px] font-extrabold transition-colors',
+                isActive ? 'bg-cream text-ink' : 'text-white/55'
               )}
             >
-              <Icon className={cn('w-5 h-5', isActive && 'text-blue-700')} />
+              <Icon size={18} strokeWidth={2.2} />
               <span className="leading-none">{item.name}</span>
             </Link>
           );

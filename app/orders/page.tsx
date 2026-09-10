@@ -4,19 +4,23 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { House, Package, User } from 'lucide-react';
 import { useOrdersStore } from '@/lib/stores/ordersStore';
+
+// Lucide icon component (same call-site API as before)
+const ICONS = {
+  person: User,
+  package_2: Package,
+  home: House,
+} as const;
+
+function Icon({ name, className = '' }: { name: keyof typeof ICONS; className?: string }) {
+  const Cmp = ICONS[name];
+  return <Cmp size={20} className={className} />;
+}
 import { useAuthStore } from '@/lib/stores/authStore';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { useUser } from '@clerk/nextjs';
-
-// Material Symbol icon component
-function Icon({ name, className = '' }: { name: string; className?: string }) {
-  return (
-    <span className={`material-symbols-rounded ${className}`}>
-      {name}
-    </span>
-  );
-}
 
 export default function OrdersPage() {
   const { user } = useAuthStore();
@@ -119,7 +123,7 @@ export default function OrdersPage() {
           href="/"
           className="flex items-center justify-center gap-2 py-3.5 bg-blue-600 rounded-2xl shadow-lg shadow-blue-600/30 text-white font-medium active:scale-[0.98] transition-transform"
         >
-          <span className="material-symbols-rounded text-xl">home</span>
+          <Icon name="home" className="text-xl" />
           Back to Home
         </Link>
       </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { QrCode } from 'lucide-react';
 import { haptics } from '@/lib/utils/haptics';
 import type { OrderDoc } from '@/types/models';
 
@@ -57,7 +58,7 @@ export function OrderCard({ order }: { order: OrderDoc }) {
       {isActive && (
         <div className="mt-3 pt-3 border-t border-gray-100">
           <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600">
-            <span className="material-symbols-rounded text-sm">qr_code_2</span>
+            <QrCode size={14} className="shrink-0" />
             Tap to view pickup code
           </div>
         </div>

@@ -3,12 +3,25 @@
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
+import { ArrowLeft, ChevronRight, CircleHelp, House, LogOut, Package, ShieldCheck, User } from 'lucide-react';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useUser, useClerk } from '@clerk/nextjs';
 
-// Material icon component
-function Icon({ name, className = '' }: { name: string; className?: string }) {
-  return <span className={`material-symbols-rounded ${className}`}>{name}</span>;
+// Lucide icon component (same call-site API as before)
+const ICONS = {
+  arrow_back: ArrowLeft,
+  person: User,
+  package_2: Package,
+  chevron_right: ChevronRight,
+  help: CircleHelp,
+  privacy_tip: ShieldCheck,
+  logout: LogOut,
+  home: House,
+} as const;
+
+function Icon({ name, className = '' }: { name: keyof typeof ICONS; className?: string }) {
+  const Cmp = ICONS[name];
+  return <Cmp size={20} className={className} />;
 }
 
 export default function ProfilePage() {
@@ -63,6 +76,15 @@ export default function ProfilePage() {
           >
             <Icon name="help" className="text-xl text-blue-600" />
             <span className="text-sm font-medium text-gray-900">Help & Support</span>
+            <Icon name="chevron_right" className="ml-auto text-xl text-gray-400" />
+          </Link>
+
+          <Link
+            href="/settings/privacy"
+            className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+          >
+            <Icon name="privacy_tip" className="text-xl text-blue-600" />
+            <span className="text-sm font-medium text-gray-900">Privacy settings</span>
             <Icon name="chevron_right" className="ml-auto text-xl text-gray-400" />
           </Link>
         </div>

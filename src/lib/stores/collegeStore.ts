@@ -79,6 +79,7 @@ export const useCollegeStore = create<CollegeStore>()(
 // Helper to get college names array for dropdowns
 export function useCollegeNames(): string[] {
 	const { colleges, loading } = useCollegeStore();
-	if (loading || colleges.length === 0) return LEGACY_COLLEGES;
-	return colleges.map(c => c.name);
+	const names = colleges.map(c => c.name).filter((name) => Boolean(name && name.trim()));
+	if (loading || names.length === 0) return LEGACY_COLLEGES;
+	return names;
 }

@@ -2,10 +2,22 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { ArrowLeft, Bug, CreditCard, Headset, House, Lightbulb, MessageCircle } from 'lucide-react';
 
-// Material icon component
-function Icon({ name, className = '' }: { name: string; className?: string }) {
-  return <span className={`material-symbols-rounded ${className}`}>{name}</span>;
+// Lucide icon component (same call-site API as before)
+const ICONS = {
+  arrow_back: ArrowLeft,
+  support_agent: Headset,
+  payments: CreditCard,
+  bug_report: Bug,
+  lightbulb: Lightbulb,
+  chat: MessageCircle,
+  home: House,
+} as const;
+
+function Icon({ name, className = '' }: { name: keyof typeof ICONS; className?: string }) {
+  const Cmp = ICONS[name];
+  return <Cmp size={20} className={className} />;
 }
 
 export default function ContactPage() {
