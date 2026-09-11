@@ -163,7 +163,12 @@ namespace PeasyPrint.Helper
             {
                 Logger.Info("Resolving job details...");
                 var apiKey = Environment.GetEnvironmentVariable("PEASYPRINT_API_KEY");
-                var client = new JobClient(SharedHttpClient, null);
+                var settings = SettingsStore.Load();
+                var apiBase = request.ApiBase
+                    ?? settings.ApiBaseOverride
+                    ?? Environment.GetEnvironmentVariable("PEASYPRINT_API_BASE")
+                    ?? DEFAULT_API_BASE;
+                var client = new JobClient(SharedHttpClient, new Uri(apiBase));
 
                 // Highest priority: direct jobUrl
                 if (request.JobUrl != null)
@@ -173,12 +178,6 @@ namespace PeasyPrint.Helper
                 }
 
                 // Build API base precedence: request.ApiBase -> settings override -> env -> default
-                var settings = SettingsStore.Load();
-                var apiBase = request.ApiBase
-                    ?? settings.ApiBaseOverride
-                    ?? Environment.GetEnvironmentVariable("PEASYPRINT_API_BASE")
-                    ?? DEFAULT_API_BASE;
-
                 Logger.Info($"Fetching job by ID: {request.JobId} from {apiBase}");
                 var clientWithBase = new JobClient(SharedHttpClient, new Uri(apiBase));
                 return await clientWithBase.FetchJobAsync(request.JobId!, apiKey, cancellationToken);

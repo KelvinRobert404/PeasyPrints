@@ -30,7 +30,8 @@ namespace PeasyPrint.Helper
                 throw new InvalidOperationException("API base is not set");
             }
 
-            var requestUri = new Uri(apiBaseUri, $"/print-jobs/{Uri.EscapeDataString(jobId)}");
+            var baseUri = apiBaseUri.AbsoluteUri.EndsWith("/", StringComparison.Ordinal) ? apiBaseUri : new Uri(apiBaseUri.AbsoluteUri + "/");
+            var requestUri = new Uri(baseUri, $"print-jobs/{Uri.EscapeDataString(jobId)}");
             using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
             if (!string.IsNullOrWhiteSpace(apiKey))
             {
@@ -78,6 +79,14 @@ namespace PeasyPrint.Helper
 
         public async Task<PrintRequest?> FetchJobByUrlAsync(Uri jobUrl, string? apiKey, CancellationToken cancellationToken)
         {
+            if (!string.Equals(jobUrl.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Print job URLs must use HTTPS");
+            }
+            if (apiBaseUri == null || !string.Equals(jobUrl.Host, apiBaseUri.Host, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Print job URL host is not trusted");
+            }
             using var request = new HttpRequestMessage(HttpMethod.Get, jobUrl);
             if (!string.IsNullOrWhiteSpace(apiKey))
             {
