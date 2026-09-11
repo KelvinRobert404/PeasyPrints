@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { cn } from '@/lib/utils/cn';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,6 @@ export function PrintConfigurator() {
     imagesScale,
     setImagesScale
   } = useUploadStore();
-  const [customizeOpen, setCustomizeOpen] = useState(false);
 
   const priceTable = useMemo(() => {
     if (!shopPricing) return null;
@@ -60,193 +59,178 @@ export function PrintConfigurator() {
   const toggle = (key: keyof typeof settings, value: any) => () => setSettings({ [key]: value } as any);
 
   return (
-    <div className="space-y-4">
-      {/* Copies (always visible) */}
-      <div className="grid grid-cols-3 gap-3 items-center">
+    <div className="space-y-2">
+      {/* Copies */}
+      <div className="grid grid-cols-3 gap-2 items-center">
         <button
-          className="h-12 rounded-xl border bg-white text-xl"
+          className="h-10 rounded-lg border border-black/10 bg-white text-lg font-bold"
           onClick={() => setSettings({ copies: Math.max(1, settings.copies - 1) })}
         >
           -
         </button>
-        <div className="h-12 rounded-xl bg-blue-600 text-white flex flex-col items-center justify-center">
-          <div className="text-base font-bold">{settings.copies}</div>
-          <div className="text-[10px] leading-none">copies</div>
+        <div className="h-10 rounded-lg bg-royal text-white flex items-center justify-center gap-1.5">
+          <div className="text-[15px] font-extrabold tabular-nums">{settings.copies}</div>
+          <div className="text-[10px] font-semibold text-white/70">copies</div>
         </div>
         <button
-          className="h-12 rounded-xl border bg-white text-xl"
+          className="h-10 rounded-lg border border-black/10 bg-white text-lg font-bold"
           onClick={() => setSettings({ copies: settings.copies + 1 })}
         >
           +
         </button>
       </div>
 
-      {/* Customize toggle */}
-      <div>
-        <button
-          type="button"
-          className="w-full h-10 rounded-lg border bg-white text-sm font-medium"
-          onClick={() => setCustomizeOpen((v) => !v)}
-        >
-          {customizeOpen ? 'Hide Customize' : 'Customize'}
-        </button>
+      {/* Paper Size */}
+      <div className="grid grid-cols-2 gap-2">
+        {(['A3', 'A4'] as const).map((size) => {
+          const unavailable = isUnavailablePaper(size);
+          return (
+            <button
+              key={size}
+              className={cn(
+                'h-12 rounded-xl border text-lg font-extrabold font-quinn',
+                settings.paperSize === size ? 'bg-royal text-white border-transparent' : 'bg-white text-ink border-black/10',
+                unavailable ? 'opacity-60 cursor-not-allowed' : ''
+              )}
+              onClick={unavailable ? undefined : toggle('paperSize', size)}
+              disabled={unavailable}
+            >
+              <div className="px-3 w-full flex flex-col items-center text-center">
+                <div>{size}</div>
+                {shopPricing && unavailable && (
+                  <div className="mt-0.5">
+                    <Badge variant="destructive" className="text-[9px]">UNAVAILABLE</Badge>
+                  </div>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      {customizeOpen && (
-        <div className="space-y-4">
-          {/* Paper Size */}
-          <div className="grid grid-cols-2 gap-3">
-            {(['A3', 'A4'] as const).map((size) => {
-              const unavailable = isUnavailablePaper(size);
-              return (
-                <button
-                  key={size}
-                  className={cn(
-                    'h-16 rounded-2xl border text-xl font-extrabold font-quinn',
-                    settings.paperSize === size ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
-                    unavailable ? 'opacity-60 cursor-not-allowed' : ''
-                  )}
-                  onClick={unavailable ? undefined : toggle('paperSize', size)}
-                  disabled={unavailable}
-                >
-                  <div className="px-3 w-full flex flex-col items-center text-center">
-                    <div>{size}</div>
-                    {shopPricing && unavailable && (
-                      <div className="mt-1">
-                        <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge>
-                      </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+      {/* Color */}
+      <div className="grid grid-cols-2 gap-2">
+        {(['Black & White', 'Color'] as const).map((color) => {
+          const unavailable = isUnavailableColor(color);
+          return (
+            <button
+              key={color}
+              className={cn(
+                'h-10 rounded-lg border border-black/10 text-xs font-bold',
+                settings.printColor === color ? 'bg-royal text-white border-transparent' : 'bg-white text-ink',
+                unavailable ? 'opacity-60 cursor-not-allowed' : ''
+              )}
+              onClick={unavailable ? undefined : toggle('printColor', color)}
+              disabled={unavailable}
+            >
+              {color === 'Black & White' ? 'black & white' : 'colour'}
+            </button>
+          );
+        })}
+      </div>
 
-          {/* Color */}
-          <div className="grid grid-cols-2 gap-3">
-            {(['Black & White', 'Color'] as const).map((color) => {
-              const unavailable = isUnavailableColor(color);
-              return (
-                <button
-                  key={color}
-                  className={cn(
-                    'h-12 rounded-xl border text-xs font-semibold',
-                    settings.printColor === color ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
-                    unavailable ? 'opacity-60 cursor-not-allowed' : ''
-                  )}
-                  onClick={unavailable ? undefined : toggle('printColor', color)}
-                  disabled={unavailable}
-                >
-                  {color === 'Black & White' ? 'black & white' : 'colour'}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Format (hidden when images present) */}
-          {(images?.length || 0) === 0 && (
-            <div className="grid grid-cols-2 gap-3">
-              {(['Single-Sided', 'Double-Sided'] as const).map((format) => {
-                const unavailable = isUnavailableFormat(format);
-                return (
-                  <button
-                    key={format}
-                    className={cn(
-                      'h-12 rounded-xl border text-xs font-semibold',
-                      settings.printFormat === format ? 'bg-blue-600 text-white' : 'bg-white text-gray-900',
-                      unavailable ? 'opacity-60 cursor-not-allowed' : ''
-                    )}
-                    onClick={unavailable ? undefined : toggle('printFormat', format)}
-                    disabled={unavailable}
-                  >
-                    <div className="px-3 w-full flex flex-col items-center text-center">
-                      <div>{format === 'Single-Sided' ? 'single-sided' : 'double-sided'}</div>
-                      {shopPricing && unavailable && (
-                        <div className="mt-1">
-                          <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Binding (hidden when images present) */}
-          {(images?.length || 0) === 0 && (
-            <div className="grid grid-cols-1 gap-3">
-              <select
-                className="border rounded h-12 px-3"
-                value={settings.binding}
-                onChange={(e) => setSettings({ binding: e.target.value as any })}
+      {/* Format (hidden when images present) */}
+      {(images?.length || 0) === 0 && (
+        <div className="grid grid-cols-2 gap-2">
+          {(['Single-Sided', 'Double-Sided'] as const).map((format) => {
+            const unavailable = isUnavailableFormat(format);
+            return (
+              <button
+                key={format}
+                className={cn(
+                  'h-10 rounded-lg border border-black/10 text-xs font-bold',
+                  settings.printFormat === format ? 'bg-royal text-white border-transparent' : 'bg-white text-ink',
+                  unavailable ? 'opacity-60 cursor-not-allowed' : ''
+                )}
+                onClick={unavailable ? undefined : toggle('printFormat', format)}
+                disabled={unavailable}
               >
-                <option value="">No Binding</option>
-                {(['Soft Binding', 'Spiral Binding', 'Hard Binding'] as const).map((label) => {
-                  const price = label === 'Soft Binding' ? shopPricing?.services.softBinding
-                    : label === 'Spiral Binding' ? shopPricing?.services.spiralBinding
-                      : shopPricing?.services.hardBinding;
-                  const unavailable = shopPricing ? Number(price ?? 0) <= 0 : false;
-                  return (
-                    <option key={label} value={label} disabled={unavailable}>
-                      {label}{shopPricing && unavailable ? ' — UNAVAILABLE' : ''}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          )}
-
-          {/* Images-only controls (visible when images uploaded) */}
-          {images && images.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Pages</label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="h-8 w-8 rounded bg-white border"
-                    onClick={() => setImagesPages(Math.max(1, imagesPages - 1))}
-                  >
-                    −
-                  </button>
-                  <div className="w-10 text-center text-sm font-semibold">{imagesPages}</div>
-                  <button
-                    type="button"
-                    className="h-8 w-8 rounded bg-white border"
-                    onClick={() => setImagesPages(Math.min(5, imagesPages + 1))}
-                  >
-                    +
-                  </button>
+                <div className="px-3 w-full flex flex-col items-center text-center">
+                  <div>{format === 'Single-Sided' ? 'single-sided' : 'double-sided'}</div>
+                  {shopPricing && unavailable && (
+                    <div className="mt-0.5">
+                      <Badge variant="destructive" className="text-[9px]">UNAVAILABLE</Badge>
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Image size</label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="h-8 w-8 rounded bg-white border"
-                    onClick={() => setImagesScale(Math.max(0.5, Math.round((imagesScale - 0.1) * 10) / 10))}
-                  >
-                    −
-                  </button>
-                  <div className="w-12 text-center text-sm font-semibold">{Math.round(imagesScale * 100)}%</div>
-                  <button
-                    type="button"
-                    className="h-8 w-8 rounded bg-white border"
-                    onClick={() => setImagesScale(Math.min(2.0, Math.round((imagesScale + 0.1) * 10) / 10))}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* No extra color pages input per new design */}
+              </button>
+            );
+          })}
         </div>
       )}
+
+      {/* Binding (hidden when images present) */}
+      {(images?.length || 0) === 0 && (
+        <div className="grid grid-cols-1 gap-2">
+          <select
+            className="border border-black/10 rounded-lg h-10 px-3 text-[13px] font-semibold bg-white"
+            value={settings.binding}
+            onChange={(e) => setSettings({ binding: e.target.value as any })}
+          >
+            <option value="">No Binding</option>
+            {(['Soft Binding', 'Spiral Binding', 'Hard Binding'] as const).map((label) => {
+              const price = label === 'Soft Binding' ? shopPricing?.services.softBinding
+                : label === 'Spiral Binding' ? shopPricing?.services.spiralBinding
+                  : shopPricing?.services.hardBinding;
+              const unavailable = shopPricing ? Number(price ?? 0) <= 0 : false;
+              return (
+                <option key={label} value={label} disabled={unavailable}>
+                  {label}{shopPricing && unavailable ? ' — UNAVAILABLE' : ''}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      )}
+
+      {/* Images-only controls (visible when images uploaded) */}
+      {images && images.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-[13px] font-bold">Pages</label>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                className="h-8 w-8 rounded-lg bg-white border border-black/10 font-bold"
+                onClick={() => setImagesPages(Math.max(1, imagesPages - 1))}
+              >
+                −
+              </button>
+              <div className="w-10 text-center text-sm font-bold tabular-nums">{imagesPages}</div>
+              <button
+                type="button"
+                className="h-8 w-8 rounded-lg bg-white border border-black/10 font-bold"
+                onClick={() => setImagesPages(Math.min(5, imagesPages + 1))}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <label className="text-[13px] font-bold">Image size</label>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                className="h-8 w-8 rounded-lg bg-white border border-black/10 font-bold"
+                onClick={() => setImagesScale(Math.max(0.5, Math.round((imagesScale - 0.1) * 10) / 10))}
+              >
+                −
+              </button>
+              <div className="w-12 text-center text-sm font-bold tabular-nums">{Math.round(imagesScale * 100)}%</div>
+              <button
+                type="button"
+                className="h-8 w-8 rounded-lg bg-white border border-black/10 font-bold"
+                onClick={() => setImagesScale(Math.min(2.0, Math.round((imagesScale + 0.1) * 10) / 10))}
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* No extra color pages input per new design */}
     </div>
   );
 }

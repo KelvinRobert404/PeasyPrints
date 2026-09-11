@@ -3,7 +3,8 @@
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BottomNavigation } from '@/components/layout/BottomNavigation';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { FileDropzone } from '@/components/upload/FileDropzone';
 import { PrintConfigurator } from '@/components/upload/PrintConfigurator';
 import { PrintUpgrades } from '@/components/upload/PrintUpgrades';
@@ -115,23 +116,28 @@ export default function UploadEntryPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-outfit">
-      {/* Navbar */}
-      <div className="bg-blue-600 px-4 py-3 flex items-center gap-3">
-        <a href="/" className="text-white active:opacity-70">
-          <span className="material-symbols-rounded text-2xl">arrow_back</span>
-        </a>
-        <h1 className="text-lg font-semibold text-white">Print</h1>
+    <div className="min-h-screen flex flex-col bg-[#F4F5F7] font-sans">
+      {/* Slim title row — the single header on this page */}
+      <div className="sticky top-0 z-30 border-b border-black/[0.05] bg-[#F4F5F7]/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-3 py-3">
+          <Link href="/" aria-label="Back home" className="campus-press flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <ArrowLeft size={18} className="text-black" />
+          </Link>
+          <div className="min-w-0 flex-1 leading-tight">
+            <h1 className="truncate font-quinn text-[18px] font-bold tracking-tight text-black">print</h1>
+          </div>
+          {selectedShop ? <span className="shrink-0 rounded-full bg-ink px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-cream">{selectedShop.name}</span> : null}
+        </div>
       </div>
 
-      <main className="flex-1 overflow-y-auto p-4 pb-24 md:pb-10 space-y-4">
-        <Card>
-          <CardContent className="pt-3">
+      <main className="flex-1 overflow-y-auto px-3 pt-3 pb-28 space-y-2.5">
+        <Card className="rounded-[20px] border-black/[0.06]">
+          <CardContent className="p-3">
             <div className="relative">
               <div
                 ref={scrollerRef}
                 onScroll={updateScrollIndicators}
-                className="grid grid-flow-col auto-cols-[25%] gap-2 overflow-x-auto snap-x py-1 no-scrollbar"
+                className="grid grid-flow-col auto-cols-[22%] gap-1.5 overflow-x-auto snap-x py-0.5 no-scrollbar"
               >
                 {[...filteredShops]
                   .sort((a, b) => Number(Boolean(b.isOpen)) - Number(Boolean(a.isOpen)))
@@ -148,34 +154,28 @@ export default function UploadEntryPage() {
                         }}
                         aria-disabled={!isOpen}
                         className={[
-                          'relative aspect-[4/3] rounded-xl border shadow-sm p-1.5 flex flex-col items-center justify-between text-center overflow-hidden',
+                          'relative aspect-[4/5] rounded-2xl border shadow-sm p-1.5 flex flex-col items-center justify-between text-center overflow-hidden',
                           'transition-all',
-                          isOpen ? 'bg-white hover:shadow-md' : 'bg-gray-100 opacity-60 grayscale cursor-not-allowed',
-                          isSelected && isOpen ? 'ring-2 ring-blue-600' : '',
+                          isOpen ? 'bg-white hover:shadow-md' : 'bg-zinc-100 opacity-60 grayscale cursor-not-allowed',
+                          isSelected && isOpen ? 'ring-2 ring-royal border-transparent' : 'border-black/[0.06]',
                           'snap-start shrink-0'
                         ].join(' ')}
                       >
                         <div className="w-full flex justify-center">
                           {isOpen ? (
-                            <Badge className="px-2 py-0.5 text-[10px]">OPEN</Badge>
+                            <span className="rounded-full bg-ink px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.08em] text-cream">Open</span>
                           ) : (
-                            <Badge variant="destructive" className="px-2 py-0.5 text-[10px]">Closed</Badge>
+                            <span className="rounded-full bg-zinc-200/70 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.08em] text-zinc-500">Closed</span>
                           )}
                         </div>
-                        <div className="px-1 w-full min-w-0">
-                          <div className="text-xs font-semibold w-full line-clamp-2 leading-tight">{s.name}</div>
+                        <div className="px-0.5 w-full min-w-0">
+                          <div className="font-quinn text-[12px] font-bold w-full line-clamp-2 leading-tight text-ink">{s.name}</div>
                         </div>
 
                       </button>
                     );
                   })}
               </div>
-              {showLeft && (
-                <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10" />
-              )}
-              {showRight && (
-                <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10" />
-              )}
               {showLeft && (
                 <div className="absolute left-1 top-1/2 -translate-y-1/2 z-20">
                   <ChevronLeft className="w-4 h-4 text-gray-500" />
@@ -188,19 +188,15 @@ export default function UploadEntryPage() {
               )}
             </div>
             {selectedShop && (
-              <div className="mt-3 rounded-xl border bg-white p-3 shadow-sm">
+              <div className="mt-2.5 rounded-2xl bg-[#F4F5F7] p-2.5">
                 {selectedShop.address && (
-                  <div className="text-xs text-gray-800">
-                    <div className="font-medium mb-0.5">Address:</div>
-                    <div className="text-gray-700 leading-relaxed">{selectedShop.address}</div>
-                  </div>
+                  <div className="text-[11px] text-zinc-600 leading-relaxed">{selectedShop.address}</div>
                 )}
                 {formatShopTiming(selectedShop) && (
-                  <div className="text-xs text-gray-800 mt-2">
-                    <span className="font-medium mr-1">Timing:</span>
+                  <div className="mt-1">
                     <Badge
                       variant="outline"
-                      className="px-2 py-0.5 text-[10px] bg-yellow-500/10 text-yellow-700 border-yellow-500/20"
+                      className="px-2 py-0.5 text-[10px] bg-cream/60 text-ink border-ink/10"
                     >
                       {formatShopTiming(selectedShop) as string}
                     </Badge>
@@ -211,23 +207,23 @@ export default function UploadEntryPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">What are we printing today?</CardTitle>
+        <Card className="rounded-[20px] border-black/[0.06]">
+          <CardHeader className="p-3 pb-0">
+            <CardTitle className="font-quinn text-[17px] font-bold text-ink">What are we printing today?</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3">
             <UmbrellaSelector />
           </CardContent>
         </Card>
 
         <div className="relative" onClick={disabled ? nudgeSelectShop : undefined}>
-          <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
-            <CardHeader>
-              <CardTitle className="text-base">
+          <Card className={`rounded-[20px] border-black/[0.06] ${disabled ? 'opacity-60 pointer-events-none select-none' : ''}`}>
+            <CardHeader className="p-3 pb-0">
+              <CardTitle className="font-quinn text-[17px] font-bold text-ink">
                 {jobType === 'Assignment' ? 'Select Assignment PDF' : 'Select PDF or Images'}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3">
               {jobType === 'Assignment' ? (
                 <FileDropzone />
               ) : (() => {
@@ -254,11 +250,11 @@ export default function UploadEntryPage() {
           )}
         </div>
 
-        <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
-          <CardHeader>
-            <CardTitle className="text-base">Print Configuration</CardTitle>
+        <Card className={`rounded-[20px] border-black/[0.06] ${disabled ? 'opacity-60 pointer-events-none select-none' : ''}`}>
+          <CardHeader className="p-3 pb-0">
+            <CardTitle className="font-quinn text-[17px] font-bold text-ink">Print Configuration</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3">
             {jobType === 'Assignment' ? (
               <AssignmentConfigurator />
             ) : (
@@ -267,20 +263,20 @@ export default function UploadEntryPage() {
           </CardContent>
         </Card>
 
-        <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
-          <CardHeader>
-            <CardTitle className="text-base">Print Upgrades</CardTitle>
+        <Card className={`rounded-[20px] border-black/[0.06] ${disabled ? 'opacity-60 pointer-events-none select-none' : ''}`}>
+          <CardHeader className="p-3 pb-0">
+            <CardTitle className="font-quinn text-[17px] font-bold text-ink">Print Upgrades</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3">
             <PrintUpgrades shopTiming={selectedShop?.timing} />
           </CardContent>
         </Card>
 
-        <Card className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
-          <CardHeader>
-            <CardTitle className="text-base">Summary</CardTitle>
+        <Card className={`rounded-[20px] border-black/[0.06] ${disabled ? 'opacity-60 pointer-events-none select-none' : ''}`}>
+          <CardHeader className="p-3 pb-0">
+            <CardTitle className="font-quinn text-[17px] font-bold text-ink">Summary</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3">
             <PriceSummary />
           </CardContent>
         </Card>
@@ -291,13 +287,12 @@ export default function UploadEntryPage() {
         </div>
       </main>
       {toast && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[60]">
-          <div className="rounded-md bg-gray-900 text-white px-3 py-2 text-sm shadow-lg">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-full max-w-[428px] px-4">
+          <div className="rounded-full bg-ink text-cream px-4 py-2.5 text-[13px] font-semibold text-center shadow-lg">
             {toast}
           </div>
         </div>
       )}
-      <BottomNavigation />
     </div>
   );
 }

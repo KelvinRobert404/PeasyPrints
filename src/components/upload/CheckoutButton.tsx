@@ -6,7 +6,7 @@ import { imagesToPdf } from '@/lib/utils/imagesToPdf';
 import { splitAssignmentPdf } from '@/lib/utils/splitAssignmentPdf';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useUser } from '@clerk/nextjs';
-import { uploadPdfAndGetUrl } from '@/lib/firebase/storageUpload';
+import { uploadPdfAndGetPath } from '@/lib/firebase/storageUpload';
 import { loadRazorpay } from '@/lib/razorpay/loadRazorpay';
 // import { createOrderDoc } from '@/lib/firebase/createOrder';
 import { useRouter } from 'next/navigation';
@@ -116,14 +116,21 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         jobType,
       });
       // 1) Create Razorpay order first (match Flutter flow)
+      const checkoutId = crypto.randomUUID();
       const orderRes = await fetch('/api/razorpay/order', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: totalCost, currency: 'INR' })
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': checkoutId },
+        body: JSON.stringify({
+          shopId,
+          totalPages: pageCount,
+          printSettings: settings,
+          jobType,
+          assignment: (jobType === 'Assignment' && assignmentMode === 'Mixed') ? { colorPages: assignmentColorPages } : undefined,
+        })
       });
-      const { order, error } = await orderRes.json();
+      const { order, quote, error } = await orderRes.json();
       if (error || !order?.id) throw new Error(error || 'Failed to create Razorpay order');
-      capture('razorpay_order_created', { razorpay_order_id: order.id, totalCost, userId: clerkUser.id });
+      capture('razorpay_order_created', { razorpay_order_id: order.id, totalCost: quote?.amount, userId: clerkUser.id });
 
       // 2) Load Razorpay SDK and open checkout quickly to keep click context
       await loadRazorpay();
@@ -167,29 +174,29 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
           try {
             // 3) After successful payment, upload the prepared blob(s)
             const uid = clerkUser.id;
-            let fileUrl = '';
-            let splitUrls: { bwUrl: string; colorUrl: string; originalUrl?: string } | null = null;
+            let filePath = '';
+            let splitPaths: { bwPath: string; colorPath: string; originalPath?: string } | null = null;
             if (preparedSplit) {
               const bwFile = new File([(preparedSplit as any).bw], 'bw.pdf', { type: 'application/pdf' });
               const colorFile = new File([(preparedSplit as any).color], 'color.pdf', { type: 'application/pdf' });
               const originalBlob: Blob | undefined = (preparedSplit as any).original;
               const uploads: Promise<string>[] = [
-                uploadPdfAndGetUrl(uid, bwFile),
-                uploadPdfAndGetUrl(uid, colorFile)
+                uploadPdfAndGetPath(uid, bwFile),
+                uploadPdfAndGetPath(uid, colorFile)
               ];
               if (originalBlob) {
                 const originalFile = new File([originalBlob], 'original.pdf', { type: 'application/pdf' });
-                uploads.push(uploadPdfAndGetUrl(uid, originalFile));
+                uploads.push(uploadPdfAndGetPath(uid, originalFile));
               }
               const urls = await Promise.all(uploads);
-              const bwUrl = urls[0];
-              const colorUrl = urls[1];
-              const originalUrl = urls[2];
-              splitUrls = { bwUrl, colorUrl, originalUrl };
-              fileUrl = originalUrl || colorUrl; // primary reference
+              const bwPath = urls[0];
+              const colorPath = urls[1];
+              const originalPath = urls[2];
+              splitPaths = { bwPath, colorPath, originalPath };
+              filePath = originalPath || colorPath;
             } else if (preparedSingle) {
               const uploadFile = new File([preparedSingle.blob], preparedSingle.name, { type: 'application/pdf' });
-              fileUrl = await uploadPdfAndGetUrl(uid, uploadFile);
+              filePath = await uploadPdfAndGetPath(uid, uploadFile);
             } else {
               throw new Error('Nothing to upload');
             }
@@ -197,16 +204,12 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                shopId,
-                shopName: shopName || '',
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
                 userName: clerkUser.fullName || clerkUser.username || clerkUser.phoneNumbers?.[0]?.phoneNumber || clerkUser.emailAddresses?.[0]?.emailAddress || 'User',
-                fileUrl,
+                filePath,
                 fileName: hasPdf ? file!.name : (hasImages ? 'images.pdf' : 'document.pdf'),
-                totalPages: pageCount,
-                printSettings: settings,
-                jobType,
-                splitFiles: splitUrls || undefined,
-                assignment: (jobType === 'Assignment' && assignmentMode === 'Mixed') ? { colorPages: assignmentColorPages } : undefined
+                splitFiles: splitPaths || undefined,
               })
             });
             if (!res.ok) {
@@ -284,8 +287,8 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
           const hasImages = (images?.length || 0) > 0;
           return loading || (!hasPdf && !hasImages) || totalCost <= 0 || !isClerkLoaded || !clerkUser;
         })()}
-        className="w-full h-14 bg-blue-600 text-white rounded-xl disabled:opacity-50 font-quinn text-[24px]"
-        style={{ letterSpacing: '0.02em' }}
+        className="w-full h-14 bg-royal text-white rounded-2xl disabled:opacity-50 font-poster text-[22px]"
+        style={{ letterSpacing: '0.03em' }}
       >
         {loading ? 'PROCESSING…' : 'CHECKOUT'}
       </button>
@@ -309,7 +312,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
             <button type="button" className="h-10 px-3 rounded-md border bg-white" onClick={() => setPreviewOpen(false)}>Cancel</button>
             <button
               type="button"
-              className="h-10 px-3 rounded-md bg-blue-600 text-white"
+              className="h-10 px-4 rounded-xl bg-royal text-white text-sm font-extrabold"
               onClick={async () => {
                 setPreviewOpen(false);
                 await startPaymentFlow();
@@ -341,7 +344,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
               <div>Still processing… This is taking longer than usual.</div>
               <button
                 onClick={() => router.push('/orders')}
-                className="mt-3 w-full h-10 rounded-md bg-blue-600 text-white"
+                className="mt-3 w-full h-11 rounded-xl bg-royal text-white text-sm font-extrabold"
               >
                 View Orders
               </button>

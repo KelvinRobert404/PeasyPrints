@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { Image as ImageIcon } from 'lucide-react';
 import type { Listing, ListingCategory } from '@/types/models';
 import { formatLocationForCard } from '@/lib/utils/location';
 
@@ -53,9 +54,7 @@ export function ListingCard({ listing, category }: ListingCardProps) {
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <span className="material-symbols-rounded text-3xl text-gray-300">
-                image
-              </span>
+              <ImageIcon size={28} className="text-gray-300" />
             </div>
           )}
 
@@ -92,7 +91,7 @@ export function ListingCard({ listing, category }: ListingCardProps) {
           <div className="flex items-center gap-1.5 mt-2">
             <div
               className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
+              style={{ background: 'var(--primary)' }}
             >
               {listing.authorName?.[0] ?? 'S'}
             </div>
