@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import Script from 'next/script';
 import './globals.css';
 import { assertRequiredEnvInProd } from '@/lib/utils/env';
 import localFont from 'next/font/local';
@@ -30,6 +29,7 @@ import { AuthProvider } from '@/components/providers/AuthProvider';
 import { RootShell } from '@/components/layout/RootShell';
 import { ClerkProvider } from '@clerk/nextjs';
 import { AnalyticsConsent } from '@/components/privacy/AnalyticsConsent';
+import { AgentationDevTools } from '../components/dev/AgentationDevTools';
 
 export const metadata: Metadata = {
   title: 'PeasyPrints',
@@ -53,13 +53,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link href="https://fonts.cdnfonts.com/css/coolvetica" rel="stylesheet" />
-        {process.env.NODE_ENV === 'development' && (
-          <Script
-            src="https://unpkg.com/react-grab/dist/index.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
-        )}
       </head>
       <body className={`${Quinn.variable} ${poster.variable} ${dmSans.variable} font-sans antialiased text-black`}>
         <ClerkProvider
@@ -73,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </RootShell>
         </ClerkProvider>
         <AnalyticsConsent />
+        <AgentationDevTools />
       </body>
     </html>
   );
