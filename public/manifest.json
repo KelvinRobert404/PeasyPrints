@@ -1,13 +1,13 @@
 {
-  "name": "PeasyPrints",
-  "short_name": "PeasyPrints",
-  "description": "Print with ease",
+  "name": "Swoop",
+  "short_name": "Swoop",
+  "description": "Your campus, sorted.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "theme_color": "#ffffff",
   "orientation": "any",
   "categories": ["productivity", "utilities"],
   "icons": [

@@ -2,13 +2,17 @@
 
 import { ReactNode } from 'react';
 import { SwoopNavbar } from '@/components/layout/SwoopNavbar';
-import { BottomNavigation } from '@/components/layout/BottomNavigation';
+import { Dock } from '@/components/layout/Dock';
 import { usePathname } from 'next/navigation';
+import { useDockStore } from '@/lib/stores/dockStore';
 
 export function RootShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const dockHidden = useDockStore((s) => s.hidden);
+  const hasSlot = useDockStore((s) => Boolean(s.slot));
+
   const isShopfront = pathname?.startsWith('/shopfront');
-  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/otp';
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/otp' || pathname === '/sso-callback';
   const isPickup = pathname?.startsWith('/orders/') && pathname?.includes('/pickup');
 
   const isGodview = pathname?.startsWith('/godview');
@@ -23,15 +27,17 @@ export function RootShell({ children }: { children: ReactNode }) {
     );
   }
 
+  const showDock = !isAuthPage && !isPickup && !dockHidden;
+
   return (
     <div className="min-h-screen bg-surface flex justify-center">
-      <div className="w-full max-w-[428px] bg-white shadow-lg min-h-screen flex flex-col">
+      <div className="w-full max-w-[428px] bg-white min-h-screen flex flex-col shadow-[0_0_0_1px_var(--line)]">
         {!isAuthPage && !isPickup && !hideNavbar && <SwoopNavbar />}
         {children}
-        {!isAuthPage && !isPickup && <BottomNavigation />}
+        {/* Keeps the last content clear of the fixed dock (tab bar 52px, live slot +46px). */}
+        {showDock && <div aria-hidden className={hasSlot ? 'h-[calc(118px+env(safe-area-inset-bottom))] shrink-0' : 'h-[calc(66px+env(safe-area-inset-bottom))] shrink-0'} />}
+        {showDock && <Dock />}
       </div>
     </div>
   );
 }
-
-

@@ -1,29 +1,28 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { assertRequiredEnvInProd } from '@/lib/utils/env';
-import localFont from 'next/font/local';
-import { Anton, DM_Sans } from 'next/font/google';
+import { Archivo, Bricolage_Grotesque, Figtree } from 'next/font/google';
 
-const poster = Anton({
+// Swoop design system v1: Bricolage (headings), Figtree (body), Archivo Black Italic (logo only).
+const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
-  weight: ['400'],
+  axes: ['wdth', 'opsz'],
   display: 'swap',
-  variable: '--font-poster'
+  variable: '--font-bricolage'
 });
 
-const dmSans = DM_Sans({
+const figtree = Figtree({
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
   display: 'swap',
-  variable: '--font-dm-sans'
+  variable: '--font-figtree'
 });
 
-const Quinn = localFont({
-  src: '../public/fonts/Quinn-Bold.otf',
-  weight: '700 800',
-  style: 'normal',
+const archivo = Archivo({
+  subsets: ['latin'],
+  style: ['italic'],
+  axes: ['wdth'],
   display: 'swap',
-  variable: '--font-quinn'
+  variable: '--font-archivo'
 });
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { RootShell } from '@/components/layout/RootShell';
@@ -32,15 +31,15 @@ import { AnalyticsConsent } from '@/components/privacy/AnalyticsConsent';
 import { AgentationDevTools } from '../components/dev/AgentationDevTools';
 
 export const metadata: Metadata = {
-  title: 'PeasyPrints',
-  description: 'Print with ease - web app',
+  title: 'Swoop',
+  description: 'Print, buy, sell and find a place to stay: your campus, sorted.',
   manifest: '/manifest.json'
 };
 
 export const runtime = 'nodejs';
 
 export const viewport: Viewport = {
-  themeColor: '#f8fafc',
+  themeColor: '#ffffff',
   viewportFit: 'cover'
 };
 
@@ -52,9 +51,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link href="https://fonts.cdnfonts.com/css/coolvetica" rel="stylesheet" />
       </head>
-      <body className={`${Quinn.variable} ${poster.variable} ${dmSans.variable} font-sans antialiased text-black`}>
+      <body className={`${bricolage.variable} ${figtree.variable} ${archivo.variable} font-sans antialiased text-ink`}>
         <ClerkProvider
           signInUrl="/login"
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}

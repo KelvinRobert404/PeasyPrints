@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic';
 
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useEffect, useState } from 'react';
-import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,7 +64,6 @@ export default function OTPPage() {
           </CardContent>
         </Card>
       </main>
-      <BottomNavigation />
     </div>
   );
 }

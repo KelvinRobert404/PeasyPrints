@@ -11,52 +11,61 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand palette - Revolut / 3-Color Constraint */
-  --background: #f4f5f7;
-  /* Very light grey for app structural background to show depth */
-  --surface: #f4f5f7;
-  --card: #ffffff;
-  /* Pure white cards */
-  --foreground: #000000;
-  /* Solid black for text and icons */
-  --border: #eef0f3;
-  /* Extremely subtle borders */
-  --muted: #F3F4F6;
-  --ring: #2563EB;
-  --primary: #0055FF;
-  /* Swoop Blue focus ring */
-
-  --primary-light: #3B82F6;
-  --primary-dark: #1D4ED8;
-
-  --secondary: #000000;
-  --text-primary: #000000;
-  --text-secondary: #52525B;
-  /* Zinc 600 */
-  --text-muted: #A1A1AA;
-  /* Zinc 400 */
-  --success: #10b981;
-  --marketplace-accent: #f43f5e;
-
-  /* Receipt language — global theme */
-  --cream: #FCF6B1;
-  /* Paper yellow for names, numerals, stat chips */
-  --ink: #101828;
-  /* Near-black navy for receipt slabs */
+  /* Swoop design system v1 (locked 2026-10-09) — white ground, royal for action, ink for weight */
   --royal: #0055FF;
-  /* Field blue */
+  /* Primary: actions, active tab, Print tile */
+  --royal-tint: #E8EFFF;
+  /* Selected states */
+  --royal-soft: #6E9BFF;
+  /* Royal on ink (sparks, icons on dark) */
+  --ink: #101828;
+  /* Text, dock, logo tape */
+  --surface: #F2F3F5;
+  /* Tiles, search pills, chips */
+  --line: #EEF0F3;
+  /* Dividers, card edges */
+  --slate: #71717A;
+  /* Secondary text, inactive tabs */
   --go: #22C55E;
-  /* Status green, reserved for state words */
+  /* Open, ready */
+  --go-text: #15803D;
+  /* Green text on white */
+  --go-tint: #DCFCE7;
 
-  /* Service list tints (Minimalist, gray-based) */
-  --tint-print: #f3f4f6;
-  --tint-marketplace: #f3f4f6;
-  --tint-canteen: #f3f4f6;
-  --tint-support: #f3f4f6;
+  /* Category accents */
+  --canteen: #15803D;
+  --canteen-tint: #DCFCE7;
+  --market: #C81E1E;
+  --market-tint: #FFE4E4;
+  --girls: #7E22CE;
+  --girls-tint: #F3E8FF;
 
-  /* Legacy Figma tokens – kept for compatibility */
+  /* Cream: illustrations only */
+  --cream: #FCF6B1;
+
+  /* Semantic aliases (kept for existing components) */
+  --background: #FFFFFF;
+  --card: #FFFFFF;
+  --foreground: #101828;
+  --border: #EEF0F3;
+  --muted: #F2F3F5;
+  --ring: #0055FF;
+  --primary: #0055FF;
+  --primary-light: #3B82F6;
+  --primary-dark: #0044CC;
+  --secondary: #101828;
+  --text-primary: #101828;
+  --text-secondary: #52525B;
+  --text-muted: #71717A;
+  --success: #22C55E;
+  --marketplace-accent: #C81E1E;
+
+  /* Legacy tokens – kept for compatibility, do not use in new UI */
+  --tint-print: #F2F3F5;
+  --tint-marketplace: #F2F3F5;
+  --tint-canteen: #F2F3F5;
+  --tint-support: #F2F3F5;
   --peasyprints: #FCF6B1;
-  --canteen: #3EDA46;
   --marketplace: #FF4D4D;
 }
 
@@ -106,7 +115,19 @@
   --color-cream: var(--cream);
   --color-ink: var(--ink);
   --color-royal: var(--royal);
+  --color-royal-tint: var(--royal-tint);
+  --color-royal-soft: var(--royal-soft);
+  --color-line: var(--line);
+  --color-slate: var(--slate);
   --color-go: var(--go);
+  --color-go-text: var(--go-text);
+  --color-go-tint: var(--go-tint);
+  --color-canteen: var(--canteen);
+  --color-canteen-tint: var(--canteen-tint);
+  --color-market: var(--market);
+  --color-market-tint: var(--market-tint);
+  --color-girls: var(--girls);
+  --color-girls-tint: var(--girls-tint);
   --color-accent-electric: var(--accent-electric);
   --color-accent-glow: var(--accent-glow);
 }
@@ -130,26 +151,65 @@
   }
 }
 
-/* DM Sans for incredibly clean, geometric, tight small body copy */
+/* ── Swoop type ─────────────────────────────────────────────
+   font-sans    Figtree  — all body copy, labels, buttons
+   font-heading Bricolage 700 @ 88% width — headings only (max 16px in app)
+   font-logo    Archivo Black Italic — the tape logo and status tape only  */
 .font-sans {
-  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-figtree), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Google Sans (via Product Sans CDN) for loud, soft, punchy display headings - RETIRED, use font-quinn */
-
-.font-quinn {
-  font-family: var(--font-quinn), var(--font-poppins), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+.font-heading {
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-stretch: 88%;
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
-/* Coolvetica secondary face — always regular weight, never caps */
-.font-coolvetica {
-  font-family: "Coolvetica", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-weight: 400;
+.font-logo {
+  font-family: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
 }
 
-/* Poster face for hero names, numerals, and status words */
+/* Legacy faces (Quinn, Anton, Coolvetica) retired — mapped to the new system until every use is migrated */
+.font-quinn,
 .font-poster {
-  font-family: var(--font-poster), "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-stretch: 88%;
+  letter-spacing: -0.025em;
+}
+
+.font-coolvetica {
+  font-family: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+}
+
+/* ── Swoop tape (logo) ─────────────────────────────────────
+   One straight piece of black tape with torn ends. Never rotate the logo. */
+.sw-tape {
+  display: inline-flex;
+  align-items: center;
+  gap: .22em;
+  padding: .2em .6em .26em;
+  background: var(--ink);
+  color: #FFFFFF;
+  white-space: nowrap;
+  clip-path: polygon(0 0, .09em 14%, 0 28%, .09em 42%, 0 57%, .09em 71%, 0 85%, .09em 100%, calc(100% - .09em) 100%, 100% 86%, calc(100% - .09em) 72%, 100% 58%, calc(100% - .09em) 43%, 100% 29%, calc(100% - .09em) 15%, 100% 0);
+}
+
+/* Endless strip — only where it means something real (e.g. SOLD across a listing) */
+.sw-strip {
+  display: flex;
+  align-items: center;
+  gap: .55em;
+  white-space: nowrap;
+  overflow: hidden;
+  background: var(--ink);
+  color: #FFFFFF;
+  padding: .3em .6em .34em;
 }
 
 /* Emergency order blink */
@@ -254,20 +314,26 @@
 
   .campus-input {
     width: 100%;
-    min-height: 48px;
-    border: 1px solid rgb(0 0 0 / 0.08);
-    border-radius: 16px;
-    background: white;
-    padding: 0.75rem 1rem;
-    color: #111827;
-    font-size: 0.875rem;
+    min-height: 44px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 0.625rem 0.875rem;
+    color: var(--ink);
+    font-size: 0.8125rem;
     font-weight: 600;
     outline: none;
-    transition: border-color 150ms ease, box-shadow 150ms ease;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  }
+
+  .campus-input::placeholder {
+    color: var(--slate);
+    font-weight: 500;
   }
 
   .campus-input:focus-visible {
-    border-color: #0055ff;
+    border-color: var(--royal);
+    background: #FFFFFF;
     box-shadow: 0 0 0 3px rgb(0 85 255 / 0.12);
   }
 
