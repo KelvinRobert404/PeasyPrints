@@ -1,112 +1,77 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import type { ComponentType } from 'react';
+import { cn } from '@/lib/utils/cn';
+import { Tag } from '@/components/swoop/primitives';
+import { ArrowRightIcon, HousingIcon, MarketIcon, PrintIcon, type IconProps } from '@/components/swoop/icons';
 
 type PromoSlide = {
   eyebrow: string;
   title: string;
   sub: string;
   href: string;
+  /** Art block colour; there are no photos for these promos yet. */
+  tone: 'royal' | 'ink' | 'surface';
+  icon: ComponentType<IconProps>;
 };
-
-const AUTO_ADVANCE_MS = 4000;
-const EASE = 'ease-[cubic-bezier(0.22,1,0.36,1)]';
 
 const PROMO_SLIDES: PromoSlide[] = [
   {
-    eyebrow: 'print',
-    title: 'PRINTS READY IN MINUTES',
+    eyebrow: 'Print',
+    title: 'Prints ready in minutes',
     sub: 'Upload PDFs, pick up nearby',
     href: '/upload',
+    tone: 'royal',
+    icon: PrintIcon
   },
   {
-    eyebrow: 'market place',
-    title: 'PRE-LOVED FINDS ON CAMPUS',
+    eyebrow: 'Marketplace',
+    title: 'Pre-loved finds on campus',
     sub: 'Books, tech & more',
     href: '/marketplace',
+    tone: 'ink',
+    icon: MarketIcon
   },
   {
-    eyebrow: 'housing',
-    title: 'ROOMS & ROOMMATES',
+    eyebrow: 'Housing',
+    title: 'Rooms & roommates',
     sub: 'Find your next stay',
     href: '/housing',
-  },
+    tone: 'surface',
+    icon: HousingIcon
+  }
 ];
 
-export function AnnouncementCarousel({ heightClass = 'h-24', outerClassName = 'px-[5px] mt-3', backgroundClass = '' }: { heightClass?: string; outerClassName?: string; backgroundClass?: string }) {
-  const [index, setIndex] = useState(0);
-  const [dir, setDir] = useState<1 | -1>(1);
-  const touchX = useRef<number | null>(null);
-  const count = PROMO_SLIDES.length;
+const TONES = {
+  royal: { block: 'bg-royal', icon: 'text-white/90', tag: 'white' },
+  ink: { block: 'bg-ink', icon: 'text-royal-soft', tag: 'royal' },
+  surface: { block: 'bg-surface', icon: 'text-royal', tag: 'ink' }
+} as const;
 
-  const go = (d: 1 | -1) => {
-    setDir(d);
-    setIndex((prev) => (prev + d + count) % count);
-  };
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setDir(1);
-      setIndex((prev) => (prev + 1) % count);
-    }, AUTO_ADVANCE_MS);
-    return () => clearInterval(id);
-  }, [count]);
-
+/** Horizontally scrolling 200px announcement cards (Home). */
+export function AnnouncementCarousel({ className }: { className?: string }) {
   return (
-    <div
-      className={outerClassName}
-      onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
-      onTouchEnd={(e) => {
-        if (touchX.current == null) return;
-        const dx = e.changedTouches[0].clientX - touchX.current;
-        if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
-        touchX.current = null;
-      }}
-    >
-      <div className={`relative ${heightClass} w-full overflow-hidden rounded-[24px] ${backgroundClass}`}>
-        {PROMO_SLIDES.map((slide, i) => {
-          const active = i === index;
-          return (
-            <Link
-              key={slide.title}
-              href={slide.href}
-              aria-hidden={!active}
-              tabIndex={active ? 0 : -1}
-              className={`absolute inset-0 bg-royal overflow-hidden transition-all duration-500 ${EASE} ${active ? 'opacity-100 z-[1] translate-x-0 scale-100' : `opacity-0 pointer-events-none scale-[0.985] ${dir === 1 ? 'translate-x-8' : '-translate-x-8'}`}`}
-            >
-              {/* soft glow */}
-              <span className="pointer-events-none absolute -left-16 -top-24 h-56 w-56 rounded-full bg-white/15 blur-2xl" aria-hidden />
-
-              <span className="relative flex h-full flex-col justify-between p-5">
-                <span className={`font-coolvetica text-[13px] tracking-[0.02em] text-white/70 transition-all duration-500 ${EASE} ${active ? 'opacity-100 translate-y-0 delay-100' : 'opacity-0 translate-y-2'}`}>{slide.eyebrow}</span>
-                <span>
-                  <span className={`block font-poster text-white text-[30px] leading-[1.0] tracking-[0.01em] transition-all duration-500 ${EASE} ${active ? 'opacity-100 translate-y-0 delay-150' : 'opacity-0 translate-y-3'}`}>{slide.title}</span>
-                  <span className={`mt-2 flex items-center gap-2 transition-all duration-500 ${EASE} ${active ? 'opacity-100 translate-y-0 delay-200' : 'opacity-0 translate-y-2'}`}>
-                    <span className="text-[12px] font-semibold text-white/75">{slide.sub}</span>
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
-                      <ArrowRight size={14} strokeWidth={2.5} className="text-white" />
-                    </span>
-                  </span>
-                </span>
-              </span>
-            </Link>
-          );
-        })}
-
-        {/* dots */}
-        <div className="absolute bottom-3.5 left-5 z-10 flex gap-1.5">
-          {PROMO_SLIDES.map((slide, i) => (
-            <button
-              key={slide.title}
-              aria-label={`Go to slide ${i + 1}`}
-              onClick={() => { setDir(i === index ? dir : i > index ? 1 : -1); setIndex(i); }}
-              className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? 'w-6 bg-white' : 'w-2 bg-white/40 hover:bg-white/60'}`}
-            />
-          ))}
-        </div>
-      </div>
+    <div className={cn('no-scrollbar flex snap-x gap-2 overflow-x-auto scroll-px-3 px-3', className)}>
+      {PROMO_SLIDES.map((slide) => {
+        const tone = TONES[slide.tone];
+        const Icon = slide.icon;
+        return (
+          <Link key={slide.href} href={slide.href} className="campus-press flex w-[200px] shrink-0 snap-start flex-col gap-0.5 text-ink">
+            <span className={cn('relative mb-1 block h-[88px] overflow-hidden rounded-[14px]', tone.block)}>
+              <Tag tone={tone.tag} className="absolute left-2 top-2">
+                {slide.eyebrow}
+              </Tag>
+              <Icon size={44} className={cn('absolute bottom-2 right-2.5', tone.icon)} />
+            </span>
+            <span className="flex min-w-0 items-center gap-[3px]">
+              <span className="font-heading truncate text-[12.5px] leading-[1.15]">{slide.title}</span>
+              <ArrowRightIcon size={12} className="shrink-0" />
+            </span>
+            <span className="truncate text-[11px] text-slate">{slide.sub}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 }

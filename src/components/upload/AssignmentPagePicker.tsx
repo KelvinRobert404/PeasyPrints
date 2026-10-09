@@ -3,7 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils/cn';
+import { swButton } from '@/components/swoop/primitives';
+
+// Thumbnails are built imperatively; these are their Swoop classes.
+const OVERLAY_ON = 'absolute inset-0 rounded-[12px] ring-2 ring-inset ring-royal pointer-events-none';
+const OVERLAY_OFF = 'absolute inset-0 pointer-events-none';
+const TYPE_ON = 'absolute right-1 bottom-1 inline-flex h-5 items-center rounded-full bg-royal px-1.5 text-[10px] font-bold text-white pointer-events-none';
+const TYPE_OFF = 'absolute right-1 bottom-1 inline-flex h-5 items-center rounded-full bg-ink/70 px-1.5 text-[10px] font-bold text-white pointer-events-none';
 
 export function AssignmentPagePicker({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { fileUrl, pageCount, assignmentColorPages, toggleAssignmentColorPage, clearAssignmentSelection, setAssignmentConfirmed } = useUploadStore();
@@ -82,31 +88,32 @@ export function AssignmentPagePicker({ open, onOpenChange }: { open: boolean; on
 
         const wrapper = document.createElement('button');
         wrapper.type = 'button';
-        wrapper.className = 'relative rounded-md border bg-white overflow-hidden shadow-sm focus:outline-none';
+        wrapper.className = 'relative overflow-hidden rounded-[12px] border border-line bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-royal/40';
+        wrapper.setAttribute('aria-label', `Page ${i}`);
         wrapper.onclick = () => toggleAssignmentColorPage(i);
 
         const img = document.createElement('img');
         img.src = canvas.toDataURL('image/png');
+        img.alt = '';
         img.className = 'block w-full h-auto pointer-events-none';
         wrapper.appendChild(img);
 
         const badge = document.createElement('div');
-        badge.className = 'absolute left-1 top-1 inline-flex items-center justify-center px-1.5 h-5 rounded text-[10px] font-medium bg-black/70 text-white';
+        badge.className = 'absolute left-1 top-1 inline-flex h-5 items-center justify-center rounded-full bg-ink/85 px-1.5 text-[10px] font-bold text-white tabular-nums';
         badge.textContent = String(i);
         wrapper.appendChild(badge);
 
         const overlay = document.createElement('div');
         const selected = assignmentColorPages.includes(i);
-        overlay.className = selected ? 'absolute inset-0 ring-2 ring-inset ring-blue-600 pointer-events-none' : 'absolute inset-0 pointer-events-none';
+        overlay.className = selected ? OVERLAY_ON : OVERLAY_OFF;
+        wrapper.setAttribute('aria-pressed', String(selected));
         overlay.setAttribute('data-overlay', '');
         wrapper.appendChild(overlay);
 
         const typeBadge = document.createElement('div');
-        typeBadge.className = selected
-          ? 'absolute right-1 bottom-1 px-1.5 h-5 rounded text-[10px] font-medium bg-blue-600 text-white pointer-events-none'
-          : 'absolute right-1 bottom-1 px-1.5 h-5 rounded text-[10px] font-medium bg-gray-700/70 text-white pointer-events-none';
+        typeBadge.className = selected ? TYPE_ON : TYPE_OFF;
         typeBadge.setAttribute('data-type', '');
-        typeBadge.textContent = selected ? 'Color' : 'B/W';
+        typeBadge.textContent = selected ? 'Colour' : 'B&W';
         wrapper.appendChild(typeBadge);
 
         // Track selected state reactively via MutationObserver pattern
@@ -121,13 +128,12 @@ export function AssignmentPagePicker({ open, onOpenChange }: { open: boolean; on
           const idx = (child as any)._pageIndex as number;
           const selected = useUploadStore.getState().assignmentColorPages.includes(idx);
           const overlay = child.querySelector('[data-overlay]') as HTMLDivElement | null;
-          if (overlay) overlay.className = selected ? 'absolute inset-0 ring-2 ring-inset ring-blue-600 pointer-events-none' : 'absolute inset-0 pointer-events-none';
+          if (overlay) overlay.className = selected ? OVERLAY_ON : OVERLAY_OFF;
+          child.setAttribute('aria-pressed', String(selected));
           const type = child.querySelector('[data-type]') as HTMLDivElement | null;
           if (type) {
-            type.className = selected
-              ? 'absolute right-1 bottom-1 px-1.5 h-5 rounded text-[10px] font-medium bg-blue-600 text-white pointer-events-none'
-              : 'absolute right-1 bottom-1 px-1.5 h-5 rounded text-[10px] font-medium bg-gray-700/70 text-white pointer-events-none';
-            type.textContent = selected ? 'Color' : 'B/W';
+            type.className = selected ? TYPE_ON : TYPE_OFF;
+            type.textContent = selected ? 'Colour' : 'B&W';
           }
         }
       };
@@ -146,22 +152,22 @@ export function AssignmentPagePicker({ open, onOpenChange }: { open: boolean; on
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[90vw]">
-        <DialogHeader>
-          <DialogTitle>Select color pages</DialogTitle>
-          <DialogDescription>Click pages to toggle color. You can change this later.</DialogDescription>
-          <div className="mt-2 flex flex-wrap gap-2 text-xs">
-            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">Color: {colorText || 'None'}</span>
-            <span className="px-2 py-0.5 rounded bg-gray-50 text-gray-700 border">B/W: {bwText || 'None'}</span>
+      <DialogContent className="w-[92vw] max-w-4xl rounded-[14px] p-3.5">
+        <DialogHeader className="mb-2.5">
+          <DialogTitle className="font-heading text-[16px] text-ink">Pick colour pages</DialogTitle>
+          <DialogDescription className="mt-0.5 text-[11.5px] text-slate">Tap a page to switch it between colour and B&W. You can change this later.</DialogDescription>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <span className="rounded-full bg-royal-tint px-2 py-0.5 text-[11px] font-bold text-royal tabular-nums">Colour: {colorText || 'None'}</span>
+            <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-bold text-ink tabular-nums">B&W: {bwText || 'None'}</span>
           </div>
         </DialogHeader>
-        <div className="grid grid-cols-4 gap-3 max-h-[70vh] overflow-auto" ref={containerRef} />
-        <DialogFooter>
-          <div className="mr-auto text-xs text-gray-600">{colorCount} page(s) selected</div>
-          <button type="button" className="h-9 px-3 rounded-md border" onClick={clearAssignmentSelection}>Clear</button>
+        <div className="grid max-h-[70vh] grid-cols-3 gap-2 overflow-auto sm:grid-cols-4" ref={containerRef} />
+        <DialogFooter className="mt-3 items-center gap-1.5">
+          <div className="mr-auto text-[11px] font-semibold text-slate tabular-nums">{colorCount} page{colorCount === 1 ? '' : 's'} in colour</div>
+          <button type="button" className={swButton({ variant: 'surface', size: 'sm' })} onClick={clearAssignmentSelection}>Clear</button>
           <button
             type="button"
-            className="h-9 px-3 rounded-md bg-blue-600 text-white"
+            className={swButton({ variant: 'primary', size: 'sm' })}
             onClick={() => { setAssignmentConfirmed(true); onOpenChange(false); }}
           >
             Done

@@ -2,9 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { FileDropzone } from '@/components/upload/FileDropzone';
 import { PrintConfigurator } from '@/components/upload/PrintConfigurator';
 import { PrintUpgrades } from '@/components/upload/PrintUpgrades';
@@ -13,19 +11,33 @@ import { CheckoutButton } from '@/components/upload/CheckoutButton';
 import { UmbrellaSelector } from '@/components/upload/UmbrellaSelector';
 import { ImagesUploader } from '@/components/upload/ImagesUploader';
 import { AssignmentConfigurator } from '@/components/upload/AssignmentConfigurator';
+import { ChevronLeftIcon } from '@/components/upload/icons';
+import { PageHeader, SectionHeader, StatusLine } from '@/components/swoop/primitives';
+import { ChevronRightIcon, ClockIcon, PinIcon } from '@/components/swoop/icons';
 import { useShopsStore } from '@/lib/stores/shopsStore';
 import { useUploadStore } from '@/lib/stores/uploadStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCollegeStore } from '@/lib/stores/collegeStore';
+import { useHideDock } from '@/lib/stores/dockStore';
 import haptics from '@/lib/utils/haptics';
+import { cn } from '@/lib/utils/cn';
+
+function Section({ title, dimmed, children }: { title: ReactNode; dimmed?: boolean; children: ReactNode }) {
+  return (
+    <section className={cn('pt-3.5', dimmed && 'pointer-events-none select-none opacity-60')}>
+      <SectionHeader title={title} className="mb-2" />
+      {children}
+    </section>
+  );
+}
 
 export default function UploadEntryPage() {
   const { shops, subscribe } = useShopsStore();
   const { setShopPricing, jobType, file, images } = useUploadStore();
   const { selectedCollege, colleges, subscribe: subscribeColleges } = useCollegeStore();
   const [selectedShopId, setSelectedShopId] = useState<string>('');
+
+  // This screen owns a sticky checkout bar, so the global dock steps aside.
+  useHideDock();
 
   // Read window.location rather than useSearchParams to keep this page statically renderable.
   useEffect(() => {
@@ -106,7 +118,7 @@ export default function UploadEntryPage() {
   function formatShopTiming(s: { openingTime?: string; closingTime?: string; timing?: string }): string | undefined {
     const open = formatHourLabel(s.openingTime);
     const close = formatHourLabel(s.closingTime);
-    if (open && close) return `${open}:${close}`;
+    if (open && close) return `${open} – ${close}`;
     return s.timing ?? undefined;
   }
 
@@ -121,131 +133,104 @@ export default function UploadEntryPage() {
     window.setTimeout(() => setToast(''), 2500);
   }
 
+  const shopTiming = selectedShop ? formatShopTiming(selectedShop) : undefined;
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F5F7] font-sans">
-      {/* Slim title row — the single header on this page */}
-      <div className="sticky top-0 z-30 border-b border-black/[0.05] bg-[#F4F5F7]/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-3 py-3">
-          <Link href="/" aria-label="Back home" className="campus-press flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <ArrowLeft size={18} className="text-black" />
-          </Link>
-          <div className="min-w-0 flex-1 leading-tight">
-            <h1 className="truncate font-quinn text-[18px] font-bold tracking-tight text-black">print</h1>
+    <div className="flex min-h-screen flex-col bg-white font-sans">
+      <PageHeader
+        backHref="/"
+        kicker={selectedShop?.name ?? 'PeasyPrints'}
+        title="Print"
+        className="sticky top-0 z-30 border-b border-line bg-white pb-1.5"
+      />
+
+      <main className="flex-1 px-3 pb-3">
+        {/* Shop picker */}
+        <section className="pt-3">
+          <SectionHeader title="Pick a shop" className="mb-2" />
+          <div className="relative">
+            <div
+              ref={scrollerRef}
+              onScroll={updateScrollIndicators}
+              className="no-scrollbar grid snap-x auto-cols-[30%] grid-flow-col gap-1.5 overflow-x-auto py-0.5"
+            >
+              {[...filteredShops]
+                .sort((a, b) => Number(Boolean(b.isOpen)) - Number(Boolean(a.isOpen)))
+                .map((s) => {
+                  const isSelected = selectedShopId === s.id;
+                  const isOpen = Boolean(s.isOpen);
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => {
+                        if (!isOpen) return;
+                        setSelectedShopId(s.id);
+                      }}
+                      aria-disabled={!isOpen}
+                      aria-pressed={isSelected && isOpen}
+                      className={cn(
+                        'campus-press relative flex h-[72px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-[12px] p-2 text-left transition-colors',
+                        isOpen ? 'bg-surface' : 'cursor-not-allowed bg-surface opacity-60 grayscale',
+                        isSelected && isOpen && 'bg-royal-tint ring-2 ring-inset ring-royal'
+                      )}
+                    >
+                      <StatusLine open={isOpen} label={isOpen ? 'Open' : 'Closed'} />
+                      <span className="font-heading line-clamp-2 w-full text-[12.5px] leading-[1.1] text-ink">{s.name}</span>
+                    </button>
+                  );
+                })}
+            </div>
+            {showLeft && (
+              <span aria-hidden className="pointer-events-none absolute left-1 top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full bg-white text-ink shadow-[0_1px_3px_rgba(16,24,40,0.16)]">
+                <ChevronLeftIcon size={12} />
+              </span>
+            )}
+            {showRight && (
+              <span aria-hidden className="pointer-events-none absolute right-1 top-1/2 z-20 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full bg-white text-ink shadow-[0_1px_3px_rgba(16,24,40,0.16)]">
+                <ChevronRightIcon size={12} />
+              </span>
+            )}
           </div>
-          {selectedShop ? <span className="shrink-0 rounded-full bg-ink px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-cream">{selectedShop.name}</span> : null}
-        </div>
-      </div>
-
-      <main className="flex-1 overflow-y-auto px-3 pt-3 pb-28 space-y-2.5">
-        <Card className="rounded-[20px] border-black/[0.06]">
-          <CardContent className="p-3">
-            <div className="relative">
-              <div
-                ref={scrollerRef}
-                onScroll={updateScrollIndicators}
-                className="grid grid-flow-col auto-cols-[22%] gap-1.5 overflow-x-auto snap-x py-0.5 no-scrollbar"
-              >
-                {[...filteredShops]
-                  .sort((a, b) => Number(Boolean(b.isOpen)) - Number(Boolean(a.isOpen)))
-                  .map((s) => {
-                    const isSelected = selectedShopId === s.id;
-                    const isOpen = Boolean(s.isOpen);
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => {
-                          if (!isOpen) return;
-                          setSelectedShopId(s.id);
-                        }}
-                        aria-disabled={!isOpen}
-                        className={[
-                          'relative aspect-[4/5] rounded-2xl border shadow-sm p-1.5 flex flex-col items-center justify-between text-center overflow-hidden',
-                          'transition-all',
-                          isOpen ? 'bg-white hover:shadow-md' : 'bg-zinc-100 opacity-60 grayscale cursor-not-allowed',
-                          isSelected && isOpen ? 'ring-2 ring-royal border-transparent' : 'border-black/[0.06]',
-                          'snap-start shrink-0'
-                        ].join(' ')}
-                      >
-                        <div className="w-full flex justify-center">
-                          {isOpen ? (
-                            <span className="rounded-full bg-ink px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.08em] text-cream">Open</span>
-                          ) : (
-                            <span className="rounded-full bg-zinc-200/70 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.08em] text-zinc-500">Closed</span>
-                          )}
-                        </div>
-                        <div className="px-0.5 w-full min-w-0">
-                          <div className="font-quinn text-[12px] font-bold w-full line-clamp-2 leading-tight text-ink">{s.name}</div>
-                        </div>
-
-                      </button>
-                    );
-                  })}
-              </div>
-              {showLeft && (
-                <div className="absolute left-1 top-1/2 -translate-y-1/2 z-20">
-                  <ChevronLeft className="w-4 h-4 text-gray-500" />
-                </div>
+          {selectedShop && (selectedShop.address || shopTiming) && (
+            <div className="mt-2 flex flex-col gap-1 rounded-[12px] bg-surface px-2.5 py-2">
+              {selectedShop.address && (
+                <p className="flex items-start gap-1.5 text-[11px] leading-[1.4] text-text-secondary">
+                  <PinIcon size={14} className="mt-px shrink-0 text-slate" />
+                  <span className="min-w-0">{selectedShop.address}</span>
+                </p>
               )}
-              {showRight && (
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 z-20">
-                  <ChevronRight className="w-4 h-4 text-gray-500" />
-                </div>
+              {shopTiming && (
+                <p className="flex items-center gap-1.5 text-[11px] font-bold text-ink tabular-nums">
+                  <ClockIcon size={14} className="shrink-0 text-slate" />
+                  {shopTiming}
+                </p>
               )}
             </div>
-            {selectedShop && (
-              <div className="mt-2.5 rounded-2xl bg-[#F4F5F7] p-2.5">
-                {selectedShop.address && (
-                  <div className="text-[11px] text-zinc-600 leading-relaxed">{selectedShop.address}</div>
-                )}
-                {formatShopTiming(selectedShop) && (
-                  <div className="mt-1">
-                    <Badge
-                      variant="outline"
-                      className="px-2 py-0.5 text-[10px] bg-cream/60 text-ink border-ink/10"
-                    >
-                      {formatShopTiming(selectedShop) as string}
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          )}
+        </section>
 
-        <Card className="rounded-[20px] border-black/[0.06]">
-          <CardHeader className="p-3 pb-0">
-            <CardTitle className="font-quinn text-[17px] font-bold text-ink">What are we printing today?</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3">
-            <UmbrellaSelector />
-          </CardContent>
-        </Card>
+        <Section title="What are we printing?">
+          <UmbrellaSelector />
+        </Section>
 
         <div className="relative" onClick={disabled ? nudgeSelectShop : undefined}>
-          <Card className={`rounded-[20px] border-black/[0.06] ${disabled ? 'opacity-60 pointer-events-none select-none' : ''}`}>
-            <CardHeader className="p-3 pb-0">
-              <CardTitle className="font-quinn text-[17px] font-bold text-ink">
-                {jobType === 'Assignment' ? 'Select Assignment PDF' : 'Select PDF or Images'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3">
-              {jobType === 'Assignment' ? (
-                <FileDropzone />
-              ) : (() => {
-                const hasPdf = Boolean(file);
-                const hasImages = Boolean(images && images.length > 0);
-                if (hasPdf) return <FileDropzone />;
-                if (hasImages) return <ImagesUploader />;
-                return (
-                  <div className="grid grid-cols-2 gap-2">
-                    <FileDropzone />
-                    <ImagesUploader />
-                  </div>
-                );
-              })()}
-            </CardContent>
-          </Card>
+          <Section title={jobType === 'Assignment' ? 'Select assignment PDF' : 'Select PDF or images'} dimmed={disabled}>
+            {jobType === 'Assignment' ? (
+              <FileDropzone />
+            ) : (() => {
+              const hasPdf = Boolean(file);
+              const hasImages = Boolean(images && images.length > 0);
+              if (hasPdf) return <FileDropzone />;
+              if (hasImages) return <ImagesUploader />;
+              return (
+                <div className="grid grid-cols-2 gap-2">
+                  <FileDropzone />
+                  <ImagesUploader />
+                </div>
+              );
+            })()}
+          </Section>
           {disabled && (
             <button
               type="button"
@@ -256,60 +241,37 @@ export default function UploadEntryPage() {
           )}
         </div>
 
-        <Card className={`rounded-[20px] border-black/[0.06] ${disabled ? 'opacity-60 pointer-events-none select-none' : ''}`}>
-          <CardHeader className="p-3 pb-0">
-            <CardTitle className="font-quinn text-[17px] font-bold text-ink">Print Configuration</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3">
-            {jobType === 'Assignment' ? (
-              <AssignmentConfigurator />
-            ) : (
-              <PrintConfigurator />
-            )}
-          </CardContent>
-        </Card>
+        <Section title="Print settings" dimmed={disabled}>
+          {jobType === 'Assignment' ? (
+            <AssignmentConfigurator />
+          ) : (
+            <PrintConfigurator />
+          )}
+        </Section>
 
-        <Card className={`rounded-[20px] border-black/[0.06] ${disabled ? 'opacity-60 pointer-events-none select-none' : ''}`}>
-          <CardHeader className="p-3 pb-0">
-            <CardTitle className="font-quinn text-[17px] font-bold text-ink">Print Upgrades</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3">
-            <PrintUpgrades shopTiming={selectedShop?.timing} />
-          </CardContent>
-        </Card>
+        <Section title="Upgrades" dimmed={disabled}>
+          <PrintUpgrades shopTiming={selectedShop?.timing} />
+        </Section>
 
-        <Card className={`rounded-[20px] border-black/[0.06] ${disabled ? 'opacity-60 pointer-events-none select-none' : ''}`}>
-          <CardHeader className="p-3 pb-0">
-            <CardTitle className="font-quinn text-[17px] font-bold text-ink">Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3">
-            <PriceSummary />
-          </CardContent>
-        </Card>
+        <Section title="Summary" dimmed={disabled}>
+          <PriceSummary />
+        </Section>
+      </main>
 
-        {/* Checkout CTA separated */}
-        <div className={disabled ? 'opacity-60 pointer-events-none select-none' : ''}>
+      {/* Sticky checkout bar (the dock is hidden on this screen) */}
+      <div className="sticky bottom-0 z-30 border-t border-line bg-white px-3 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2.5">
+        <div className={disabled ? 'pointer-events-none select-none opacity-60' : ''}>
           <CheckoutButton shopId={selectedShopId} shopName={selectedShop?.name} />
         </div>
-      </main>
+      </div>
+
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-full max-w-[428px] px-4">
-          <div className="rounded-full bg-ink text-cream px-4 py-2.5 text-[13px] font-semibold text-center shadow-lg">
+        <div className="fixed bottom-24 left-1/2 z-[60] w-full max-w-[428px] -translate-x-1/2 px-3">
+          <div role="status" className="rounded-full bg-ink px-4 py-2.5 text-center text-[12.5px] font-semibold text-white shadow-[0_4px_16px_rgba(16,24,40,0.18)]">
             {toast}
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-
-function CollegePill() {
-  const { selectedCollege } = useCollegeStore();
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full bg-white/90 text-blue-900 px-3 py-1 text-xs">
-      <span className="inline-block w-2 h-2 rounded-full bg-blue-900" />
-      <span className="truncate max-w-[180px]">{selectedCollege}</span>
     </div>
   );
 }

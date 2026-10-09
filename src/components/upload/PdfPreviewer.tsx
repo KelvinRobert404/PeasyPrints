@@ -57,11 +57,12 @@ export function PdfPreviewer() {
         await page.render({ canvasContext: context, viewport }).promise;
 
         const wrapper = document.createElement('div');
-        wrapper.className = 'mb-4';
+        wrapper.className = 'mb-3 last:mb-0';
         const label = document.createElement('div');
-        label.className = 'mb-2 text-xs text-gray-600';
+        label.className = 'mb-1 text-[11px] font-semibold text-slate';
         label.textContent = `Page ${i} of ${pageCount}`;
         wrapper.appendChild(label);
+        canvas.className = 'block h-auto max-w-full rounded-[12px] border border-line bg-white';
         wrapper.appendChild(canvas);
         container.appendChild(wrapper);
       }

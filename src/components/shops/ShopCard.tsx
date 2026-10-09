@@ -1,42 +1,73 @@
-import Image from 'next/image';
+'use client';
+
 import type { Shop } from '@/types/models';
 import { cn } from '@/lib/utils/cn';
+import { ListRow, StatusLine } from '@/components/swoop/primitives';
+import { StoreIcon } from '@/components/swoop/icons';
+import { shopHours, shopServices } from '@/components/shops/shopMeta';
 
 interface Props {
   shop: Shop;
-  onSelect: (id: string) => void;
+  onSelect?: (id: string) => void;
+  /** Render as a link instead of calling onSelect. */
+  href?: string;
+  /** Show the street address under the status line. */
+  showAddress?: boolean;
+  divider?: boolean;
+  className?: string;
 }
 
-export function ShopCard({ shop, onSelect }: Props) {
-  return (
-    <div
-      className={cn(
-        'w-full rounded-xl border bg-white p-4 mb-4 shadow-sm',
-        'hover:shadow-md transition-shadow active:scale-[0.99]'
-      )}
-      onClick={() => onSelect(shop.id)}
-      role="button"
-      tabIndex={0}
+/** 44px shop thumb: the shop's logo when it has one, otherwise a surface tile with a duotone icon. */
+export function ShopThumb({ shop, size = 44, className }: { shop: Shop; size?: number; className?: string }) {
+  const closed = !shop.isOpen;
+  return shop.logoUrl ? (
+    <img
+      src={shop.logoUrl}
+      alt=""
+      width={size}
+      height={size}
+      style={{ width: size, height: size }}
+      className={cn('block shrink-0 rounded-[10px] bg-surface object-cover', closed && 'opacity-55 grayscale', className)}
+    />
+  ) : (
+    <span
+      className={cn('grid shrink-0 place-items-center rounded-[10px] bg-surface text-ink', closed && 'text-text-muted', className)}
+      style={{ width: size, height: size }}
+      aria-hidden="true"
     >
-      <div className="flex items-start gap-3">
-        {shop.logoUrl ? (
-          <Image
-            src={shop.logoUrl}
-            alt={shop.name}
-            width={56}
-            height={56}
-            style={{ width: '56px', height: '56px' }}
-            className="rounded-md object-cover"
-          />
-        ) : (
-          <div className="w-14 h-14 bg-gray-100 rounded-md" />
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="text-base font-semibold truncate">{shop.name}</div>
-          <div className="text-xs text-gray-600 line-clamp-2">{shop.address}</div>
-          {shop.timing && <div className="text-xs text-gray-500 mt-1">{shop.timing}</div>}
-        </div>
-      </div>
-    </div>
+      <StoreIcon size={Math.round(size * 0.5)} />
+    </span>
+  );
+}
+
+/** Shop row: thumb · name · ● Open • hours • services. */
+export function ShopCard({ shop, onSelect, href, showAddress = false, divider = true, className }: Props) {
+  const open = Boolean(shop.isOpen);
+  const hours = shopHours(shop);
+  const services = shopServices(shop);
+
+  return (
+    <ListRow
+      href={href}
+      onClick={href ? undefined : onSelect ? () => onSelect(shop.id) : undefined}
+      divider={divider}
+      className={className}
+      leading={<ShopThumb shop={shop} />}
+      title={<span className="font-heading text-[12.5px] leading-[1.15]">{shop.name}</span>}
+      subtitle={
+        <>
+          <span className="flex min-w-0 items-center gap-1">
+            <StatusLine open={open} label={open ? 'Open' : 'Closed'} detail={hours} />
+            {services.length > 0 && (
+              <>
+                <span className="text-[11.5px] text-text-muted">•</span>
+                <span className="truncate text-[11.5px] font-medium text-slate">{services.join(' · ')}</span>
+              </>
+            )}
+          </span>
+          {showAddress && shop.address && <span className="mt-px block truncate">{shop.address}</span>}
+        </>
+      }
+    />
   );
 }

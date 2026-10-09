@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { useCouponStore } from '@/lib/stores/couponsStore';
 import { useUploadStore } from '@/lib/stores/uploadStore';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tag, X, Check, Loader2 } from 'lucide-react';
+import { swButton } from '@/components/swoop/primitives';
+import { AlertIcon, CheckIcon, CloseIcon, TicketIcon } from '@/components/swoop/icons';
+import { SpinnerIcon } from '@/components/upload/icons';
 
 interface CouponInputProps {
     shopId?: string;
@@ -37,65 +36,60 @@ export function CouponInput({ shopId }: CouponInputProps) {
 
     if (appliedCoupon) {
         return (
-            <div className="rounded-xl border border-green-200 bg-green-50 p-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                            <Check className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="font-mono font-semibold text-green-700">{appliedCoupon.code}</span>
-                                <span className="text-sm text-green-600">applied</span>
-                            </div>
-                            <p className="text-sm text-green-600">
-                                You save ₹{discount}
-                                {appliedCoupon.discountType === 'percentage' && ` (${appliedCoupon.discountValue}% off)`}
-                            </p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={clearCoupon}
-                        className="rounded-full p-1 hover:bg-green-100 transition-colors"
-                        aria-label="Remove coupon"
-                    >
-                        <X className="h-4 w-4 text-green-600" />
-                    </button>
+            <div className="flex items-center gap-2.5 rounded-[12px] bg-go-tint px-2.5 py-2">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-go text-white">
+                    <CheckIcon size={15} />
+                </span>
+                <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12.5px] font-bold text-ink">
+                        <span className="uppercase tracking-[0.04em]">{appliedCoupon.code}</span> applied
+                    </p>
+                    <p className="text-[11px] font-semibold text-go-text tabular-nums">
+                        You save ₹{discount}
+                        {appliedCoupon.discountType === 'percentage' && ` (${appliedCoupon.discountValue}% off)`}
+                    </p>
                 </div>
+                <button
+                    type="button"
+                    onClick={clearCoupon}
+                    className="campus-press grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-ink"
+                    aria-label="Remove coupon"
+                >
+                    <CloseIcon size={13} />
+                </button>
             </div>
         );
     }
 
     return (
-        <div className="space-y-2">
-            <div className="flex gap-2">
-                <div className="relative flex-1">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
+        <div className="space-y-1.5">
+            <div className="flex gap-1.5">
+                <label className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-[10px] bg-surface pl-3 pr-2 focus-within:ring-2 focus-within:ring-royal/40">
+                    <TicketIcon size={16} className="shrink-0 text-slate" />
+                    <input
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Enter coupon code"
-                        className="pl-10 font-mono uppercase"
+                        placeholder="Coupon code"
+                        aria-label="Coupon code"
+                        autoCapitalize="characters"
+                        className="min-w-0 flex-1 bg-transparent text-[12.5px] font-bold uppercase tracking-[0.04em] text-ink outline-none placeholder:font-medium placeholder:normal-case placeholder:tracking-normal placeholder:text-slate disabled:opacity-60"
                         disabled={loading}
                     />
-                </div>
-                <Button
+                </label>
+                <button
+                    type="button"
                     onClick={handleApply}
                     disabled={loading || !couponCode.trim()}
-                    variant="outline"
-                    className="px-6"
+                    aria-label={loading ? 'Applying coupon' : undefined}
+                    className={swButton({ variant: 'ink', size: 'md', className: 'min-w-[72px]' })}
                 >
-                    {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                        'Apply'
-                    )}
-                </Button>
+                    {loading ? <SpinnerIcon size={16} className="animate-spin" /> : 'Apply'}
+                </button>
             </div>
             {error && (
-                <p className="text-sm text-red-500 flex items-center gap-1">
-                    <X className="h-3 w-3" />
+                <p role="alert" className="flex items-center gap-1 text-[11px] font-semibold text-market">
+                    <AlertIcon size={13} className="shrink-0" />
                     {error}
                 </p>
             )}

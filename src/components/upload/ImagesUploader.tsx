@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { ImagesLayoutPreview } from '@/components/upload/ImagesLayoutPreview';
-import { Image as ImageIcon, Plus } from 'lucide-react';
+import { AlertIcon, ImageIcon } from '@/components/swoop/icons';
+import { cn } from '@/lib/utils/cn';
 
 const ACCEPT = ['image/png', 'image/jpeg'];
 const MAX_IMAGE_MB = 8;
@@ -98,40 +99,53 @@ export function ImagesUploader() {
     accept: { 'image/*': ['.png', '.jpg', '.jpeg'] }
   });
 
+  const hasImages = Boolean(images && images.length > 0);
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div
         {...getRootProps()}
-        className="rounded-2xl bg-gray-100 p-4 text-center text-sm cursor-pointer select-none"
+        className={cn(
+          'cursor-pointer select-none rounded-[14px] text-center outline-none focus-visible:ring-2 focus-visible:ring-royal/40',
+          hasImages ? 'bg-surface p-1.5' : 'border-[1.5px] border-dashed px-3 py-5',
+          !hasImages && (isDragActive ? 'border-royal bg-royal-tint' : 'border-line bg-surface')
+        )}
       >
         <input {...getInputProps()} />
-        {images && images.length > 0 ? (
-          <div className="overflow-hidden rounded-xl border bg-white">
-            <div className="h-64 overflow-auto">
+        {hasImages ? (
+          <div className="overflow-hidden rounded-[12px] border border-line bg-white">
+            <div className="h-64 overflow-auto p-2">
               <ImagesLayoutPreview />
             </div>
-            <div className="px-3 py-2 text-xs text-gray-600 text-left border-t">
-              {images.length} image{images.length > 1 ? 's' : ''} selected
+            <div className="flex items-center gap-2 border-t border-line px-2.5 py-2 text-left">
+              <ImageIcon size={18} className="shrink-0 text-royal" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[12.5px] font-bold text-ink">
+                  {images.length} image{images.length > 1 ? 's' : ''} selected
+                </p>
+                <p className="text-[11px] text-slate">Tap to replace</p>
+              </div>
             </div>
           </div>
-        ) : isDragActive ? (
-          <div className="text-gray-600">Drop images here...</div>
         ) : (
-          <div className="text-gray-600 flex flex-col items-center justify-center gap-2 py-6">
-            <ImageIcon className="w-8 h-8 text-gray-400" />
-            <div className="font-medium">Select Images</div>
-            <div className="text-xs flex items-center gap-1"><Plus className="w-3 h-3" /> Tap to add or drag & drop</div>
+          <div className="flex flex-col items-center justify-center gap-1">
+            <ImageIcon size={24} className={isDragActive ? 'text-royal' : 'text-ink'} />
+            <p className="mt-0.5 text-[12.5px] font-bold text-ink">{isDragActive ? 'Drop images here' : 'Select images'}</p>
+            <p className="text-[11px] text-slate">Tap to add or drag and drop</p>
           </div>
         )}
       </div>
-      {error && <div className="text-xs text-red-600">{error}</div>}
+      {error && <p role="alert" className="text-[11px] font-semibold text-market">{error}</p>}
 
       {/* Controls moved to Customize in Print Configuration */}
 
       {/* Precise overflow warning */}
       {overflow && (
-        <div className="text-xs text-yellow-800 bg-yellow-50 border border-yellow-200 rounded p-2">
-          Current image size and pages cannot fit all images without overlap. Increase Pages or reduce image size.
+        <div className="flex items-start gap-2 rounded-[12px] bg-market-tint px-2.5 py-2">
+          <AlertIcon size={16} className="mt-px shrink-0 text-market" />
+          <p className="text-[11px] leading-[1.4] text-ink">
+            These images won&apos;t fit without overlapping. Add pages or reduce the image size.
+          </p>
         </div>
       )}
 
@@ -139,5 +153,3 @@ export function ImagesUploader() {
     </div>
   );
 }
-
-

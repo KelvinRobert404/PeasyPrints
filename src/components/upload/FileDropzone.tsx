@@ -3,9 +3,10 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useUploadStore } from '@/lib/stores/uploadStore';
-import { FileText, Plus } from 'lucide-react';
+import { DocIcon, UploadIcon } from '@/components/swoop/icons';
 import { PdfPreviewer } from '@/components/upload/PdfPreviewer';
 import { usePosthog } from '@/hooks/usePosthog';
+import { cn } from '@/lib/utils/cn';
 
 export function FileDropzone() {
   const { setFile, file } = useUploadStore();
@@ -31,23 +32,31 @@ export function FileDropzone() {
   return (
     <div
       {...getRootProps()}
-      className="rounded-2xl bg-gray-100 p-4 text-center text-sm cursor-pointer select-none"
+      className={cn(
+        'cursor-pointer select-none rounded-[14px] text-center outline-none focus-visible:ring-2 focus-visible:ring-royal/40',
+        file ? 'bg-surface p-1.5' : 'border-[1.5px] border-dashed px-3 py-5',
+        !file && (isDragActive ? 'border-royal bg-royal-tint' : 'border-line bg-surface')
+      )}
     >
       <input {...getInputProps()} />
       {file ? (
-        <div className="overflow-hidden rounded-xl border bg-white">
-          <div className="h-64 overflow-auto">
+        <div className="overflow-hidden rounded-[12px] border border-line bg-white">
+          <div className="h-64 overflow-auto p-2">
             <PdfPreviewer />
           </div>
-          <div className="px-3 py-2 text-xs text-gray-600 text-left border-t">{file.name}</div>
+          <div className="flex items-center gap-2 border-t border-line px-2.5 py-2 text-left">
+            <DocIcon size={18} className="shrink-0 text-royal" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[12.5px] font-bold text-ink">{file.name}</p>
+              <p className="text-[11px] text-slate">Tap to replace</p>
+            </div>
+          </div>
         </div>
-      ) : isDragActive ? (
-        <div className="text-gray-600">Drop the PDF here...</div>
       ) : (
-        <div className="text-gray-600 flex flex-col items-center justify-center gap-2 py-6">
-          <FileText className="w-8 h-8 text-gray-400" />
-          <div className="font-medium">Select a PDF</div>
-          <div className="text-xs flex items-center gap-1"><Plus className="w-3 h-3" /> Tap to add or drag & drop</div>
+        <div className="flex flex-col items-center justify-center gap-1">
+          <UploadIcon size={24} className={isDragActive ? 'text-royal' : 'text-ink'} />
+          <p className="mt-0.5 text-[12.5px] font-bold text-ink">{isDragActive ? 'Drop the PDF here' : 'Select a PDF'}</p>
+          <p className="text-[11px] text-slate">Tap to add or drag and drop</p>
         </div>
       )}
     </div>

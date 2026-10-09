@@ -1,31 +1,37 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState, type ReactNode } from 'react';
+import { useParams } from 'next/navigation';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { OrderDoc } from '@/types/models';
-import Link from 'next/link';
 import { haptics } from '@/lib/utils/haptics';
+import { EmptyState, IconButton, ListRow, IconTile, Tag } from '@/components/swoop/primitives';
+import { SwoopLogo } from '@/components/swoop/Logo';
+import { BackIcon, DocIcon, HelpIcon, OrdersIcon } from '@/components/swoop/icons';
+import { formatOrderDate, formatOrderTime, orderStatusMeta } from '@/components/orders/orderStatus';
 
-function isToday(ts: any) {
-  try {
-    const d = (ts?.toDate ? ts.toDate() : new Date(ts)) as Date;
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
-  } catch {
-    return false;
-  }
+function TopBar() {
+  return (
+    <div className="flex h-12 items-center justify-between px-3 pt-1.5">
+      <IconButton label="Back to orders" icon={BackIcon} href="/orders" />
+      <SwoopLogo size={15} />
+      <span className="h-8 w-8" aria-hidden />
+    </div>
+  );
 }
 
-function formatMoney(n: number | undefined) {
-  if (typeof n !== 'number') return '';
-  return `₹${n}`;
+function Stat({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-0.5 rounded-[12px] bg-surface py-2.5">
+      <span className="font-heading text-[16px] leading-none tabular-nums text-ink">{value}</span>
+      <span className="text-[10.5px] font-semibold text-slate">{label}</span>
+    </div>
+  );
 }
 
 export default function PickupPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const [order, setOrder] = useState<OrderDoc | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -45,20 +51,6 @@ export default function PickupPage() {
     return () => unsub();
   }, [params?.id]);
 
-  const statusDisplay = useMemo(() => {
-    if (!order) return { label: '', color: 'text-white' };
-    const map: Record<string, { label: string; color: string }> = {
-      printed: { label: 'ready to collect', color: 'text-[#3eda46]' },
-      printed_ready: { label: 'ready to collect', color: 'text-[#3eda46]' },
-      collected: { label: 'collected', color: 'text-[#3eda46]' },
-      processing: { label: 'processing', color: 'text-yellow-300' },
-      printing: { label: 'printing', color: 'text-yellow-300' },
-      cancelled: { label: 'cancelled', color: 'text-red-400' },
-      completed: { label: 'completed', color: 'text-white' }
-    };
-    return map[order.status] || { label: order.status?.toUpperCase?.() || '', color: 'text-white' };
-  }, [order]);
-
   // Fire a success haptic when the order is ready. Must be before any early returns
   useEffect(() => {
     if (order && (order.status === 'printed' || (order as any).status === 'printed_ready')) {
@@ -66,86 +58,78 @@ export default function PickupPage() {
     }
   }, [order]);
 
-  if (loading) return <div className="p-6 text-sm text-gray-100 bg-[#155dfc] min-h-screen">Loading...</div>;
-  if (!order) return <div className="p-6 text-sm text-gray-100 bg-[#155dfc] min-h-screen">Order not found</div>;
+  if (loading) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col bg-white">
+        <TopBar />
+        <div className="flex flex-1 items-center justify-center" aria-busy="true">
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-royal border-t-transparent" aria-label="Loading order" />
+        </div>
+      </div>
+    );
+  }
 
-  const showCta = isToday(order.timestamp);
+  if (!order) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col bg-white">
+        <TopBar />
+        <div className="px-3 pt-6">
+          <EmptyState icon={OrdersIcon} title="Order not found" body="This order doesn't exist or isn't on your account." />
+        </div>
+      </div>
+    );
+  }
+
+  const meta = orderStatusMeta(order.status);
+  const placed = [formatOrderDate(order.timestamp), formatOrderTime(order.timestamp)].filter(Boolean).join(', ');
 
   return (
-    <div className="relative h-[100dvh] bg-[#155dfc] text-white overflow-hidden">
-      {/* Home button */}
-      <div className="absolute left-3 top-3">
-        <Link href="/orders" className="block rounded-2xl bg-[#101828] w-[61px] h-[54px] grid place-items-center">
-          <img src="/figma/e4702269c114f68dcff879aecd2445c1fe9c83c8.svg" alt="home" className="w-[27px] h-[27px]" />
-        </Link>
-      </div>
+    <div className="flex min-h-[100dvh] flex-col bg-white">
+      <TopBar />
 
-      {/* Stub card */}
-      <div className="px-3 pt-[104px]">
-        <div className="rounded-[27px] bg-[#101828] px-5 pt-5 pb-6 text-[#fcf6b1]">
-          <div className="text-[40px] font-quinn text-[#fcf6b1] leading-none mb-2">{order.userName?.toUpperCase?.()}</div>
-          <div className="text-white lowercase text-[24px] leading-6 mb-4">
-            <div><span className="text-white">shop</span>: {order.shopName}</div>
-            <div><span className="text-white">filename</span>: {order.fileName}</div>
+      <main className="flex flex-1 flex-col gap-3 px-3 pt-2 pb-4">
+        {/* Hero: the name the shop matches at the counter */}
+        <section className={`flex flex-col gap-2 rounded-[14px] px-4 pt-3.5 pb-4 ${meta.ready ? 'bg-royal text-white' : 'bg-ink text-white'}`}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold text-white/80">Show this at the counter</span>
+            <Tag tone={meta.ready ? 'go' : 'white'}>{meta.label}</Tag>
           </div>
+          <p className="font-heading break-words text-[36px] leading-[0.95]">{order.userName}</p>
+          <p className="truncate text-[12px] font-semibold text-white/80">at {order.shopName}</p>
+        </section>
 
-          <div className="grid grid-cols-4 gap-3 text-[#101828]">
-            <div className="rounded-2xl bg-[#fcf6b1] h-[103px] grid place-items-center">
-              <div className="text-[48px] font-quinn leading-none">{order.printSettings?.paperSize || 'A4'}</div>
-            </div>
-            <div className="rounded-2xl bg-[#fcf6b1] h-[103px] grid place-items-center">
-              <div className="text-center">
-                <div className="text-[48px] font-quinn leading-none">{order.printSettings?.copies ?? 1}</div>
-                <div className="text-[13px]">copies</div>
-              </div>
-            </div>
-            <div className="rounded-2xl bg-[#fcf6b1] h-[103px] grid place-items-center">
-              <div className="text-center">
-                <div className="text-[48px] font-quinn leading-none">{order.totalPages}</div>
-                <div className="text-[13px]">pages</div>
-              </div>
-            </div>
-            <div className="rounded-2xl bg-[#fcf6b1] h-[103px] grid place-items-center">
-              <div className="text-center">
-                <div className="flex items-center justify-center">
-                  <span className="text-[28px] font-quinn leading-none">₹</span>
-                  <span className="text-[48px] font-quinn leading-none">{order.totalCost}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 text-[#fcf6b1]">
-            <span className="text-[40px] lowercase">status</span>
-            <span className="text-[40px]">: </span>
-            <span className={`${statusDisplay.color} text-[28px]`}>{statusDisplay.label}</span>
-          </div>
-
-          {/* Contact support CTA */}
-          <div className="mt-4">
-            <Link href="/contact" className="inline-flex items-center justify-center h-12 px-4 rounded-xl bg-white text-[#101828] font-semibold">
-              contact us
-            </Link>
-          </div>
+        <div className="grid grid-cols-4 gap-1.5">
+          <Stat label="Paper" value={order.printSettings?.paperSize || 'A4'} />
+          <Stat label="Copies" value={order.printSettings?.copies ?? 1} />
+          <Stat label="Pages" value={order.totalPages} />
+          <Stat label="Paid" value={`₹${order.totalCost}`} />
         </div>
-      </div>
 
-      {/* Cat graphic */}
-      <img
-        src="/figma/3282e2fcd344b844a08c5e470da99b46d1dc9445.png"
-        alt="cat"
-        className="absolute left-[5px] bottom-0 w-[214px] h-[220px] object-contain select-none pointer-events-none"
-      />
-
-      {/* Footer message - as per Figma */}
-      <div className="absolute bottom-4 right-2 w-[260px] text-center text-[#fcf6b1] px-2">
-        <div className="font-quinn text-[64px] leading-none">SWOOP</div>
-        <div className="text-[13px] lowercase max-w-[254px] mx-auto">
-          show this screen at the counter, our kitten pal will wait with you
+        <div className="flex flex-col">
+          <ListRow
+            leading={<IconTile icon={DocIcon} shape="square" size={36} iconSize={18} />}
+            title={order.fileName}
+            subtitle={[order.printSettings?.printColor, order.printSettings?.printFormat, placed].filter(Boolean).join(' · ')}
+          />
+          <ListRow
+            href="/contact"
+            divider={false}
+            leading={<IconTile icon={HelpIcon} shape="square" size={36} iconSize={18} />}
+            title="Something wrong with this order?"
+            subtitle="Contact us"
+          />
         </div>
-      </div>
+
+        <div className="mt-auto flex items-end gap-2 pt-2">
+          <img
+            src="/figma/3282e2fcd344b844a08c5e470da99b46d1dc9445.png"
+            alt=""
+            aria-hidden
+            className="pointer-events-none h-[92px] w-[88px] select-none object-contain"
+          />
+          <p className="pb-2 text-[11.5px] text-slate">Show this screen at the counter. Our kitten pal will wait with you.</p>
+        </div>
+      </main>
     </div>
   );
 }
-
-

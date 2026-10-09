@@ -39,13 +39,13 @@ export function ImagesLayoutPreview() {
         let wrapper = el.querySelector(`.image-page[data-idx="${idx}"]`) as HTMLDivElement | null;
         if (!wrapper) {
           wrapper = document.createElement('div');
-          wrapper.className = 'image-page min-w-[220px] max-w-[260px] h-[360px] border rounded bg-white p-2 overflow-hidden shadow-sm flex flex-col';
+          wrapper.className = 'image-page flex h-[360px] min-w-[220px] max-w-[260px] flex-col overflow-hidden rounded-[12px] border border-line bg-white p-2';
           wrapper.setAttribute('data-idx', String(idx));
           const pager = document.createElement('div');
-          pager.className = 'image-page-pager inline-flex items-center justify-center px-2 py-0.5 text-[10px] text-emerald-900 bg-emerald-100 border border-emerald-200 rounded self-start flex-none';
+          pager.className = 'image-page-pager inline-flex flex-none items-center justify-center self-start rounded-full bg-surface px-2 py-0.5 text-[10.5px] font-bold text-ink tabular-nums';
           wrapper.appendChild(pager);
           const viewport = document.createElement('div');
-          viewport.className = 'image-page-viewport mt-2 bg-white border rounded flex-1 overflow-hidden';
+          viewport.className = 'image-page-viewport mt-1.5 flex-1 overflow-hidden rounded-[10px] border border-line bg-white';
           const img = document.createElement('img');
           img.className = 'image-page-img w-full h-full object-contain block';
           viewport.appendChild(img);
@@ -132,7 +132,7 @@ export function ImagesLayoutPreview() {
   return (
     <div className="space-y-3">
       <div className="relative">
-        <div ref={containerRef} className="flex gap-3 overflow-x-auto no-scrollbar min-h-[260px]" />
+        <div ref={containerRef} className="no-scrollbar flex min-h-[260px] gap-2 overflow-x-auto" />
       </div>
     </div>
   );

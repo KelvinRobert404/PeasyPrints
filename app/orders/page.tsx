@@ -4,23 +4,26 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { House, Package, User } from 'lucide-react';
+import { useUser } from '@clerk/nextjs';
 import { useOrdersStore } from '@/lib/stores/ordersStore';
-
-// Lucide icon component (same call-site API as before)
-const ICONS = {
-  person: User,
-  package_2: Package,
-  home: House,
-} as const;
-
-function Icon({ name, className = '' }: { name: keyof typeof ICONS; className?: string }) {
-  const Cmp = ICONS[name];
-  return <Cmp size={20} className={className} />;
-}
 import { useAuthStore } from '@/lib/stores/authStore';
 import { OrderCard } from '@/components/orders/OrderCard';
-import { useUser } from '@clerk/nextjs';
+import { EmptyState, swButton } from '@/components/swoop/primitives';
+import { OrdersIcon, UploadIcon, UserIcon } from '@/components/swoop/icons';
+import type { OrderDoc } from '@/types/models';
+
+function OrderGroup({ title, orders }: { title: string; orders: OrderDoc[] }) {
+  return (
+    <section className="pt-3">
+      <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">{title}</h2>
+      <div className="mt-1 flex flex-col">
+        {orders.map((o, i) => (
+          <OrderCard key={o.id ?? `${title}-${i}`} order={o} divider={i < orders.length - 1} />
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export default function OrdersPage() {
   const { user } = useAuthStore();
@@ -53,80 +56,71 @@ export default function OrdersPage() {
   const isSignedIn = isClerkLoaded ? clerkUser : user;
 
   return (
-    <div className="min-h-screen flex flex-col bg-white pb-20">
-      {/* Content */}
-      <main className="flex-1 overflow-y-auto px-4 py-4">
+    <div className="flex flex-1 flex-col bg-white">
+      <main className="flex-1 px-3 pt-2 pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="font-heading text-[16px] leading-[1.05] text-ink">Orders</h1>
+          {isSignedIn && orders.length > 0 && (
+            <Link href="/upload" className={swButton({ variant: 'surface', size: 'pill' })}>
+              <UploadIcon size={15} />
+              New print
+            </Link>
+          )}
+        </div>
+
         {/* Not signed in */}
         {!isSignedIn && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-              <Icon name="person" className="text-2xl text-blue-600" />
-            </div>
-            <p className="text-sm text-gray-500">Please sign in to view your orders</p>
-          </div>
+          <EmptyState
+            className="mt-3"
+            icon={UserIcon}
+            title="Sign in to see your orders"
+            body="Your prints and pickup screens show up here."
+            action={
+              <Link href="/login?redirect_url=/orders" className={swButton({ variant: 'primary', size: 'sm', className: 'mt-1' })}>
+                Sign in
+              </Link>
+            }
+          />
         )}
 
         {/* Signed in */}
         {isSignedIn && (
           <>
-            {/* Loading */}
-            {loading && (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            {loading && orders.length === 0 && (
+              <div className="mt-3 flex flex-col gap-2" aria-busy="true" aria-label="Loading orders">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <span className="h-9 w-9 shrink-0 animate-pulse rounded-[10px] bg-surface" />
+                    <span className="h-8 flex-1 animate-pulse rounded-[8px] bg-surface" />
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Error */}
             {error && (
-              <div className="p-4 bg-red-50 border border-red-100 rounded-xl">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
+              <p className="mt-3 rounded-[10px] bg-market-tint px-3 py-2 text-[11.5px] font-semibold text-market">{error}</p>
             )}
 
-            {/* Today's orders */}
-            {todayOrders.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Today</p>
-                <div className="space-y-2.5">
-                  {todayOrders.map((o, i) => <OrderCard key={`t-${i}`} order={o} />)}
-                </div>
-              </div>
-            )}
+            {todayOrders.length > 0 && <OrderGroup title="Today" orders={todayOrders} />}
+            {olderOrders.length > 0 && <OrderGroup title="Earlier" orders={olderOrders} />}
 
-            {/* Older orders */}
-            {olderOrders.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Earlier</p>
-                <div className="space-y-2.5">
-                  {olderOrders.map((o, i) => <OrderCard key={`o-${i}`} order={o} />)}
-                </div>
-              </div>
-            )}
-
-            {/* Empty state */}
             {!loading && orders.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                  <Icon name="package_2" className="text-2xl text-blue-600" />
-                </div>
-                <p className="text-base font-medium text-gray-900">No orders yet</p>
-                <p className="text-sm text-gray-500 mt-1">Your orders will appear here</p>
-              </div>
+              <EmptyState
+                className="mt-3"
+                icon={OrdersIcon}
+                title="No orders yet"
+                body="Upload a PDF, pick a shop and collect it on campus."
+                action={
+                  <Link href="/upload" className={swButton({ variant: 'primary', size: 'sm', className: 'mt-1' })}>
+                    <UploadIcon size={15} />
+                    Start a print
+                  </Link>
+                }
+              />
             )}
           </>
         )}
       </main>
-
-      {/* Floating Bottom Nav */}
-      <div className="fixed bottom-4 left-4 right-4 max-w-[396px] mx-auto">
-        <Link
-          href="/"
-          className="flex items-center justify-center gap-2 py-3.5 bg-blue-600 rounded-2xl shadow-lg shadow-blue-600/30 text-white font-medium active:scale-[0.98] transition-transform"
-        >
-          <Icon name="home" className="text-xl" />
-          Back to Home
-        </Link>
-      </div>
     </div>
   );
 }

@@ -2,10 +2,16 @@
 
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { useCouponStore } from '@/lib/stores/couponsStore';
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { calculateTotalCost, resolvePageRates } from '@/lib/utils/pricing';
+import { Card, ListRow } from '@/components/swoop/primitives';
+import { cn } from '@/lib/utils/cn';
 
 const money = (value: number) => (Math.round(value * 100) / 100).toFixed(2).replace(/\.00$/, '');
+
+function Amount({ children, className }: { children: ReactNode; className?: string }) {
+  return <span className={cn('shrink-0 text-[12.5px] font-bold text-ink tabular-nums', className)}>{children}</span>;
+}
 
 export function PriceSummary() {
   const { totalCost, pageCount, settings, shopPricing, jobType, assignmentMode, assignmentColorPages } = useUploadStore();
@@ -68,44 +74,62 @@ export function PriceSummary() {
   const subtotal = totalCost;
   const finalTotal = Math.max(subtotal - couponDiscount, 0);
 
+  const copiesNote = breakdown.copies > 1 ? ` × ${breakdown.copies} copies` : '';
+
   return (
-    <div className="space-y-2 text-sm">
+    <Card>
       {breakdown.assignment ? (
-        <div className="space-y-1">
-          <div className="flex justify-between"><span>B&W ({breakdown.assignment.bwPages} pages)</span><span>₹{money(breakdown.assignment.bwSubtotal)}</span></div>
-          <div className="flex justify-between"><span>Color ({breakdown.assignment.colorPages} pages)</span><span>₹{money(breakdown.assignment.colorSubtotal)}</span></div>
-        </div>
+        <>
+          <ListRow
+            className="px-3"
+            title="Black & white"
+            subtitle={`${breakdown.assignment.bwPages} pages${copiesNote}`}
+            trailing={<Amount>₹{money(breakdown.assignment.bwSubtotal)}</Amount>}
+          />
+          <ListRow
+            className="px-3"
+            title="Colour"
+            subtitle={`${breakdown.assignment.colorPages} pages${copiesNote}`}
+            trailing={<Amount>₹{money(breakdown.assignment.colorSubtotal)}</Amount>}
+          />
+        </>
       ) : (
-        <div className="flex justify-between"><span>Pages × Rate</span><span>₹{money(breakdown.basePagesCost)}</span></div>
+        <ListRow
+          className="px-3"
+          title="Printing"
+          subtitle={breakdown.perPage > 0 ? `${pageCount} pages × ₹${money(breakdown.perPage)}${copiesNote}` : 'Pages × rate'}
+          trailing={<Amount>₹{money(breakdown.basePagesCost)}</Amount>}
+        />
       )}
       {breakdown.bindingCostTotal > 0 && (
-        <div className="flex justify-between"><span>Binding</span><span>₹{money(breakdown.bindingCostTotal)}</span></div>
+        <ListRow className="px-3" title="Binding" trailing={<Amount>₹{money(breakdown.bindingCostTotal)}</Amount>} />
       )}
       {breakdown.extraColorSurcharge > 0 && (
-        <div className="flex justify-between"><span>Extra color pages</span><span>₹{money(breakdown.extraColorSurcharge)}</span></div>
+        <ListRow className="px-3" title="Extra colour pages" trailing={<Amount>₹{money(breakdown.extraColorSurcharge)}</Amount>} />
       )}
       {breakdown.rushCost > 0 && (
-        <div className="flex justify-between"><span>Rush</span><span>₹{money(breakdown.rushCost)}</span></div>
+        <ListRow className="px-3" title="Rush" trailing={<Amount>₹{money(breakdown.rushCost)}</Amount>} />
       )}
       {breakdown.afterDarkCost > 0 && (
-        <div className="flex justify-between"><span>After dark</span><span>₹{money(breakdown.afterDarkCost)}</span></div>
+        <ListRow className="px-3" title="After dark" trailing={<Amount>₹{money(breakdown.afterDarkCost)}</Amount>} />
       )}
       {breakdown.convenienceFee > 0 && (
-        <div className="flex justify-between"><span>Service Fee</span><span>₹{money(breakdown.convenienceFee)}</span></div>
+        <ListRow className="px-3" title="Service fee" trailing={<Amount>₹{money(breakdown.convenienceFee)}</Amount>} />
       )}
       {appliedCoupon && couponDiscount > 0 && (
-        <div className="flex justify-between text-green-600">
-          <span>Coupon ({appliedCoupon.code})</span>
-          <span>-₹{money(couponDiscount)}</span>
-        </div>
+        <ListRow
+          className="px-3"
+          title={`Coupon (${appliedCoupon.code})`}
+          trailing={<Amount className="text-go-text">-₹{money(couponDiscount)}</Amount>}
+        />
       )}
-      <div className="flex justify-between font-semibold border-t pt-2">
-        <span>Total</span>
-        <span className={appliedCoupon ? 'text-green-600' : ''}>
+      <div className="flex items-center justify-between gap-3 px-3 py-3">
+        <span className="font-heading text-[14.5px] leading-none text-ink">Total</span>
+        <span className={cn('font-heading text-[14.5px] leading-none tabular-nums', appliedCoupon ? 'text-go-text' : 'text-ink')}>
           ₹{money(appliedCoupon ? finalTotal : subtotal)}
         </span>
       </div>
-    </div>
+    </Card>
   );
 }
 

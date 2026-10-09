@@ -1,74 +1,44 @@
-import Link from 'next/link';
-import { QrCode } from 'lucide-react';
+'use client';
+
 import { haptics } from '@/lib/utils/haptics';
 import type { OrderDoc } from '@/types/models';
+import { IconTile, ListRow, StatusLine, Tag } from '@/components/swoop/primitives';
+import { ChevronRightIcon, DocIcon, QrIcon } from '@/components/swoop/icons';
+import { formatOrderDate, orderStatusMeta } from '@/components/orders/orderStatus';
 
-function formatDate(timestamp: any) {
-  try {
-    const d = (timestamp?.toDate ? timestamp.toDate() : new Date(timestamp)) as Date;
-    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
-  } catch {
-    return '';
-  }
-}
-
-function getStatusStyle(status: string) {
-  switch (status?.toLowerCase()) {
-    case 'completed':
-      return 'bg-emerald-50 text-emerald-700';
-    case 'ready':
-      return 'bg-blue-50 text-blue-700';
-    case 'cancelled':
-      return 'bg-red-50 text-red-600';
-    case 'printing':
-    case 'processing':
-      return 'bg-amber-50 text-amber-700';
-    default:
-      return 'bg-gray-100 text-gray-600';
-  }
-}
-
-export function OrderCard({ order }: { order: OrderDoc }) {
+/** Dense order row: file · ● status • shop · price/date. Taps through to the pickup screen. */
+export function OrderCard({ order, divider = true }: { order: OrderDoc; divider?: boolean }) {
   const href = order.id ? `/orders/${order.id}/pickup` : undefined;
-  const isActive = ['pending', 'processing', 'printing', 'printed', 'printed_ready', 'ready'].includes(order.status?.toLowerCase() || '');
+  const meta = orderStatusMeta(order.status);
+  const cancelled = order.status === 'cancelled';
 
-  const content = (
-    <div className={`
-      bg-white border rounded-xl p-4
-      ${isActive ? 'border-blue-200' : 'border-gray-200'}
-      active:bg-gray-50 transition-colors
-    `}>
-      <div className="flex items-start justify-between gap-3">
-        {/* Left: Shop & File */}
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-[15px] text-gray-900 truncate">{order.shopName}</div>
-          <div className="text-sm text-gray-500 truncate mt-0.5">{order.fileName}</div>
-        </div>
-
-        {/* Right: Status & Date */}
-        <div className="flex flex-col items-end gap-1">
-          <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium capitalize ${getStatusStyle(order.status)}`}>
-            {order.status}
+  const row = (
+    <ListRow
+      href={href}
+      divider={divider}
+      leading={<IconTile icon={meta.ready ? QrIcon : DocIcon} tone={meta.ready ? 'go' : 'surface'} shape="square" size={36} iconSize={18} />}
+      title={
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate">{order.fileName}</span>
+          {order.emergency && <Tag tone="royal" className="shrink-0">Rush</Tag>}
+          {order.afterDark && <Tag tone="ink" className="shrink-0">After dark</Tag>}
+        </span>
+      }
+      subtitle={<StatusLine open={meta.ready} label={meta.label} detail={order.shopName} />}
+      trailing={
+        <span className="flex shrink-0 items-center gap-1.5">
+          <span className="flex flex-col items-end gap-px">
+            <span className={`text-[12.5px] font-bold tabular-nums ${cancelled ? 'text-slate line-through' : 'text-ink'}`}>
+              ₹{Number(order.totalCost ?? 0)}
+            </span>
+            <span className="text-[11px] text-slate">{formatOrderDate(order.timestamp)}</span>
           </span>
-          <span className="text-[11px] text-gray-400">{formatDate(order.timestamp)}</span>
-        </div>
-      </div>
-
-      {/* CTA for active orders */}
-      {isActive && (
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600">
-            <QrCode size={14} className="shrink-0" />
-            Tap to view pickup code
-          </div>
-        </div>
-      )}
-    </div>
+          {href && <ChevronRightIcon size={12} className="text-text-muted" />}
+        </span>
+      }
+    />
   );
 
-  return href ? (
-    <Link href={href} className="block" onClick={() => haptics.tap()}>{content}</Link>
-  ) : (
-    content
-  );
+  // Haptic tick on tap, as before; the row itself is the link.
+  return href ? <div onClickCapture={() => haptics.tap()}>{row}</div> : row;
 }

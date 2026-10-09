@@ -1,12 +1,63 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type ComponentType, type ReactNode } from 'react';
 import { useUploadStore } from '@/lib/stores/uploadStore';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import type { IconProps } from '@/components/swoop/icons';
+import { BoltIcon, MoonIcon } from '@/components/upload/icons';
+import { cn } from '@/lib/utils/cn';
 
-const flashIcon = '/figma/3a3d1724c2727a8bfe5104c30b0f9c4f34325e85.png';
-const batmanIcon = '/figma/a9df3efab731ab9679d53bf2e350d8ff724a5c4b.png';
+function UpgradeTile({
+  title,
+  icon: Icon,
+  description,
+  price,
+  selected,
+  unavailable,
+  dimmed,
+  disabled,
+  onClick
+}: {
+  title: string;
+  icon: ComponentType<IconProps>;
+  description: ReactNode;
+  price: ReactNode;
+  selected: boolean;
+  unavailable: boolean;
+  dimmed: boolean;
+  disabled: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={selected}
+      className={cn(
+        'campus-press flex flex-col rounded-[14px] p-2.5 text-left transition-colors',
+        selected ? 'bg-royal-tint ring-2 ring-inset ring-royal' : 'bg-surface',
+        dimmed && 'cursor-not-allowed opacity-60'
+      )}
+    >
+      <span className="flex items-center justify-between gap-2">
+        <span className="text-[12.5px] font-bold text-ink">{title}</span>
+        <span className={cn('grid h-7 w-7 shrink-0 place-items-center rounded-full', selected ? 'bg-royal text-white' : 'bg-white text-royal')}>
+          <Icon size={16} />
+        </span>
+      </span>
+      <span className="mt-1 text-[11px] leading-[1.35] text-slate">{description}</span>
+      <span className="mt-2 flex justify-end">
+        {unavailable ? (
+          <span className="rounded-full bg-market-tint px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-[0.06em] text-market">
+            Unavailable
+          </span>
+        ) : (
+          <span className="font-heading text-[14.5px] leading-none text-ink tabular-nums">{price}</span>
+        )}
+      </span>
+    </button>
+  );
+}
 
 export function PrintUpgrades({ shopTiming }: { shopTiming?: string }) {
   const { settings, setSettings, shopPricing } = useUploadStore();
@@ -45,45 +96,29 @@ export function PrintUpgrades({ shopTiming }: { shopTiming?: string }) {
   };
 
   return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-3">
-        <button type="button" onClick={rushUnavailable ? undefined : toggleRush} disabled={rushUnavailable} className={`rounded-2xl bg-white text-left p-4 border ${settings.emergency ? 'ring-2 ring-blue-600' : 'border-gray-200'} ${rushUnavailable ? 'opacity-60 cursor-not-allowed' : ''}`}>
-          <div className="flex items-center justify-between">
-            <div className="text-lg font-extrabold">rush</div>
-            <img src={flashIcon} alt="rush" className="w-6 h-6" />
-          </div>
-          <div className="mt-2 text-[12px] leading-tight text-gray-700">
-            <div>jump the queue.</div>
-            <div>ready in 5 mins flat</div>
-            <div>or refund of the extras.</div>
-          </div>
-          <div className="mt-2 text-right font-extrabold lowercase">
-            {shopPricing && rushUnavailable ? <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge> : <>rs{rushPrice}</>}
-          </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={afterDarkUnavailable ? undefined : toggleAfterDark}
-          disabled={afterDarkUnavailable || (!isShopClosed && !settings.afterDark)}
-          className={`rounded-2xl bg-white text-left p-4 border ${settings.afterDark ? 'ring-2 ring-blue-600' : 'border-gray-200'} ${((!isShopClosed && !settings.afterDark) || afterDarkUnavailable) ? 'opacity-60 cursor-not-allowed' : ''}`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="text-lg font-extrabold">afterdark</div>
-            <img src={batmanIcon} alt="afterdark" className="w-6 h-6" />
-          </div>
-          <div className="mt-2 text-[12px] leading-tight text-gray-700">
-            <div>place your order while the</div>
-            <div>shop snoozes.</div>
-            <div>grab it first thing, 8:30–10 am.</div>
-          </div>
-          <div className="mt-2 text-right font-extrabold lowercase">
-            {shopPricing && afterDarkUnavailable ? <Badge variant="destructive" className="font-[coolvetica]">UNAVAILABLE</Badge> : <>rs{afterDarkPrice}</>}
-          </div>
-        </button>
-      </div>
+    <div className="grid grid-cols-2 gap-2">
+      <UpgradeTile
+        title="Rush"
+        icon={BoltIcon}
+        description="Jump the queue. Ready in 5 minutes flat, or the extra is refunded."
+        price={<>₹{rushPrice}</>}
+        selected={Boolean(settings.emergency)}
+        unavailable={Boolean(shopPricing && rushUnavailable)}
+        dimmed={rushUnavailable}
+        disabled={rushUnavailable}
+        onClick={rushUnavailable ? undefined : toggleRush}
+      />
+      <UpgradeTile
+        title="After dark"
+        icon={MoonIcon}
+        description="Order while the shop sleeps. Pick it up first thing, 8:30 to 10 am."
+        price={<>₹{afterDarkPrice}</>}
+        selected={Boolean(settings.afterDark)}
+        unavailable={Boolean(shopPricing && afterDarkUnavailable)}
+        dimmed={(!isShopClosed && !settings.afterDark) || afterDarkUnavailable}
+        disabled={afterDarkUnavailable || (!isShopClosed && !settings.afterDark)}
+        onClick={afterDarkUnavailable ? undefined : toggleAfterDark}
+      />
     </div>
   );
 }
-
-

@@ -15,6 +15,11 @@ import { startSessionRecording, stopSessionRecording } from '@/lib/posthog/clien
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PdfPreviewer } from '@/components/upload/PdfPreviewer';
 import { ImagesLayoutPreview } from '@/components/upload/ImagesLayoutPreview';
+import { SpinnerIcon } from '@/components/upload/icons';
+import { swButton } from '@/components/swoop/primitives';
+import { cn } from '@/lib/utils/cn';
+
+const money = (value: number) => (Math.round(value * 100) / 100).toFixed(2).replace(/\.00$/, '');
 
 export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?: string }) {
   const { file, pageCount, totalCost, settings, jobType, images, imagesPages, imagesGapCm, imagesScale, assignmentMode, assignmentColorPages, assignmentConfirmed } = useUploadStore();
@@ -183,7 +188,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
           email: clerkUser.emailAddresses?.[0]?.emailAddress,
           contact: clerkUser.phoneNumbers?.[0]?.phoneNumber
         },
-        theme: { color: '#2563eb' },
+        theme: { color: '#0055FF' },
         handler: async (response: any) => {
           setProcessing(true);
           const paymentRef = response?.razorpay_payment_id ? ` (payment ID ${response.razorpay_payment_id})` : '';
@@ -293,66 +298,73 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
           const hasImages = (images?.length || 0) > 0;
           return loading || (!hasPdf && !hasImages) || totalCost <= 0 || !isClerkLoaded || !clerkUser;
         })()}
-        className="w-full h-14 bg-royal text-white rounded-2xl disabled:opacity-50 font-poster text-[22px]"
-        style={{ letterSpacing: '0.03em' }}
+        className={cn(swButton({ size: 'lg' }), 'w-full', !loading && totalCost > 0 && 'justify-between')}
       >
-        {loading ? 'PROCESSING…' : 'CHECKOUT'}
+        {loading ? (
+          <>
+            <SpinnerIcon size={18} className="animate-spin" />
+            Processing…
+          </>
+        ) : (
+          <>
+            <span>Checkout</span>
+            {totalCost > 0 && <span className="font-heading text-[14.5px] leading-none tabular-nums">₹{money(totalCost)}</span>}
+          </>
+        )}
       </button>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Confirm preview</DialogTitle>
-            <DialogDescription>What you see is exactly what the shop sees.</DialogDescription>
+        <DialogContent className="w-[92vw] max-w-2xl rounded-[14px] p-3.5">
+          <DialogHeader className="mb-2.5">
+            <DialogTitle className="font-heading text-[16px] text-ink">Check your print</DialogTitle>
+            <DialogDescription className="mt-0.5 text-[11.5px] text-slate">What you see is exactly what the shop sees.</DialogDescription>
           </DialogHeader>
           {jobType === 'Assignment' && assignmentMode === 'Mixed' && (
-            <div className="mb-2 flex flex-wrap gap-2 text-xs">
-              <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">Color: {colorText || 'None'}</span>
-              <span className="px-2 py-0.5 rounded bg-gray-50 text-gray-700 border">B/W: {bwText || 'None'}</span>
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              <span className="rounded-full bg-royal-tint px-2 py-0.5 text-[11px] font-bold text-royal tabular-nums">Colour: {colorText || 'None'}</span>
+              <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-bold text-ink tabular-nums">B&W: {bwText || 'None'}</span>
             </div>
           )}
-          <div className="max-h-[60vh] overflow-auto border rounded p-2 bg-white">
+          <div className="max-h-[60vh] overflow-auto rounded-[12px] border border-line bg-white p-2">
             {(images?.length || 0) > 0 ? <ImagesLayoutPreview /> : <PdfPreviewer />}
           </div>
-          <div className="flex justify-end gap-2">
-            <button type="button" className="h-10 px-3 rounded-md border bg-white" onClick={() => setPreviewOpen(false)}>Cancel</button>
+          <div className="mt-3 flex justify-end gap-1.5">
+            <button type="button" className={swButton({ variant: 'surface', size: 'md' })} onClick={() => setPreviewOpen(false)}>Cancel</button>
             <button
               type="button"
-              className="h-10 px-4 rounded-xl bg-royal text-white text-sm font-extrabold"
+              className={swButton({ variant: 'primary', size: 'md' })}
               onClick={async () => {
                 setPreviewOpen(false);
                 await startPaymentFlow();
               }}
             >
-              Confirm & Pay
+              Confirm & pay
             </button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={processing} onOpenChange={() => { }} dismissible={false}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Processing payment</DialogTitle>
-            <DialogDescription>
-              Do not close or refresh this page. This can take up to a minute.
+        <DialogContent className="w-[92vw] max-w-sm rounded-[14px] p-3.5">
+          <DialogHeader className="mb-2.5">
+            <DialogTitle className="font-heading text-[16px] text-ink">Processing payment</DialogTitle>
+            <DialogDescription className="mt-0.5 text-[11.5px] text-slate">
+              Don&apos;t close or refresh this page. This can take up to a minute.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-3 text-gray-700 text-sm">
-            <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-            </svg>
+          <div role="status" className="flex items-center gap-2.5 rounded-[12px] bg-surface px-3 py-2.5 text-[12.5px] font-bold text-ink">
+            <SpinnerIcon size={18} className="shrink-0 animate-spin text-royal" />
             Waiting for confirmation…
           </div>
           {isLongWait && (
-            <div className="mt-4 text-sm text-gray-600">
-              <div>Still processing… This is taking longer than usual.</div>
+            <div className="mt-3">
+              <p className="text-[11.5px] text-slate">Still processing. This is taking longer than usual.</p>
               <button
+                type="button"
                 onClick={() => router.push('/orders')}
-                className="mt-3 w-full h-11 rounded-xl bg-royal text-white text-sm font-extrabold"
+                className={cn(swButton({ size: 'lg' }), 'mt-2.5 w-full')}
               >
-                View Orders
+                View orders
               </button>
             </div>
           )}

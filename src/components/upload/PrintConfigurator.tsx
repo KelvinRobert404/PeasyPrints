@@ -1,9 +1,96 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { cn } from '@/lib/utils/cn';
-import { Badge } from '@/components/ui/badge';
+import { CaretDownIcon, MinusIcon, PlusIcon } from '@/components/swoop/icons';
+
+/* Segmented-style option group that supports per-option unavailability. */
+type OptionItem<T extends string> = { value: T; label: string; unavailable?: boolean; showTag?: boolean };
+
+function OptionGroup<T extends string>({
+  title,
+  options,
+  value,
+  onSelect
+}: {
+  title: string;
+  options: OptionItem<T>[];
+  value: T;
+  onSelect: (value: T) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-1.5 text-[12.5px] font-bold text-ink">{title}</p>
+      <div
+        role="group"
+        aria-label={title}
+        className="grid gap-0.5 rounded-[10px] bg-surface p-[3px]"
+        style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+      >
+        {options.map((o) => {
+          const active = o.value === value;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={active}
+              disabled={o.unavailable}
+              onClick={o.unavailable ? undefined : () => onSelect(o.value)}
+              className={cn(
+                'flex min-h-7 flex-col items-center justify-center rounded-lg px-1 py-1 text-[12px] leading-none transition-colors disabled:cursor-not-allowed disabled:opacity-45',
+                active ? 'bg-white font-bold text-ink shadow-[0_1px_3px_rgba(16,24,40,0.12)]' : 'font-semibold text-text-secondary'
+              )}
+            >
+              {o.label}
+              {o.showTag && (
+                <span className="mt-1 text-[8.5px] font-extrabold uppercase tracking-[0.06em] text-market">Unavailable</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* Row title + meta on the left, round surface stepper on the right. */
+function StepperRow({
+  title,
+  meta,
+  value,
+  onDecrement,
+  onIncrement,
+  incrementDisabled
+}: {
+  title: string;
+  meta?: ReactNode;
+  value: ReactNode;
+  onDecrement: () => void;
+  onIncrement: () => void;
+  incrementDisabled?: boolean;
+}) {
+  const btn = 'campus-press grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface text-ink transition-colors hover:bg-line disabled:pointer-events-none disabled:opacity-45';
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-[12.5px] font-bold text-ink">{title}</p>
+        {meta && <p className="text-[11px] text-slate">{meta}</p>}
+      </div>
+      <div className="flex items-center gap-1">
+        <button type="button" aria-label={`Decrease ${title.toLowerCase()}`} className={btn} onClick={onDecrement}>
+          <MinusIcon size={14} />
+        </button>
+        <span aria-live="polite" className="min-w-10 text-center text-[13px] font-bold tabular-nums text-ink">
+          {value}
+        </span>
+        <button type="button" aria-label={`Increase ${title.toLowerCase()}`} className={btn} onClick={onIncrement} disabled={incrementDisabled}>
+          <PlusIcon size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function PrintConfigurator() {
   const {
@@ -59,176 +146,105 @@ export function PrintConfigurator() {
   const toggle = (key: keyof typeof settings, value: any) => () => setSettings({ [key]: value } as any);
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-3">
       {/* Copies */}
-      <div className="grid grid-cols-3 gap-2 items-center">
-        <button
-          className="h-10 rounded-lg border border-black/10 bg-white text-lg font-bold"
-          onClick={() => setSettings({ copies: Math.max(1, settings.copies - 1) })}
-        >
-          -
-        </button>
-        <div className="h-10 rounded-lg bg-royal text-white flex items-center justify-center gap-1.5">
-          <div className="text-[15px] font-extrabold tabular-nums">{settings.copies}</div>
-          <div className="text-[10px] font-semibold text-white/70">copies</div>
-        </div>
-        <button
-          className="h-10 rounded-lg border border-black/10 bg-white text-lg font-bold"
-          onClick={() => setSettings({ copies: Math.min(settings.copies + 1, 50) })}
-          disabled={settings.copies >= 50}
-        >
-          +
-        </button>
-      </div>
+      <StepperRow
+        title="Copies"
+        meta="Up to 50"
+        value={settings.copies}
+        onDecrement={() => setSettings({ copies: Math.max(1, settings.copies - 1) })}
+        onIncrement={() => setSettings({ copies: Math.min(settings.copies + 1, 50) })}
+        incrementDisabled={settings.copies >= 50}
+      />
 
       {/* Paper Size */}
-      <div className="grid grid-cols-2 gap-2">
-        {(['A3', 'A4'] as const).map((size) => {
+      <OptionGroup
+        title="Paper size"
+        value={settings.paperSize}
+        onSelect={(size) => toggle('paperSize', size)()}
+        options={(['A3', 'A4'] as const).map((size) => {
           const unavailable = isUnavailablePaper(size);
-          return (
-            <button
-              key={size}
-              className={cn(
-                'h-12 rounded-xl border text-lg font-extrabold font-quinn',
-                settings.paperSize === size ? 'bg-royal text-white border-transparent' : 'bg-white text-ink border-black/10',
-                unavailable ? 'opacity-60 cursor-not-allowed' : ''
-              )}
-              onClick={unavailable ? undefined : toggle('paperSize', size)}
-              disabled={unavailable}
-            >
-              <div className="px-3 w-full flex flex-col items-center text-center">
-                <div>{size}</div>
-                {shopPricing && unavailable && (
-                  <div className="mt-0.5">
-                    <Badge variant="destructive" className="text-[9px]">UNAVAILABLE</Badge>
-                  </div>
-                )}
-              </div>
-            </button>
-          );
+          return { value: size, label: size, unavailable, showTag: Boolean(shopPricing && unavailable) };
         })}
-      </div>
+      />
 
       {/* Color */}
-      <div className="grid grid-cols-2 gap-2">
-        {(['Black & White', 'Color'] as const).map((color) => {
-          const unavailable = isUnavailableColor(color);
-          return (
-            <button
-              key={color}
-              className={cn(
-                'h-10 rounded-lg border border-black/10 text-xs font-bold',
-                settings.printColor === color ? 'bg-royal text-white border-transparent' : 'bg-white text-ink',
-                unavailable ? 'opacity-60 cursor-not-allowed' : ''
-              )}
-              onClick={unavailable ? undefined : toggle('printColor', color)}
-              disabled={unavailable}
-            >
-              {color === 'Black & White' ? 'black & white' : 'colour'}
-            </button>
-          );
-        })}
-      </div>
+      <OptionGroup
+        title="Colour"
+        value={settings.printColor}
+        onSelect={(color) => toggle('printColor', color)()}
+        options={(['Black & White', 'Color'] as const).map((color) => ({
+          value: color,
+          label: color === 'Black & White' ? 'Black & white' : 'Colour',
+          unavailable: isUnavailableColor(color)
+        }))}
+      />
 
       {/* Format (hidden when images present) */}
       {(images?.length || 0) === 0 && (
-        <div className="grid grid-cols-2 gap-2">
-          {(['Single-Sided', 'Double-Sided'] as const).map((format) => {
+        <OptionGroup
+          title="Sides"
+          value={settings.printFormat}
+          onSelect={(format) => toggle('printFormat', format)()}
+          options={(['Single-Sided', 'Double-Sided'] as const).map((format) => {
             const unavailable = isUnavailableFormat(format);
-            return (
-              <button
-                key={format}
-                className={cn(
-                  'h-10 rounded-lg border border-black/10 text-xs font-bold',
-                  settings.printFormat === format ? 'bg-royal text-white border-transparent' : 'bg-white text-ink',
-                  unavailable ? 'opacity-60 cursor-not-allowed' : ''
-                )}
-                onClick={unavailable ? undefined : toggle('printFormat', format)}
-                disabled={unavailable}
-              >
-                <div className="px-3 w-full flex flex-col items-center text-center">
-                  <div>{format === 'Single-Sided' ? 'single-sided' : 'double-sided'}</div>
-                  {shopPricing && unavailable && (
-                    <div className="mt-0.5">
-                      <Badge variant="destructive" className="text-[9px]">UNAVAILABLE</Badge>
-                    </div>
-                  )}
-                </div>
-              </button>
-            );
+            return {
+              value: format,
+              label: format === 'Single-Sided' ? 'Single-sided' : 'Double-sided',
+              unavailable,
+              showTag: Boolean(shopPricing && unavailable)
+            };
           })}
-        </div>
+        />
       )}
 
       {/* Binding (hidden when images present) */}
       {(images?.length || 0) === 0 && (
-        <div className="grid grid-cols-1 gap-2">
-          <select
-            className="border border-black/10 rounded-lg h-10 px-3 text-[13px] font-semibold bg-white"
-            value={settings.binding}
-            onChange={(e) => setSettings({ binding: e.target.value as any })}
-          >
-            <option value="">No Binding</option>
-            {(['Soft Binding', 'Spiral Binding', 'Hard Binding'] as const).map((label) => {
-              const price = label === 'Soft Binding' ? shopPricing?.services.softBinding
-                : label === 'Spiral Binding' ? shopPricing?.services.spiralBinding
-                  : shopPricing?.services.hardBinding;
-              const unavailable = shopPricing ? Number(price ?? 0) <= 0 : false;
-              return (
-                <option key={label} value={label} disabled={unavailable}>
-                  {label}{shopPricing && unavailable ? ' — UNAVAILABLE' : ''}
-                </option>
-              );
-            })}
-          </select>
-        </div>
+        <label className="block">
+          <span className="mb-1.5 block text-[12.5px] font-bold text-ink">Binding</span>
+          <span className="relative block">
+            <select
+              className="h-10 w-full appearance-none rounded-[10px] bg-surface pl-3 pr-9 text-[12.5px] font-semibold text-ink outline-none focus-visible:ring-2 focus-visible:ring-royal/40"
+              value={settings.binding}
+              onChange={(e) => setSettings({ binding: e.target.value as any })}
+            >
+              <option value="">No binding</option>
+              {(['Soft Binding', 'Spiral Binding', 'Hard Binding'] as const).map((label) => {
+                const price = label === 'Soft Binding' ? shopPricing?.services.softBinding
+                  : label === 'Spiral Binding' ? shopPricing?.services.spiralBinding
+                    : shopPricing?.services.hardBinding;
+                const unavailable = shopPricing ? Number(price ?? 0) <= 0 : false;
+                const text = label === 'Soft Binding' ? 'Soft binding' : label === 'Spiral Binding' ? 'Spiral binding' : 'Hard binding';
+                return (
+                  <option key={label} value={label} disabled={unavailable}>
+                    {text}{shopPricing && unavailable ? ' (unavailable)' : ''}
+                  </option>
+                );
+              })}
+            </select>
+            <CaretDownIcon size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink" />
+          </span>
+        </label>
       )}
 
       {/* Images-only controls (visible when images uploaded) */}
       {images && images.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-[13px] font-bold">Pages</label>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                className="h-8 w-8 rounded-lg bg-white border border-black/10 font-bold"
-                onClick={() => setImagesPages(Math.max(1, imagesPages - 1))}
-              >
-                −
-              </button>
-              <div className="w-10 text-center text-sm font-bold tabular-nums">{imagesPages}</div>
-              <button
-                type="button"
-                className="h-8 w-8 rounded-lg bg-white border border-black/10 font-bold"
-                onClick={() => setImagesPages(Math.min(5, imagesPages + 1))}
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <label className="text-[13px] font-bold">Image size</label>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                className="h-8 w-8 rounded-lg bg-white border border-black/10 font-bold"
-                onClick={() => setImagesScale(Math.max(0.5, Math.round((imagesScale - 0.1) * 10) / 10))}
-              >
-                −
-              </button>
-              <div className="w-12 text-center text-sm font-bold tabular-nums">{Math.round(imagesScale * 100)}%</div>
-              <button
-                type="button"
-                className="h-8 w-8 rounded-lg bg-white border border-black/10 font-bold"
-                onClick={() => setImagesScale(Math.min(2.0, Math.round((imagesScale + 0.1) * 10) / 10))}
-              >
-                +
-              </button>
-            </div>
-          </div>
-        </div>
+        <>
+          <StepperRow
+            title="Pages"
+            meta="Spread images over 1 to 5 pages"
+            value={imagesPages}
+            onDecrement={() => setImagesPages(Math.max(1, imagesPages - 1))}
+            onIncrement={() => setImagesPages(Math.min(5, imagesPages + 1))}
+          />
+          <StepperRow
+            title="Image size"
+            meta="50% to 200%"
+            value={`${Math.round(imagesScale * 100)}%`}
+            onDecrement={() => setImagesScale(Math.max(0.5, Math.round((imagesScale - 0.1) * 10) / 10))}
+            onIncrement={() => setImagesScale(Math.min(2.0, Math.round((imagesScale + 0.1) * 10) / 10))}
+          />
+        </>
       )}
 
       {/* No extra color pages input per new design */}

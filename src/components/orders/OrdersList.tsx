@@ -63,7 +63,7 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
   return (
     <div className="w-full">
       {error && (
-        <div className="mb-3 text-sm text-red-600">{error}</div>
+        <div className="mb-3 text-[11.5px] font-semibold text-market">{error}</div>
       )}
 
       {isLoading && (
@@ -76,11 +76,11 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
       )}
 
       {!isLoading && orders.length === 0 && !error && (
-        <div className="text-sm text-gray-600">No orders yet</div>
+        <div className="text-[12px] text-slate">No orders yet</div>
       )}
 
       {todayOrders.length > 0 && (
-        <div className="mb-2 text-xs font-semibold text-gray-700">Today</div>
+        <div className="mb-2 font-heading text-[14.5px] text-ink">Today</div>
       )}
 
       {todayOrders.length > 0 && (
@@ -97,20 +97,20 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
           <TableBody>
             {todayOrders.map((order) => (
               <TableRow key={order.id ?? `${order.userId}-${order.timestamp}`}
-                className={`cursor-pointer hover:bg-gray-50 ${rowPadding}`}
+                className={`cursor-pointer hover:bg-surface ${rowPadding}`}
               >
                 <TableCell className="px-3" onClick={() => onOrderClick?.(order)}>
-                  <div className="font-medium text-gray-900 truncate max-w-[220px]">{order.fileName}</div>
-                  <div className="text-xs text-gray-500 sm:hidden truncate max-w-[220px]">{order.shopName}</div>
+                  <div className="font-bold text-[12.5px] text-ink truncate max-w-[220px]">{order.fileName}</div>
+                  <div className="text-[11px] text-slate sm:hidden truncate max-w-[220px]">{order.shopName}</div>
                 </TableCell>
-                <TableCell className="px-3 hidden sm:table-cell text-gray-700" onClick={() => onOrderClick?.(order)}>{order.shopName}</TableCell>
+                <TableCell className="px-3 hidden sm:table-cell text-text-secondary" onClick={() => onOrderClick?.(order)}>{order.shopName}</TableCell>
                 <TableCell className="px-3" onClick={() => onOrderClick?.(order)}>
                   <Badge variant={statusToBadgeVariant((order as any).status)}>
                     {((order as any).status === 'printed_ready') ? 'Ready' : String(order.status).replace('_', ' ')}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-3 hidden md:table-cell text-gray-700" onClick={() => onOrderClick?.(order)}>{formatDate(order.timestamp)}</TableCell>
-                <TableCell className="px-3 hidden sm:table-cell text-right text-gray-900" onClick={() => onOrderClick?.(order)}>₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
+                <TableCell className="px-3 hidden md:table-cell text-text-secondary" onClick={() => onOrderClick?.(order)}>{formatDate(order.timestamp)}</TableCell>
+                <TableCell className="px-3 hidden sm:table-cell text-right text-ink" onClick={() => onOrderClick?.(order)}>₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -118,7 +118,7 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
       )}
 
       {olderOrders.length > 0 && (
-        <div className="mt-4 mb-2 text-xs font-semibold text-gray-700">Older</div>
+        <div className="mt-4 mb-2 font-heading text-[14.5px] text-ink">Older</div>
       )}
 
       {olderOrders.length > 0 && (
@@ -135,20 +135,20 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
           <TableBody>
             {olderOrders.map((order) => (
               <TableRow key={order.id ?? `${order.userId}-${order.timestamp}-older`}
-                className={`cursor-pointer hover:bg-gray-50 ${rowPadding}`}
+                className={`cursor-pointer hover:bg-surface ${rowPadding}`}
               >
                 <TableCell className="px-3" onClick={() => onOrderClick?.(order)}>
-                  <div className="font-medium text-gray-900 truncate max-w-[220px]">{order.fileName}</div>
-                  <div className="text-xs text-gray-500 sm:hidden truncate max-w-[220px]">{order.shopName}</div>
+                  <div className="font-bold text-[12.5px] text-ink truncate max-w-[220px]">{order.fileName}</div>
+                  <div className="text-[11px] text-slate sm:hidden truncate max-w-[220px]">{order.shopName}</div>
                 </TableCell>
-                <TableCell className="px-3 hidden sm:table-cell text-gray-700" onClick={() => onOrderClick?.(order)}>{order.shopName}</TableCell>
+                <TableCell className="px-3 hidden sm:table-cell text-text-secondary" onClick={() => onOrderClick?.(order)}>{order.shopName}</TableCell>
                 <TableCell className="px-3" onClick={() => onOrderClick?.(order)}>
                   <Badge variant={statusToBadgeVariant((order as any).status)}>
                     {((order as any).status === 'printed_ready') ? 'Ready' : String(order.status).replace('_', ' ')}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-3 hidden md:table-cell text-gray-700" onClick={() => onOrderClick?.(order)}>{formatDate(order.timestamp)}</TableCell>
-                <TableCell className="px-3 hidden sm:table-cell text-right text-gray-900" onClick={() => onOrderClick?.(order)}>₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
+                <TableCell className="px-3 hidden md:table-cell text-text-secondary" onClick={() => onOrderClick?.(order)}>{formatDate(order.timestamp)}</TableCell>
+                <TableCell className="px-3 hidden sm:table-cell text-right text-ink" onClick={() => onOrderClick?.(order)}>₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
