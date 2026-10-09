@@ -12,8 +12,16 @@ coverage/
 
 # Env files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# Generated at dev/build/install time
+*.tsbuildinfo
+next-env.d.ts
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
+public/pdf.worker.min.mjs
 
 # Editors/OS
 .vscode/
