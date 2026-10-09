@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { Image as ImageIcon } from 'lucide-react';
+import { ImageIcon, ShieldCheckIcon } from '@/components/swoop/icons';
+import { ChatIcon } from '@/components/marketplace/icons';
 import type { Listing, ListingCategory } from '@/types/models';
 import { formatLocationForCard } from '@/lib/utils/location';
 
@@ -40,72 +41,43 @@ export function ListingCard({ listing, category }: ListingCardProps) {
   const metaLine = [locationLabel, timeAgo].filter(Boolean).join(' · ');
 
   return (
-    <Link href={`/marketplace/${listing.id}`} className="block group">
-      <article
-        className="overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 group-hover:shadow-md group-active:scale-[0.98]"
-      >
-        {/* Image — square aspect ratio */}
-        <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
-          {listing.images?.[0] ? (
-            <img
-              src={listing.images[0]}
-              alt={listing.title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <ImageIcon size={28} className="text-gray-300" />
-            </div>
-          )}
+    <Link href={`/marketplace/${listing.id}`} className="campus-press flex flex-col gap-[3px] text-ink">
+      <span className="relative grid h-[112px] place-items-center overflow-hidden rounded-[12px] bg-surface">
+        {listing.images?.[0] ? (
+          <img src={listing.images[0]} alt={listing.title} className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <ImageIcon size={28} className="text-text-muted" />
+        )}
 
-          {/* Price badge overlay */}
-          {priceLabel && (
-            <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-marketplace-accent text-white text-[12px] font-bold shadow-sm">
-              {priceLabel}
-            </div>
-          )}
+        {priceLabel && (
+          <span className="font-heading absolute bottom-[5px] left-[5px] rounded-[6px] bg-white px-1.5 py-0.5 text-[12px] leading-[1.15] text-ink tabular-nums shadow-[0_1px_3px_rgba(16,24,40,0.12)]">
+            {priceLabel}
+          </span>
+        )}
 
-          {/* WhatsApp indicator */}
-          {listing.whatsappAllowed && (
-            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
-              <svg className="h-3.5 w-3.5 text-emerald-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2z" fillOpacity=".9" /></svg>
-            </div>
-          )}
-        </div>
+        {listing.whatsappAllowed && (
+          <span className="absolute right-[5px] top-[5px] grid h-6 w-6 place-items-center rounded-full bg-white text-go-text shadow-[0_1px_3px_rgba(16,24,40,0.12)]">
+            <ChatIcon size={12} />
+            <span className="sr-only">WhatsApp allowed</span>
+          </span>
+        )}
+      </span>
 
-        {/* Content */}
-        <div className="p-3">
-          {/* Title */}
-          <h3 className="text-[13px] font-semibold leading-tight text-text-primary line-clamp-2 group-hover:text-primary transition-colors">
-            {listing.title}
-          </h3>
+      <span className="font-heading line-clamp-2 text-[11.5px] leading-[1.15]">{listing.title}</span>
+      {metaLine && <span className="truncate text-[10px] font-semibold text-slate">{metaLine}</span>}
 
-          {/* Meta */}
-          {metaLine && (
-            <p className="text-[11px] text-text-muted mt-1 line-clamp-1">
-              {metaLine}
-            </p>
-          )}
-
-          {/* Author */}
-          <div className="flex items-center gap-1.5 mt-2">
-            <div
-              className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
-              style={{ background: 'var(--primary)' }}
-            >
-              {listing.authorName?.[0] ?? 'S'}
-            </div>
-            <span className="truncate text-[11px] font-medium text-text-secondary">
-              {listing.authorName?.split(' ')[0] || 'Student'}
-            </span>
-            {listing.authorVerified && (
-              <svg className="h-3 w-3 text-success flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-            )}
-          </div>
-        </div>
-      </article>
+      <span className="flex items-center gap-1">
+        <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-ink text-[8.5px] font-extrabold text-white" aria-hidden="true">
+          {listing.authorName?.[0] ?? 'S'}
+        </span>
+        <span className="truncate text-[10px] font-semibold text-text-secondary">{listing.authorName?.split(' ')[0] || 'Student'}</span>
+        {listing.authorVerified && (
+          <>
+            <ShieldCheckIcon size={11} className="shrink-0 text-royal" />
+            <span className="sr-only">Verified</span>
+          </>
+        )}
+      </span>
     </Link>
   );
 }

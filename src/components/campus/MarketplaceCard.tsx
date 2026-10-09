@@ -1,34 +1,82 @@
 'use client';
 
 import Link from 'next/link';
-import { Bookmark, Package } from 'lucide-react';
+import { BookmarkIcon, MarketIcon } from '@/components/swoop/icons';
+import { Tag } from '@/components/swoop/primitives';
+import { TapeStrip } from '@/components/swoop/Logo';
+import { cn } from '@/lib/utils/cn';
 import type { MarketplaceListing } from '@/types/campus';
 import { MARKETPLACE_CATEGORY_LABELS } from '@/lib/campus/constants';
 
-export function MarketplaceCard({ item, href, onSave }: { item: MarketplaceListing; href: string; onSave?: (item: MarketplaceListing) => void }) {
+const CHIP_SHADOW = 'shadow-[0_1px_3px_rgba(16,24,40,0.12)]';
+
+/**
+ * Listing tile. Default: 3-up grid card (112px photo, post-type tag, price chip, save button).
+ * `compact`: 104px card for horizontal rows (80px photo, college · category meta, no tag).
+ */
+export function MarketplaceCard({
+  item,
+  href,
+  onSave,
+  compact = false
+}: {
+  item: MarketplaceListing;
+  href: string;
+  onSave?: (item: MarketplaceListing) => void;
+  compact?: boolean;
+}) {
   const price = item.postType === 'free' ? 'Free' : item.postType === 'wanted' && item.price == null ? 'Name your price' : item.price == null ? 'Ask' : `₹${item.price.toLocaleString('en-IN')}`;
+  const textPrice = item.postType !== 'free' && item.price == null;
+  const sold = item.status === 'sold' || item.status === 'closed';
+  const category = MARKETPLACE_CATEGORY_LABELS[item.category];
+  const meta = compact ? `${item.collegeCode} · ${category}` : `${category} · ${item.pickupLabel || item.area || item.collegeCode}`;
+
   return (
-    <article className="group relative overflow-hidden rounded-[20px] bg-white shadow-[0_8px_30px_rgba(20,20,20,0.05)]">
-      <Link href={href} className="block">
-        <div className="relative aspect-[4/5] overflow-hidden bg-[#eceef1]">
-          {item.images[0] ? <img src={item.images[0]} alt={item.title} className="h-full w-full object-cover transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-active:scale-[0.985]" /> : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 text-zinc-300"><Package size={32} /><span className="text-[10px] font-bold uppercase tracking-widest">Student post</span></div>
+    <article className={cn('relative', compact && 'w-[104px] shrink-0')}>
+      <Link href={href} className="campus-press flex flex-col gap-[3px] text-ink">
+        <span className={cn('relative grid place-items-center overflow-hidden rounded-[12px] bg-surface', compact ? 'h-20' : 'h-[112px]')}>
+          {item.images[0] ? (
+            <img src={item.images[0]} alt={item.title} className={cn('absolute inset-0 h-full w-full object-cover', sold && 'opacity-50')} />
+          ) : (
+            <MarketIcon size={compact ? 24 : 28} className={cn('text-text-muted', sold && 'opacity-50')} />
           )}
-          <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white backdrop-blur">{item.postType}</span>
-          <span className="absolute bottom-2 left-2 rounded-lg bg-cream px-2 py-1 font-poster text-[14px] tracking-[0.01em] text-ink shadow-sm">{price}</span>
-        </div>
-        <div className="p-3">
-          <h2 className="line-clamp-2 min-h-[2.4em] font-quinn text-[15px] font-bold leading-[1.2] text-ink">{item.title}</h2>
-          <p className="mt-1.5 truncate text-[11px] font-bold text-zinc-500">{MARKETPLACE_CATEGORY_LABELS[item.category]} · {item.pickupLabel || item.area || item.collegeCode}</p>
-          <div className="mt-2 flex items-center justify-between border-t border-black/[0.05] pt-2">
-            <span className="font-mono text-[10px] font-bold text-zinc-400">{item.serial}</span>
-            <span className="text-[10px] font-extrabold text-zinc-500">{item.collegeCode}</span>
-          </div>
-        </div>
+          {sold ? (
+            <TapeStrip
+              word="sold"
+              className={cn('absolute -left-3.5 -right-3.5 text-[11px]', compact ? 'top-[30px]' : 'top-[44px]')}
+              style={{ transform: 'rotate(-14deg)' }}
+            />
+          ) : null}
+          {!compact ? <Tag className="absolute left-[5px] top-[5px]">{item.postType}</Tag> : null}
+          {textPrice ? (
+            <span className="absolute bottom-[5px] left-[5px] rounded-[6px] bg-ink px-1.5 py-[3px] text-[10px] font-bold leading-none text-white">{price}</span>
+          ) : (
+            <span
+              className={cn(
+                'font-heading absolute bottom-[5px] left-[5px] rounded-[6px] bg-white px-1.5 py-0.5 leading-[1.15] tabular-nums',
+                compact ? 'text-[11.5px]' : 'text-[12px]',
+                sold ? 'text-slate line-through' : 'text-ink',
+                CHIP_SHADOW
+              )}
+            >
+              {price}
+            </span>
+          )}
+        </span>
+        <span className="font-heading line-clamp-2 text-[11.5px] leading-[1.15]">
+          {sold ? <span className="sr-only">Sold: </span> : null}
+          {item.title}
+        </span>
+        <span className="truncate text-[10px] font-semibold text-slate">{meta}</span>
       </Link>
       {onSave ? (
-        <button type="button" aria-label={item.isSaved ? 'Remove saved item' : 'Save item'} onClick={() => onSave(item)} className="campus-press absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur">
-          <Bookmark size={17} className="text-ink" fill={item.isSaved ? 'currentColor' : 'none'} />
+        <button
+          type="button"
+          aria-label={item.isSaved ? 'Remove saved item' : 'Save item'}
+          onClick={() => onSave(item)}
+          className={cn('campus-press absolute right-[5px] top-[5px] grid h-6 w-6 place-items-center rounded-full bg-white', CHIP_SHADOW, item.isSaved ? 'text-royal' : 'text-ink')}
+        >
+          <BookmarkIcon size={12} filled={item.isSaved} />
         </button>
       ) : null}
     </article>

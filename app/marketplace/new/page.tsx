@@ -3,9 +3,13 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CampusGate } from '@/components/campus/CampusGate';
-import { CampusHeader } from '@/components/campus/CampusHeader';
+import { Chip, PageHeader, SectionHeader, Segmented, swButton } from '@/components/swoop/primitives';
+import { cn } from '@/lib/utils/cn';
 import { MARKETPLACE_CATEGORIES, MARKETPLACE_CATEGORY_LABELS } from '@/lib/campus/constants';
 import type { CampusAudience, MarketplacePostType } from '@/types/campus';
+
+const POST_TYPES = (['sell', 'wanted', 'free'] as const).map((value) => ({ value, label: value }));
+const CONDITIONS = ['Like new', 'Good', 'Used', 'Needs repair'];
 
 export default function NewMarketplaceListingPage() {
   const router = useRouter();
@@ -56,29 +60,63 @@ export default function NewMarketplaceListingPage() {
 
   return (
     <CampusGate girlsOnly={audience === 'girls'}>
-      <div className="min-h-screen bg-[#f4f5f7] pb-10">
-        <CampusHeader title="New marketplace post" eyebrow={audience === 'girls' ? 'Girls’ Space' : 'KJU Marketplace'} accent={audience === 'girls' ? '#c23b73' : '#ff5c35'} />
-        <form onSubmit={submit} className="mx-auto max-w-xl space-y-4 px-4 pt-4">
-          <section className="rounded-[28px] bg-white p-4">
-            <p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-400">What are you posting?</p>
-            <div className="grid grid-cols-3 gap-2">{(['sell', 'wanted', 'free'] as const).map((type) => <button type="button" key={type} onClick={() => setPostType(type)} className={`campus-press rounded-2xl px-3 py-3 text-xs font-extrabold capitalize ${postType === type ? 'bg-black text-white' : 'bg-[#f4f5f7] text-zinc-600'}`}>{type}</button>)}</div>
+      <div className="min-h-screen bg-white pb-3">
+        <PageHeader
+          title="New marketplace post"
+          kicker={audience === 'girls' ? 'Girls’ space' : 'KJU marketplace'}
+          backHref={audience === 'girls' ? '/girls-space/marketplace' : '/marketplace'}
+        />
+        <form onSubmit={submit} className="mx-auto max-w-xl px-3">
+          <section className="pt-2">
+            <SectionHeader title="What are you posting?" />
+            <Segmented label="Post type" options={POST_TYPES} value={postType} onChange={setPostType} className="mt-2" />
           </section>
-          <section className="space-y-4 rounded-[28px] bg-white p-4">
+
+          <section className="space-y-3 pt-3.5">
+            <SectionHeader title="The essentials" />
             <Field label="Title"><input required minLength={4} maxLength={90} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="What should campus know?" className="campus-input" /></Field>
-            <Field label="Category"><select value={category} onChange={(event) => setCategory(event.target.value as (typeof MARKETPLACE_CATEGORIES)[number])} className="campus-input">{MARKETPLACE_CATEGORIES.map((item) => <option key={item} value={item}>{MARKETPLACE_CATEGORY_LABELS[item]}</option>)}</select></Field>
+            <ChipGroup label="Category">
+              {MARKETPLACE_CATEGORIES.map((item) => <Chip key={item} selected={category === item} onClick={() => setCategory(item)}>{MARKETPLACE_CATEGORY_LABELS[item]}</Chip>)}
+            </ChipGroup>
             <Field label="Description"><textarea required minLength={8} maxLength={1200} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Condition, edition, size, what’s included…" className="campus-input min-h-28 resize-none py-3" /></Field>
             {postType !== 'free' ? <Field label={postType === 'wanted' ? 'Your budget' : 'Price'}><input inputMode="numeric" min="0" type="number" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="₹ 0" className="campus-input" /></Field> : null}
-            {postType === 'sell' ? <div className="grid grid-cols-2 gap-3"><Field label="Condition"><select value={condition} onChange={(event) => setCondition(event.target.value)} className="campus-input"><option>Like new</option><option>Good</option><option>Used</option><option>Needs repair</option></select></Field><label className="flex items-end"><span className="flex h-12 w-full items-center justify-between rounded-2xl bg-[#f4f5f7] px-4 text-xs font-extrabold">Negotiable<input type="checkbox" checked={negotiable} onChange={(event) => setNegotiable(event.target.checked)} className="h-4 w-4 accent-black" /></span></label></div> : null}
+            {postType === 'sell' ? (
+              <>
+                <ChipGroup label="Condition">
+                  {CONDITIONS.map((item) => <Chip key={item} selected={condition === item} onClick={() => setCondition(item)}>{item}</Chip>)}
+                </ChipGroup>
+                <label className="flex h-11 items-center justify-between rounded-[12px] bg-surface px-3.5 text-[12.5px] font-bold text-ink">
+                  Negotiable
+                  <input type="checkbox" checked={negotiable} onChange={(event) => setNegotiable(event.target.checked)} className="h-4 w-4 accent-royal" />
+                </label>
+              </>
+            ) : null}
           </section>
-          <section className="space-y-4 rounded-[28px] bg-white p-4">
+
+          <section className="space-y-3 pt-3.5">
+            <SectionHeader title="Pickup and contact" />
             <Field label="Safe campus pickup"><select value={pickupPointId} onChange={(event) => setPickupPointId(event.target.value)} className="campus-input"><option value="">Choose a campus spot</option>{pickupPoints.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></Field>
             <Field label="Approximate off-campus area (optional)"><input value={area} onChange={(event) => setArea(event.target.value)} placeholder="Kothanur" className="campus-input" /></Field>
             <Field label="WhatsApp number"><input required inputMode="tel" value={whatsappNumber} onChange={(event) => setWhatsappNumber(event.target.value)} placeholder="91… (shared only after approval)" className="campus-input" /></Field>
           </section>
-          <section className="rounded-[28px] bg-white p-4"><Field label="Photos (up to 5)"><input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(event) => setFiles(Array.from(event.target.files || []).slice(0, 5))} className="block w-full rounded-2xl bg-[#f4f5f7] p-3 text-xs font-bold" /></Field>{files.length ? <p className="mt-2 text-xs font-bold text-zinc-500">{files.length} photo{files.length === 1 ? '' : 's'} ready</p> : null}</section>
-          <p className="px-2 text-[11px] font-semibold leading-5 text-zinc-500">Campus posts may be featured in PeasyPrints public promotional material. You can turn promotion off later. Girls’ Space posts are never publicly promoted.</p>
-          {error ? <div role="alert" className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div> : null}
-          <button disabled={submitting} className="campus-press h-14 w-full rounded-2xl bg-black text-sm font-extrabold text-white disabled:opacity-50">{submitting ? 'Publishing…' : 'Publish to campus'}</button>
+
+          <section className="space-y-1.5 pt-3.5">
+            <SectionHeader title="Photos" kicker="Up to 5" />
+            <Field label="Add photos">
+              <input
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => setFiles(Array.from(event.target.files || []).slice(0, 5))}
+                className="block w-full rounded-[12px] bg-surface p-2.5 text-[11.5px] font-semibold text-text-secondary file:mr-3 file:h-8 file:rounded-full file:border-0 file:bg-white file:px-3 file:text-[12px] file:font-bold file:text-ink"
+              />
+            </Field>
+            {files.length ? <p className="text-[11px] font-semibold text-slate">{files.length} photo{files.length === 1 ? '' : 's'} ready</p> : null}
+          </section>
+
+          <p className="pt-3 text-[11px] leading-[1.45] text-slate">Campus posts may be featured in PeasyPrints public promotional material. You can turn promotion off later. Girls’ Space posts are never publicly promoted.</p>
+          {error ? <div role="alert" className="mt-2.5 rounded-[12px] bg-market-tint px-3 py-2.5 text-[11.5px] font-bold text-market">{error}</div> : null}
+          <button type="submit" disabled={submitting} className={cn(swButton({ variant: 'primary', size: 'lg' }), 'mt-3 w-full')}>{submitting ? 'Publishing…' : 'Publish to campus'}</button>
         </form>
       </div>
     </CampusGate>
@@ -86,5 +124,14 @@ export default function NewMarketplaceListingPage() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="block"><span className="mb-2 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-zinc-400">{label}</span>{children}</label>;
+  return <label className="block"><span className="mb-1.5 block text-[11px] font-bold text-text-secondary">{label}</span>{children}</label>;
+}
+
+function ChipGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div role="group" aria-label={label}>
+      <span className="mb-1.5 block text-[11px] font-bold text-text-secondary" aria-hidden="true">{label}</span>
+      <div className="flex flex-wrap gap-1.5">{children}</div>
+    </div>
+  );
 }

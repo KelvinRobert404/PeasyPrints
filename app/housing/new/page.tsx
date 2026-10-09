@@ -3,10 +3,14 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CampusGate } from '@/components/campus/CampusGate';
-import { CampusHeader } from '@/components/campus/CampusHeader';
+import { HOUSING_TYPE_LABELS } from '@/components/campus/HousingCard';
+import { CameraIcon, LockIcon } from '@/components/swoop/icons';
+import { Chip, PageHeader, Segmented, swButton } from '@/components/swoop/primitives';
+import { cn } from '@/lib/utils/cn';
 import type { CampusAudience, HousingPostType } from '@/types/campus';
 
 const AMENITIES = ['Wi-Fi', 'Attached bath', 'Kitchen', 'Power backup', 'Parking', 'Security'];
+const POST_TYPES = (['room', 'roommate', 'replacement', 'sublet'] as const).map((value) => ({ value, label: HOUSING_TYPE_LABELS[value] }));
 
 export default function NewHousingPostPage() {
   const router = useRouter();
@@ -38,19 +42,140 @@ export default function NewHousingPostPage() {
   };
 
   return (
-    <CampusGate girlsOnly={audience === 'girls'}><div className="min-h-screen bg-[#eef2ef] pb-10"><CampusHeader title="New housing post" eyebrow={audience === 'girls' ? 'Girls’ Space' : 'KJU Housing'} accent="#2e6f57" />
-      <form onSubmit={submit} className="mx-auto max-w-xl space-y-4 px-4 pt-4">
-        <Section label="What do you need?"><div className="grid grid-cols-2 gap-2">{(['room', 'roommate', 'replacement', 'sublet'] as const).map((type) => <button type="button" key={type} onClick={() => setPostType(type)} className={`campus-press rounded-2xl px-3 py-3 text-xs font-extrabold capitalize ${postType === type ? 'bg-[#193c31] text-white' : 'bg-[#eef2ef] text-zinc-600'}`}>{type}</button>)}</div></Section>
-        <Section label="The essentials"><Input label="Title" required value={form.title} onChange={(value) => update('title', value)} placeholder="Room near KJU for two" /><TextArea label="Description" value={form.description} onChange={(value) => update('description', value)} placeholder="Tell students what makes this a good fit…" /><div className="grid grid-cols-2 gap-3"><Input label="Monthly rent" type="number" value={form.rent} onChange={(value) => update('rent', value)} placeholder="₹" /><Input label="Deposit" type="number" value={form.deposit} onChange={(value) => update('deposit', value)} placeholder="₹" /></div><Input label="Available from" type="date" value={form.availableFrom} onChange={(value) => update('availableFrom', value)} /></Section>
-        <Section label="Location without oversharing"><Input label="Area / locality" required value={form.area} onChange={(value) => update('area', value)} placeholder="Kothanur" /><Input label="Commute to KJU" value={form.commuteLabel} onChange={(value) => update('commuteLabel', value)} placeholder="10 min walk" /><p className="text-[11px] font-semibold leading-5 text-zinc-500">Exact addresses are never included in the public post.</p></Section>
-        {postType !== 'roommate' ? <Section label="Room details"><div className="grid grid-cols-2 gap-3"><Input label="Occupancy" value={form.occupancy} onChange={(value) => update('occupancy', value)} placeholder="Single / shared" /><Input label="Furnishing" value={form.furnishing} onChange={(value) => update('furnishing', value)} placeholder="Furnished" /></div><div className="flex flex-wrap gap-2">{AMENITIES.map((item) => <button type="button" key={item} onClick={() => setAmenities((current) => current.includes(item) ? current.filter((value) => value !== item) : [...current, item])} className={`campus-press rounded-full px-3 py-2 text-[11px] font-extrabold ${amenities.includes(item) ? 'bg-[#d8ff6a] text-[#193c31]' : 'bg-[#eef2ef] text-zinc-600'}`}>{item}</button>)}</div></Section> : null}
-        {postType === 'roommate' ? <Section label="Compatibility card"><div className="grid grid-cols-2 gap-3"><Input label="Budget" type="number" value={form.budget} onChange={(value) => update('budget', value)} /><Input label="Move-in" type="date" value={form.moveInDate} onChange={(value) => update('moveInDate', value)} /><Input label="Sleep schedule" value={form.sleepSchedule} onChange={(value) => update('sleepSchedule', value)} placeholder="Early bird" /><Input label="Food" value={form.foodPreference} onChange={(value) => update('foodPreference', value)} placeholder="Vegetarian" /><Input label="Cleanliness" value={form.cleanliness} onChange={(value) => update('cleanliness', value)} placeholder="Very tidy" /><Input label="Smoking" value={form.smokingPreference} onChange={(value) => update('smokingPreference', value)} placeholder="No smoking" /></div></Section> : null}
-        <Section label="Photos + contact"><input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(event) => setFiles(Array.from(event.target.files || []).slice(0, 10))} className="mb-4 block w-full rounded-2xl bg-[#eef2ef] p-3 text-xs font-bold" /><Input label="WhatsApp number" required value={form.whatsappNumber} onChange={(value) => update('whatsappNumber', value)} placeholder="Shared only after your approval" /></Section>
-        {error ? <div role="alert" className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div> : null}<button disabled={submitting} className="campus-press h-14 w-full rounded-2xl bg-[#193c31] text-sm font-extrabold text-white disabled:opacity-50">{submitting ? 'Publishing…' : 'Publish housing post'}</button>
-      </form></div></CampusGate>
+    <CampusGate girlsOnly={audience === 'girls'}>
+      <div className="pb-3">
+        <PageHeader
+          backHref={audience === 'girls' ? '/girls-space/housing' : '/housing'}
+          kicker={audience === 'girls' ? 'Girls’ space · Housing' : 'Housing · KJU'}
+          title="New housing post"
+        />
+        <form onSubmit={submit} className="px-3">
+          <Section label="What do you need?">
+            <Segmented label="Post type" options={POST_TYPES} value={postType} onChange={setPostType} />
+          </Section>
+          <Section label="The essentials">
+            <Input label="Title" required value={form.title} onChange={(value) => update('title', value)} placeholder="Room near KJU for two" />
+            <TextArea label="Description" value={form.description} onChange={(value) => update('description', value)} placeholder="Tell students what makes this a good fit…" />
+            <div className="grid grid-cols-2 gap-2">
+              <Input label="Monthly rent (₹)" type="number" value={form.rent} onChange={(value) => update('rent', value)} placeholder="₹" />
+              <Input label="Deposit (₹)" type="number" value={form.deposit} onChange={(value) => update('deposit', value)} placeholder="₹" />
+            </div>
+            <Input label="Available from" type="date" value={form.availableFrom} onChange={(value) => update('availableFrom', value)} />
+          </Section>
+          <Section label="Location without oversharing">
+            <Input label="Area or locality" required value={form.area} onChange={(value) => update('area', value)} placeholder="Kothanur" />
+            <Input label="Commute to KJU" value={form.commuteLabel} onChange={(value) => update('commuteLabel', value)} placeholder="10 min walk" />
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate">
+              <LockIcon size={14} className="shrink-0 text-ink" />
+              Exact addresses are never included in the public post.
+            </p>
+          </Section>
+          {postType !== 'roommate' ? (
+            <Section label="Room details">
+              <div className="grid grid-cols-2 gap-2">
+                <Input label="Occupancy" value={form.occupancy} onChange={(value) => update('occupancy', value)} placeholder="Single / shared" />
+                <Input label="Furnishing" value={form.furnishing} onChange={(value) => update('furnishing', value)} placeholder="Furnished" />
+              </div>
+              <div role="group" aria-label="Amenities" className="flex flex-wrap gap-1.5">
+                {AMENITIES.map((item) => (
+                  <Chip
+                    key={item}
+                    selected={amenities.includes(item)}
+                    onClick={() => setAmenities((current) => current.includes(item) ? current.filter((value) => value !== item) : [...current, item])}
+                  >
+                    {item}
+                  </Chip>
+                ))}
+              </div>
+            </Section>
+          ) : null}
+          {postType === 'roommate' ? (
+            <Section label="Compatibility card">
+              <div className="grid grid-cols-2 gap-2">
+                <Input label="Budget (₹)" type="number" value={form.budget} onChange={(value) => update('budget', value)} />
+                <Input label="Move-in" type="date" value={form.moveInDate} onChange={(value) => update('moveInDate', value)} />
+                <Input label="Sleep schedule" value={form.sleepSchedule} onChange={(value) => update('sleepSchedule', value)} placeholder="Early bird" />
+                <Input label="Food" value={form.foodPreference} onChange={(value) => update('foodPreference', value)} placeholder="Vegetarian" />
+                <Input label="Cleanliness" value={form.cleanliness} onChange={(value) => update('cleanliness', value)} placeholder="Very tidy" />
+                <Input label="Smoking" value={form.smokingPreference} onChange={(value) => update('smokingPreference', value)} placeholder="No smoking" />
+              </div>
+            </Section>
+          ) : null}
+          <Section label="Photos and contact">
+            <PhotoPicker files={files} onChange={setFiles} />
+            <Input label="WhatsApp number" required value={form.whatsappNumber} onChange={(value) => update('whatsappNumber', value)} placeholder="Shared only after your approval" />
+          </Section>
+          <div className="space-y-2 pt-3.5">
+            {error ? <div role="alert" className="rounded-[12px] bg-market-tint px-3 py-2.5 text-[12px] font-semibold text-market">{error}</div> : null}
+            <button type="submit" disabled={submitting} className={cn(swButton({ size: 'lg' }), 'w-full')}>
+              {submitting ? 'Publishing…' : 'Publish housing post'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </CampusGate>
   );
 }
 
-function Section({ label, children }: { label: string; children: React.ReactNode }) { return <section className="space-y-4 rounded-[28px] bg-white p-4"><p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#2e6f57]">{label}</p>{children}</section>; }
-function Input({ label, value, onChange, placeholder, type = 'text', required = false }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; required?: boolean }) { return <label className="block"><span className="mb-2 block text-[10px] font-extrabold uppercase tracking-[0.12em] text-zinc-400">{label}</span><input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="campus-input" /></label>; }
-function TextArea({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) { return <label className="block"><span className="mb-2 block text-[10px] font-extrabold uppercase tracking-[0.12em] text-zinc-400">{label}</span><textarea required minLength={12} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="campus-input min-h-28 resize-none py-3" /></label>; }
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-2.5 pt-3.5">
+      <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">{label}</h2>
+      {children}
+    </section>
+  );
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <span className="mb-1 block text-[11px] font-bold text-text-secondary">{children}</span>;
+}
+
+function Input({ label, value, onChange, placeholder, type = 'text', required = false }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; required?: boolean }) {
+  return (
+    <label className="block">
+      <FieldLabel>{label}</FieldLabel>
+      <input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="campus-input" />
+    </label>
+  );
+}
+
+function TextArea({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
+  return (
+    <label className="block">
+      <FieldLabel>{label}</FieldLabel>
+      <textarea required minLength={12} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="campus-input min-h-24 resize-none py-2.5" />
+    </label>
+  );
+}
+
+/** Photo tiles: an "Add photos" picker tile followed by previews of the chosen files. */
+function PhotoPicker({ files, onChange }: { files: File[]; onChange: (files: File[]) => void }) {
+  const [previews, setPreviews] = useState<string[]>([]);
+  useEffect(() => {
+    const urls = files.map((file) => URL.createObjectURL(file));
+    setPreviews(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [files]);
+
+  return (
+    <div className="grid grid-cols-4 gap-1.5">
+      <label className="campus-press flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-[12px] bg-surface text-ink focus-within:ring-2 focus-within:ring-royal/40">
+        <CameraIcon size={22} />
+        <span className="text-[10.5px] font-bold">{files.length ? 'Change' : 'Add photos'}</span>
+        <span className="text-[9.5px] font-semibold text-slate">Up to 10</span>
+        <input
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(event) => onChange(Array.from(event.target.files || []).slice(0, 10))}
+          className="sr-only"
+        />
+      </label>
+      {previews.map((url, index) => (
+        <span key={url} className="aspect-square overflow-hidden rounded-[12px] bg-surface">
+          <img src={url} alt={`Selected photo ${index + 1}`} className="h-full w-full object-cover" />
+        </span>
+      ))}
+    </div>
+  );
+}

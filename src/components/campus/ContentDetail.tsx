@@ -1,14 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
 import Link from 'next/link';
-import { Bookmark, Flag, House, MessageCircle, Package, SearchX, Share2, X } from 'lucide-react';
+import {
+  BookmarkIcon,
+  ClockIcon,
+  CloseIcon,
+  HousingIcon,
+  MarketIcon,
+  PinIcon,
+  RupeeIcon,
+  SearchIcon,
+  ShareIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  UserIcon,
+  type IconProps,
+} from '@/components/swoop/icons';
+import { EmptyState, IconButton, IconTile, ListRow, PageHeader, SectionHeader, StatusLine, swButton, Tag } from '@/components/swoop/primitives';
+import { ChatIcon, FlagIcon } from '@/components/marketplace/icons';
+import { cn } from '@/lib/utils/cn';
 import { CampusGate } from './CampusGate';
-import { CampusHeader } from './CampusHeader';
-import type { CampusAudience, ContactRequest, HousingPost, MarketplaceListing } from '@/types/campus';
+import type { CampusAudience, CampusContentStatus, ContactRequest, HousingPost, MarketplaceListing } from '@/types/campus';
 import { MARKETPLACE_CATEGORY_LABELS } from '@/lib/campus/constants';
 
 type Props = { id: string; type: 'marketplace' | 'housing'; audience?: CampusAudience };
+
+const STATUS_LABELS: Record<CampusContentStatus, string> = {
+  active: 'Available',
+  needs_confirmation: 'Awaiting confirmation',
+  sold: 'Sold',
+  filled: 'Filled',
+  closed: 'Closed',
+  removed: 'Removed',
+};
+
+const SavedIcon = (p: IconProps) => <BookmarkIcon filled {...p} />;
 
 export function ContentDetail({ id, type, audience = 'campus' }: Props) {
   const [item, setItem] = useState<MarketplaceListing | HousingPost | null>(null);
@@ -22,7 +49,6 @@ export function ContentDetail({ id, type, audience = 'campus' }: Props) {
   const endpoint = audience === 'girls'
     ? `/api/girls-space/${type}/${id}`
     : type === 'marketplace' ? `/api/marketplace/listings/${id}` : `/api/housing/posts/${id}`;
-  const accent = type === 'marketplace' ? '#ff5c35' : '#2e6f57';
   const base = audience === 'girls' ? `/girls-space/${type}` : `/${type}`;
 
   const load = async () => {
@@ -87,50 +113,213 @@ export function ContentDetail({ id, type, audience = 'campus' }: Props) {
     }
   };
 
+  const posterName = item ? (type === 'marketplace' ? (item as MarketplaceListing).seller.displayName : (item as HousingPost).poster.displayName) : '';
+  const closed = item ? item.status === 'sold' || item.status === 'closed' || item.status === 'filled' : false;
+  const contactWaiting = contact?.status === 'pending' || contact?.status === 'declined';
+
   return (
     <CampusGate girlsOnly={audience === 'girls'}>
-      <div className={`min-h-screen pb-10 ${type === 'housing' ? 'bg-[#eef2ef]' : 'bg-[#f4f5f7]'}`}>
-        <CampusHeader title={type === 'marketplace' ? 'Campus find' : 'Housing post'} eyebrow={audience === 'girls' ? 'Girls’ Space' : 'KJU verified'} accent={accent} actions={<Link href={base} className="campus-press flex h-10 w-10 items-center justify-center rounded-full bg-white"><X size={18} className="text-black" /></Link>} />
-        {loading ? <div className="mx-auto max-w-xl space-y-4 px-4 pt-4"><div className="skeleton aspect-square rounded-[30px]" /><div className="skeleton h-48 rounded-[30px]" /></div> : null}
-        {error && !item ? <div className="mx-auto mt-8 max-w-md rounded-[28px] bg-white p-8 text-center"><SearchX size={36} className="mx-auto text-zinc-300" /><h2 className="mt-3 font-quinn text-xl font-bold">This post stepped off campus</h2><p className="mt-2 text-sm font-semibold text-zinc-500">{error}</p><Link href={base} className="mt-5 inline-flex rounded-2xl bg-black px-5 py-3 text-xs font-extrabold text-white">Browse active posts</Link></div> : null}
+      <div className="min-h-screen bg-white pb-3">
+        <PageHeader
+          title={type === 'marketplace' ? 'Campus find' : 'Housing post'}
+          kicker={audience === 'girls' ? 'Girls’ space' : `${item?.collegeCode || 'KJU'} verified`}
+          backHref={base}
+          actions={item ? (
+            <>
+              <IconButton label="Share post" icon={ShareIcon} onClick={() => void share()} />
+              <IconButton
+                label={item.isSaved ? 'Remove from saved' : 'Save post'}
+                icon={item.isSaved ? SavedIcon : BookmarkIcon}
+                onClick={() => void save()}
+                className={item.isSaved ? 'text-royal' : undefined}
+              />
+            </>
+          ) : undefined}
+        />
+
+        {loading && !item ? (
+          <div className="mx-auto max-w-xl space-y-2 px-3 pt-1" aria-hidden="true">
+            <div className="aspect-[4/3] animate-pulse rounded-[14px] bg-surface" />
+            <div className="h-4 w-2/3 animate-pulse rounded-full bg-surface" />
+            <div className="h-3 w-1/3 animate-pulse rounded-full bg-surface" />
+            <div className="h-24 animate-pulse rounded-[14px] bg-surface" />
+          </div>
+        ) : null}
+
+        {error && !item ? (
+          <div className="mx-auto max-w-md px-3 pt-3">
+            <EmptyState
+              icon={SearchIcon}
+              title="This post stepped off campus"
+              body={error}
+              action={<Link href={base} className={cn(swButton({ variant: 'primary', size: 'sm' }), 'mt-1')}>Browse active posts</Link>}
+            />
+          </div>
+        ) : null}
+
         {item ? (
-          <main className="mx-auto max-w-xl px-4 pt-4">
-            <section className="overflow-hidden rounded-[30px] bg-white">
-              <div className="aspect-square bg-zinc-100">{item.images[0] ? <img src={item.images[0]} alt={item.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center">{type === 'housing' ? <House size={60} className="text-zinc-300" /> : <Package size={60} className="text-zinc-300" />}</div>}</div>
-              <div className="p-5">
-                <div className="flex items-center justify-between"><span className="rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-white" style={{ backgroundColor: accent }}>{item.postType}</span><span className="font-mono text-xs font-bold text-zinc-400">{item.serial}</span></div>
-                <h1 className="mt-5 font-quinn text-[30px] font-bold leading-[0.98]">{item.title}</h1>
-                <p className="mt-3 text-2xl font-black">{type === 'marketplace' ? marketPrice(item as MarketplaceListing) : housingPrice(item as HousingPost)}</p>
-                <p className="mt-5 whitespace-pre-wrap text-sm font-medium leading-6 text-zinc-600">{item.description}</p>
+          <main className="mx-auto max-w-xl px-3 pt-1">
+            <Gallery images={item.images} title={item.title} fallback={type === 'housing' ? HousingIcon : MarketIcon} />
+
+            <section className="pt-3">
+              <div className="flex items-center gap-1.5">
+                <Tag>{item.postType}</Tag>
+                <span className="ml-auto font-mono text-[10px] font-semibold text-slate">{item.serial}</span>
+              </div>
+              <h2 className="font-heading mt-1.5 text-[16px] leading-[1.1] text-ink">{item.title}</h2>
+              <p className={cn('font-heading mt-1 text-[15px] tabular-nums', closed ? 'text-slate line-through' : 'text-ink')}>
+                {type === 'marketplace' ? marketPrice(item as MarketplaceListing) : housingPrice(item as HousingPost)}
+              </p>
+              <div className="mt-1.5">
+                <StatusLine open={item.status === 'active'} label={STATUS_LABELS[item.status] ?? item.status} />
+              </div>
+              <p className="mt-2.5 whitespace-pre-wrap text-[12.5px] leading-[1.5] text-text-secondary">{item.description}</p>
+            </section>
+
+            <section className="pt-3.5">
+              <SectionHeader title="Campus context" />
+              <div className="mt-1">
+                {type === 'marketplace' ? <MarketplaceMeta item={item as MarketplaceListing} /> : <HousingMeta item={item as HousingPost} />}
+                <ListRow
+                  leading={<span className="grid h-8 w-8 place-items-center rounded-full bg-ink text-[12px] font-extrabold text-white" aria-hidden="true">{posterName[0]}</span>}
+                  title={posterName}
+                  subtitle={`Verified ${item.collegeCode} student`}
+                  trailing={<ShieldCheckIcon size={16} className="shrink-0 text-royal" />}
+                  divider={false}
+                />
               </div>
             </section>
 
-            <section className="mt-4 rounded-[26px] bg-white p-4">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em]" style={{ color: accent }}>Campus context</p>
-              {type === 'marketplace' ? <MarketplaceMeta item={item as MarketplaceListing} /> : <HousingMeta item={item as HousingPost} />}
-              <div className="mt-4 flex items-center gap-3 border-t border-black/[0.06] pt-4"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-sm font-black text-white">{(type === 'marketplace' ? (item as MarketplaceListing).seller.displayName : (item as HousingPost).poster.displayName)[0]}</div><div><p className="text-sm font-extrabold">{type === 'marketplace' ? (item as MarketplaceListing).seller.displayName : (item as HousingPost).poster.displayName}</p><p className="text-[11px] font-bold text-zinc-400">Verified KJU student</p></div></div>
-            </section>
-
             {item.isOwner ? (
-              <section className="mt-4 rounded-[26px] bg-[#161616] p-4 text-white"><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/45">Your post</p><p className="mt-2 text-sm font-semibold text-white/70">Confirm every week to keep the post visible.</p><div className="mt-4 grid grid-cols-2 gap-2"><button disabled={busy} onClick={() => action('confirm')} className="campus-press rounded-2xl bg-white px-3 py-3 text-xs font-extrabold text-black">Still available</button><button disabled={busy} onClick={() => action(type === 'marketplace' ? 'sold' : 'filled')} className="campus-press rounded-2xl bg-white/10 px-3 py-3 text-xs font-extrabold">{type === 'marketplace' ? 'Mark sold' : 'Mark filled'}</button></div></section>
+              <section className="mt-3 rounded-[14px] bg-surface p-3">
+                <p className="font-heading text-[14.5px] leading-[1.1] text-ink">Your post</p>
+                <p className="mt-0.5 text-[11.5px] text-text-secondary">Confirm every week to keep the post visible.</p>
+                <div className="mt-2.5 grid grid-cols-2 gap-2">
+                  <button type="button" disabled={busy} onClick={() => action('confirm')} className={swButton({ variant: 'primary' })}>Still available</button>
+                  <button type="button" disabled={busy} onClick={() => action(type === 'marketplace' ? 'sold' : 'filled')} className={swButton({ variant: 'white' })}>
+                    {type === 'marketplace' ? 'Mark sold' : 'Mark filled'}
+                  </button>
+                </div>
+              </section>
             ) : (
-              <section className="mt-4">
-                {contact?.status === 'approved' && contact.whatsappUrl ? <a href={contact.whatsappUrl} target="_blank" rel="noreferrer" className="campus-press flex h-14 items-center justify-center gap-2 rounded-2xl bg-[#25D366] text-sm font-extrabold text-[#092e17]"><MessageCircle size={18} />Continue on WhatsApp</a> : <button disabled={busy || contact?.status === 'pending'} onClick={requestContact} className="campus-press h-14 w-full rounded-2xl bg-black text-sm font-extrabold text-white disabled:bg-zinc-400">{contact?.status === 'pending' ? 'Contact request pending' : contact?.status === 'declined' ? 'Contact request declined' : busy ? 'Sending request…' : 'Request WhatsApp access'}</button>}
-                <p className="mt-2 text-center text-[10px] font-bold text-zinc-400">The poster decides whether to share contact access.</p>
+              <section className="mt-3">
+                {contact?.status === 'approved' && contact.whatsappUrl ? (
+                  <a href={contact.whatsappUrl} target="_blank" rel="noreferrer" className={cn(swButton({ variant: 'primary', size: 'lg' }), 'w-full')}>
+                    <ChatIcon size={18} />
+                    Continue on WhatsApp
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={busy || contact?.status === 'pending'}
+                    onClick={requestContact}
+                    className={cn(swButton({ variant: contactWaiting ? 'surface' : 'primary', size: 'lg' }), 'w-full', contactWaiting && 'text-text-secondary disabled:opacity-100')}
+                  >
+                    {contact?.status === 'pending' ? 'Contact request pending' : contact?.status === 'declined' ? 'Contact request declined' : busy ? 'Sending request…' : 'Request WhatsApp access'}
+                  </button>
+                )}
+                <p className="mt-1.5 text-center text-[10.5px] font-semibold text-slate">The poster decides whether to share contact access.</p>
               </section>
             )}
-            {error ? <div className="mt-3 rounded-2xl bg-red-50 p-3 text-xs font-bold text-red-700" role="alert">{error}</div> : null}
-            {notice ? <div className="mt-3 rounded-2xl bg-emerald-50 p-3 text-xs font-bold text-emerald-700" role="status">{notice}</div> : null}
-            <div className="mt-4 grid grid-cols-3 gap-2"><button onClick={save} className="campus-press rounded-2xl bg-white py-3 text-xs font-extrabold"><Bookmark size={17} className="mr-1 inline align-middle" fill={item.isSaved ? 'currentColor' : 'none'} />{item.isSaved ? 'Saved' : 'Save'}</button><button onClick={() => void share()} className="campus-press rounded-2xl bg-white py-3 text-xs font-extrabold"><Share2 size={17} className="mr-1 inline align-middle" />Share</button><button onClick={() => setReportOpen(true)} className="campus-press rounded-2xl bg-white py-3 text-xs font-extrabold text-red-600"><Flag size={17} className="mr-1 inline align-middle" />Report</button></div>
+
+            {error ? <div className="mt-2.5 rounded-[12px] bg-market-tint px-3 py-2.5 text-[11.5px] font-bold text-market" role="alert">{error}</div> : null}
+            {notice ? <div className="mt-2.5 rounded-[12px] bg-go-tint px-3 py-2.5 text-[11.5px] font-bold text-go-text" role="status">{notice}</div> : null}
+
+            <button type="button" onClick={() => setReportOpen(true)} className="campus-press mx-auto mt-3 flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-bold text-market">
+              <FlagIcon size={14} />
+              Report this post
+            </button>
           </main>
         ) : null}
-        {reportOpen ? <div className="fixed inset-0 z-[70] flex items-end bg-black/45 p-3 backdrop-blur-[2px] sm:items-center sm:justify-center" onMouseDown={(event) => { if (event.currentTarget === event.target) setReportOpen(false); }}><section role="dialog" aria-modal="true" aria-labelledby="report-title" className="w-full max-w-md rounded-[28px] bg-white p-5 shadow-2xl"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-red-600">Safety report</p><h2 id="report-title" className="mt-1 font-quinn text-xl font-bold">What should we review?</h2></div><button onClick={() => setReportOpen(false)} aria-label="Close report" className="campus-press flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100"><X size={18} className="text-black" /></button></div><label className="mt-5 block text-xs font-bold text-zinc-600">Reason<textarea autoFocus value={reportReason} onChange={(event) => setReportReason(event.target.value)} maxLength={400} className="campus-input mt-2 min-h-28 resize-none" placeholder="Describe the issue without including private information." /></label><button disabled={busy || reportReason.trim().length < 3} onClick={() => report()} className="campus-press mt-4 h-12 w-full rounded-2xl bg-red-600 text-xs font-extrabold text-white disabled:bg-zinc-300">{busy ? 'Sending…' : 'Send confidential report'}</button></section></div> : null}
+
+        {reportOpen ? (
+          <div
+            className="fixed inset-0 z-[70] flex items-end bg-ink/45 p-3 sm:items-center sm:justify-center"
+            onMouseDown={(event) => { if (event.currentTarget === event.target) setReportOpen(false); }}
+          >
+            <section role="dialog" aria-modal="true" aria-labelledby="report-title" className="mx-auto w-full max-w-md rounded-[14px] bg-white p-4 shadow-[0_8px_30px_rgba(16,24,40,0.18)]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10.5px] font-semibold text-market">Safety report</p>
+                  <h2 id="report-title" className="font-heading text-[16px] leading-[1.1] text-ink">What should we review?</h2>
+                </div>
+                <IconButton label="Close report" icon={CloseIcon} onClick={() => setReportOpen(false)} />
+              </div>
+              <label className="mt-3 block text-[11.5px] font-bold text-ink">
+                Reason
+                <textarea
+                  autoFocus
+                  value={reportReason}
+                  onChange={(event) => setReportReason(event.target.value)}
+                  maxLength={400}
+                  className="campus-input mt-1.5 min-h-28 resize-none"
+                  placeholder="Describe the issue without including private information."
+                />
+              </label>
+              <button
+                type="button"
+                disabled={busy || reportReason.trim().length < 3}
+                onClick={() => report()}
+                className={cn(swButton({ variant: 'danger' }), 'mt-3 w-full')}
+              >
+                {busy ? 'Sending…' : 'Send confidential report'}
+              </button>
+            </section>
+          </div>
+        ) : null}
       </div>
     </CampusGate>
   );
 }
 
+function Gallery({ images, title, fallback: Fallback }: { images: string[]; title: string; fallback: ComponentType<IconProps> }) {
+  if (!images.length) {
+    return (
+      <div className="grid aspect-[4/3] place-items-center rounded-[14px] bg-surface">
+        <Fallback size={44} className="text-text-muted" />
+      </div>
+    );
+  }
+  if (images.length === 1) {
+    return <img src={images[0]} alt={title} className="aspect-[4/3] w-full rounded-[14px] bg-surface object-cover" />;
+  }
+  return (
+    <div role="group" aria-label={`${images.length} photos`} tabIndex={0} className="-mx-3 flex snap-x snap-mandatory gap-1.5 overflow-x-auto px-3 no-scrollbar">
+      {images.map((src, index) => (
+        <img
+          key={`${src}-${index}`}
+          src={src}
+          alt={index === 0 ? title : `${title}, photo ${index + 1}`}
+          className="aspect-[4/3] w-[88%] shrink-0 snap-center rounded-[14px] bg-surface object-cover"
+        />
+      ))}
+    </div>
+  );
+}
+
+function MetaRow({ icon, title, label }: { icon: ComponentType<IconProps>; title: string; label: string }) {
+  return <ListRow leading={<IconTile icon={icon} />} title={title} subtitle={label} />;
+}
+
 function marketPrice(item: MarketplaceListing) { return item.postType === 'free' ? 'Free' : item.price == null ? 'Ask for price' : `₹${item.price.toLocaleString('en-IN')}`; }
 function housingPrice(item: HousingPost) { return item.rent == null ? 'Budget flexible' : `₹${item.rent.toLocaleString('en-IN')} / month`; }
-function MarketplaceMeta({ item }: { item: MarketplaceListing }) { return <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-bold text-zinc-600"><span className="rounded-xl bg-[#f4f5f7] p-3">{MARKETPLACE_CATEGORY_LABELS[item.category]}</span><span className="rounded-xl bg-[#f4f5f7] p-3">{item.pickupLabel || item.area || item.collegeCode}</span>{item.condition ? <span className="rounded-xl bg-[#f4f5f7] p-3">{item.condition}</span> : null}{item.negotiable ? <span className="rounded-xl bg-[#f4f5f7] p-3">Negotiable</span> : null}</div>; }
-function HousingMeta({ item }: { item: HousingPost }) { return <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-bold text-zinc-600"><span className="rounded-xl bg-[#eef2ef] p-3">{item.area}</span><span className="rounded-xl bg-[#eef2ef] p-3">{item.commuteLabel || `Near ${item.collegeCode}`}</span>{item.furnishing ? <span className="rounded-xl bg-[#eef2ef] p-3">{item.furnishing}</span> : null}{item.occupancy ? <span className="rounded-xl bg-[#eef2ef] p-3">{item.occupancy}</span> : null}</div>; }
+function MarketplaceMeta({ item }: { item: MarketplaceListing }) {
+  return (
+    <>
+      <MetaRow icon={MarketIcon} title={MARKETPLACE_CATEGORY_LABELS[item.category]} label="Category" />
+      <MetaRow icon={PinIcon} title={item.pickupLabel || item.area || item.collegeCode} label="Pickup" />
+      {item.condition ? <MetaRow icon={SparklesIcon} title={item.condition} label="Condition" /> : null}
+      {item.negotiable ? <MetaRow icon={RupeeIcon} title="Negotiable" label="Price" /> : null}
+    </>
+  );
+}
+function HousingMeta({ item }: { item: HousingPost }) {
+  return (
+    <>
+      <MetaRow icon={PinIcon} title={item.area} label="Area" />
+      <MetaRow icon={ClockIcon} title={item.commuteLabel || `Near ${item.collegeCode}`} label="Commute" />
+      {item.furnishing ? <MetaRow icon={HousingIcon} title={item.furnishing} label="Furnishing" /> : null}
+      {item.occupancy ? <MetaRow icon={UserIcon} title={item.occupancy} label="Occupancy" /> : null}
+    </>
+  );
+}

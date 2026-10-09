@@ -1,18 +1,21 @@
-import Link from 'next/link';
-import { House, Sparkles } from 'lucide-react';
+import { HousingIcon, MarketIcon } from '@/components/swoop/icons';
+import { PageHeader, ServiceTile, Tag } from '@/components/swoop/primitives';
 import { CampusGate } from '@/components/campus/CampusGate';
-import { CampusHeader } from '@/components/campus/CampusHeader';
 
 export default function GirlsSpacePage() {
   return (
     <CampusGate girlsOnly>
-      <div className="min-h-screen bg-[#fff1f6] pb-12">
-        <CampusHeader title="Girls’ Space" eyebrow="Private · KJU verified" accent="#c23b73" />
-        <main className="mx-auto max-w-2xl px-4 pt-5">
-          <div className="rounded-[32px] bg-[#3b1024] p-6 text-white"><span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-pink-100">Only approved members</span><h1 className="mt-16 max-w-sm font-quinn text-[38px] font-bold leading-[0.93]">A smaller circle.<br />A safer exchange.</h1><p className="mt-4 max-w-xs text-sm font-semibold leading-6 text-white/55">Marketplace and housing stay separate—your private access connects them.</p></div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Link href="/girls-space/marketplace" className="campus-press relative overflow-hidden rounded-[28px] bg-[#ff77ac] p-5 text-[#3b1024]"><Sparkles size={30} /><h2 className="mt-20 font-quinn text-[27px] font-bold leading-none">Girls<br />Marketplace</h2><p className="mt-3 text-xs font-bold text-[#3b1024]/60">Private resale and requests.</p></Link>
-            <Link href="/girls-space/housing" className="campus-press relative overflow-hidden rounded-[28px] bg-[#d8ff6a] p-5 text-[#193c31]"><House size={30} /><h2 className="mt-20 font-quinn text-[27px] font-bold leading-none">Girls<br />Housing</h2><p className="mt-3 text-xs font-bold text-[#193c31]/60">Rooms and roommates.</p></Link>
+      <div className="min-h-screen bg-white pb-3">
+        <PageHeader title="Girls’ space" kicker="Private · KJU verified" backHref="/" />
+        <main className="mx-auto max-w-2xl px-3 pt-1">
+          <section className="flex flex-col gap-1 rounded-[14px] bg-girls-tint px-3 pb-3 pt-[11px]">
+            <Tag tone="white" className="self-start text-girls">Only approved members</Tag>
+            <h2 className="font-heading max-w-[220px] text-[17px] leading-none text-ink">A smaller circle. A safer exchange.</h2>
+            <p className="max-w-[260px] text-[11px] leading-[1.3] text-text-secondary">Marketplace and housing stay separate. Your private access connects them.</p>
+          </section>
+          <div className="grid grid-cols-2 gap-1.5 pt-3">
+            <ServiceTile title="Marketplace" subtitle="Resale and requests" href="/girls-space/marketplace" art={<MarketIcon size={24} className="text-girls" />} />
+            <ServiceTile title="Housing" subtitle="Rooms and roommates" href="/girls-space/housing" art={<HousingIcon size={24} className="text-girls" />} />
           </div>
         </main>
       </div>

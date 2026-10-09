@@ -2,11 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { House, HousePlus, Inbox, Search } from 'lucide-react';
+import { HousingIcon, InboxIcon } from '@/components/swoop/icons';
+import { Chip, EmptyState, IconButton, PageHeader, SearchPill, SectionHeader, swButton } from '@/components/swoop/primitives';
+import { useDockSlot } from '@/lib/stores/dockStore';
 import { CampusGate } from './CampusGate';
-import { CampusHeader } from './CampusHeader';
-import { HousingCard } from './HousingCard';
+import { HOUSING_TYPE_LABELS, HousingCard } from './HousingCard';
 import type { CampusAudience, HousingPost, HousingPostType } from '@/types/campus';
+
+const TYPE_FILTERS = ['all', 'room', 'roommate', 'replacement', 'sublet'] as const;
 
 export function HousingExperience({ audience = 'campus' }: { audience?: CampusAudience }) {
   const [own, setOwn] = useState<HousingPost[]>([]);
@@ -37,6 +40,8 @@ export function HousingExperience({ audience = 'campus' }: { audience?: CampusAu
   const filteredOther = useMemo(() => filter(allItems.filter((item) => item.collegeId !== selectedCollegeId)), [allItems, selectedCollegeId, type, query]);
   const detailBase = audience === 'girls' ? '/girls-space/housing' : '/housing';
   const createUrl = audience === 'girls' ? '/housing/new?audience=girls' : '/housing/new';
+  const postsUrl = `/campus/activity?tab=posts&audience=${audience}`;
+  const collegeCode = colleges.find((college) => college.id === selectedCollegeId)?.code || 'KJU';
   const save = async (item: HousingPost) => {
     const action = item.isSaved ? 'unsave' : 'save';
     setOwn((list) => list.map((entry) => entry.id === item.id ? { ...entry, isSaved: !entry.isSaved } : entry));
@@ -47,29 +52,93 @@ export function HousingExperience({ audience = 'campus' }: { audience?: CampusAu
 
   return (
     <CampusGate girlsOnly={audience === 'girls'}>
-      <div className="min-h-screen bg-[#eef2ef] pb-28">
-        <CampusHeader title={audience === 'girls' ? 'Girls Housing' : 'Housing'} eyebrow={audience === 'girls' ? 'Girls’ Space · KJU' : 'Rooms + roommates · KJU'} accent="#2e6f57" actions={<Link href={`/campus/activity?tab=posts&audience=${audience}`} className="campus-press flex h-10 w-10 items-center justify-center rounded-full bg-white"><Inbox size={20} className="text-black" /></Link>} />
-        <main className="mx-auto max-w-3xl px-4 pt-4">
-          <section className="relative overflow-hidden rounded-[30px] bg-[#193c31] p-5 text-white">
-            <div className="absolute -bottom-14 -right-10 h-44 w-44 rounded-full border-[26px] border-[#d8ff6a]/75" />
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#d8ff6a]">Live closer. Live better.</p>
-            <h2 className="mt-14 max-w-[260px] font-quinn text-[33px] font-bold leading-[0.94]">Your next room starts on campus.</h2>
-            <p className="mt-3 max-w-[250px] text-xs font-semibold leading-5 text-white/55">Compare rent, commute and compatibility without exposing exact addresses.</p>
-          </section>
-          <label className="mt-4 flex h-12 items-center gap-3 rounded-2xl bg-white px-4 shadow-sm"><Search size={20} className="shrink-0 text-zinc-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search area or KJU serial" className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none" /></label>
-          <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar">
-            {(['all', 'room', 'roommate', 'replacement', 'sublet'] as const).map((item) => <button key={item} onClick={() => setType(item)} className={`campus-press shrink-0 rounded-full px-4 py-2.5 text-xs font-extrabold capitalize ${type === item ? 'bg-[#193c31] text-white' : 'bg-white text-zinc-600'}`}>{item === 'all' ? 'Everything' : item}</button>)}
+      <PostSlot audience={audience} href={createUrl} />
+      <div className="pb-3">
+        {audience === 'girls' ? (
+          <PageHeader
+            backHref="/girls-space"
+            kicker={`Girls’ space · ${collegeCode}`}
+            title="Housing"
+            actions={<IconButton label="My housing posts" icon={InboxIcon} href={postsUrl} />}
+          />
+        ) : (
+          <div className="flex items-end justify-between gap-3 px-3 pt-2">
+            <div className="min-w-0">
+              <p className="truncate text-[10.5px] font-semibold text-slate">Rooms and roommates · {collegeCode}</p>
+              <h1 className="font-heading truncate text-[16px] leading-[1.05] text-ink">Housing</h1>
+            </div>
+            <Link href={postsUrl} className={swButton({ variant: 'surface', size: 'pill' })}>My posts</Link>
           </div>
-          {colleges.length > 1 ? <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar" aria-label="Choose a campus">{colleges.map((college) => <button key={college.id} onClick={() => setSelectedCollegeId(college.id)} className={`shrink-0 rounded-full border px-3 py-2 text-[10px] font-extrabold ${selectedCollegeId === college.id ? 'border-[#193c31] bg-[#193c31] text-white' : 'border-black/10 bg-white text-zinc-500'}`}>{college.code}</button>)}</div> : null}
-          <div className="mt-6 flex items-end justify-between"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#2e6f57]">Best for your commute</p><h2 className="font-quinn text-2xl font-bold">Around KJU</h2></div><span className="text-xs font-bold text-zinc-400">{filteredOwn.length} posts</span></div>
-          {loading ? <div className="mt-4 space-y-3">{[0, 1, 2].map((item) => <div key={item} className="skeleton h-[166px] rounded-[26px]" />)}</div> : null}
-          {error ? <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{error}</div> : null}
-          {!loading && filteredOwn.length ? <div className="mt-4 space-y-3">{filteredOwn.map((item) => <HousingCard key={item.id} item={item} href={`${detailBase}/${item.id}`} onSave={save} />)}</div> : null}
-          {!loading && !error && !filteredOwn.length ? <div className="mt-4 rounded-[26px] border border-dashed border-[#193c31]/15 bg-white/60 p-10 text-center"><House size={36} className="mx-auto text-[#2e6f57]/30" /><h3 className="mt-3 font-quinn text-lg font-bold">No matching homes yet</h3><p className="mt-1 text-xs font-semibold text-zinc-500">Post what you need and let campus find you.</p></div> : null}
-          {filteredOther.length ? <section className="mt-9"><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#2e6f57]">Explore other campuses</p><h2 className="font-quinn text-2xl font-bold">Worth the commute</h2><div className="mt-4 space-y-3">{filteredOther.map((item) => <HousingCard key={item.id} item={item} href={`${detailBase}/${item.id}`} onSave={save} />)}</div></section> : null}
+        )}
+
+        <main className="px-3 pt-2.5">
+          <SearchPill
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search area or serial"
+            aria-label="Search housing by area or serial"
+          />
+          <div role="group" aria-label="Filter by post type" className="-mx-3 mt-2 flex gap-1.5 overflow-x-auto px-3 no-scrollbar">
+            {TYPE_FILTERS.map((item) => (
+              <Chip key={item} selected={type === item} onClick={() => setType(item)}>
+                {item === 'all' ? 'All' : HOUSING_TYPE_LABELS[item]}
+              </Chip>
+            ))}
+          </div>
+          {colleges.length > 1 ? (
+            <div role="group" aria-label="Choose a campus" className="-mx-3 mt-1.5 flex gap-1.5 overflow-x-auto px-3 no-scrollbar">
+              {colleges.map((college) => (
+                <Chip key={college.id} selected={selectedCollegeId === college.id} onClick={() => setSelectedCollegeId(college.id)}>
+                  {college.code}
+                </Chip>
+              ))}
+            </div>
+          ) : null}
+
+          <section className="pt-3.5">
+            <div className="flex items-end justify-between gap-3">
+              <SectionHeader className="min-w-0" kicker="Best for your commute" title={`Around ${collegeCode}`} />
+              {!loading ? <span className="shrink-0 text-[11px] font-semibold text-slate">{filteredOwn.length} {filteredOwn.length === 1 ? 'post' : 'posts'}</span> : null}
+            </div>
+            {loading ? (
+              <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-3" aria-busy="true" aria-label="Loading housing">
+                {[0, 1, 2, 3].map((item) => <div key={item} className="skeleton h-[168px] rounded-[12px]" />)}
+              </div>
+            ) : null}
+            {error ? <div role="alert" className="mt-2 rounded-[12px] bg-market-tint px-3 py-2.5 text-[12px] font-semibold text-market">{error}</div> : null}
+            {!loading && filteredOwn.length ? (
+              <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-3">
+                {filteredOwn.map((item) => <HousingCard key={item.id} item={item} href={`${detailBase}/${item.id}`} onSave={save} />)}
+              </div>
+            ) : null}
+            {!loading && !error && !filteredOwn.length ? (
+              <EmptyState className="mt-2" icon={HousingIcon} title="No matching homes yet" body="Post what you need and let campus find you." />
+            ) : null}
+          </section>
+
+          {filteredOther.length ? (
+            <section className="pt-3.5">
+              <SectionHeader kicker="Explore other campuses" title="Worth the commute" />
+              <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-3">
+                {filteredOther.map((item) => <HousingCard key={item.id} item={item} href={`${detailBase}/${item.id}`} onSave={save} />)}
+              </div>
+            </section>
+          ) : null}
         </main>
-        <Link href={createUrl} className="campus-press fixed bottom-6 right-5 z-30 flex h-15 items-center gap-2 rounded-2xl bg-[#193c31] px-5 text-sm font-extrabold text-white shadow-[0_15px_40px_rgba(25,60,49,0.3)]"><HousePlus size={20} />Post</Link>
       </div>
     </CampusGate>
   );
+}
+
+/** Dock live slot for posting. Rendered inside the gate so it only shows to students who can post. */
+function PostSlot({ audience, href }: { audience: CampusAudience; href: string }) {
+  useDockSlot({
+    id: 'housing-post',
+    title: 'Have a room or need a flatmate?',
+    subtitle: audience === 'girls' ? 'Visible to Girls’ space members only' : 'Visible to verified students only',
+    tone: 'white',
+    icon: 'plus',
+    action: { label: 'Post', href }
+  });
+  return null;
 }
