@@ -16,17 +16,10 @@ export function usePosthog() {
     if (!isLoaded) return;
     // Identify or reset
     if (distinctId) {
-      const email = user?.emailAddresses?.[0]?.emailAddress;
-      const phone = user?.phoneNumbers?.[0]?.phoneNumber;
-      const safeProps = {
-        email: email ? hashLike(email) : undefined,
-        phone: phone ? hashLike(phone) : undefined,
-        name: user?.fullName || user?.username || undefined,
-        provider: 'clerk',
-      };
-      identifyUser(distinctId, safeProps);
+      // Identify by Clerk id only; names, emails and phone numbers stay out of analytics.
+      identifyUser(distinctId, { provider: 'clerk' });
     }
-  }, [isLoaded, distinctId, user?.fullName, user?.username, user?.emailAddresses, user?.phoneNumbers]);
+  }, [isLoaded, distinctId]);
 
   useEffect(() => {
     // Page view event for manual funnels
@@ -51,17 +44,3 @@ function buildBaseProps({ pathname }: { pathname?: string | null }): BaseEventPr
     $screen_height: window.innerHeight,
   };
 }
-
-// Minimal irreversible transform for PII markers used only for identification props
-function hashLike(input: string): string {
-  try {
-    const data = new TextEncoder().encode(input);
-    return Array.from(new Uint8Array(data.slice(0, 12)))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-  } catch {
-    return 'redacted';
-  }
-}
-
-

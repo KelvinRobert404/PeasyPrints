@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { db } from '@/lib/firebase/config';
+import { firebaseAuthHeaders } from '@/lib/firebase/authHeaders';
 import {
   collection,
   doc,
@@ -22,6 +23,7 @@ interface ShopState {
   pendingOrders: OrderDoc[];
   historyOrders: OrderDoc[];
   receivableAmount: number;
+  reservedPayoutAmount: number;
   payoutRequests: Array<{ id: string; amount: number; status: 'requested'|'processing'|'paid'|'cancelled'; expectedAt?: any; requestedAt: any }>;
   payouts: Array<{ id: string; amount: number; createdAt: any }>;
 
@@ -45,7 +47,7 @@ interface ShopState {
 async function mutateOrder(orderId: string, action: string) {
   const response = await fetch(`/api/shopfront/orders/${encodeURIComponent(orderId)}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await firebaseAuthHeaders()) },
     body: JSON.stringify({ action }),
   });
   const data = await response.json().catch(() => ({}));
@@ -59,6 +61,7 @@ export const useShopStore = create<ShopState>()(
     pendingOrders: [],
     historyOrders: [],
     receivableAmount: 0,
+    reservedPayoutAmount: 0,
     payoutRequests: [],
     payouts: [],
 
@@ -77,13 +80,18 @@ export const useShopStore = create<ShopState>()(
           logoUrl: data.logoUrl,
           pricing: data.pricing,
           isOpen: data.isOpen,
+          // Carried so a profile save doesn't blank fields the form round-trips.
+          phone: data.phone ?? data.phoneNumber,
+          email: data.email,
+          collegeId: data.collegeId,
         } as Shop;
         set((s) => {
           s.currentShop = shop;
           s.receivableAmount = Number(data.receivableAmount ?? 0);
+          s.reservedPayoutAmount = Number(data.reservedPayoutAmount ?? 0);
         });
       } else {
-        set((s) => { s.currentShop = null; s.receivableAmount = 0; });
+        set((s) => { s.currentShop = null; s.receivableAmount = 0; s.reservedPayoutAmount = 0; });
       }
     },
 
@@ -164,8 +172,14 @@ export const useShopStore = create<ShopState>()(
       const shop = get().currentShop;
       if (!shop) return;
       const ref = doc(db, 'shops', shop.id);
-      await updateDoc(ref, { pricing, updatedAt: serverTimestamp() as any });
-      set((s) => { if (s.currentShop) s.currentShop.pricing = pricing; });
+      // Write only the owner-managed parts: replacing the whole map would wipe the
+      // platform fees (convenienceFee/convenienceFeeTiers) Godview sets.
+      await updateDoc(ref, {
+        'pricing.services': pricing.services,
+        'pricing.tiers': pricing.tiers ?? [],
+        updatedAt: serverTimestamp() as any,
+      });
+      set((s) => { if (s.currentShop) s.currentShop.pricing = { ...(s.currentShop.pricing ?? {}), services: pricing.services, tiers: pricing.tiers ?? [] }; });
     },
 
     updateOpenStatus: async (isOpen) => {
@@ -208,10 +222,11 @@ export const useShopStore = create<ShopState>()(
       const safeAmount = Math.max(0, Math.floor(Number(amount)));
       if (!safeAmount) return;
       const response = await fetch('/api/shopfront/payouts', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: safeAmount })
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...(await firebaseAuthHeaders()) }, body: JSON.stringify({ amount: safeAmount })
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'Payout request failed');
+      await get().fetchShopData(shop.id);
     }
   }))
 );

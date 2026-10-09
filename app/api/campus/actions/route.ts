@@ -1,9 +1,9 @@
-import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { CampusHttpError, campusErrorResponse, getCampusPrincipal } from '@/lib/campus/auth';
+import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
 
 const schema = z.object({
   action: z.enum(['save', 'unsave', 'report']),
@@ -36,9 +36,13 @@ export async function POST(request: NextRequest) {
       await getAdminDb().collection('campus_saves').doc(saveId).delete();
     } else {
       if (!body.reason) return NextResponse.json({ error: 'A report reason is required' }, { status: 400 });
+      const rate = await checkRateLimit('campus-report', principal.userId, 10, 3600);
+      if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
       await getAdminDb().runTransaction(async (transaction) => {
         const contentRef = getAdminDb().collection(collectionFor(body.contentType)).doc(body.contentId);
-        const reportRef = getAdminDb().collection('campus_content_reports').doc(crypto.randomUUID());
+        // One report per user per post, so a single account can't inflate report counts.
+        const reportRef = getAdminDb().collection('campus_content_reports').doc(`${principal.userId}_${body.contentType}_${body.contentId}`);
+        if ((await transaction.get(reportRef)).exists) throw new CampusHttpError(409, 'You already reported this post');
         transaction.create(reportRef, {
           reporterId: principal.userId,
           contentType: body.contentType,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth as clerkAuth } from '@clerk/nextjs/server';
 import crypto from 'crypto';
+import { PDFDocument } from 'pdf-lib';
 import { isAllowedOrigin } from '@/lib/utils/origin';
 import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
 import { getAdminBucket } from '@/lib/firebase/admin';
@@ -14,7 +15,8 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const rate = await checkRateLimit('pdf-upload', userId, 12, 600);
+    // A split assignment checkout uploads three files at once.
+    const rate = await checkRateLimit('pdf-upload', userId, 30, 600);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
 
     // Basic CSRF protection for same-site/allowlisted requests
@@ -50,6 +52,14 @@ export async function POST(req: NextRequest) {
     if (buffer.length < 5 || buffer.subarray(0, 5).toString('ascii') !== '%PDF-') {
       return NextResponse.json({ error: 'File content is not a valid PDF' }, { status: 400 });
     }
+    // Count pages here so checkout prices the file that was actually uploaded,
+    // not a page count the browser claims.
+    let pageCount: number;
+    try {
+      pageCount = (await PDFDocument.load(buffer, { updateMetadata: false })).getPageCount();
+    } catch {
+      return NextResponse.json({ error: 'This PDF could not be read. It may be password-protected or damaged.' }, { status: 400 });
+    }
     const safeName = `${crypto.randomUUID()}.pdf`;
     const path = `uploads/${userId}/${safeName}`;
 
@@ -58,15 +68,16 @@ export async function POST(req: NextRequest) {
       contentType: 'application/pdf',
       resumable: false,
       public: false,
-      metadata: { cacheControl: 'private,no-store', metadata: { ownerId: userId } }
+      metadata: { cacheControl: 'private,no-store', metadata: { ownerId: userId, pageCount: String(pageCount) } }
     });
 
     // Persist only the private object path. Authorized download endpoints issue
     // short-lived signed URLs when a customer or shop needs the document.
-    const res = NextResponse.json({ path });
+    const res = NextResponse.json({ path, pageCount });
     res.headers.set('Cache-Control', 'no-store');
     return res;
   } catch (e: any) {
+    console.error('[storage/upload]', e);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }

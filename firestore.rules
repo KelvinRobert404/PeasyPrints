@@ -10,6 +10,22 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.admin == true;
     }
 
+    // Platform fees live inside the shop's pricing map but are set by Godview only.
+    function platformFeesUnchanged() {
+      return request.resource.data.get('pricing', {}).get('convenienceFee', null) == resource.data.get('pricing', {}).get('convenienceFee', null)
+        && request.resource.data.get('pricing', {}).get('convenienceFeeTiers', null) == resource.data.get('pricing', {}).get('convenienceFeeTiers', null);
+    }
+
+    function noPlatformFees() {
+      return !('convenienceFee' in request.resource.data.get('pricing', {}))
+        && !('convenienceFeeTiers' in request.resource.data.get('pricing', {}));
+    }
+
+    // Shop balances move only through server transactions (orders, payouts).
+    function ledgerUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['receivableAmount', 'reservedPayoutAmount']);
+    }
+
     // Campus products are server-only. Firebase Admin validates Clerk sessions,
     // college membership, audience entitlement, lifecycle and field projection.
     match /{collection}/{document} {
@@ -25,6 +41,7 @@ service cloud.firestore {
           'campus_saves',
           'campus_content_reports',
           'campus_private_profiles',
+          'campus_private_contacts',
           'campus_media',
           'campus_serial_reservations',
           'campus_serial_metrics',
@@ -51,13 +68,15 @@ service cloud.firestore {
           'receivableAmount', 'reservedPayoutAmount', 'createdAt', 'updatedAt'
         ])
         && request.resource.data.receivableAmount == 0
-        && request.resource.data.reservedPayoutAmount == 0);
-      allow update: if isAdmin() || (isSignedIn()
+        && request.resource.data.reservedPayoutAmount == 0
+        && noPlatformFees());
+      allow update: if (isAdmin() && ledgerUnchanged()) || (isSignedIn()
         && request.auth.uid == shopId
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'name', 'address', 'timing', 'openingTime', 'closingTime', 'logoUrl',
           'pricing', 'isOpen', 'collegeId', 'phone', 'phoneNumber', 'email', 'updatedAt'
-        ]));
+        ])
+        && platformFeesUnchanged());
       allow delete: if false;
     }
 
@@ -96,6 +115,11 @@ service cloud.firestore {
     match /payout_requests/{requestId} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.shopId == request.auth.uid);
       allow create, update, delete: if false;
+    }
+
+    // Colleges are public reference data (navbar picker and shop filter).
+    match /colleges/{collegeId} {
+      allow read: if true;
     }
 
     // Legacy Godview collections remain client-readable only for tokens minted

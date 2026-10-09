@@ -6,11 +6,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { SignIn } from '@clerk/nextjs';
+import { safeRedirectPath } from '@/lib/utils/safeRedirect';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams?.get('redirect_url') || '/';
+  const redirect = safeRedirectPath(searchParams?.get('redirect_url'));
   const { isSignedIn, isLoaded } = useAuth();
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function LoginPage() {
 
       <SignIn
         routing="hash"
-        signUpUrl="/register"
+        signUpUrl={`/register?redirect_url=${encodeURIComponent(redirect)}`}
         afterSignInUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
         afterSignUpUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
       />

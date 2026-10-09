@@ -148,6 +148,15 @@ export default function ShopfrontDashboardPage() {
   const [historyFilterOpen, setHistoryFilterOpen] = useState(false);
   const [historyRange, setHistoryRange] = useState<{ start: string; end: string }>(last7);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  // Only report success once the server accepted the change.
+  const runOrderAction = async (action: () => Promise<void>, success: string) => {
+    try {
+      await action();
+      setStatusMessage(success);
+    } catch (error: any) {
+      alert(error?.message || 'That action failed. Please try again.');
+    }
+  };
   const [helperOpen, setHelperOpen] = useState(false);
   useEffect(() => {
     if (!statusMessage) return;
@@ -406,13 +415,12 @@ export default function ShopfrontDashboardPage() {
                     setStatusMessage('Connecting to printer...');
                     setTimeout(() => setStatusMessage('Sending file...'), 800);
                   }}
-                  onCancel={(o) => { if (!((o as any).id)) return; if (!confirm('Cancel this order?')) return; void cancelOrder((o as any).id, o as any); setStatusMessage('Order cancelled'); }}
-                  onMarkPrinted={(o) => { if (!((o as any).id)) return; void markPrinted((o as any).id); setStatusMessage('Marked as printed'); }}
-                  onRevertToProcessing={(o) => { if (!((o as any).id)) return; void revertToProcessing((o as any).id); setStatusMessage('Reverted to processing'); }}
+                  onCancel={(o) => { if (!((o as any).id)) return; if (!confirm('Cancel this order?')) return; void runOrderAction(() => cancelOrder((o as any).id, o as any), 'Order cancelled'); }}
+                  onMarkPrinted={(o) => { if (!((o as any).id)) return; void runOrderAction(() => markPrinted((o as any).id), 'Marked as printed'); }}
+                  onRevertToProcessing={(o) => { if (!((o as any).id)) return; void runOrderAction(() => revertToProcessing((o as any).id), 'Reverted to processing'); }}
                   onCollected={async (o) => {
                     if (!((o as any).id)) return;
-                    await completeOrder((o as any).id, o as any);
-                    setStatusMessage('Marked as collected');
+                    await runOrderAction(() => completeOrder((o as any).id, o as any), 'Marked as collected');
                   }}
                 />
               </div>
@@ -428,8 +436,8 @@ export default function ShopfrontDashboardPage() {
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <ShopfrontHistoryTable
                   orders={completedToday as any}
-                  onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
-                  onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+                  onUndoCollected={(o) => { void runOrderAction(() => undoCollected(o.orderId, o), 'Order moved back to printed'); }}
+                  onUndoCancelled={(o) => { void runOrderAction(() => undoCancelled(o.orderId, o), 'Order restored'); }}
                 />
               </div>
             )}
@@ -444,8 +452,8 @@ export default function ShopfrontDashboardPage() {
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <ShopfrontHistoryTable
                   orders={cancelledToday as any}
-                  onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
-                  onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+                  onUndoCollected={(o) => { void runOrderAction(() => undoCollected(o.orderId, o), 'Order moved back to printed'); }}
+                  onUndoCancelled={(o) => { void runOrderAction(() => undoCancelled(o.orderId, o), 'Order restored'); }}
                 />
               </div>
             )}
@@ -485,8 +493,8 @@ export default function ShopfrontDashboardPage() {
                 <ShopfrontHistoryTable
                   orders={historyFiltered as any}
                   showUndo={false}
-                  onUndoCollected={(o) => { void undoCollected(o.orderId, o); }}
-                  onUndoCancelled={(o) => { void undoCancelled(o.orderId, o); }}
+                  onUndoCollected={(o) => { void runOrderAction(() => undoCollected(o.orderId, o), 'Order moved back to printed'); }}
+                  onUndoCancelled={(o) => { void runOrderAction(() => undoCancelled(o.orderId, o), 'Order restored'); }}
                 />
               )}
             </div>

@@ -51,9 +51,20 @@ export async function POST(request: NextRequest) {
 
     const Razorpay = (await import('razorpay')).default;
     const instance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-    const providerPayment = await instance.payments.fetch(paymentId);
+    let providerPayment = await instance.payments.fetch(paymentId);
     const expectedAmount = Number(intent.data()!.amountPaise);
-    if (providerPayment.order_id !== orderId || Number(providerPayment.amount) !== expectedAmount || providerPayment.currency !== intent.data()!.currency || providerPayment.status !== 'captured') {
+    const matchesIntent = providerPayment.order_id === orderId && Number(providerPayment.amount) === expectedAmount && providerPayment.currency === intent.data()!.currency;
+    // Without auto-capture (or before it runs) a successful checkout is only
+    // 'authorized'; capture it here so the customer is not charged without an order.
+    if (matchesIntent && providerPayment.status === 'authorized') {
+      try {
+        providerPayment = await instance.payments.capture(paymentId, expectedAmount, intent.data()!.currency);
+      } catch {
+        // Auto-capture may have won the race; trust the provider's current state.
+        providerPayment = await instance.payments.fetch(paymentId);
+      }
+    }
+    if (!matchesIntent || providerPayment.status !== 'captured') {
       captureServerEvent({ event: 'razorpay_payment_failed', distinctId: userId, properties: { razorpay_order_id: orderId, razorpay_payment_id: paymentId, reason: 'provider_mismatch', provider_status: providerPayment.status } });
       return NextResponse.json({ valid: false, error: 'Payment has not been captured for the quoted amount' }, { status: 409 });
     }
@@ -62,8 +73,9 @@ export async function POST(request: NextRequest) {
       const fresh = await transaction.get(paymentRef);
       if (!fresh.exists || fresh.data()!.userId !== userId) throw new Error('Payment intent ownership changed');
       if (fresh.data()!.razorpayPaymentId && fresh.data()!.razorpayPaymentId !== paymentId) throw new Error('Payment intent already bound');
+      const alreadySettled = fresh.data()!.status === 'paid' || fresh.data()!.status === 'fulfilled';
       transaction.update(paymentRef, {
-        status: 'paid',
+        ...(alreadySettled ? {} : { status: 'paid' }),
         razorpayPaymentId: paymentId,
         verifiedAt: new Date(),
         updatedAt: new Date(),

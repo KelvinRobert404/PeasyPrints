@@ -4,7 +4,12 @@ let withSerwist = (cfg) => cfg;
 if (isProd) {
   withSerwist = require('@serwist/next').default({
     swSrc: 'service-worker.js',
-    swDest: 'public/sw.js'
+    swDest: 'public/sw.js',
+    // The default reloads the page whenever the browser comes back online, which
+    // wipes an in-progress upload and can interrupt Razorpay checkout.
+    reloadOnOnline: false,
+    // Don't precache multi-MB announcement images, sounds and the PDF worker.
+    globPublicPatterns: ['icons/**/*', 'manifest.json']
   });
 }
 
@@ -40,7 +45,7 @@ const nextConfig = {
     // React/Turbopack need eval() for dev debugging; never allow it in production.
     const devEval = isProd ? '' : " 'unsafe-eval'";
     const securityHeaders = [
-      { key: 'Content-Security-Policy', value: "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: blob: https://firebasestorage.googleapis.com https://img.clerk.com https://*.clerk.com; font-src 'self' data: https://fonts.gstatic.com https://use.typekit.net https://fonts.cdnfonts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://use.typekit.net https://fonts.cdnfonts.com; script-src 'self' 'unsafe-inline'" + devEval + " https://checkout.razorpay.com https://www.googletagmanager.com https://*.clerk.accounts.dev https://*.clerk.com https://clerk.peasyprints.com; connect-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.clerk.accounts.dev https://*.clerk.com https://api.clerk.com https://clerk-telemetry.com https://clerk.peasyprints.com https://www.google-analytics.com https://region1.google-analytics.com https://vitals.vercel-insights.com; frame-src https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://*.clerk.accounts.dev https://*.clerk.com; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests" },
+      { key: 'Content-Security-Policy', value: "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: blob: https://firebasestorage.googleapis.com https://img.clerk.com https://*.clerk.com; font-src 'self' data: https://fonts.gstatic.com https://use.typekit.net https://fonts.cdnfonts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://use.typekit.net https://fonts.cdnfonts.com; script-src 'self' 'unsafe-inline'" + devEval + " https://challenges.cloudflare.com https://checkout.razorpay.com https://www.googletagmanager.com https://*.clerk.accounts.dev https://*.clerk.com https://clerk.peasyprints.com; connect-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.clerk.accounts.dev https://*.clerk.com https://api.clerk.com https://clerk-telemetry.com https://clerk.peasyprints.com https://www.google-analytics.com https://region1.google-analytics.com https://vitals.vercel-insights.com; frame-src https://challenges.cloudflare.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://*.clerk.accounts.dev https://*.clerk.com; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests" },
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'X-Content-Type-Options', value: 'nosniff' },
       { key: 'X-Frame-Options', value: 'DENY' },

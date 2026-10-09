@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import crypto from 'crypto';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/firebase/admin';
+import { getRequestUserId } from '@/lib/server/requestAuth';
 
 export const runtime = 'nodejs';
 
-export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+  const userId = await getRequestUserId(request);
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await context.params;
   const order = await getAdminDb().collection('orders').doc(id).get();

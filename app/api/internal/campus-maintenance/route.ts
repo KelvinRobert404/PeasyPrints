@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DocumentReference, Timestamp } from 'firebase-admin/firestore';
+import { DocumentReference, FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { getAdminBucket, getAdminDb } from '@/lib/firebase/admin';
 import { isAvailable, toDate } from '@/lib/campus/serialize';
 import { bearerToken, safeTokenEqual } from '@/lib/server/secrets';
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     db.collection('_rate_limits').where('expiresAt', '<=', nowTimestamp).limit(500).get(),
     db.collection('print_tickets').where('expiresAt', '<=', nowTimestamp).limit(500).get(),
     db.collection('orders').where('fileDeleteAfter', '<=', nowTimestamp).limit(200).get(),
-    db.collection('payments').limit(500).get(),
+    db.collection('payments').where('status', '==', 'paid').limit(500).get(),
   ]);
   const files = new Set<string>();
   const updates: Array<{ ref: DocumentReference; data: Record<string, unknown> }> = [];
@@ -74,11 +74,17 @@ export async function GET(request: NextRequest) {
 
   fileOrders.docs.forEach((doc) => {
     const data = doc.data();
-    if (!['completed', 'cancelled'].includes(data.status) || data.fileDeletedAt) return;
+    // Already-processed orders still matching the query are dequeued; otherwise 200
+    // of them would fill every slot and newer orders' files would never be deleted.
+    if (data.fileDeletedAt) {
+      updates.push({ ref: doc.ref, data: { fileDeleteAfter: FieldValue.delete() } });
+      return;
+    }
+    if (!['completed', 'cancelled'].includes(data.status)) return;
     const paths = [data.filePath, ...Object.values(data.splitFilePaths || {})].filter((path): path is string => typeof path === 'string');
     paths.forEach((path) => files.add(path));
     retainedPrintFilesDeleted += new Set(paths).size;
-    updates.push({ ref: doc.ref, data: { filePath: null, splitFilePaths: null, fileDeletedAt: nowTimestamp, updatedAt: nowTimestamp } });
+    updates.push({ ref: doc.ref, data: { filePath: null, splitFilePaths: null, fileDeletedAt: nowTimestamp, fileDeleteAfter: FieldValue.delete(), updatedAt: nowTimestamp } });
   });
 
   const stalePaidPayments = payments.docs.filter((doc) => {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { FinalizeOrderSchema } from '@/lib/checkout/schema';
+import { FinalizeOrderSchema, type CheckoutFiles } from '@/lib/checkout/schema';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { assertUploadExists, protectedOrderFileUrl } from '@/lib/server/uploads';
 import { captureServerEvent } from '@/lib/posthog/server';
@@ -21,13 +21,23 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) return NextResponse.json({ error: 'Invalid order finalization payload' }, { status: 400 });
     const input = parsed.data;
 
-    const paths = [input.filePath];
-    if (input.splitFiles) paths.push(input.splitFiles.bwPath, input.splitFiles.colorPath, ...(input.splitFiles.originalPath ? [input.splitFiles.originalPath] : []));
-    await Promise.all([...new Set(paths)].map((path) => assertUploadExists(path, userId)));
-
     const db = getAdminDb();
     const paymentRef = db.collection('payments').doc(input.razorpayOrderId);
     const orderRef = db.collection('orders').doc(input.razorpayOrderId);
+
+    // The files were verified and bound to this payment when it was quoted.
+    const intentSnapshot = await paymentRef.get();
+    if (!intentSnapshot.exists) throw new Error('Payment intent not found');
+    const intentData = intentSnapshot.data()!;
+    if (intentData.userId !== userId) throw new Error('Payment intent does not belong to this user');
+    if (intentData.status === 'fulfilled' && intentData.orderId) {
+      return NextResponse.json({ id: intentData.orderId, existing: true }, { headers: { 'Cache-Control': 'no-store' } });
+    }
+    const files = intentData.quoteInput?.files as CheckoutFiles | undefined;
+    if (!files?.filePath) throw new Error('Uploaded file not found for this payment');
+    const paths = [files.filePath];
+    if (files.splitFiles) paths.push(files.splitFiles.bwPath, files.splitFiles.colorPath, ...(files.splitFiles.originalPath ? [files.splitFiles.originalPath] : []));
+    await Promise.all([...new Set(paths)].map((path) => assertUploadExists(path, userId)));
 
     const result = await db.runTransaction(async (transaction) => {
       const [payment, existingOrder] = await Promise.all([transaction.get(paymentRef), transaction.get(orderRef)]);
@@ -44,8 +54,8 @@ export async function POST(request: NextRequest) {
         shopId: intent.shopId,
         shopName: intent.shopName || '',
         userName: input.userName || '',
-        fileName: input.fileName,
-        filePath: input.filePath,
+        fileName: files.fileName,
+        filePath: files.filePath,
         fileUrl: protectedOrderFileUrl(orderRef.id),
         totalPages: quoteInput.totalPages,
         totalCost: intent.quote.amount,
@@ -62,8 +72,8 @@ export async function POST(request: NextRequest) {
         pricingDetails: intent.quote.pricingDetails,
         jobType: quoteInput.jobType,
         assignment: quoteInput.assignment || null,
-        ...(input.splitFiles ? {
-          splitFilePaths: input.splitFiles,
+        ...(files.splitFiles ? {
+          splitFilePaths: files.splitFiles,
           splitFiles: {
             bwUrl: protectedOrderFileUrl(orderRef.id, 'bw'),
             colorUrl: protectedOrderFileUrl(orderRef.id, 'color'),

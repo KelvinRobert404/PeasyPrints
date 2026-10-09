@@ -20,7 +20,12 @@ export default function CampusContentPage() {
   useEffect(() => { const timer = window.setTimeout(() => void load(), 180); return () => window.clearTimeout(timer); }, [load]);
 
   async function changeStatus(item: Item, status: 'active' | 'removed' | 'closed') {
-    const reason = status === 'removed' ? window.prompt('Moderation reason') || 'Removed after administrative review' : '';
+    let reason = '';
+    if (status === 'removed') {
+      const entered = window.prompt('Moderation reason');
+      if (entered === null) return;
+      reason = entered || 'Removed after administrative review';
+    }
     const response = await fetch('/api/godview/campus/content', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type, id: item.id, status, reason }) });
     if (!response.ok) return toast.error((await response.json()).error || 'Status update failed');
     toast.success(`${item.serial} updated`);

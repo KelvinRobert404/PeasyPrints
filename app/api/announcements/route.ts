@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
-import { db } from '@/lib/firebase/config';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { getAdminDb } from '@/lib/firebase/admin';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const ANNOUNCEMENTS_DIR = path.join(process.cwd(), 'public', 'announcements');
 const ALLOWED_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg']);
@@ -38,12 +40,12 @@ export async function GET() {
 
 async function getFirestoreAnnouncements(): Promise<{ src: string; alt: string }[]> {
   try {
-    const q = query(
-      collection(db, 'announcements'),
-      where('active', '==', true),
-      orderBy('order', 'asc')
-    );
-    const snapshot = await getDocs(q);
+    // Rules restrict this collection to admins, so read it with the Admin SDK.
+    const snapshot = await getAdminDb()
+      .collection('announcements')
+      .where('active', '==', true)
+      .orderBy('order', 'asc')
+      .get();
 
     if (snapshot.empty) {
       return [];

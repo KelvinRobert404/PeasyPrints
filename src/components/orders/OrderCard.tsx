@@ -30,7 +30,7 @@ function getStatusStyle(status: string) {
 
 export function OrderCard({ order }: { order: OrderDoc }) {
   const href = order.id ? `/orders/${order.id}/pickup` : undefined;
-  const isActive = ['pending', 'processing', 'printing', 'ready'].includes(order.status?.toLowerCase() || '');
+  const isActive = ['pending', 'processing', 'printing', 'printed', 'printed_ready', 'ready'].includes(order.status?.toLowerCase() || '');
 
   const content = (
     <div className={`

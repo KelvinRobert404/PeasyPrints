@@ -54,6 +54,35 @@ test('shop reads are public but financial fields remain server-controlled', asyn
   }));
 });
 
+test('shop owners cannot set platform fees and admins cannot edit ledgers', async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'shops', 'shop-owner'), {
+      name: 'Test Print Shop',
+      pricing: { services: { softBinding: 10 }, tiers: [], convenienceFeeTiers: [{ minPages: 1, maxPages: 10, fee: 2 }] },
+      receivableAmount: 100,
+      reservedPayoutAmount: 0,
+    });
+  });
+  const owner = environment.authenticatedContext('shop-owner');
+  const ownerShop = doc(owner.firestore(), 'shops', 'shop-owner');
+  await assertSucceeds(updateDoc(ownerShop, { 'pricing.services': { softBinding: 12 }, updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(ownerShop, { 'pricing.convenienceFeeTiers': [], updatedAt: serverTimestamp() }));
+  await assertFails(setDoc(doc(owner.firestore(), 'shops', 'new-owner'), { name: 'New', pricing: { convenienceFee: 50 }, receivableAmount: 0, reservedPayoutAmount: 0 }));
+
+  const admin = environment.authenticatedContext('admin-1', { admin: true });
+  const adminShop = doc(admin.firestore(), 'shops', 'shop-owner');
+  await assertSucceeds(updateDoc(adminShop, { 'pricing.convenienceFeeTiers': [{ minPages: 1, maxPages: 5, fee: 1 }] }));
+  await assertFails(updateDoc(adminShop, { receivableAmount: 100000 }));
+});
+
+test('colleges are publicly readable but admin-written', async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'colleges', 'kju'), { name: 'KJU' });
+  });
+  await assertSucceeds(getDoc(doc(environment.unauthenticatedContext().firestore(), 'colleges', 'kju')));
+  await assertFails(setDoc(doc(environment.authenticatedContext('student-1').firestore(), 'colleges', 'fake'), { name: 'Fake' }));
+});
+
 test('users can write only their own constrained profile', async () => {
   const user = environment.authenticatedContext('student-1');
   await assertSucceeds(setDoc(doc(user.firestore(), 'users', 'student-1'), {

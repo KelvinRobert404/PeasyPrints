@@ -29,8 +29,13 @@ export default function CampusTrustPage() {
   useEffect(() => { void load(); }, [load]);
 
   async function decide(id: string, action: 'approve' | 'reject') {
+    let reason: string | undefined;
+    if (action === 'reject') {
+      const entered = window.prompt('Reason for rejection');
+      if (entered === null) return;
+      reason = entered || 'Unable to verify the submitted card';
+    }
     setBusy(true);
-    const reason = action === 'reject' ? window.prompt('Reason for rejection') || 'Unable to verify the submitted card' : undefined;
     const response = await fetch(`/api/godview/campus/verifications/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, reason }) });
     setBusy(false);
     if (!response.ok) return toast.error((await response.json()).error || 'Action failed');

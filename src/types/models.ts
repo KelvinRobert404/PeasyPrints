@@ -69,6 +69,8 @@ export interface Shop {
   isOpen?: boolean;
   // College this shop belongs to
   collegeId?: string;
+  phone?: string;
+  email?: string;
 }
 
 export interface PrintSettings {

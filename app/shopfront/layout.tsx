@@ -51,7 +51,8 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
     const uid = auth.currentUser?.uid;
     if (!uid) { setShopChecked(true); return; }
     (async () => {
-      if (!currentShop) {
+      // Refetch when a different account signs in, not only when nothing is loaded.
+      if (!currentShop || currentShop.id !== uid) {
         await fetchShopData(uid);
       }
       setShopChecked(true);
@@ -131,7 +132,11 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
                       size="sm"
                       variant="ghost"
                       className="h-8 w-8 p-0 rounded-full text-gray-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => auth.signOut()}
+                      onClick={async () => {
+                        // Clear the previous shop's orders so nothing stays on a shared counter PC.
+                        useShopStore.setState({ currentShop: null, orders: [], pendingOrders: [], historyOrders: [], receivableAmount: 0, reservedPayoutAmount: 0, payoutRequests: [], payouts: [] });
+                        await auth.signOut();
+                      }}
                       title="Logout"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>

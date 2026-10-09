@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Timestamp } from 'firebase-admin/firestore';
+import { Timestamp, type Transaction } from 'firebase-admin/firestore';
 import { getAdminBucket, getAdminDb } from '@/lib/firebase/admin';
 import { CampusHttpError, campusErrorResponse, requireAdminPrincipal } from '@/lib/campus/auth';
 import { VERIFICATION_DAYS, addDays } from '@/lib/campus/constants';
@@ -20,16 +20,23 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const membershipRef = db.collection('campus_memberships').doc(data.userId);
     const lockRef = db.collection('campus_verification_locks').doc(`${data.userId}_${data.kind}`);
     const now = new Date();
+    // Re-check inside each transaction so two admins deciding at once can't both win
+    // (e.g. a reject deleting the iCard that a concurrent approve then references).
+    const assertStillPending = async (transaction: Transaction) => {
+      const fresh = await transaction.get(ref);
+      if (fresh.data()?.status !== 'pending') throw new CampusHttpError(409, 'Verification has already been decided');
+    };
     if (action === 'approve') {
-      if (data.kind === 'girls_space') {
-        const membership = await membershipRef.get();
-        const expires = membership.data()?.studentVerification?.expiresAt?.toDate?.();
-        if (membership.data()?.studentVerification?.status !== 'approved' || !expires || expires.getTime() <= Date.now()) {
-          throw new CampusHttpError(409, 'Student verification must be active first');
-        }
-      }
       const field = data.kind === 'student' ? 'studentVerification' : 'girlsSpaceVerification';
       await db.runTransaction(async (transaction) => {
+        await assertStillPending(transaction);
+        if (data.kind === 'girls_space') {
+          const membership = await transaction.get(membershipRef);
+          const expires = membership.data()?.studentVerification?.expiresAt?.toDate?.();
+          if (membership.data()?.studentVerification?.status !== 'approved' || !expires || expires.getTime() <= Date.now()) {
+            throw new CampusHttpError(409, 'Student verification must be active first');
+          }
+        }
         transaction.set(membershipRef, {
           collegeId: data.collegeId,
           collegeCode: data.collegeCode,
@@ -52,6 +59,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     } else {
       const field = data.kind === 'student' ? 'studentVerification' : 'girlsSpaceVerification';
       await db.runTransaction(async (transaction) => {
+        await assertStillPending(transaction);
         transaction.set(membershipRef, { [field]: { status: 'rejected', method: 'id_card', requestId: id }, updatedAt: Timestamp.fromDate(now) }, { merge: true });
         transaction.update(ref, { status: 'rejected', rejectionReason: String(body.reason || 'Verification could not be confirmed').slice(0, 300), decidedAt: Timestamp.fromDate(now), decidedBy: admin.email, idCardPath: null, updatedAt: Timestamp.fromDate(now) });
         transaction.delete(lockRef);

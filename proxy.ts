@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { isAllowedOrigin } from '@/lib/utils/origin';
+import { safeRedirectPath } from '@/lib/utils/safeRedirect';
 
 // Next.js 16 runs this file as the request proxy (formerly middleware).
 const isPublicRoute = createRouteMatcher([
@@ -15,7 +16,11 @@ const isPublicRoute = createRouteMatcher([
   '/otp',
   '/about(.*)',
   '/privacy',
-  '/terms'
+  '/terms',
+  // Shop owners sign in with Firebase, not Clerk, and need the helper download page.
+  '/helper',
+  // Support must stay reachable for signed-out users (e.g. after a failed payment).
+  '/contact'
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -39,18 +44,16 @@ export default clerkMiddleware(async (auth, req) => {
     pathname === '/sw.js' ||
     pathname === '/manifest.json' ||
     pathname === '/favicon.ico' ||
-    /\.(png|jpg|jpeg|gif|svg|webp|avif|ico|mp3|wav|ogg)$/.test(pathname);
+    /\.(png|jpg|jpeg|gif|svg|webp|avif|ico|mp3|wav|ogg|js|mjs|css|otf|ttf|woff2?)$/.test(pathname);
   if (isStaticAssetRequest) {
     return NextResponse.next();
   }
 
   // If already signed in and visiting /login, bounce to intended target
   if (pathname.startsWith('/login') && userId) {
-    const requestedTarget = searchParams.get('redirect_url') || '/';
-    const target = requestedTarget.startsWith('/') && !requestedTarget.startsWith('//') ? requestedTarget : '/';
-    req.nextUrl.pathname = target || '/';
-    req.nextUrl.search = '';
-    return NextResponse.redirect(req.nextUrl);
+    // Parse as a URL so a target with a query string isn't encoded into the pathname.
+    const target = safeRedirectPath(searchParams.get('redirect_url'));
+    return NextResponse.redirect(new URL(target, req.url));
   }
 
   // Allow Razorpay webhook to pass without auth (it uses its own signature verification)
@@ -117,7 +120,9 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    '/((?!.+\.[\w]+$|_next|images|fonts|sw\.js|manifest\.json|favicon\.ico).*)',
+    // Backslashes must be doubled in a JS string: the previous single-escaped
+    // pattern skipped the proxy for any path ending in "w" (/godview, /marketplace/new).
+    '/((?!_next|images|fonts|[^?]*\\.(?:html?|css|js(?!on)|mjs|jpe?g|webp|avif|png|gif|svg|ico|ttf|otf|woff2?|mp3|wav|ogg|txt|xml|webmanifest)).*)',
     '/(api|trpc)(.*)'
   ]
 };

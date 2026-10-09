@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { getAdminDb } from '@/lib/firebase/admin';
-import { campusErrorResponse, requireAdminPrincipal } from '@/lib/campus/auth';
+import { CampusHttpError, campusErrorResponse, requireAdminPrincipal } from '@/lib/campus/auth';
 
 const schema = z.object({ id: z.string().min(1).max(128), action: z.enum(['processing', 'paid', 'cancelled']), reference: z.string().trim().max(200).optional() });
 
@@ -24,22 +24,22 @@ export async function PATCH(request: NextRequest) {
     await db.runTransaction(async (transaction) => {
       const requestRef = db.collection('payout_requests').doc(body.id);
       const payoutRequest = await transaction.get(requestRef);
-      if (!payoutRequest.exists) throw new Error('Payout request not found');
+      if (!payoutRequest.exists) throw new CampusHttpError(404, 'Payout request not found');
       const data = payoutRequest.data()!;
       if (['paid', 'cancelled'].includes(data.status)) {
         if (data.status === body.action) return;
-        throw new Error('Payout request is already closed');
+        throw new CampusHttpError(409, 'Payout request is already closed');
       }
       const shopRef = db.collection('shops').doc(data.shopId);
       const shop = await transaction.get(shopRef);
-      if (!shop.exists) throw new Error('Shop not found');
+      if (!shop.exists) throw new CampusHttpError(404, 'Shop not found');
       const amount = Number(data.amount);
       const shopData = shop.data()!;
       if (!Number.isFinite(amount) || amount <= 0 || Number(shopData.reservedPayoutAmount || 0) < amount) {
-        throw new Error('Reserved payout balance is inconsistent');
+        throw new CampusHttpError(409, 'Reserved payout balance is inconsistent');
       }
       if (body.action === 'paid' && Number(shopData.receivableAmount || 0) < amount) {
-        throw new Error('Receivable balance is insufficient');
+        throw new CampusHttpError(409, 'Receivable balance is insufficient');
       }
       const now = Timestamp.now();
       if (body.action === 'processing') {

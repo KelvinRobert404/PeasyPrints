@@ -10,6 +10,28 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { ShopPricing, PricingTier } from '@/types/models';
 import { Plus, Trash2, Upload, Check } from 'lucide-react';
+import { firebaseAuthHeaders } from '@/lib/firebase/authHeaders';
+
+// Checkout matches a tier by page count, so gaps or overlaps make some orders unpriceable.
+function validateTiers(tiers: PricingTier[]): string | null {
+    if (tiers.length === 0) return 'Add at least one pricing tier.';
+    const sorted = [...tiers].sort((a, b) => a.minPages - b.minPages);
+    let expectedMin = 1;
+    for (const tier of sorted) {
+        if (!Number.isInteger(tier.minPages) || !Number.isInteger(tier.maxPages) || tier.maxPages < tier.minPages) {
+            return `Tier ${tier.minPages}-${tier.maxPages} has an invalid page range.`;
+        }
+        if (tier.minPages !== expectedMin) {
+            return `Pricing tiers must start at page 1 and have no gaps or overlaps (expected a tier starting at page ${expectedMin}).`;
+        }
+        const prices = [...Object.values(tier.a4), ...Object.values(tier.a3)].map(Number);
+        if (prices.some((price) => !Number.isFinite(price) || price < 0)) {
+            return `Tier ${tier.minPages}-${tier.maxPages} has an invalid price.`;
+        }
+        expectedMin = tier.maxPages + 1;
+    }
+    return null;
+}
 
 export default function ShopfrontProfilePage() {
     const { currentShop, fetchShopData, updatePricing } = useShopStore();
@@ -59,11 +81,11 @@ export default function ShopfrontProfilePage() {
 
             if (currentShop.pricing) {
                 const p = currentShop.pricing;
-                setSoftBinding(p.services.softBinding || 0);
-                setSpiralBinding(p.services.spiralBinding || 0);
-                setHardBinding(p.services.hardBinding || 0);
-                setEmergency(p.services.emergency || 0);
-                setAfterDark(p.services.afterDark || 0);
+                setSoftBinding(p.services?.softBinding || 0);
+                setSpiralBinding(p.services?.spiralBinding || 0);
+                setHardBinding(p.services?.hardBinding || 0);
+                setEmergency(p.services?.emergency || 0);
+                setAfterDark(p.services?.afterDark || 0);
 
                 if (p.tiers && p.tiers.length > 0) {
                     // Start ensuring compatibility with new structure if old data exists
@@ -88,13 +110,15 @@ export default function ShopfrontProfilePage() {
             form.set('file', file);
             const response = await fetch(`/api/shops/${encodeURIComponent(user.uid)}/logo`, {
                 method: 'POST',
-                body: form
+                body: form,
+                headers: await firebaseAuthHeaders()
             });
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error(data.error || 'Logo upload failed');
             setLogoUrl(data.logoUrl);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Logo upload failed:', error);
+            alert(error?.message || 'Logo upload failed');
         } finally {
             setLoading(false);
         }
@@ -136,6 +160,11 @@ export default function ShopfrontProfilePage() {
 
     const handleSave = async () => {
         if (!user?.uid || !currentShop) return;
+        const tierError = validateTiers(tiers);
+        if (tierError) {
+            alert(tierError);
+            return;
+        }
 
         try {
             setLoading(true);
@@ -168,8 +197,9 @@ export default function ShopfrontProfilePage() {
 
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Save failed:', error);
+            alert(error?.message || 'Saving failed. Please try again.');
         } finally {
             setLoading(false);
         }

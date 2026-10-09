@@ -25,6 +25,7 @@ export function ImagesUploader() {
         const img = new Image();
         const url = URL.createObjectURL(f);
         img.onload = () => { resolve({ w: img.width, h: img.height }); URL.revokeObjectURL(url); };
+        img.onerror = () => { resolve({ w: 1, h: 1 }); URL.revokeObjectURL(url); };
         img.src = url;
       })));
       // page size in points

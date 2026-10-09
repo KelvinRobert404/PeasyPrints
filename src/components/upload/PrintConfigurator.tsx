@@ -74,7 +74,8 @@ export function PrintConfigurator() {
         </div>
         <button
           className="h-10 rounded-lg border border-black/10 bg-white text-lg font-bold"
-          onClick={() => setSettings({ copies: settings.copies + 1 })}
+          onClick={() => setSettings({ copies: Math.min(settings.copies + 1, 50) })}
+          disabled={settings.copies >= 50}
         >
           +
         </button>

@@ -12,10 +12,14 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const snapshot = await ref.get();
     if (!snapshot.exists) throw new CampusHttpError(404, 'Request not found');
     const data = snapshot.data()!;
+    // Non-parties get the same 404 as a missing request, before any other check or write.
+    if (data.buyerId !== principal.userId && data.sellerId !== principal.userId) throw new CampusHttpError(404, 'Request not found');
     await getCampusPrincipal({ requireVerified: true, audience: data.audience, product: data.contentType });
     const body = await request.json();
     const action = String(body.action || '');
-    if (data.expiresAt && toDate(data.expiresAt)!.getTime() <= Date.now()) {
+    if (action !== 'cancel' && data.status !== 'pending') throw new CampusHttpError(409, 'This request has already been decided');
+    if (action === 'cancel' && !['pending', 'approved'].includes(data.status)) throw new CampusHttpError(409, 'This request is no longer active');
+    if (data.status === 'pending' && data.expiresAt && toDate(data.expiresAt)!.getTime() <= Date.now()) {
       await ref.update({ status: 'expired', updatedAt: Timestamp.now() });
       throw new CampusHttpError(409, 'This request has expired');
     }

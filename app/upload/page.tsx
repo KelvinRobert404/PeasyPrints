@@ -27,6 +27,12 @@ export default function UploadEntryPage() {
   const { selectedCollege, colleges, subscribe: subscribeColleges } = useCollegeStore();
   const [selectedShopId, setSelectedShopId] = useState<string>('');
 
+  // Read window.location rather than useSearchParams to keep this page statically renderable.
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('shopId');
+    if (requested) setSelectedShopId((current) => current || requested);
+  }, []);
+
 
   useEffect(() => {
     const unsub = subscribe();

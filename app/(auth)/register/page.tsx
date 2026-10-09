@@ -3,7 +3,8 @@
 export const dynamic = 'force-dynamic';
 
 import { useAuthStore } from '@/lib/stores/authStore';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { safeRedirectPath } from '@/lib/utils/safeRedirect';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PhoneRegister } from '@/components/auth/PhoneRegister';
 import { SignUp } from '@clerk/nextjs';
@@ -12,8 +13,12 @@ import { useEffect } from 'react';
 export default function RegisterPage() {
   const { verificationId, resetRecaptcha } = useAuthStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = safeRedirectPath(searchParams?.get('redirect_url'));
 
-  if (verificationId) router.replace('/otp');
+  useEffect(() => {
+    if (verificationId) router.replace('/otp');
+  }, [verificationId, router]);
 
   useEffect(() => {
     return () => {
@@ -35,8 +40,8 @@ export default function RegisterPage() {
           <CardContent>
             <SignUp
               routing="hash"
-              signInUrl="/login"
-              afterSignUpUrl="/sso-callback?redirect_url=/dashboard"
+              signInUrl={`/login?redirect_url=${encodeURIComponent(redirect)}`}
+              afterSignUpUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
             />
           </CardContent>
         </Card>

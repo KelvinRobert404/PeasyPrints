@@ -36,7 +36,11 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const body = await request.json();
     const action = String(body.action || '');
     const now = new Date();
+    const status = snapshot.data()!.status;
+    if (status === 'removed') throw new CampusHttpError(409, 'This post was removed by moderators');
     if (action === 'confirm') {
+      // Only re-confirm live content; closed or sold/filled posts stay closed.
+      if (!['active', 'needs_confirmation'].includes(status)) throw new CampusHttpError(409, 'Only a live post can be confirmed');
       await ref.update({ status: 'active', availabilityConfirmedAt: Timestamp.fromDate(now), availabilityExpiresAt: Timestamp.fromDate(addDays(now, AVAILABILITY_DAYS)), updatedAt: Timestamp.now() });
     } else if (action === 'filled' || action === 'close') {
       await ref.update({ status: action === 'filled' ? 'filled' : 'closed', updatedAt: Timestamp.now() });

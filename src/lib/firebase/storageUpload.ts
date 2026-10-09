@@ -6,6 +6,8 @@ export async function uploadPdfAndGetPath(_userId: string, file: File): Promise<
   form.append('file', file);
   const res = await fetch('/api/storage/upload', { method: 'POST', body: form });
   const data = await res.json().catch(() => ({}));
+  // The hosting platform rejects oversized bodies before our route runs, without JSON.
+  if (res.status === 413) throw new Error(data?.error || 'This file is too large to upload. Please compress it and try again.');
   if (!res.ok || !data?.path) throw new Error(data?.error || 'Upload failed');
   return data.path as string;
 }

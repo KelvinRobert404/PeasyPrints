@@ -3,11 +3,12 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSignIn, useSignUp, useAuth } from '@clerk/nextjs';
+import { safeRedirectPath } from '@/lib/utils/safeRedirect';
 
 export default function SsoCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams?.get('redirect_url') || '/';
+  const redirect = safeRedirectPath(searchParams?.get('redirect_url'));
   const { isSignedIn } = useAuth();
   const { isLoaded: signInLoaded, signIn, setActive } = useSignIn();
   const { isLoaded: signUpLoaded, signUp } = useSignUp();

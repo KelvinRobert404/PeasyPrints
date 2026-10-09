@@ -1,3 +1,5 @@
+import { firebaseAuthHeaders } from '@/lib/firebase/authHeaders';
+
 /**
  * Tiny trigger to launch the Windows helper via custom URL protocol.
  * - Builds peasyprint://print?jobId=...
@@ -35,7 +37,7 @@ export async function triggerPeasyPrint(jobId: string, opts: PeasyPrintOptions =
   // Prefer jobUrl so the helper needs no local API configuration.
   let data: { ticket?: string; error?: string } = {};
   try {
-    const response = await fetch(`/api/print-jobs/${encodeURIComponent(jobId)}/ticket`, { method: 'POST' });
+    const response = await fetch(`/api/print-jobs/${encodeURIComponent(jobId)}/ticket`, { method: 'POST', headers: await firebaseAuthHeaders() });
     data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ticket) throw new Error(data.error || 'Unable to create a print ticket');
   } catch (error) {

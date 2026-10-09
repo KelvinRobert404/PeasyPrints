@@ -44,8 +44,12 @@ async function serializeRequest(doc: QueryDocumentSnapshot | DocumentSnapshot, v
       item.status = 'expired';
       await doc.ref.update({ status: 'expired', updatedAt: Timestamp.now() });
     } else {
-      const profile = await getAdminDb().collection('campus_private_profiles').doc(data.sellerId).get();
-      const phone = digits(String(profile.data()?.whatsappNumber || ''));
+      const contact = await getAdminDb().collection('campus_private_contacts').doc(`${data.contentType}_${data.contentId}`).get();
+      // Posts created before per-post contacts fall back to the legacy per-user profile.
+      const number = contact.exists
+        ? contact.data()?.whatsappNumber
+        : (await getAdminDb().collection('campus_private_profiles').doc(data.sellerId).get()).data()?.whatsappNumber;
+      const phone = digits(String(number || ''));
       if (phone) {
         const text = encodeURIComponent(`Hi, I’m interested in ${data.serial} on PeasyPrints.`);
         item.whatsappUrl = `https://wa.me/${phone}?text=${text}`;
@@ -85,6 +89,8 @@ export async function POST(request: NextRequest) {
     const id = `${body.contentType}_${body.contentId}_${principal.userId}`;
     const ref = getAdminDb().collection('campus_contact_requests').doc(id);
     const existing = await ref.get();
+    // A declined request is final; re-requesting would let a buyer spam the seller.
+    if (existing.exists && existing.data()!.status === 'declined') throw new CampusHttpError(409, 'The seller declined this request');
     if (existing.exists && ['pending', 'approved'].includes(existing.data()!.status)) {
       const existingData = existing.data()!;
       const pendingExpired = existingData.status === 'pending'

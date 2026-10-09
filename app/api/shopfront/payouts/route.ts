@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { isAllowedOrigin } from '@/lib/utils/origin';
+import { getRequestUserId } from '@/lib/server/requestAuth';
 
 const schema = z.object({ amount: z.number().int().min(1).max(1_000_000) });
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getRequestUserId(request);
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!isAllowedOrigin(request.url, request.headers.get('origin'), request.headers.get('x-forwarded-host'), request.headers.get('x-forwarded-proto'))) {
     return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
       if (!shop.exists) throw new Error('Shop not found');
       const balance = Number(shop.data()!.receivableAmount || 0);
       const reserved = Number(shop.data()!.reservedPayoutAmount || 0);
+      if (!Number.isFinite(balance) || !Number.isFinite(reserved)) throw new Error('Shop balance is inconsistent; contact support');
       if (parsed.data.amount > balance - reserved) throw new Error('Payout exceeds available balance');
       const now = Timestamp.now();
       transaction.create(requestRef, { shopId: userId, amount: parsed.data.amount, status: 'requested', requestedAt: now, updatedAt: now });

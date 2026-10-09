@@ -72,6 +72,10 @@ export default function StoresPage() {
 
     const saveEdit = async () => {
         if (!editingId) return;
+        if (!editForm.openingTime || !editForm.closingTime) {
+            alert('Set both opening and closing times.');
+            return;
+        }
         setSaving(true);
         try {
             await updateDoc(doc(db, 'shops', editingId), {
@@ -79,13 +83,14 @@ export default function StoresPage() {
                 address: editForm.address,
                 openingTime: editForm.openingTime,
                 closingTime: editForm.closingTime,
-                timing: `${editForm.openingTime} - ${editForm.closingTime}`,
+                timing: `${editForm.openingTime} to ${editForm.closingTime}`,
                 collegeId: editForm.collegeId || null,
             });
             setEditingId(null);
             setEditForm({});
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to save', err);
+            alert(err?.message || 'Failed to save store');
         }
         setSaving(false);
     };

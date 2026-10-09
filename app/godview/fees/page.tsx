@@ -71,6 +71,25 @@ export default function FeesPage() {
     };
 
     const saveTiers = async () => {
+        const sorted = [...editingTiers].sort((a, b) => a.minPages - b.minPages);
+        for (let i = 0; i < sorted.length; i++) {
+            const t = sorted[i];
+            if (!Number.isInteger(t.minPages) || !Number.isInteger(t.maxPages) || t.minPages < 1 || t.maxPages < t.minPages) {
+                alert(`Tier ${i + 1} has an invalid page range.`);
+                return;
+            }
+            if (!Number.isFinite(t.fee) || t.fee < 0) {
+                alert(`Tier ${t.minPages}-${t.maxPages} needs a fee of 0 or more.`);
+                return;
+            }
+            if (i > 0 && t.minPages <= sorted[i - 1].maxPages) {
+                alert(`Tiers ${sorted[i - 1].minPages}-${sorted[i - 1].maxPages} and ${t.minPages}-${t.maxPages} overlap.`);
+                return;
+            }
+        }
+        if (isGlobalMode && !window.confirm(sorted.length === 0
+            ? 'This removes convenience fee tiers from EVERY store. Continue?'
+            : `Apply these ${sorted.length} tier(s) to all ${shops.length} stores?`)) return;
         setSaving(true);
         try {
             if (isGlobalMode) {
@@ -79,20 +98,21 @@ export default function FeesPage() {
                 shops.forEach((shop) => {
                     const ref = doc(db, 'shops', shop.id);
                     batch.update(ref, {
-                        'pricing.convenienceFeeTiers': editingTiers
+                        'pricing.convenienceFeeTiers': sorted
                     });
                 });
                 await batch.commit();
             } else if (selectedShop) {
                 // Apply to single shop
                 await updateDoc(doc(db, 'shops', selectedShop.id), {
-                    'pricing.convenienceFeeTiers': editingTiers,
+                    'pricing.convenienceFeeTiers': sorted,
                     // Optional: clear legacy flat fee to avoid confusion, or keep as fallback
                 });
             }
             setSheetOpen(false);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to save tiers', err);
+            alert(err?.message || 'Failed to save fee tiers');
         }
         setSaving(false);
     };
@@ -270,7 +290,7 @@ export default function FeesPage() {
                                                 <Input
                                                     type="number"
                                                     value={tier.fee}
-                                                    onChange={(e) => updateTier(idx, 'fee', parseInt(e.target.value))}
+                                                    onChange={(e) => updateTier(idx, 'fee', parseFloat(e.target.value))}
                                                     className="h-8 text-xs bg-white pl-7"
                                                 />
                                             </div>

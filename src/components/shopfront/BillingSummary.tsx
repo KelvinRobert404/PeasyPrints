@@ -13,7 +13,9 @@ function toLocalMonthYear(d: Date) {
 }
 
 export function BillingSummary() {
-  const { historyOrders, orders, payouts, receivableAmount, payoutRequests, requestPayout } = useShopStore() as any;
+  const { historyOrders, orders, payouts, receivableAmount, reservedPayoutAmount, payoutRequests, requestPayout } = useShopStore() as any;
+  const [payoutSubmitting, setPayoutSubmitting] = useState(false);
+  const [payoutError, setPayoutError] = useState<string | null>(null);
   const [month, setMonth] = useState<string>(() => toLocalMonthYear(new Date()));
   const [payoutAmount, setPayoutAmount] = useState<string>('');
   const [payoutOpen, setPayoutOpen] = useState<boolean>(false);
@@ -65,7 +67,8 @@ export function BillingSummary() {
       .reduce((sum: number, o: any) => sum + Number(o.totalCost || 0), 0);
   }, [historyOrders]);
   const totalPayouts = useMemo(() => (Array.isArray(payouts) ? payouts : []).reduce((s: number, p: any) => s + Number(p.amount || 0), 0), [payouts]);
-  const maxPayout = Math.max(0, derivedAllTimeRevenue - totalPayouts);
+  // Must match the server's check: receivable minus amounts already reserved by pending requests.
+  const maxPayout = Math.max(0, Math.floor(Number(receivableAmount || 0) - Number(reservedPayoutAmount || 0)));
   const formatShortDate = (d: Date) => {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const day = d.getDate();
@@ -122,19 +125,29 @@ export function BillingSummary() {
               onChange={(e) => setPayoutAmount(e.target.value.replace(/[^0-9]/g, ''))}
             />
           </div>
+          {payoutError ? <p role="alert" className="text-sm text-red-600">{payoutError}</p> : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setPayoutOpen(false)}>Cancel</Button>
             <Button
-              onClick={() => {
+              disabled={payoutSubmitting}
+              onClick={async () => {
                 const amt = Number(payoutAmount || '0');
                 if (!amt || amt < 1) return;
-                if (amt > maxPayout) return;
-                void requestPayout(amt);
-                setPayoutAmount('');
-                setPayoutOpen(false);
+                if (amt > maxPayout) { setPayoutError(`You can request up to ₹${maxPayout}.`); return; }
+                setPayoutSubmitting(true);
+                setPayoutError(null);
+                try {
+                  await requestPayout(amt);
+                  setPayoutAmount('');
+                  setPayoutOpen(false);
+                } catch (error: any) {
+                  setPayoutError(error?.message || 'Payout request failed');
+                } finally {
+                  setPayoutSubmitting(false);
+                }
               }}
             >
-              Submit request
+              {payoutSubmitting ? 'Submitting…' : 'Submit request'}
             </Button>
           </DialogFooter>
         </DialogContent>

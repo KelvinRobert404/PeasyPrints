@@ -37,6 +37,10 @@ export default function PickupPage() {
       const data = snap.data() as OrderDoc | undefined;
       setOrder(data ? { ...data, id: snap.id } : null);
       setLoading(false);
+    }, () => {
+      // Permission denied (not your order, or the session isn't bridged yet): show not-found.
+      setOrder(null);
+      setLoading(false);
     });
     return () => unsub();
   }, [params?.id]);

@@ -6,6 +6,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, Printer, X, Check, RotateCcw } from 'lucide-react';
+import { openProtectedFile } from '@/lib/firebase/authHeaders';
+
+function openFile(url?: string) {
+  if (!url) return;
+  openProtectedFile(url).catch((error) => alert(error?.message || 'Unable to open file'));
+}
 
 export interface ShopfrontPendingTableProps {
   orders: (OrderDoc & { id?: string })[];
@@ -76,20 +82,19 @@ export function ShopfrontPendingTable({ orders, isWindows, onPrint, onCancel, on
                   tabIndex={0}
                   role="button"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      if (isWindows) onPrint?.(o);
-                      else if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer');
-                    }
                     if (e.key === 'Enter' && e.shiftKey) {
                       if ((o as any).status !== 'printed') onMarkPrinted?.(o);
                       else onRevertToProcessing?.(o);
+                    } else if (e.key === 'Enter') {
+                      if (isWindows) onPrint?.(o);
+                      else openFile(o.fileUrl);
                     }
                   }}
                 >
                   <div className="font-semibold text-gray-900 truncate max-w-[280px]">{o.userName}</div>
                   <div className="flex items-center gap-2">
                     <div className="truncate max-w-[240px]" title={o.fileName}>{o.fileName}</div>
-                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 hidden sm:inline-flex" title="Click to open file" aria-label="Open file" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 hidden sm:inline-flex" title="Click to open file" aria-label="Open file" onClick={() => openFile(o.fileUrl)}>
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   </div>
@@ -114,10 +119,10 @@ export function ShopfrontPendingTable({ orders, isWindows, onPrint, onCancel, on
                   {o.splitFiles ? (
                     <>
                       {o.fileUrl && (
-                        <Button size="sm" className="h-8 px-2" variant="outline" title="Open original file" aria-label="Open original file" onClick={() => { if (o.fileUrl) window.open(o.fileUrl, '_blank', 'noopener,noreferrer'); }}>Original</Button>
+                        <Button size="sm" className="h-8 px-2" variant="outline" title="Open original file" aria-label="Open original file" onClick={() => openFile(o.fileUrl)}>Original</Button>
                       )}
-                      <Button size="sm" className="h-8 px-2" variant="outline" title="Open black and white file" aria-label="Open black and white file" onClick={() => { const url = (o as any).splitFiles?.bwUrl; if (url) window.open(url, '_blank', 'noopener,noreferrer'); }}>B&W</Button>
-                      <Button size="sm" className="h-8 px-2" variant="outline" title="Open color file" aria-label="Open color file" onClick={() => { const url = (o as any).splitFiles?.colorUrl; if (url) window.open(url, '_blank', 'noopener,noreferrer'); }}>Color</Button>
+                      <Button size="sm" className="h-8 px-2" variant="outline" title="Open black and white file" aria-label="Open black and white file" onClick={() => openFile((o as any).splitFiles?.bwUrl)}>B&W</Button>
+                      <Button size="sm" className="h-8 px-2" variant="outline" title="Open color file" aria-label="Open color file" onClick={() => openFile((o as any).splitFiles?.colorUrl)}>Color</Button>
                     </>
                   ) : null}
                   {isWindows && (

@@ -19,10 +19,19 @@ export default function CampusVerificationPage() {
     const file = input?.files?.[0];
     if (!file) { setMessage('Choose a clear photo or PDF of your college iCard.'); setBusy(null); return; }
     const form = new FormData(); form.append('kind', kind); form.append('file', file);
-    const response = await fetch('/api/campus/verifications', { method: 'POST', body: form });
-    const data = await response.json();
-    setMessage(response.ok ? 'Submitted. The campus team will review it in Godview.' : data.error || 'Could not submit verification.');
-    await refresh(); setBusy(null);
+    try {
+      const response = await fetch('/api/campus/verifications', { method: 'POST', body: form });
+      // The platform rejects oversized bodies with a non-JSON 413.
+      const data = await response.json().catch(() => ({}));
+      setMessage(response.ok ? 'Submitted. The campus team will review it in Godview.'
+        : response.status === 413 ? 'That file is too large. Please upload a smaller photo (under 4 MB).'
+        : data.error || 'Could not submit verification.');
+      await refresh();
+    } catch {
+      setMessage('Could not submit verification. Check your connection and try again.');
+    } finally {
+      setBusy(null);
+    }
   };
 
   if (loading) return <div className="min-h-screen bg-[#f4f5f7] p-4"><div className="skeleton mx-auto h-72 max-w-md rounded-[30px]" /></div>;

@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminPrincipal } from '@/lib/campus/auth';
+import { campusErrorResponse, requireAdminPrincipal } from '@/lib/campus/auth';
 import { isAllowedOrigin } from '@/lib/utils/origin';
 
 export async function POST(request: NextRequest) {
-  await requireAdminPrincipal();
+  try {
+    await requireAdminPrincipal();
+  } catch (error) {
+    return campusErrorResponse(error);
+  }
   if (!isAllowedOrigin(request.url, request.headers.get('origin'), request.headers.get('x-forwarded-host'), request.headers.get('x-forwarded-proto'))) {
     return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
   }

@@ -109,6 +109,9 @@ export const useUploadStore = create<UploadState>()(
         if (jobType === 'Assignment') {
           s.settings.paperSize = 'A4';
           s.settings.printFormat = 'Single-Sided';
+          // The assignment UI starts on "Full B&W" and hides colour/binding controls.
+          s.settings.printColor = 'Black & White';
+          s.settings.binding = '';
           s.settings.copies = Math.max(s.settings.copies || 1, 1);
           s.assignmentMode = 'BW';
           s.assignmentColorPages = [];
@@ -118,6 +121,7 @@ export const useUploadStore = create<UploadState>()(
         if (jobType !== 'Assignment') {
           s.assignmentConfirmed = false;
           s.assignmentColorPages = [];
+          s.settings.extraColorPages = 0;
         }
       });
       get().recalc();
@@ -129,10 +133,14 @@ export const useUploadStore = create<UploadState>()(
         if (s.jobType !== 'Assignment') {
           s.jobType = 'PDF';
         }
+        if (s.fileUrl) URL.revokeObjectURL(s.fileUrl);
         s.file = null;
         s.fileUrl = null;
         s.pageRotations = [];
         s.images = files;
+        // Binding and duplex controls are hidden for image jobs, so don't keep charging for them.
+        s.settings.binding = '';
+        s.settings.printFormat = 'Single-Sided';
         // Recompute page count for Images mode
         const target = Math.min(Math.max(s.imagesPages || 1, 1), 5);
         s.pageCount = target;
@@ -143,7 +151,9 @@ export const useUploadStore = create<UploadState>()(
     setImagesPages: (n) => {
       set((s) => {
         s.imagesPages = Math.min(Math.max(Number(n) || 1, 1), 5);
-        s.pageCount = s.jobType === 'Images' ? s.imagesPages : s.pageCount;
+        // setImages keeps jobType as 'PDF', so key off the selected images; checkout
+        // sends pageCount and must match the generated PDF.
+        if (s.jobType === 'Images' || s.images.length > 0) s.pageCount = s.imagesPages;
       });
       get().recalc();
     },
@@ -222,11 +232,16 @@ export const useUploadStore = create<UploadState>()(
         const pages = pdf.getPageCount();
         const url = URL.createObjectURL(file);
         set((s) => {
+          if (s.fileUrl) URL.revokeObjectURL(s.fileUrl);
           s.file = file;
           s.fileUrl = url;
           s.pageCount = pages;
           s.pageRotations = Array.from({ length: pages }, () => 0);
           s.loading = false;
+          // Colour-page picks belong to the previous file.
+          s.assignmentColorPages = [];
+          s.assignmentConfirmed = false;
+          s.settings.extraColorPages = 0;
         });
         get().recalc();
         // Track upload analyzed with masked filename
@@ -284,6 +299,8 @@ export const useUploadStore = create<UploadState>()(
     },
 
     reset: () => {
+      const previousUrl = get().fileUrl;
+      if (previousUrl) URL.revokeObjectURL(previousUrl);
       set(() => ({
         file: null,
         fileUrl: null,

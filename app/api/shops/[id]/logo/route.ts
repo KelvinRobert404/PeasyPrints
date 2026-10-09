@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { getAdminBucket, getAdminDb } from '@/lib/firebase/admin';
 import { matchesDeclaredFileType } from '@/lib/server/fileValidation';
 import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
 import { isAllowedOrigin } from '@/lib/utils/origin';
+import { getRequestUserId } from '@/lib/server/requestAuth';
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_BYTES = 3 * 1024 * 1024;
@@ -11,7 +11,15 @@ const MAX_BYTES = 3 * 1024 * 1024;
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const shop = await getAdminDb().collection('shops').doc(id).get();
-  const path = shop.data()?.logoPath;
+  let path = shop.data()?.logoPath;
+  if (shop.exists && typeof path !== 'string') {
+    // Shops registered with a logo have logoUrl but no logoPath (the logo is
+    // uploaded before the shop doc exists), so look in the standard location.
+    for (const ext of ['png', 'jpg', 'webp']) {
+      const [exists] = await getAdminBucket().file(`shop_logos/${id}/logo.${ext}`).exists();
+      if (exists) { path = `shop_logos/${id}/logo.${ext}`; break; }
+    }
+  }
   if (!shop.exists || typeof path !== 'string' || !path.startsWith(`shop_logos/${id}/`)) {
     return NextResponse.json({ error: 'Logo not found' }, { status: 404 });
   }
@@ -31,7 +39,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
 }
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
+  const userId = await getRequestUserId(request);
   const { id } = await context.params;
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (id !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -54,10 +62,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     resumable: false,
     metadata: { contentType: upload.type, cacheControl: 'public,max-age=3600' },
   });
-  await getAdminDb().collection('shops').doc(userId).set({
-    logoPath: path,
-    logoUrl: `/api/shops/${encodeURIComponent(userId)}/logo?v=${Date.now()}`,
-    updatedAt: new Date(),
-  }, { merge: true });
-  return NextResponse.json({ logoUrl: `/api/shops/${encodeURIComponent(userId)}/logo?v=${Date.now()}` });
+  const logoUrl = `/api/shops/${encodeURIComponent(userId)}/logo?v=${Date.now()}`;
+  // During registration the shop doc doesn't exist yet: the client creates it with
+  // this logoUrl. Creating a stub here would turn that create into a denied update.
+  const shopRef = getAdminDb().collection('shops').doc(userId);
+  if ((await shopRef.get()).exists) {
+    await shopRef.update({ logoPath: path, logoUrl, updatedAt: new Date() });
+  }
+  return NextResponse.json({ logoUrl });
 }

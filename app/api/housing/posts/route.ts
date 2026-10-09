@@ -97,7 +97,13 @@ export async function POST(request: NextRequest) {
         moderation: { reportCount: 0, lastReviewedAt: null },
       },
     });
-    await getAdminDb().collection('campus_private_profiles').doc(principal.userId).set({ whatsappNumber: parsed.whatsappNumber, updatedAt: Timestamp.now() }, { merge: true });
+    // Store the contact number per post: a single per-user number would expose a
+    // number given on a Girls' Space post to buyers of the seller's other posts.
+    await getAdminDb().collection('campus_private_contacts').doc(`housing_${result.id}`).set({
+      authorId: principal.userId,
+      whatsappNumber: parsed.whatsappNumber,
+      updatedAt: Timestamp.now(),
+    });
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: error.issues[0]?.message || 'Invalid housing post' }, { status: 400 });

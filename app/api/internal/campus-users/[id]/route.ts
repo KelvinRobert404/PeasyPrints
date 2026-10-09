@@ -10,9 +10,10 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   if (!authorized(request)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { id } = await context.params;
   const db = getAdminDb();
-  const [membership, requests] = await Promise.all([
+  const [membership, requests, contacts] = await Promise.all([
     db.collection('campus_memberships').doc(id).get(),
     db.collection('campus_verification_requests').where('userId', '==', id).get(),
+    db.collection('campus_private_contacts').where('authorId', '==', id).get(),
   ]);
   const paths = new Set<string>();
   const data = membership.data();
@@ -26,6 +27,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   batch.delete(db.collection('campus_verification_locks').doc(`${id}_student`));
   batch.delete(db.collection('campus_verification_locks').doc(`${id}_girls_space`));
   requests.docs.forEach((doc) => batch.delete(doc.ref));
+  contacts.docs.forEach((doc) => batch.delete(doc.ref));
   await batch.commit();
   return NextResponse.json({ ok: true, deletedCards: paths.size });
 }

@@ -14,11 +14,18 @@ export async function POST(request: NextRequest) {
   if (!isAllowedOrigin(request.url, request.headers.get('origin'), request.headers.get('x-forwarded-host'), request.headers.get('x-forwarded-proto'))) {
     return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
   }
+  // Validate before spending the rate limit so a typo doesn't lock the user out for a day.
+  const parsed = schema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: 'Type the confirmation exactly' }, { status: 400 });
   const rate = await checkRateLimit('account-deletion', userId, 3, 24 * 60 * 60);
   if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
-  const parsed = schema.safeParse(await request.json());
-  if (!parsed.success) return NextResponse.json({ error: 'Type the confirmation exactly' }, { status: 400 });
-  await getAdminDb().collection('account_deletion_requests').doc(userId).set({
+  const ref = getAdminDb().collection('account_deletion_requests').doc(userId);
+  const existing = await ref.get();
+  // Don't reset a request that is already being processed or done back to 'queued'.
+  if (existing.exists && ['processing', 'completed'].includes(existing.data()?.status)) {
+    return NextResponse.json({ ok: true, message: 'Deletion request already in progress' }, { headers: { 'Cache-Control': 'no-store' } });
+  }
+  await ref.set({
     userId,
     status: 'queued',
     requestedAt: Timestamp.now(),

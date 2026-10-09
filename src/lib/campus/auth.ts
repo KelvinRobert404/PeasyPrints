@@ -2,7 +2,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAdminBucket, getAdminDb } from '@/lib/firebase/admin';
-import { isAdminEmail } from '@/lib/admin/config';
+import { isAdminUser, verifiedPrimaryEmail } from '@/lib/admin/config';
 import { PILOT_COLLEGE, VERIFICATION_DAYS, addDays } from './constants';
 import type { CampusAudience, CollegeMembership } from '@/types/campus';
 
@@ -24,6 +24,14 @@ function activeVerification(state: any) {
   return state?.status === 'approved' && Boolean(dateValue(state?.expiresAt) && dateValue(state.expiresAt)!.getTime() > Date.now());
 }
 
+// An 'approved' state that isn't active (expired or missing expiry) must never be
+// reported as approved; it gates Girls' Space access.
+function verificationStatus(state: any) {
+  if (activeVerification(state)) return 'approved';
+  if (state?.status === 'approved') return 'expired';
+  return state?.status || 'unverified';
+}
+
 function serializeMembership(userId: string, data: any): CollegeMembership {
   return {
     userId,
@@ -32,12 +40,12 @@ function serializeMembership(userId: string, data: any): CollegeMembership {
     collegeName: data.collegeName || PILOT_COLLEGE.name,
     displayName: data.displayName || 'Student',
     student: {
-      status: activeVerification(data.studentVerification) ? 'approved' : data.studentVerification?.status || 'unverified',
+      status: verificationStatus(data.studentVerification),
       method: data.studentVerification?.method,
       expiresAt: dateValue(data.studentVerification?.expiresAt)?.toISOString() || null,
     },
     girlsSpace: {
-      status: activeVerification(data.girlsSpaceVerification) ? 'approved' : data.girlsSpaceVerification?.status || 'unverified',
+      status: verificationStatus(data.girlsSpaceVerification),
       method: data.girlsSpaceVerification?.method,
       expiresAt: dateValue(data.girlsSpaceVerification?.expiresAt)?.toISOString() || null,
     },
@@ -51,6 +59,9 @@ async function maybeVerifyCollegeEmail(userId: string, membershipData: any | nul
   const email = primary?.emailAddress?.toLowerCase();
   const verified = primary?.verification?.status === 'verified';
   if (!email || !verified || activeVerification(membershipData?.studentVerification)) return membershipData;
+  // Re-approving a revoked member here would silently undo the admin's revocation
+  // on the user's next request.
+  if (membershipData?.studentVerification?.status === 'revoked' || membershipData?.blocked) return membershipData;
 
   const configSnap = await getAdminDb().collection('college_configs').doc(PILOT_COLLEGE.id).get();
   const domains = (configSnap.data()?.emailDomains || []).map((domain: string) => String(domain).toLowerCase());
@@ -84,7 +95,7 @@ async function expireIdCardVerifications(userId: string, membershipData: any | n
     ['girlsSpaceVerification', membershipData.girlsSpaceVerification],
   ] as const) {
     const expiresAt = dateValue(value?.expiresAt);
-    if (value?.status === 'approved' && expiresAt && expiresAt.getTime() <= Date.now()) {
+    if (value?.status === 'approved' && (!expiresAt || expiresAt.getTime() <= Date.now())) {
       if (value.idCardPath) files.push(value.idCardPath);
       updates[field] = { ...value, status: 'expired', idCardPath: null, expiredAt: Timestamp.now() };
       membershipData[field] = updates[field];
@@ -124,7 +135,7 @@ export async function getCampusPrincipal(options?: { requireVerified?: boolean; 
     userId,
     membership,
     displayName: membership?.displayName || user?.firstName || user?.fullName || 'Student',
-    email: user?.primaryEmailAddress?.emailAddress || null,
+    email: verifiedPrimaryEmail(user),
   };
 }
 
@@ -132,9 +143,8 @@ export async function requireAdminPrincipal() {
   const { userId } = await auth();
   if (!userId) throw new CampusHttpError(401, 'Sign in required');
   const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress || null;
-  if (!isAdminEmail(email)) throw new CampusHttpError(403, 'Admin access required');
-  return { userId, email };
+  if (!isAdminUser(user)) throw new CampusHttpError(403, 'Admin access required');
+  return { userId, email: verifiedPrimaryEmail(user) };
 }
 
 export function campusErrorResponse(error: unknown) {

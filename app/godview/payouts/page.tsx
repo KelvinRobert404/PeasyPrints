@@ -16,7 +16,13 @@ export default function GodviewPayoutsPage() {
   };
   useEffect(() => { void load().catch((reason) => setError(reason.message)); }, []);
   const update = async (id: string, action: 'processing' | 'paid' | 'cancelled') => {
-    const reference = action === 'paid' ? window.prompt('Settlement reference') || '' : undefined;
+    let reference: string | undefined;
+    if (action === 'paid') {
+      const entered = window.prompt('Settlement reference');
+      if (entered === null) return;
+      reference = entered;
+    }
+    if (action === 'cancelled' && !window.confirm('Cancel this payout request and release the reserved balance?')) return;
     const response = await fetch('/api/godview/payouts', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action, reference }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Unable to update payout');

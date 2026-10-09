@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { onAuthStateChanged } from 'firebase/auth';
+import { firebaseAuthHeaders } from '@/lib/firebase/authHeaders';
 
 export default function ShopfrontRegisterPage() {
   const router = useRouter();
@@ -32,8 +33,8 @@ export default function ShopfrontRegisterPage() {
       if (logoFile) {
         const form = new FormData();
         form.set('file', logoFile);
-        const response = await fetch(`/api/shops/${encodeURIComponent(uid)}/logo`, { method: 'POST', body: form });
-        const data = await response.json();
+        const response = await fetch(`/api/shops/${encodeURIComponent(uid)}/logo`, { method: 'POST', body: form, headers: await firebaseAuthHeaders() });
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Logo upload failed');
         logoUrl = data.logoUrl;
       }
@@ -41,7 +42,8 @@ export default function ShopfrontRegisterPage() {
       await setDoc(doc(db, 'shops', uid), {
         name, address, phone, email,
         openingTime, closingTime, timing,
-        logoUrl,
+        // Firestore rejects undefined field values, so omit logoUrl when there's no logo.
+        ...(logoUrl ? { logoUrl } : {}),
         receivableAmount: 0,
         reservedPayoutAmount: 0,
         createdAt: serverTimestamp(),

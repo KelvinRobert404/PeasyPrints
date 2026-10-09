@@ -70,6 +70,7 @@ export function ImagesLayoutPreview() {
           const img = new Image();
           const url = URL.createObjectURL(file);
           img.onload = () => resolve({ img, url });
+          img.onerror = () => resolve({ img, url });
           img.src = url;
         })));
 

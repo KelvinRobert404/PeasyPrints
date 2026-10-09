@@ -31,6 +31,7 @@ export function useOrderAlerts(params: {
   const { enable, enabled, playChime, startLoop, stopLoop } = useOrderAudio();
 
   const lastSeenIdsRef = useRef<Set<string>>(new Set());
+  const mountedAtRef = useRef(Date.now());
 
   const orders = params.getOrders();
 
@@ -39,7 +40,16 @@ export function useOrderAlerts(params: {
   // One-shot chime on new orders
   useEffect(() => {
     if (!isLeader || !enabled || muted) return;
-    const unseen = unresolvedOrders.filter((o) => !lastSeenIdsRef.current.has(o.id));
+    const unseen = unresolvedOrders.filter((o) => {
+      if (lastSeenIdsRef.current.has(o.id)) return false;
+      // Orders placed before this dashboard opened aren't "new"; mark them seen silently.
+      const placed = (o as any).timestamp?.toMillis?.() ?? new Date((o as any).timestamp ?? 0).getTime();
+      if (Number.isFinite(placed) && placed > 0 && placed < mountedAtRef.current - 5000) {
+        lastSeenIdsRef.current.add(o.id);
+        return false;
+      }
+      return true;
+    });
     if (unseen.length > 0) {
       void playChime();
       unseen.forEach((o) => lastSeenIdsRef.current.add(o.id));
