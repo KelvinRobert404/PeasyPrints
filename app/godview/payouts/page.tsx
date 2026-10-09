@@ -1,9 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils/cn';
+import { swButton } from '@/components/swoop/primitives';
+import { WalletIcon } from '../icons';
+import { PageHead, StatusTag, TableState, gvCard, gvRow, gvTableHead, type StatusTone } from '../ui';
 
 type Item = { id: string; shopId: string; amount: number; status: string; requestedAt: string | null; reference?: string };
+
+const toneFor = (status: string): StatusTone =>
+  status === 'paid' ? 'go' : status === 'processing' ? 'royal' : status === 'failed' ? 'market' : 'slate';
 
 export default function GodviewPayoutsPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -28,5 +34,50 @@ export default function GodviewPayoutsPage() {
     if (!response.ok) throw new Error(data.error || 'Unable to update payout');
     await load();
   };
-  return <section><h1 className="text-xl font-semibold text-zinc-900">Payout approvals</h1><p className="mt-1 text-sm text-zinc-500">Only administrators can settle or cancel reserved shop balances.</p>{error ? <p role="alert" className="mt-4 text-sm text-red-600">{error}</p> : null}<div className="mt-6 overflow-hidden rounded-xl border bg-white">{items.length === 0 ? <p className="p-8 text-sm text-zinc-500">No payout requests.</p> : items.map((item) => <div key={item.id} className="flex flex-wrap items-center gap-4 border-b p-4 last:border-0"><div className="min-w-52 flex-1"><p className="text-sm font-semibold">₹{item.amount} · {item.shopId}</p><p className="text-xs text-zinc-500">{item.status} · {item.requestedAt ? new Date(item.requestedAt).toLocaleString() : 'Unknown date'}</p></div>{!['paid', 'cancelled'].includes(item.status) ? <div className="flex gap-2"><Button variant="outline" onClick={() => void update(item.id, 'processing').catch((reason) => setError(reason.message))}>Processing</Button><Button onClick={() => void update(item.id, 'paid').catch((reason) => setError(reason.message))}>Mark paid</Button><Button variant="destructive" onClick={() => void update(item.id, 'cancelled').catch((reason) => setError(reason.message))}>Cancel</Button></div> : null}</div>)}</div></section>;
+  return (
+    <section>
+      <PageHead title="Payout approvals" description="Only administrators can settle or cancel reserved shop balances." />
+      {error ? (
+        <p role="alert" className="mb-3 rounded-[10px] bg-market-tint px-3 py-2 text-[12px] font-semibold text-market">{error}</p>
+      ) : null}
+      <div className={cn(gvCard, 'overflow-hidden')}>
+        {items.length === 0 ? (
+          <TableState icon={WalletIcon} title="No payout requests." />
+        ) : (
+          <>
+            <div className={cn(gvTableHead, 'grid grid-cols-12 gap-4 px-4 py-2')}>
+              <div className="col-span-3">Shop</div>
+              <div className="col-span-2 text-right">Amount</div>
+              <div className="col-span-2">Status</div>
+              <div className="col-span-2">Requested</div>
+              <div className="col-span-3 text-right">Actions</div>
+            </div>
+            <div>
+              {items.map((item) => (
+                <div key={item.id} className={cn(gvRow, 'grid min-h-[44px] grid-cols-12 items-center gap-4 px-4 py-1.5 transition-colors hover:bg-surface/60')}>
+                  <p className="col-span-3 truncate font-bold">{item.shopId}</p>
+                  <div className="col-span-2 text-right font-bold tabular-nums">₹{item.amount}</div>
+                  <div className="col-span-2">
+                    <StatusTag tone={toneFor(item.status)}>{item.status}</StatusTag>
+                  </div>
+                  <div className="col-span-2 text-[11.5px] text-slate tabular-nums">
+                    {item.requestedAt ? new Date(item.requestedAt).toLocaleString() : 'Unknown date'}
+                  </div>
+                  <div className="col-span-3 flex justify-end">
+                    {!['paid', 'cancelled'].includes(item.status) ? (
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        <button type="button" className={swButton({ variant: 'surface', size: 'sm' })} onClick={() => void update(item.id, 'processing').catch((reason) => setError(reason.message))}>Processing</button>
+                        <button type="button" className={swButton({ variant: 'primary', size: 'sm' })} onClick={() => void update(item.id, 'paid').catch((reason) => setError(reason.message))}>Mark paid</button>
+                        <button type="button" className={swButton({ variant: 'danger', size: 'sm' })} onClick={() => void update(item.id, 'cancelled').catch((reason) => setError(reason.message))}>Cancel</button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  );
 }

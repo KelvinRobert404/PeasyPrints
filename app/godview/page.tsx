@@ -5,6 +5,9 @@ import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { cn } from '@/lib/utils/cn';
 import Link from 'next/link';
+import { Segmented } from '@/components/swoop/primitives';
+import { OrdersIcon } from '@/components/swoop/icons';
+import { PageHead, SectionTitle, StatTile, TableState, gvCard, gvRow, gvTableHead } from './ui';
 
 // Detailed stats for charts
 interface ShopStatusCounts {
@@ -43,14 +46,14 @@ interface LiveOrder {
 
 type TimeFilter = 'today' | 'week' | 'month' | 'all';
 
-// Linear Style Colors: High Signal, Low Noise
+// Status palette (Swoop tokens): blue = in progress, ink = printing, green = done, red = cancelled
 const STATUS_COLORS: Record<keyof ShopStatusCounts, string> = {
-    pending: 'bg-amber-400',
-    processing: 'bg-blue-500',
-    printing: 'bg-indigo-500',
-    ready: 'bg-emerald-400',
-    completed: 'bg-emerald-600',
-    cancelled: 'bg-rose-400',
+    pending: 'bg-royal-soft',
+    processing: 'bg-royal',
+    printing: 'bg-ink',
+    ready: 'bg-go',
+    completed: 'bg-go-text',
+    cancelled: 'bg-market',
 };
 
 const STATUS_LABELS: Record<keyof ShopStatusCounts, string> = {
@@ -154,73 +157,55 @@ export default function GodviewDashboard() {
     const maxOrders = Math.max(...shopStats.map(s => s.total), 1);
 
     return (
-        <div className="space-y-12 max-w-[1200px] mx-auto pt-2">
-
+        <div className="mx-auto max-w-[1200px] space-y-5">
             {/* Overview Section */}
-            <section className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-widest">Overview</h2>
-                    <div className="flex border-b border-zinc-200">
-                        {(['today', 'week', 'month', 'all'] as const).map((t) => (
-                            <button
-                                key={t}
-                                onClick={() => setTimeFilter(t)}
-                                className={cn(
-                                    "px-4 py-1.5 text-xs font-medium transition-colors capitalize border-b-2 -mb-[2px]",
-                                    timeFilter === t
-                                        ? "border-zinc-900 text-zinc-900"
-                                        : "border-transparent text-zinc-400 hover:text-zinc-600"
-                                )}
-                            >
-                                {t}
-                            </button>
-                        ))}
-                    </div>
+            <section className="space-y-3">
+                <PageHead
+                    title="Dashboard"
+                    description="Orders, revenue and store activity across Swoop."
+                    actions={
+                        <Segmented
+                            label="Time range"
+                            value={timeFilter}
+                            onChange={setTimeFilter}
+                            options={(['today', 'week', 'month', 'all'] as const).map((t) => ({ value: t, label: t }))}
+                            className="w-[280px]"
+                        />
+                    }
+                    className="pb-0"
+                />
+
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+                    <StatTile label="Revenue" value={`₹${loading ? '-' : aggregates.revenue.toLocaleString()}`} dot="go" />
+                    <StatTile label="Total orders" value={loading ? '-' : aggregates.orders} />
+                    <StatTile label="Pending active" value={loading ? '-' : aggregates.pending} dot="royal" />
+                    <StatTile label="Cancelled" value={loading ? '-' : aggregates.cancelled} dot="market" />
                 </div>
 
-                <div className="grid grid-cols-4 gap-8">
-                    <div>
-                        <div className="text-3xl font-semibold text-zinc-900 tracking-tight">₹{loading ? '-' : aggregates.revenue.toLocaleString()}</div>
-                        <div className="text-xs text-zinc-500 mt-1 font-medium">Revenue</div>
-                    </div>
-                    <div>
-                        <div className="text-3xl font-semibold text-zinc-900 tracking-tight">{loading ? '-' : aggregates.orders}</div>
-                        <div className="text-xs text-zinc-500 mt-1 font-medium">Total Orders</div>
-                    </div>
-                    <div>
-                        <div className="text-3xl font-semibold text-zinc-900 tracking-tight">{loading ? '-' : aggregates.pending}</div>
-                        <div className="text-xs text-amber-600 mt-1 font-medium">Pending Active</div>
-                    </div>
-                    <div>
-                        <div className="text-3xl font-semibold text-zinc-900 tracking-tight">{loading ? '-' : aggregates.cancelled}</div>
-                        <div className="text-xs text-rose-600 mt-1 font-medium">Cancelled</div>
-                    </div>
-                </div>
-
-                {/* Stacked Chart (Linear Style) */}
-                <div className="space-y-3 pt-6 border-t border-zinc-100">
-                    <div className="flex justify-between items-end mb-4">
-                        <h3 className="text-xs font-semibold text-zinc-900">Store Activity</h3>
-                        <div className="flex gap-3 text-[10px] text-zinc-400">
+                {/* Stacked Chart */}
+                <div className={cn(gvCard, 'p-4')}>
+                    <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                        <SectionTitle>Store activity</SectionTitle>
+                        <div className="flex flex-wrap gap-3 text-[11px] font-semibold text-slate">
                             {Object.entries(STATUS_LABELS).map(([key, label]) => (
                                 <div key={key} className="flex items-center gap-1.5">
-                                    <div className={cn("w-1.5 h-1.5 rounded-full", STATUS_COLORS[key as keyof ShopStatusCounts])} />
+                                    <div className={cn('h-2 w-2 rounded-full', STATUS_COLORS[key as keyof ShopStatusCounts])} />
                                     <span>{label}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-1.5">
                         {loading ? (
-                            <div className="h-20 flex items-center justify-center text-xs text-zinc-400">Loading...</div>
+                            <TableState loading className="h-20" />
                         ) : shopStats.length === 0 ? (
-                            <div className="py-8 text-center text-xs text-zinc-400">No data available</div>
+                            <TableState title="No data available" className="h-20" />
                         ) : (
                             shopStats.map((shop) => (
-                                <div key={shop.id} className="grid grid-cols-12 gap-4 items-center group">
-                                    <div className="col-span-2 text-xs font-medium text-zinc-700 truncate text-right pr-4">{shop.name}</div>
-                                    <div className="col-span-10 h-6 bg-zinc-50 rounded-sm overflow-hidden flex relative">
+                                <div key={shop.id} className="group grid grid-cols-12 items-center gap-3">
+                                    <div className="col-span-2 truncate text-right text-[12px] font-bold text-ink">{shop.name}</div>
+                                    <div className="relative col-span-10 flex h-5 overflow-hidden rounded-[6px] bg-surface">
                                         {(Object.keys(STATUS_COLORS) as Array<keyof ShopStatusCounts>).map((status) => {
                                             const count = shop[status];
                                             if (count === 0) return null;
@@ -228,13 +213,13 @@ export default function GodviewDashboard() {
                                             return (
                                                 <div
                                                     key={status}
-                                                    className={cn("h-full border-r border-white/50 last:border-0", STATUS_COLORS[status])}
+                                                    className={cn('h-full border-r border-white last:border-0', STATUS_COLORS[status])}
                                                     style={{ width: `${width}%` }}
                                                     title={`${STATUS_LABELS[status]}: ${count}`}
                                                 />
                                             );
                                         })}
-                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-400 opacity-0 group-hover:opacity-100 font-medium tabular-nums transition-opacity">
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[10.5px] font-bold text-slate tabular-nums opacity-0 transition-opacity group-hover:opacity-100">
                                             {shop.total} orders
                                         </div>
                                     </div>
@@ -246,53 +231,62 @@ export default function GodviewDashboard() {
             </section>
 
             {/* Live Feed Section */}
-            <section className="space-y-4 pt-8">
-                <div className="flex items-center justify-between border-b border-zinc-200 pb-2">
-                    <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                        Live Feed <span className="flex h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
-                    </h2>
-                    <Link href="/godview/orders" className="text-xs font-medium text-zinc-400 hover:text-zinc-900 transition-colors">
-                        View All
+            <section className={cn(gvCard, 'overflow-hidden')}>
+                <div className="flex items-center justify-between px-4 py-3">
+                    <SectionTitle className="items-center">
+                        Live feed <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-go" />
+                    </SectionTitle>
+                    <Link href="/godview/orders" className="text-[12px] font-bold text-royal hover:underline">
+                        View all
                     </Link>
                 </div>
 
-                <div className="min-w-full">
-                    {loading ? (
-                        <div className="py-12 text-center text-xs text-zinc-400">Loading feed...</div>
-                    ) : liveOrders.length === 0 ? (
-                        <div className="py-12 text-center text-xs text-zinc-400">No active orders</div>
-                    ) : (
-                        <div className="divide-y divide-zinc-100">
-                            {liveOrders.map((order) => (
-                                <div key={order.id} className="grid grid-cols-12 gap-4 py-3 items-center text-xs hover:bg-zinc-50/50 transition-colors rounded-sm px-2 -mx-2">
-                                    <div className="col-span-2 font-medium text-zinc-900 truncate">{order.shopName}</div>
-                                    <div className="col-span-3 text-zinc-600 truncate flex items-center gap-2">
-                                        <span className="text-zinc-400">#{order.id.slice(-4)}</span>
-                                        <span className="text-zinc-300">•</span>
-                                        <span className="truncate">{order.userName}</span>
-                                    </div>
-                                    <div className="col-span-3 text-zinc-500 truncate">{order.fileName}</div>
-                                    <div className="col-span-2">
-                                        <div className="flex items-center gap-1.5">
-                                            <div className={cn("h-1.5 w-1.5 rounded-full",
-                                                order.status === 'printing' ? "bg-indigo-500" :
-                                                    order.status === 'processing' ? "bg-blue-500" :
-                                                        order.status === 'ready' ? "bg-emerald-500" : "bg-amber-400"
-                                            )} />
-                                            <span className="capitalize text-zinc-700">{order.status}</span>
-                                        </div>
-                                    </div>
-                                    <div className="col-span-2 text-right font-medium text-zinc-900 tabular-nums">
-                                        ₹{order.totalCost}
-                                        <span className="text-zinc-400 ml-2 font-normal">
-                                            {order.timestamp?.toDate?.().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '-'}
-                                        </span>
+                <div className={cn(gvTableHead, 'grid grid-cols-12 gap-4 border-t px-4 py-2')}>
+                    <div className="col-span-2">Store</div>
+                    <div className="col-span-3">Order</div>
+                    <div className="col-span-3">File</div>
+                    <div className="col-span-2">Status</div>
+                    <div className="col-span-2 text-right">Amount</div>
+                </div>
+
+                {loading ? (
+                    <TableState loading className="h-32" />
+                ) : liveOrders.length === 0 ? (
+                    <TableState icon={OrdersIcon} title="No active orders" className="h-32" />
+                ) : (
+                    <div>
+                        {liveOrders.map((order) => (
+                            <div key={order.id} className={cn(gvRow, 'grid min-h-[40px] grid-cols-12 items-center gap-4 px-4 py-1.5 transition-colors hover:bg-surface/60')}>
+                                <div className="col-span-2 truncate font-bold">{order.shopName}</div>
+                                <div className="col-span-3 flex items-center gap-1.5 truncate text-text-secondary">
+                                    <span className="font-mono text-[11px] text-slate">#{order.id.slice(-4)}</span>
+                                    <span className="text-text-muted">•</span>
+                                    <span className="truncate">{order.userName}</span>
+                                </div>
+                                <div className="col-span-3 truncate text-slate">{order.fileName}</div>
+                                <div className="col-span-2">
+                                    <div className="flex items-center gap-1.5">
+                                        <span
+                                            className={cn(
+                                                'h-1.5 w-1.5 rounded-full',
+                                                order.status === 'printing' ? 'bg-ink' :
+                                                    order.status === 'processing' ? 'bg-royal' :
+                                                        order.status === 'ready' ? 'bg-go' : 'bg-royal-soft'
+                                            )}
+                                        />
+                                        <span className="text-[12px] font-bold capitalize text-ink">{order.status}</span>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                                <div className="col-span-2 text-right font-bold tabular-nums">
+                                    ₹{order.totalCost}
+                                    <span className="ml-2 text-[11px] font-medium text-slate">
+                                        {order.timestamp?.toDate?.().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '-'}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </section>
         </div>
     );

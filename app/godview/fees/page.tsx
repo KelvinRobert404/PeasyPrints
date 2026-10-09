@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, doc, updateDoc, writeBatch } from 'firebase/firestore';
-import { Store, IndianRupee, Save, Loader2, ArrowRight, Layers, Plus, Trash2, Globe } from 'lucide-react';
+import { IconTile, StatusLine, swButton } from '@/components/swoop/primitives';
+import { LayersIcon, PlusIcon, RupeeIcon, StoreIcon, TrashIcon } from '@/components/swoop/icons';
 import type { Shop } from '@/types/models';
 import { cn } from '@/lib/utils/cn';
+import { GlobeIcon, SaveIcon } from '../icons';
+import { PageHead, Spinner, TableState, gvCard, gvIconBtn, gvInput, gvRow, gvTableHead } from '../ui';
 
 interface FeeTier {
     minPages: number;
@@ -130,78 +131,64 @@ export default function FeesPage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-6rem)]">
-            <div className="flex items-center justify-between px-1 pb-4">
-                <div>
-                    <h1 className="text-lg font-semibold text-zinc-900 tracking-tight">Fee Management</h1>
-                    <p className="text-xs text-zinc-500">Manage tiered service fees per store.</p>
-                </div>
+        <div className="flex h-[calc(100vh-6rem)] flex-col">
+            <PageHead
+                title="Fee management"
+                description="Manage tiered service fees per store."
+                actions={
+                    <button
+                        type="button"
+                        onClick={handleGlobalConfig}
+                        className={cn(swButton({ variant: 'surface', size: 'sm' }), 'bg-royal-tint text-royal hover:bg-royal-tint/70')}
+                    >
+                        <GlobeIcon size={14} />
+                        Configure global tiers
+                    </button>
+                }
+            />
 
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleGlobalConfig}
-                    className="h-8 border-indigo-200 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800"
-                >
-                    <Globe className="h-3.5 w-3.5 mr-2" />
-                    Configure Global Tiers
-                </Button>
-            </div>
-
-            <div className="flex-1 rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden flex flex-col">
-                <div className="grid grid-cols-12 gap-4 border-b border-zinc-100 bg-zinc-50/50 px-4 py-2 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">
-                    <div className="col-span-4 pl-8">Store Name</div>
+            <div className={cn(gvCard, 'flex flex-1 flex-col overflow-hidden')}>
+                <div className={cn(gvTableHead, 'grid grid-cols-12 gap-4 px-4 py-2')}>
+                    <div className="col-span-4 pl-10">Store name</div>
                     <div className="col-span-2">Status</div>
-                    <div className="col-span-4">Active Fee Structure</div>
+                    <div className="col-span-4">Active fee structure</div>
                     <div className="col-span-2 text-right">Actions</div>
                 </div>
 
-                <div className="overflow-y-auto flex-1">
+                <div className="flex-1 overflow-y-auto">
                     {loading ? (
-                        <div className="flex h-40 items-center justify-center">
-                            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
-                        </div>
+                        <TableState loading />
                     ) : (
-                        <div className="divide-y divide-zinc-50">
+                        <div>
                             {shops.map((shop) => {
                                 const tiers = shop.pricing?.convenienceFeeTiers;
                                 const hasTiers = tiers && tiers.length > 0;
                                 const flatFee = shop.pricing?.convenienceFee ?? 0;
 
                                 return (
-                                    <div key={shop.id} className="group grid grid-cols-12 gap-4 items-center px-4 py-2 hover:bg-zinc-50/80 transition-colors text-[13px] relative min-h-[56px]">
+                                    <div key={shop.id} className={cn(gvRow, 'grid min-h-[44px] grid-cols-12 items-center gap-4 px-4 py-1.5 transition-colors hover:bg-surface/60')}>
                                         {/* Name */}
-                                        <div className="col-span-4 pl-4 flex items-center gap-3">
-                                            <div className="flex h-8 w-8 items-center justify-center rounded bg-zinc-100 text-zinc-500 border border-zinc-200/50">
-                                                <Store className="h-4 w-4" />
-                                            </div>
-                                            <span className="font-medium text-zinc-900 truncate">{shop.name}</span>
+                                        <div className="col-span-4 flex min-w-0 items-center gap-3">
+                                            <IconTile icon={StoreIcon} shape="square" size={28} iconSize={15} />
+                                            <span className="truncate font-bold">{shop.name}</span>
                                         </div>
 
                                         {/* Status */}
                                         <div className="col-span-2">
-                                            <div className={cn(
-                                                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border",
-                                                shop.isOpen
-                                                    ? "bg-emerald-50/50 text-emerald-700 border-emerald-100"
-                                                    : "bg-zinc-100 text-zinc-500 border-zinc-200"
-                                            )}>
-                                                <div className={cn("h-1.5 w-1.5 rounded-full", shop.isOpen ? "bg-emerald-500" : "bg-zinc-400")} />
-                                                {shop.isOpen ? 'Open' : 'Closed'}
-                                            </div>
+                                            <StatusLine open={!!shop.isOpen} label={shop.isOpen ? 'Open' : 'Closed'} />
                                         </div>
 
                                         {/* Structure Summary */}
-                                        <div className="col-span-4 text-zinc-500 text-xs">
+                                        <div className="col-span-4 text-[12px] text-text-secondary tabular-nums">
                                             {hasTiers ? (
                                                 <div className="flex items-center gap-2">
-                                                    <Layers className="h-3.5 w-3.5 text-indigo-500" />
-                                                    <span>{tiers.length} tiers configured</span>
-                                                    <span className="text-zinc-400">({tiers[0].minPages}-{tiers[0].maxPages}pgs: ₹{tiers[0].fee}...)</span>
+                                                    <LayersIcon size={14} className="shrink-0 text-royal" />
+                                                    <span className="font-semibold text-ink">{tiers.length} tiers configured</span>
+                                                    <span className="truncate text-slate">({tiers[0].minPages}-{tiers[0].maxPages}pgs: ₹{tiers[0].fee}...)</span>
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center gap-2">
-                                                    <IndianRupee className="h-3.5 w-3.5 text-zinc-400" />
+                                                    <RupeeIcon size={14} className="shrink-0 text-slate" />
                                                     <span>Flat fee: ₹{flatFee}</span>
                                                 </div>
                                             )}
@@ -209,14 +196,13 @@ export default function FeesPage() {
 
                                         {/* Actions */}
                                         <div className="col-span-2 flex justify-end">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
+                                            <button
+                                                type="button"
                                                 onClick={() => handleManageTiers(shop)}
-                                                className="h-7 text-xs border-zinc-200 hover:bg-zinc-50 text-zinc-700"
+                                                className={cn(swButton({ variant: 'surface', size: 'sm' }), 'h-7 px-2.5 text-[11.5px]')}
                                             >
-                                                Manage Tiers
-                                            </Button>
+                                                Manage tiers
+                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -228,107 +214,109 @@ export default function FeesPage() {
 
             {/* Manage Tiers Sheet */}
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+                <SheetContent side="right" className="w-[400px] overflow-y-auto border-line p-5 sm:w-[540px] sm:max-w-[540px]">
                     <SheetHeader>
-                        <SheetTitle>{isGlobalMode ? 'Global Fee Configuration' : 'Manage Convenience Fees'}</SheetTitle>
-                        <SheetDescription>
+                        <SheetTitle className="font-heading text-[16px] font-bold text-ink">
+                            {isGlobalMode ? 'Global fee configuration' : 'Manage convenience fees'}
+                        </SheetTitle>
+                        <SheetDescription className="text-[12.5px] text-slate">
                             {isGlobalMode
                                 ? 'Define a tiered fee structure to apply to ALL stores instantly.'
-                                : <span>Configure tiered fees for <span className="font-medium text-zinc-900">{selectedShop?.name}</span>.</span>
+                                : <span>Configure tiered fees for <span className="font-bold text-ink">{selectedShop?.name}</span>.</span>
                             }
                         </SheetDescription>
                     </SheetHeader>
 
-                    <div className="py-6 space-y-6">
+                    <div className="space-y-4 py-5">
                         <div className="flex justify-end">
-                            <Button
-                                variant="outline"
-                                size="sm"
+                            <button
+                                type="button"
                                 onClick={generateStandardTiers}
-                                className="text-xs h-7"
+                                className={cn(swButton({ variant: 'surface', size: 'sm' }), 'h-7 px-2.5 text-[11.5px]')}
                             >
-                                Auto-fill Standard Tiers
-                            </Button>
+                                Auto-fill standard tiers
+                            </button>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             {editingTiers.length === 0 ? (
-                                <div className="text-center py-8 border-2 border-dashed border-zinc-100 rounded-lg">
-                                    <p className="text-sm text-zinc-500 mb-2">No tiers configured.</p>
+                                <div className="rounded-[14px] bg-surface px-4 py-7 text-center">
+                                    <p className="text-[12.5px] font-bold text-ink">No tiers configured.</p>
                                     {!isGlobalMode && (
-                                        <p className="text-xs text-zinc-400">Using legacy flat fee: ₹{selectedShop?.pricing?.convenienceFee ?? 0}</p>
+                                        <p className="mt-1 text-[11.5px] text-slate">Using legacy flat fee: ₹{selectedShop?.pricing?.convenienceFee ?? 0}</p>
                                     )}
                                 </div>
                             ) : (
-                                <div className="space-y-3">
-                                    <div className="grid grid-cols-12 gap-2 text-[10px] font-medium text-zinc-500 uppercase tracking-wide px-2">
-                                        <div className="col-span-3">Min Pages</div>
-                                        <div className="col-span-3">Max Pages</div>
+                                <div className="space-y-1.5">
+                                    <div className="grid grid-cols-12 gap-2 px-2 text-[10.5px] font-extrabold uppercase tracking-[0.06em] text-slate">
+                                        <div className="col-span-3">Min pages</div>
+                                        <div className="col-span-3">Max pages</div>
                                         <div className="col-span-4">Fee (₹)</div>
                                         <div className="col-span-2"></div>
                                     </div>
                                     {editingTiers.map((tier, idx) => (
-                                        <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-zinc-50 p-2 rounded-md border border-zinc-100">
+                                        <div key={idx} className="grid grid-cols-12 items-center gap-2 rounded-[12px] bg-surface p-2">
                                             <div className="col-span-3">
-                                                <Input
+                                                <input
                                                     type="number"
+                                                    aria-label={`Tier ${idx + 1} minimum pages`}
                                                     value={tier.minPages}
                                                     onChange={(e) => updateTier(idx, 'minPages', parseInt(e.target.value))}
-                                                    className="h-8 text-xs bg-white"
+                                                    className={cn(gvInput, 'h-8 bg-white text-[12px] tabular-nums')}
                                                 />
                                             </div>
                                             <div className="col-span-3">
-                                                <Input
+                                                <input
                                                     type="number"
+                                                    aria-label={`Tier ${idx + 1} maximum pages`}
                                                     value={tier.maxPages}
                                                     onChange={(e) => updateTier(idx, 'maxPages', parseInt(e.target.value))}
-                                                    className="h-8 text-xs bg-white"
+                                                    className={cn(gvInput, 'h-8 bg-white text-[12px] tabular-nums')}
                                                 />
                                             </div>
-                                            <div className="col-span-4 relative">
-                                                <IndianRupee className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-400" />
-                                                <Input
+                                            <div className="relative col-span-4">
+                                                <RupeeIcon size={13} className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-slate" />
+                                                <input
                                                     type="number"
+                                                    aria-label={`Tier ${idx + 1} fee`}
                                                     value={tier.fee}
                                                     onChange={(e) => updateTier(idx, 'fee', parseFloat(e.target.value))}
-                                                    className="h-8 text-xs bg-white pl-7"
+                                                    className={cn(gvInput, 'h-8 bg-white pl-7 text-[12px] tabular-nums')}
                                                 />
                                             </div>
                                             <div className="col-span-2 flex justify-end">
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
+                                                <button
+                                                    type="button"
                                                     onClick={() => removeTier(idx)}
-                                                    className="h-8 w-8 text-zinc-400 hover:text-rose-600 hover:bg-rose-50"
+                                                    aria-label={`Remove tier ${idx + 1}`}
+                                                    className={cn(gvIconBtn, 'h-8 w-8 hover:bg-market-tint hover:text-market')}
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                    <TrashIcon size={15} />
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             )}
 
-                            <Button onClick={addTier} variant="outline" className="w-full border-dashed border-zinc-300 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50">
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Fee Tier
-                            </Button>
+                            <button type="button" onClick={addTier} className={cn(swButton({ variant: 'surface', size: 'sm' }), 'w-full')}>
+                                <PlusIcon size={14} />
+                                Add fee tier
+                            </button>
                         </div>
                     </div>
 
-                    <SheetFooter>
-                        <Button variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                        <Button
+                    <SheetFooter className="gap-2 border-t border-line pt-4">
+                        <button type="button" onClick={() => setSheetOpen(false)} className={swButton({ variant: 'surface', size: 'md' })}>Cancel</button>
+                        <button
+                            type="button"
                             onClick={saveTiers}
                             disabled={saving}
-                            className={cn(
-                                "text-white",
-                                isGlobalMode ? "bg-indigo-600 hover:bg-indigo-700" : "bg-zinc-900 hover:bg-zinc-800"
-                            )}
+                            className={swButton({ variant: 'primary', size: 'md' })}
                         >
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : (isGlobalMode ? <Globe className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />)}
-                            {isGlobalMode ? 'Apply to All Stores' : 'Save Changes'}
-                        </Button>
+                            {saving ? <Spinner label="Saving" className="h-3.5 w-3.5 border-white/40 border-t-white" /> : (isGlobalMode ? <GlobeIcon size={15} /> : <SaveIcon size={15} />)}
+                            {isGlobalMode ? 'Apply to all stores' : 'Save changes'}
+                        </button>
                     </SheetFooter>
                 </SheetContent>
             </Sheet>

@@ -4,71 +4,60 @@ import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAdminGuard } from '@/lib/admin';
-import {
-    Store,
-    ShoppingCart,
-    DollarSign,
-    Tag,
-    Users,
-    FileCheck,
-    LayoutDashboard,
-    ChevronLeft,
-    ChevronRight,
-    Shield,
-    Menu,
-    Search,
-    Bell,
-    Settings,
-    IndianRupee,
-    GraduationCap,
-    Image,
-    Film,
-    ShieldCheck,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
+import { SwoopLogo } from '@/components/swoop/Logo';
+import { IconTile, swButton } from '@/components/swoop/primitives';
+import {
+    GridIcon,
+    LockIcon,
+    OrdersIcon,
+    RupeeIcon,
+    SearchIcon,
+    ShieldCheckIcon,
+    StoreIcon,
+    TicketIcon,
+} from '@/components/swoop/icons';
+import { cn } from '@/lib/utils/cn';
+import { BellIcon, CapIcon, ChevronLeftIcon, FilmIcon, FlagIcon, MegaphoneIcon, MenuIcon, WalletIcon } from './icons';
+import { Spinner } from './ui';
 
 const NAV_ITEMS = [
-    { href: '/godview', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/godview/announcements', label: 'Announcements', icon: Image },
-    { href: '/godview/orders', label: 'Orders', icon: ShoppingCart },
-    { href: '/godview/stores', label: 'Stores', icon: Store },
-    { href: '/godview/colleges', label: 'Colleges', icon: GraduationCap },
-    { href: '/godview/fees', label: 'Fees', icon: IndianRupee },
-    { href: '/godview/payouts', label: 'Payouts', icon: DollarSign },
-    { href: '/godview/coupons', label: 'Coupons', icon: Tag },
-    { href: '/godview/campus', label: 'Campus Trust', icon: ShieldCheck },
-    { href: '/godview/campus-content', label: 'Campus Content', icon: FileCheck },
-    { href: '/godview/reels', label: 'Reel Packs', icon: Film },
+    { href: '/godview', label: 'Dashboard', icon: GridIcon },
+    { href: '/godview/announcements', label: 'Announcements', icon: MegaphoneIcon },
+    { href: '/godview/orders', label: 'Orders', icon: OrdersIcon },
+    { href: '/godview/stores', label: 'Stores', icon: StoreIcon },
+    { href: '/godview/colleges', label: 'Colleges', icon: CapIcon },
+    { href: '/godview/fees', label: 'Fees', icon: RupeeIcon },
+    { href: '/godview/payouts', label: 'Payouts', icon: WalletIcon },
+    { href: '/godview/coupons', label: 'Coupons', icon: TicketIcon },
+    { href: '/godview/campus', label: 'Campus Trust', icon: ShieldCheckIcon },
+    { href: '/godview/campus-content', label: 'Campus Content', icon: FlagIcon },
+    { href: '/godview/reels', label: 'Reel Packs', icon: FilmIcon },
 ];
+
+function Brand({ compact }: { compact?: boolean }) {
+    if (compact) return <SwoopLogo size={9} />;
+    return (
+        <span className="flex items-center gap-2">
+            <SwoopLogo size={15} />
+            <span className="text-[12px] font-bold text-slate">godview</span>
+        </span>
+    );
+}
 
 function SidebarContent({ collapsed, email }: { collapsed?: boolean; email?: string | null }) {
     const pathname = usePathname();
 
     return (
-        <div className="flex h-full flex-col bg-zinc-950 text-zinc-400 border-r border-white/5">
+        <div className="flex h-full flex-col border-r border-line bg-white text-ink">
             {/* Header */}
-            <div className={`flex h-12 items-center px-3 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-                {!collapsed && (
-                    <div className="flex items-center gap-2.5 px-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-white shadow-sm shadow-blue-500/20">
-                            <Shield className="h-3.5 w-3.5" />
-                        </div>
-                        <span className="text-sm font-bold text-zinc-100 tracking-tight">Swoop <span className="font-normal text-zinc-400">GODVIEW</span></span>
-                    </div>
-                )}
-                {collapsed && (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-600 text-white">
-                        <Shield className="h-4 w-4" />
-                    </div>
-                )}
+            <div className={cn('flex h-12 shrink-0 items-center border-b border-line px-4', collapsed && 'justify-center px-2')}>
+                <Brand compact={collapsed} />
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 overflow-y-auto px-2 py-3">
-                <nav className="space-y-0.5">
+            <div className="flex-1 overflow-y-auto px-2 py-2.5">
+                <nav aria-label="Godview" className="space-y-0.5">
                     {NAV_ITEMS.map((item) => {
                         const Icon = item.icon;
                         const isActive =
@@ -80,14 +69,16 @@ function SidebarContent({ collapsed, email }: { collapsed?: boolean; email?: str
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 ${isActive
-                                    ? 'bg-white/10 text-zinc-50 shadow-sm'
-                                    : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
-                                    } ${collapsed ? 'justify-center px-2' : ''}`}
+                                aria-current={isActive ? 'page' : undefined}
+                                className={cn(
+                                    'flex h-8 items-center gap-2.5 rounded-[9px] px-2.5 text-[12.5px] font-bold transition-colors',
+                                    isActive ? 'bg-royal-tint text-royal' : 'text-text-secondary hover:bg-surface hover:text-ink',
+                                    collapsed && 'justify-center px-0'
+                                )}
                                 title={collapsed ? item.label : undefined}
                             >
-                                <Icon className={`h-4 w-4 flex-shrink-0 transition-colors ${isActive ? 'text-zinc-50' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
-                                {!collapsed && <span>{item.label}</span>}
+                                <Icon size={17} className="shrink-0" />
+                                {!collapsed && <span className="truncate">{item.label}</span>}
                             </Link>
                         );
                     })}
@@ -96,16 +87,15 @@ function SidebarContent({ collapsed, email }: { collapsed?: boolean; email?: str
 
             {/* Footer */}
             {!collapsed && (
-                <div className="border-t border-white/5 p-3">
-                    <div className="flex items-center gap-2.5 rounded-md px-2 py-2 hover:bg-white/5 transition-colors cursor-pointer group">
-                        <Avatar className="h-6 w-6 border border-white/10 rounded-full">
-                            <AvatarImage src="" />
-                            <AvatarFallback className="bg-zinc-800 text-zinc-300 text-[9px]">AD</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 overflow-hidden">
-                            <p className="truncate text-xs font-medium text-zinc-300 group-hover:text-zinc-100">Administrator</p>
+                <div className="border-t border-line p-2.5">
+                    <div className="flex items-center gap-2.5 px-1.5 py-1">
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface text-[10px] font-extrabold text-ink">
+                            AD
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-[12px] font-bold text-ink">Administrator</p>
+                            {email && <p className="truncate text-[10.5px] text-slate">{email}</p>}
                         </div>
-                        <Settings className="h-3.5 w-3.5 text-zinc-500 group-hover:text-zinc-300" />
                     </div>
                 </div>
             )}
@@ -121,10 +111,10 @@ export default function GodviewLayout({ children }: { children: ReactNode }) {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-zinc-50">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-800" />
-                    <p className="text-xs text-zinc-500 font-medium tracking-tight">Loading...</p>
+            <div className="flex min-h-screen items-center justify-center bg-white">
+                <div className="flex flex-col items-center gap-3">
+                    <Spinner className="h-5 w-5" />
+                    <p className="text-[12px] font-semibold text-slate">Loading...</p>
                 </div>
             </div>
         );
@@ -132,15 +122,13 @@ export default function GodviewLayout({ children }: { children: ReactNode }) {
 
     if (!isAdmin) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4">
-                <div className="w-full max-w-[320px] text-center">
-                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 border border-zinc-200 mb-4">
-                        <Shield className="h-5 w-5 text-zinc-500" />
-                    </div>
-                    <h1 className="text-sm font-semibold text-zinc-900">Access Restricted</h1>
-                    <p className="mt-1 text-xs text-zinc-500">You don't have permission to view this area.</p>
-                    <Link href="/" className="mt-4 inline-flex h-8 items-center justify-center rounded-md bg-zinc-900 px-4 text-xs font-medium text-white hover:bg-zinc-800 transition-colors shadow-sm">
-                        Return to Application
+            <div className="flex min-h-screen items-center justify-center bg-white p-4">
+                <div className="flex w-full max-w-[320px] flex-col items-center text-center">
+                    <IconTile icon={LockIcon} shape="square" size={40} className="mb-3" />
+                    <h1 className="font-heading text-[16px] text-ink">Access restricted</h1>
+                    <p className="mt-1 text-[12px] text-slate">You don&apos;t have permission to view this area.</p>
+                    <Link href="/" className={cn(swButton({ variant: 'primary', size: 'sm' }), 'mt-4')}>
+                        Return to application
                     </Link>
                 </div>
             </div>
@@ -155,22 +143,17 @@ export default function GodviewLayout({ children }: { children: ReactNode }) {
     );
 
     return (
-        <div className="flex min-h-screen bg-zinc-50/50">
+        <div className="flex min-h-screen bg-white text-ink">
             {/* Mobile Header */}
-            <div className="fixed top-0 left-0 right-0 z-40 flex h-12 items-center justify-between bg-white/80 backdrop-blur-md border-b border-zinc-200/50 px-4 lg:hidden">
-                <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-600 text-white">
-                        <Shield className="h-3 w-3" />
-                    </div>
-                    <span className="text-sm font-bold text-zinc-900 tracking-tight">Swoop <span className="font-normal text-zinc-500">GODVIEW</span></span>
-                </div>
+            <div className="fixed left-0 right-0 top-0 z-40 flex h-12 items-center justify-between border-b border-line bg-white px-4 lg:hidden">
+                <Brand />
                 <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8 text-zinc-500">
-                            <Menu className="h-4 w-4" />
-                        </Button>
+                        <button type="button" aria-label="Open navigation" className="campus-press -mr-1.5 grid h-8 w-8 place-items-center rounded-full bg-surface text-ink">
+                            <MenuIcon size={16} />
+                        </button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="p-0 border-r-zinc-800 w-64 bg-zinc-950">
+                    <SheetContent side="left" className="w-64 border-r-0 p-0">
                         <SidebarContent email={email} />
                     </SheetContent>
                 </Sheet>
@@ -178,58 +161,68 @@ export default function GodviewLayout({ children }: { children: ReactNode }) {
 
             {/* Desktop Sidebar */}
             <aside
-                className={`hidden lg:flex fixed inset-y-0 left-0 z-30 flex-col transition-[width] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${collapsed ? 'w-[60px]' : 'w-[240px]'
-                    }`}
+                className={cn(
+                    'group fixed inset-y-0 left-0 z-30 hidden flex-col transition-[width] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] lg:flex',
+                    collapsed ? 'w-[60px]' : 'w-[220px]'
+                )}
             >
-                <div className="relative flex h-full flex-col bg-zinc-950">
+                <div className="relative flex h-full flex-col">
                     <SidebarContent collapsed={collapsed} email={email} />
 
-                    {/* Minimal Collapse Toggle */}
+                    {/* Collapse Toggle */}
                     <button
+                        type="button"
                         onClick={() => setCollapsed(!collapsed)}
-                        className="group absolute -right-3 top-4 flex h-6 w-6 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 shadow-sm hover:text-zinc-600 hover:border-zinc-300 transition-[opacity,color,border-color] duration-150 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100 lg:group-hover:opacity-100"
+                        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                        className="absolute -right-3 top-3 z-10 grid h-6 w-6 place-items-center rounded-full border border-line bg-white text-slate opacity-0 shadow-[0_1px_3px_rgba(16,24,40,0.10)] transition-[opacity,color] duration-150 hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"
                     >
-                        {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+                        <ChevronLeftIcon size={11} className={cn('transition-transform', collapsed && 'rotate-180')} />
                     </button>
 
                     {/* Hover zone to show toggle */}
-                    <div className="absolute right-0 top-0 bottom-0 w-4 translate-x-1/2 bg-transparent group cursor-ew-resize" onClick={() => setCollapsed(!collapsed)} />
+                    <div className="absolute bottom-0 right-0 top-0 w-4 translate-x-1/2 cursor-ew-resize bg-transparent" onClick={() => setCollapsed(!collapsed)} />
                 </div>
             </aside>
 
             {/* Main Content */}
             <main
-                className={`flex-1 transition-[margin] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${collapsed ? 'lg:ml-[60px]' : 'lg:ml-[240px]'
-                    } pt-12 lg:pt-0`}
+                className={cn(
+                    'min-w-0 flex-1 pt-12 transition-[margin] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] lg:pt-0',
+                    collapsed ? 'lg:ml-[60px]' : 'lg:ml-[220px]'
+                )}
             >
                 {/* Desktop Top Bar */}
-                <div className="sticky top-0 z-20 hidden lg:flex h-12 items-center justify-between border-b border-zinc-200 bg-white/70 backdrop-blur-xl px-6">
-                    <div className="flex items-center gap-2 text-sm text-zinc-500">
-                        <span className="font-bold text-zinc-900">Swoop <span className="font-normal text-zinc-500">GODVIEW</span></span>
-                        <span className="text-zinc-300">/</span>
-                        <span className="text-zinc-600">{currentRoute?.label || 'Dashboard'}</span>
+                <div className="sticky top-0 z-20 hidden h-12 items-center justify-between border-b border-line bg-white px-6 lg:flex">
+                    <div className="flex items-center gap-1.5 text-[12.5px]">
+                        <span className="font-semibold text-slate">godview</span>
+                        <span className="text-text-muted">/</span>
+                        <span className="font-bold text-ink">{currentRoute?.label || 'Dashboard'}</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                    <div className="flex items-center gap-2">
+                        <label className="relative flex h-8 w-64 items-center gap-2 rounded-full bg-surface pl-3 pr-1.5">
+                            <SearchIcon size={14} className="shrink-0 text-ink" />
                             <input
                                 type="text"
                                 placeholder="Search..."
-                                className="h-8 w-64 rounded-md border border-zinc-200 bg-zinc-50 pl-8 pr-3 text-xs text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-zinc-100/50 transition-[background-color,border-color,box-shadow] duration-150"
+                                aria-label="Search"
+                                className="min-w-0 flex-1 bg-transparent text-[12px] font-semibold text-ink outline-none placeholder:font-medium placeholder:text-slate"
                             />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                                <kbd className="inline-flex h-4 items-center rounded border border-zinc-200 bg-white px-1 text-[10px] font-medium text-zinc-400">⌘</kbd>
-                                <kbd className="inline-flex h-4 items-center rounded border border-zinc-200 bg-white px-1 text-[10px] font-medium text-zinc-400">K</kbd>
-                            </div>
-                        </div>
-                        <div className="h-4 w-px bg-zinc-200" />
-                        <button className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 transition-colors">
-                            <Bell className="h-4 w-4" />
+                            <span className="flex gap-0.5">
+                                <kbd className="inline-flex h-[18px] items-center rounded-[5px] bg-white px-1 text-[10px] font-bold text-slate">⌘</kbd>
+                                <kbd className="inline-flex h-[18px] items-center rounded-[5px] bg-white px-1 text-[10px] font-bold text-slate">K</kbd>
+                            </span>
+                        </label>
+                        <button
+                            type="button"
+                            aria-label="Notifications"
+                            className="campus-press grid h-8 w-8 place-items-center rounded-full bg-surface text-ink transition-colors hover:bg-line"
+                        >
+                            <BellIcon size={16} />
                         </button>
                     </div>
                 </div>
 
-                <div className="p-4 lg:p-8 max-w-[1600px] mx-auto animate-in fade-in duration-300 slide-in-from-bottom-2">
+                <div className="mx-auto max-w-[1600px] p-4 animate-in fade-in duration-300 lg:px-6 lg:py-5">
                     {children}
                 </div>
             </main>

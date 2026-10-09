@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
-import { GraduationCap, Plus, Trash2, Loader2, Store } from 'lucide-react';
+import { swButton } from '@/components/swoop/primitives';
+import { PlusIcon, StoreIcon, TrashIcon } from '@/components/swoop/icons';
 import type { College, Shop } from '@/types/models';
 import { cn } from '@/lib/utils/cn';
 import {
@@ -18,6 +17,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { CapIcon } from '../icons';
+import { PageHead, Spinner, TableState, gvCard, gvIconBtn, gvInput, gvLabel, gvRow, gvTableHead } from '../ui';
 
 export default function CollegesPage() {
     const [colleges, setColleges] = useState<College[]>([]);
@@ -86,99 +87,90 @@ export default function CollegesPage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-6rem)]">
-            <div className="flex items-center justify-between px-1 pb-4">
-                <div>
-                    <h1 className="text-lg font-semibold text-zinc-900 tracking-tight">Colleges</h1>
-                    <p className="text-xs text-zinc-500">Manage colleges and their shop assignments.</p>
-                </div>
-                <div className="text-xs text-zinc-500 font-medium">
-                    {colleges.length} Colleges
-                </div>
-            </div>
+        <div className="flex h-[calc(100vh-6rem)] flex-col">
+            <PageHead
+                title="Colleges"
+                description="Manage colleges and their shop assignments."
+                actions={<span className="text-[12px] font-bold text-slate tabular-nums">{colleges.length} colleges</span>}
+            />
 
             {/* Add New College Form */}
-            <div className="mb-4 p-4 rounded-lg border border-zinc-200 bg-white shadow-sm">
+            <div className={cn(gvCard, 'mb-3 p-3.5')}>
                 <div className="flex items-end gap-3">
                     <div className="flex-1">
-                        <label className="text-xs font-medium text-zinc-600 mb-1 block">College Name</label>
-                        <Input
+                        <label htmlFor="college-name" className={gvLabel}>College name</label>
+                        <input
+                            id="college-name"
                             value={newCollegeName}
                             onChange={(e) => setNewCollegeName(e.target.value)}
                             placeholder="e.g., Kristu Jayanti College"
-                            className="h-9"
+                            className={gvInput}
                         />
                     </div>
                     <div className="w-32">
-                        <label className="text-xs font-medium text-zinc-600 mb-1 block">Short Name</label>
-                        <Input
+                        <label htmlFor="college-short" className={gvLabel}>Short name</label>
+                        <input
+                            id="college-short"
                             value={newCollegeShortName}
                             onChange={(e) => setNewCollegeShortName(e.target.value)}
                             placeholder="e.g., KJC"
-                            className="h-9"
+                            className={gvInput}
                         />
                     </div>
-                    <Button
+                    <button
+                        type="button"
                         onClick={handleAdd}
                         disabled={adding || !newCollegeName.trim()}
-                        className="h-9 gap-2"
+                        className={cn(swButton({ variant: 'primary', size: 'sm' }), 'h-9')}
                     >
-                        {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                        Add College
-                    </Button>
+                        {adding ? <Spinner label="Adding" className="h-3.5 w-3.5 border-white/40 border-t-white" /> : <PlusIcon size={14} />}
+                        Add college
+                    </button>
                 </div>
             </div>
 
-            <div className="flex-1 rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden flex flex-col">
-                <div className="grid grid-cols-12 gap-4 border-b border-zinc-100 bg-zinc-50/50 px-4 py-2 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">
-                    <div className="col-span-5 pl-8">College Name</div>
-                    <div className="col-span-2">Short Name</div>
+            <div className={cn(gvCard, 'flex flex-1 flex-col overflow-hidden')}>
+                <div className={cn(gvTableHead, 'grid grid-cols-12 gap-4 px-4 py-2')}>
+                    <div className="col-span-5 pl-10">College name</div>
+                    <div className="col-span-2">Short name</div>
                     <div className="col-span-2">Shops</div>
                     <div className="col-span-2">Created</div>
                     <div className="col-span-1 text-right">Actions</div>
                 </div>
 
-                <div className="overflow-y-auto flex-1">
+                <div className="flex-1 overflow-y-auto">
                     {loading ? (
-                        <div className="flex h-40 items-center justify-center">
-                            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
-                        </div>
+                        <TableState loading />
                     ) : colleges.length === 0 ? (
-                        <div className="flex h-40 flex-col items-center justify-center text-zinc-400">
-                            <GraduationCap className="h-8 w-8 mb-2 opacity-20" />
-                            <p className="text-sm">No colleges added yet</p>
-                            <p className="text-xs mt-1">Add your first college above</p>
-                        </div>
+                        <TableState icon={CapIcon} title="No colleges added yet" body="Add your first college above." />
                     ) : (
-                        <div className="divide-y divide-zinc-50">
+                        <div>
                             {colleges.map((college) => (
                                 <div
                                     key={college.id}
-                                    className="group grid grid-cols-12 gap-4 items-center px-4 py-2 transition-colors text-[13px] relative min-h-[44px] hover:bg-zinc-50/80"
+                                    className={cn(gvRow, 'group grid min-h-[44px] grid-cols-12 items-center gap-4 px-4 py-1.5 transition-colors hover:bg-surface/60')}
                                 >
-                                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-
                                     {/* Name */}
-                                    <div className="col-span-5 pl-4 flex items-center gap-3">
-                                        <div className="flex h-7 w-7 items-center justify-center rounded bg-indigo-100 text-indigo-600 border border-indigo-200/50 text-[10px] font-bold">
+                                    <div className="col-span-5 flex min-w-0 items-center gap-3">
+                                        <div className="grid h-7 w-7 shrink-0 place-items-center rounded-[8px] bg-royal-tint text-[10.5px] font-extrabold text-royal">
                                             {college.shortName?.charAt(0) || college.name.charAt(0)}
                                         </div>
-                                        <span className="font-medium text-zinc-900 truncate">{college.name}</span>
+                                        <span className="truncate font-bold">{college.name}</span>
                                     </div>
 
                                     {/* Short Name */}
-                                    <div className="col-span-2 text-zinc-600">
+                                    <div className="col-span-2 font-semibold text-text-secondary">
                                         {college.shortName || '—'}
                                     </div>
 
                                     {/* Shops Count */}
-                                    <div className="col-span-2 flex items-center gap-1.5 text-zinc-600">
-                                        <Store className="h-3 w-3 text-zinc-400" />
+                                    <div className="col-span-2 flex items-center gap-1.5 text-text-secondary tabular-nums">
+                                        <StoreIcon size={13} className="text-slate" />
                                         {shopCounts[college.id] || 0} shops
                                     </div>
 
                                     {/* Created */}
-                                    <div className="col-span-2 text-zinc-500 text-xs">
+                                    <div className="col-span-2 text-[11.5px] text-slate tabular-nums">
                                         {college.createdAt?.toDate?.()
                                             ? college.createdAt.toDate().toLocaleDateString()
                                             : '—'}
@@ -186,16 +178,16 @@ export default function CollegesPage() {
 
                                     {/* Actions */}
                                     <div className="col-span-1 flex justify-end">
-                                        <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            className="h-6 w-6 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-red-600 hover:bg-red-50 transition-all"
+                                        <button
+                                            type="button"
+                                            className={cn(gvIconBtn, 'opacity-0 hover:bg-market-tint hover:text-market focus-visible:opacity-100 group-hover:opacity-100')}
                                             onClick={() => setDeleteTarget(college)}
                                             disabled={(shopCounts[college.id] || 0) > 0}
                                             title={(shopCounts[college.id] || 0) > 0 ? 'Cannot delete: shops are assigned' : 'Delete college'}
+                                            aria-label="Delete college"
                                         >
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                        </Button>
+                                            <TrashIcon size={14} />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -206,21 +198,23 @@ export default function CollegesPage() {
 
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-                <AlertDialogContent>
+                <AlertDialogContent className="max-w-sm gap-3 rounded-[14px] border-line p-5">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete College</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Are you sure you want to delete "{deleteTarget?.name}"? This action cannot be undone.
+                        <AlertDialogTitle className="font-heading text-[16px] font-bold text-ink">Delete college</AlertDialogTitle>
+                        <AlertDialogDescription className="text-[12.5px] text-slate">
+                            Are you sure you want to delete &quot;{deleteTarget?.name}&quot;? This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-2">
+                        <AlertDialogCancel disabled={deleting} className={cn(swButton({ variant: 'surface', size: 'sm' }), 'mt-0 border-0')}>
+                            Cancel
+                        </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}
                             disabled={deleting}
-                            className="bg-red-600 hover:bg-red-700"
+                            className={swButton({ variant: 'danger', size: 'sm' })}
                         >
-                            {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            {deleting ? <Spinner label="Deleting" className="h-3.5 w-3.5 border-market/30 border-t-market" /> : null}
                             Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>

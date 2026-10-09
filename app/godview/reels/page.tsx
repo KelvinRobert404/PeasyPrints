@@ -1,11 +1,16 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, Download, Film, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils/cn';
+import { Segmented, swButton } from '@/components/swoop/primitives';
+import { ArrowDownIcon, ArrowUpIcon, DownloadIcon, FilmIcon, RefreshIcon } from '../icons';
+import { PageHead, SectionTitle, StatusTag, TableState, gvCard, gvIconBtn, gvRow, type StatusTone } from '../ui';
 
 type Content = { id: string; serial: string; title: string; audience: string; status: string; promotionEligible: boolean; availabilityExpiresAt: string };
 type Pack = { id: string; type: string; status: string; templateId: string; createdAt: string; assets?: Array<{ name: string }> };
+
+const packTone = (status: string): StatusTone => (status === 'succeeded' ? 'go' : status === 'failed' ? 'market' : 'slate');
 
 export default function ReelPacksPage() {
   const [type, setType] = useState<'marketplace' | 'housing'>('marketplace');
@@ -36,8 +41,109 @@ export default function ReelPacksPage() {
     toast.success('Immutable render snapshot queued'); setSelected([]); void load();
   }
 
-  return <div className="space-y-7"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-600">peasy-comotion</p><h1 className="mt-1 text-2xl font-bold text-zinc-950">Reel Packs</h1><p className="mt-1 text-sm text-zinc-500">Choose eligible campus posts, set their order, and hand off a frozen snapshot to the local renderer.</p></div><button onClick={() => void load()} className="rounded-lg border bg-white p-2.5"><RefreshCw className="h-4 w-4" /></button></div>
-    <div className="grid gap-6 xl:grid-cols-[1fr_380px]"><section><div className="mb-3 flex items-center justify-between"><div className="rounded-lg bg-zinc-100 p-1">{(['marketplace', 'housing'] as const).map((value) => <button key={value} onClick={() => setType(value)} className={`rounded-md px-4 py-2 text-xs font-bold capitalize ${type === value ? 'bg-white shadow-sm' : 'text-zinc-500'}`}>{value}</button>)}</div><p className="text-xs font-semibold text-zinc-500">Select {min}–{max}</p></div><div className="overflow-hidden rounded-xl border bg-white">{eligible.length === 0 ? <p className="p-10 text-center text-sm text-zinc-500">No confirmed, promotion-eligible campus posts.</p> : eligible.map((item) => <label key={item.id} className="flex cursor-pointer items-center gap-3 border-b p-4 last:border-0"><input type="checkbox" checked={selected.includes(item.id)} onChange={() => toggle(item.id)} className="h-4 w-4 accent-zinc-950" /><span className="rounded bg-zinc-100 px-2 py-1 font-mono text-[11px] font-bold">{item.serial}</span><span className="flex-1 text-sm font-semibold text-zinc-800">{item.title}</span></label>)}</div></section>
-    <aside className="h-fit rounded-xl border bg-white p-5"><div className="flex items-center gap-2"><Film className="h-4 w-4 text-violet-600" /><h2 className="text-sm font-bold">Reel order</h2></div><div className="mt-4 space-y-2">{selected.length === 0 ? <p className="rounded-lg bg-zinc-50 p-5 text-center text-xs text-zinc-500">Selected posts appear here.</p> : selected.map((id, index) => { const item = content.find((entry) => entry.id === id); return <div key={id} className="flex items-center gap-2 rounded-lg border p-2"><span className="w-5 text-center text-xs font-bold text-zinc-400">{index + 1}</span><span className="min-w-0 flex-1 truncate text-xs font-semibold">{item?.serial} · {item?.title}</span><button onClick={() => move(index, -1)} aria-label="Move up"><ArrowUp className="h-3.5 w-3.5" /></button><button onClick={() => move(index, 1)} aria-label="Move down"><ArrowDown className="h-3.5 w-3.5" /></button></div>; })}</div><button disabled={busy || selected.length < min || selected.length > max} onClick={() => void queue()} className="mt-4 w-full rounded-lg bg-zinc-950 px-4 py-3 text-xs font-bold text-white disabled:opacity-40">{busy ? 'Queuing…' : 'Queue posting pack'}</button><p className="mt-3 text-[11px] leading-relaxed text-zinc-500">Girls’ Space is structurally excluded. The worker receives no phone number, exact address, or private identity.</p></aside></div>
-    <section><h2 className="mb-3 text-sm font-bold">Recent packs</h2><div className="overflow-hidden rounded-xl border bg-white">{packs.length === 0 ? <p className="p-8 text-center text-sm text-zinc-500">No packs rendered yet.</p> : packs.map((pack) => <div key={pack.id} className="flex flex-wrap items-center gap-4 border-b p-4 last:border-0"><div className="flex-1"><p className="font-mono text-xs font-bold">{pack.id}</p><p className="mt-1 text-xs text-zinc-500">{pack.type} · {pack.templateId} · {new Date(pack.createdAt).toLocaleString()}</p></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${pack.status === 'succeeded' ? 'bg-emerald-50 text-emerald-700' : pack.status === 'failed' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>{pack.status}</span>{pack.status === 'succeeded' && <a href={`/api/godview/render-packs/${pack.id}/artifact?name=posting-pack.zip`} className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-950 px-3 py-2 text-xs font-bold text-white"><Download className="h-3.5 w-3.5" />Download pack</a>}</div>)}</div></section></div>;
+  return (
+    <div className="space-y-3.5">
+      <PageHead
+        kicker="peasy-comotion"
+        title="Reel Packs"
+        description="Choose eligible campus posts, set their order, and hand off a frozen snapshot to the local renderer."
+        className="pb-0"
+        actions={
+          <button type="button" aria-label="Refresh" onClick={() => void load()} className={cn(swButton({ variant: 'surface', size: 'sm' }), 'w-8 px-0')}>
+            <RefreshIcon size={15} />
+          </button>
+        }
+      />
+
+      <div className="grid gap-3.5 xl:grid-cols-[1fr_360px]">
+        <section>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <Segmented
+              label="Content type"
+              className="w-[240px]"
+              value={type}
+              onChange={setType}
+              options={[{ value: 'marketplace', label: 'Marketplace' }, { value: 'housing', label: 'Housing' }]}
+            />
+            <p className="text-[11.5px] font-bold text-slate tabular-nums">Select {min}–{max}</p>
+          </div>
+          <div className={cn(gvCard, 'overflow-hidden')}>
+            {eligible.length === 0 ? (
+              <TableState icon={FilmIcon} title="No confirmed, promotion-eligible campus posts." />
+            ) : (
+              <div>
+                {eligible.map((item) => {
+                  const checked = selected.includes(item.id);
+                  return (
+                    <label key={item.id} className={cn(gvRow, 'flex min-h-[44px] cursor-pointer items-center gap-3 px-4 py-1.5 transition-colors', checked ? 'bg-royal-tint/50' : 'hover:bg-surface/60')}>
+                      <input type="checkbox" checked={checked} onChange={() => toggle(item.id)} className="h-4 w-4 shrink-0 accent-royal" />
+                      <span className="rounded-[6px] bg-surface px-1.5 py-0.5 font-mono text-[10.5px] font-bold">{item.serial}</span>
+                      <span className="min-w-0 flex-1 truncate font-bold">{item.title}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <aside className={cn(gvCard, 'h-fit p-3.5')}>
+          <div className="flex items-center gap-2">
+            <FilmIcon size={16} className="text-royal" />
+            <SectionTitle meta={`${selected.length}/${max}`}>Reel order</SectionTitle>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            {selected.length === 0 ? (
+              <p className="rounded-[12px] bg-surface p-4 text-center text-[11.5px] text-slate">Selected posts appear here.</p>
+            ) : selected.map((id, index) => {
+              const item = content.find((entry) => entry.id === id);
+              return (
+                <div key={id} className="flex h-10 items-center gap-2 rounded-[10px] border border-line pl-2 pr-1">
+                  <span className="w-5 text-center text-[11px] font-extrabold text-slate tabular-nums">{index + 1}</span>
+                  <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-ink">{item?.serial} · {item?.title}</span>
+                  <button type="button" onClick={() => move(index, -1)} aria-label="Move up" className={gvIconBtn}>
+                    <ArrowUpIcon size={14} />
+                  </button>
+                  <button type="button" onClick={() => move(index, 1)} aria-label="Move down" className={gvIconBtn}>
+                    <ArrowDownIcon size={14} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <button type="button" disabled={busy || selected.length < min || selected.length > max} onClick={() => void queue()} className={cn(swButton({ variant: 'primary', size: 'md' }), 'mt-3 w-full')}>
+            {busy ? 'Queuing…' : 'Queue posting pack'}
+          </button>
+          <p className="mt-2.5 text-[11px] leading-[1.45] text-slate">Girls’ Space is structurally excluded. The worker receives no phone number, exact address, or private identity.</p>
+        </aside>
+      </div>
+
+      <section>
+        <SectionTitle className="mb-2">Recent packs</SectionTitle>
+        <div className={cn(gvCard, 'overflow-hidden')}>
+          {packs.length === 0 ? (
+            <TableState icon={FilmIcon} title="No packs rendered yet." />
+          ) : (
+            <div>
+              {packs.map((pack) => (
+                <div key={pack.id} className={cn(gvRow, 'flex min-h-[44px] flex-wrap items-center gap-3 px-4 py-1.5')}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-mono text-[11.5px] font-bold">{pack.id}</p>
+                    <p className="text-[11px] text-slate tabular-nums">{pack.type} · {pack.templateId} · {new Date(pack.createdAt).toLocaleString()}</p>
+                  </div>
+                  <StatusTag tone={packTone(pack.status)}>{pack.status}</StatusTag>
+                  {pack.status === 'succeeded' && (
+                    <a href={`/api/godview/render-packs/${pack.id}/artifact?name=posting-pack.zip`} className={swButton({ variant: 'primary', size: 'sm' })}>
+                      <DownloadIcon size={14} />
+                      Download pack
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
 }

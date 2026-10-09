@@ -1,13 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { Tag, Plus, Edit, Trash2, MoreHorizontal, Percent, IndianRupee, Loader2, Copy } from 'lucide-react';
+import { IconTile, StatusLine, swButton } from '@/components/swoop/primitives';
+import { EditIcon, PlusIcon, RupeeIcon, TicketIcon, TrashIcon } from '@/components/swoop/icons';
 import type { Coupon, CouponDiscountType } from '@/types/models';
 import { useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils/cn';
@@ -17,6 +15,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { MoreIcon, PercentIcon } from '../icons';
+import { PageHead, TableState, gvCard, gvIconBtn, gvInput, gvLabel, gvMenu, gvMenuItem, gvRow, gvTableHead } from '../ui';
 
 const EMPTY_COUPON: Partial<Coupon> = {
     code: '',
@@ -117,21 +117,21 @@ export default function CouponsPage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-6rem)]">
-            <div className="flex items-center justify-between px-1 pb-4">
-                <div>
-                    <h1 className="text-lg font-semibold text-zinc-900 tracking-tight">Coupons</h1>
-                    <p className="text-xs text-zinc-500">Manage discount codes and promotions.</p>
-                </div>
-                <Button onClick={openCreate} size="sm" className="h-8 text-xs bg-zinc-900 hover:bg-zinc-800 text-white">
-                    <Plus className="h-3.5 w-3.5 mr-1.5" />
-                    New Coupon
-                </Button>
-            </div>
+        <div className="flex h-[calc(100vh-6rem)] flex-col">
+            <PageHead
+                title="Coupons"
+                description="Manage discount codes and promotions."
+                actions={
+                    <button type="button" onClick={openCreate} className={swButton({ variant: 'primary', size: 'sm' })}>
+                        <PlusIcon size={14} />
+                        New coupon
+                    </button>
+                }
+            />
 
-            <div className="flex-1 rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden flex flex-col">
-                <div className="grid grid-cols-12 gap-4 border-b border-zinc-100 bg-zinc-50/50 px-4 py-2 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">
-                    <div className="col-span-3 pl-8">Coupon Code</div>
+            <div className={cn(gvCard, 'flex flex-1 flex-col overflow-hidden')}>
+                <div className={cn(gvTableHead, 'grid grid-cols-12 gap-4 px-4 py-2')}>
+                    <div className="col-span-3 pl-10">Coupon code</div>
                     <div className="col-span-2">Value</div>
                     <div className="col-span-2">Constraints</div>
                     <div className="col-span-2">Usage</div>
@@ -139,72 +139,66 @@ export default function CouponsPage() {
                     <div className="col-span-1 text-right"></div>
                 </div>
 
-                <div className="overflow-y-auto flex-1">
+                <div className="flex-1 overflow-y-auto">
                     {loading ? (
-                        <div className="flex h-40 items-center justify-center">
-                            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
-                        </div>
+                        <TableState loading />
                     ) : coupons.length === 0 ? (
-                        <div className="flex h-40 flex-col items-center justify-center text-zinc-400">
-                            <Tag className="h-8 w-8 mb-2 opacity-20" />
-                            <p className="text-sm">No coupons yet</p>
-                        </div>
+                        <TableState icon={TicketIcon} title="No coupons yet" />
                     ) : (
-                        <div className="divide-y divide-zinc-50">
+                        <div>
                             {coupons.map((coupon) => (
-                                <div key={coupon.id} className={cn("group grid grid-cols-12 gap-4 items-center px-4 py-2 hover:bg-zinc-50/80 transition-colors text-[13px] relative min-h-[44px]", !coupon.active && "opacity-75 bg-zinc-50/30")}>
+                                <div
+                                    key={coupon.id}
+                                    className={cn(
+                                        gvRow,
+                                        'group grid min-h-[44px] grid-cols-12 items-center gap-4 px-4 py-1.5 transition-colors hover:bg-surface/60',
+                                        !coupon.active && 'text-slate'
+                                    )}
+                                >
                                     {/* Code */}
-                                    <div className="col-span-3 pl-4 flex items-center gap-3">
-                                        <div className="flex h-7 w-7 items-center justify-center rounded bg-indigo-50 text-indigo-600 border border-indigo-100">
-                                            <Tag className="h-3.5 w-3.5" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="font-mono font-medium text-zinc-900">{coupon.code}</span>
-                                        </div>
+                                    <div className="col-span-3 flex min-w-0 items-center gap-3">
+                                        <IconTile icon={TicketIcon} tone={coupon.active ? 'royal' : 'surface'} shape="square" size={28} iconSize={15} />
+                                        <span className="truncate font-mono text-[12.5px] font-bold">{coupon.code}</span>
                                     </div>
 
                                     {/* Value */}
-                                    <div className="col-span-2 font-medium text-zinc-700">
+                                    <div className="col-span-2 font-bold tabular-nums">
                                         {coupon.discountType === 'percentage' ? (
-                                            <span className="inline-flex items-center gap-1 text-emerald-600">
-                                                <Percent className="h-3 w-3" />
+                                            <span className="inline-flex items-center gap-1 text-go-text">
+                                                <PercentIcon size={13} />
                                                 {coupon.discountValue}%
                                             </span>
                                         ) : (
-                                            <span className="inline-flex items-center gap-1 text-emerald-600">
-                                                <IndianRupee className="h-3 w-3" />
+                                            <span className="inline-flex items-center gap-1 text-go-text">
+                                                <RupeeIcon size={13} />
                                                 {coupon.discountValue}
                                             </span>
                                         )}
                                     </div>
 
                                     {/* Constraints */}
-                                    <div className="col-span-2 flex flex-col text-[11px] text-zinc-500">
+                                    <div className="col-span-2 flex flex-col text-[11px] text-slate tabular-nums">
                                         {coupon.minOrderAmount ? <span>Min: ₹{coupon.minOrderAmount}</span> : null}
-                                        {coupon.maxDiscount ? <span>Max Off: ₹{coupon.maxDiscount}</span> : null}
-                                        {!coupon.minOrderAmount && !coupon.maxDiscount && <span className="text-zinc-400">-</span>}
+                                        {coupon.maxDiscount ? <span>Max off: ₹{coupon.maxDiscount}</span> : null}
+                                        {!coupon.minOrderAmount && !coupon.maxDiscount && <span>-</span>}
                                     </div>
 
                                     {/* Usage */}
-                                    <div className="col-span-2 text-zinc-600 text-xs">
-                                        <span className="font-medium text-zinc-900">{coupon.usageCount || 0}</span>
-                                        <span className="text-zinc-400 mx-1">/</span>
+                                    <div className="col-span-2 text-[12px] text-text-secondary tabular-nums">
+                                        <span className="font-bold text-ink">{coupon.usageCount || 0}</span>
+                                        <span className="mx-1 text-text-muted">/</span>
                                         <span>{coupon.usageLimit || '∞'}</span>
                                     </div>
 
                                     {/* Status */}
                                     <div className="col-span-2">
                                         <button
+                                            type="button"
                                             onClick={() => toggleActive(coupon)}
-                                            className={cn(
-                                                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors",
-                                                coupon.active
-                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100"
-                                                    : "bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-200"
-                                            )}
+                                            title={coupon.active ? 'Deactivate coupon' : 'Activate coupon'}
+                                            className="campus-press -ml-2 inline-flex h-7 items-center rounded-full px-2 transition-colors hover:bg-surface"
                                         >
-                                            <div className={cn("h-1.5 w-1.5 rounded-full", coupon.active ? "bg-emerald-500" : "bg-zinc-400")} />
-                                            {coupon.active ? 'Active' : 'Inactive'}
+                                            <StatusLine open={!!coupon.active} label={coupon.active ? 'Active' : 'Inactive'} />
                                         </button>
                                     </div>
 
@@ -212,17 +206,21 @@ export default function CouponsPage() {
                                     <div className="col-span-1 flex justify-end">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-600 hover:bg-zinc-100 transition-all">
-                                                    <MoreHorizontal className="h-3.5 w-3.5" />
-                                                </Button>
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Actions for ${coupon.code}`}
+                                                    className={cn(gvIconBtn, 'opacity-0 focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:bg-surface data-[state=open]:opacity-100')}
+                                                >
+                                                    <MoreIcon size={15} />
+                                                </button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-[140px]">
-                                                <DropdownMenuItem onClick={() => openEdit(coupon)} className="text-xs">
-                                                    <Edit className="h-3.5 w-3.5 mr-2 text-zinc-500" />
+                                            <DropdownMenuContent align="end" className={cn(gvMenu, 'w-[140px]')}>
+                                                <DropdownMenuItem onClick={() => openEdit(coupon)} className={gvMenuItem}>
+                                                    <EditIcon size={14} className="text-slate" />
                                                     Edit
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => deleteCoupon(coupon.id)} className="text-xs text-red-600 focus:text-red-700 focus:bg-red-50">
-                                                    <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                                <DropdownMenuItem onClick={() => deleteCoupon(coupon.id)} className={cn(gvMenuItem, 'text-market focus:bg-market-tint focus:text-market')}>
+                                                    <TrashIcon size={14} />
                                                     Delete
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
@@ -237,100 +235,109 @@ export default function CouponsPage() {
 
             {/* Create/Edit Dialog */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-w-md p-0 gap-0 overflow-hidden bg-white border-zinc-200">
-                    <DialogHeader className="px-6 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                        <DialogTitle className="text-sm font-semibold text-zinc-900">
-                            {editingCoupon?.id ? 'Edit Coupon' : 'Create New Coupon'}
+                <DialogContent className="max-w-md overflow-hidden rounded-[14px] border border-line p-0">
+                    <DialogHeader className="mb-0 border-b border-line px-5 py-3.5">
+                        <DialogTitle className="font-heading text-[16px] font-bold text-ink">
+                            {editingCoupon?.id ? 'Edit coupon' : 'Create new coupon'}
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="p-6 space-y-4">
-                        <div className="space-y-3">
+                    <div className="space-y-3 p-5">
+                        <div>
+                            <label htmlFor="coupon-code" className={gvLabel}>Coupon code</label>
+                            <div className="relative">
+                                <input
+                                    id="coupon-code"
+                                    value={editingCoupon?.code || ''}
+                                    onChange={(e) => setEditingCoupon((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                                    placeholder="e.g. SUMMER24"
+                                    className={cn(gvInput, 'pl-9 font-mono uppercase')}
+                                />
+                                <TicketIcon size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-xs font-medium text-zinc-700 mb-1 block">Coupon Code</label>
-                                <div className="relative">
-                                    <Input
-                                        value={editingCoupon?.code || ''}
-                                        onChange={(e) => setEditingCoupon((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                                        placeholder="e.g. SUMMER24"
-                                        className="font-mono text-sm uppercase pl-9"
-                                    />
-                                    <Tag className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
-                                </div>
+                                <label htmlFor="coupon-type" className={gvLabel}>Type</label>
+                                <select
+                                    id="coupon-type"
+                                    value={editingCoupon?.discountType || 'percentage'}
+                                    onChange={(e) => setEditingCoupon((prev) => ({ ...prev, discountType: e.target.value as CouponDiscountType }))}
+                                    className={cn(gvInput, 'cursor-pointer')}
+                                >
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="fixed">Fixed Amount (₹)</option>
+                                </select>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-xs font-medium text-zinc-700 mb-1 block">Type</label>
-                                    <select
-                                        value={editingCoupon?.discountType || 'percentage'}
-                                        onChange={(e) => setEditingCoupon((prev) => ({ ...prev, discountType: e.target.value as CouponDiscountType }))}
-                                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <option value="percentage">Percentage (%)</option>
-                                        <option value="fixed">Fixed Amount (₹)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-zinc-700 mb-1 block">Value</label>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={editingCoupon?.discountValue || ''}
-                                        onChange={(e) => setEditingCoupon((prev) => ({ ...prev, discountValue: parseFloat(e.target.value) || 0 }))}
-                                        className=""
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-xs font-medium text-zinc-700 mb-1 block">Min Order Amount</label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-2.5 text-zinc-400 text-xs">₹</span>
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            value={editingCoupon?.minOrderAmount || ''}
-                                            onChange={(e) => setEditingCoupon((prev) => ({ ...prev, minOrderAmount: parseFloat(e.target.value) || 0 }))}
-                                            placeholder="0"
-                                            className="pl-6"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-zinc-700 mb-1 block">Max Discount</label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-2.5 text-zinc-400 text-xs">₹</span>
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            value={editingCoupon?.maxDiscount || ''}
-                                            onChange={(e) => setEditingCoupon((prev) => ({ ...prev, maxDiscount: parseFloat(e.target.value) || undefined }))}
-                                            placeholder="No limit"
-                                            className="pl-6"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
                             <div>
-                                <label className="text-xs font-medium text-zinc-700 mb-1 block">Usage Limit</label>
-                                <Input
+                                <label htmlFor="coupon-value" className={gvLabel}>Value</label>
+                                <input
+                                    id="coupon-value"
                                     type="number"
                                     min="0"
-                                    value={editingCoupon?.usageLimit || ''}
-                                    onChange={(e) => setEditingCoupon((prev) => ({ ...prev, usageLimit: parseInt(e.target.value) || undefined }))}
-                                    placeholder="Leave empty for unlimited"
-                                    className=""
+                                    value={editingCoupon?.discountValue || ''}
+                                    onChange={(e) => setEditingCoupon((prev) => ({ ...prev, discountValue: parseFloat(e.target.value) || 0 }))}
+                                    className={cn(gvInput, 'tabular-nums')}
                                 />
                             </div>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label htmlFor="coupon-min" className={gvLabel}>Min order amount</label>
+                                <div className="relative">
+                                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate">₹</span>
+                                    <input
+                                        id="coupon-min"
+                                        type="number"
+                                        min="0"
+                                        value={editingCoupon?.minOrderAmount || ''}
+                                        onChange={(e) => setEditingCoupon((prev) => ({ ...prev, minOrderAmount: parseFloat(e.target.value) || 0 }))}
+                                        placeholder="0"
+                                        className={cn(gvInput, 'pl-7 tabular-nums')}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label htmlFor="coupon-max" className={gvLabel}>Max discount</label>
+                                <div className="relative">
+                                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-slate">₹</span>
+                                    <input
+                                        id="coupon-max"
+                                        type="number"
+                                        min="0"
+                                        value={editingCoupon?.maxDiscount || ''}
+                                        onChange={(e) => setEditingCoupon((prev) => ({ ...prev, maxDiscount: parseFloat(e.target.value) || undefined }))}
+                                        placeholder="No limit"
+                                        className={cn(gvInput, 'pl-7 tabular-nums')}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="coupon-limit" className={gvLabel}>Usage limit</label>
+                            <input
+                                id="coupon-limit"
+                                type="number"
+                                min="0"
+                                value={editingCoupon?.usageLimit || ''}
+                                onChange={(e) => setEditingCoupon((prev) => ({ ...prev, usageLimit: parseInt(e.target.value) || undefined }))}
+                                placeholder="Leave empty for unlimited"
+                                className={cn(gvInput, 'tabular-nums')}
+                            />
+                        </div>
                     </div>
-                    <DialogFooter className="px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                        <Button variant="outline" onClick={closeDialog} size="sm" className="text-xs h-8">Cancel</Button>
-                        <Button onClick={saveCoupon} disabled={saving || !editingCoupon?.code} size="sm" className="text-xs h-8 bg-zinc-900 hover:bg-zinc-800">
-                            {saving ? 'Saving...' : 'Save Coupon'}
-                        </Button>
+                    <DialogFooter className="mt-0 border-t border-line px-5 py-3">
+                        <button type="button" onClick={closeDialog} className={swButton({ variant: 'surface', size: 'sm' })}>Cancel</button>
+                        <button
+                            type="button"
+                            onClick={saveCoupon}
+                            disabled={saving || !editingCoupon?.code}
+                            className={swButton({ variant: 'primary', size: 'sm' })}
+                        >
+                            {saving ? 'Saving...' : 'Save coupon'}
+                        </button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

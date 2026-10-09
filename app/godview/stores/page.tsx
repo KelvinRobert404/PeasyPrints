@@ -1,12 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { Store, Clock, MapPin, Edit2, Check, X, Loader2, GraduationCap } from 'lucide-react';
 import type { Shop, College } from '@/types/models';
 import { cn } from '@/lib/utils/cn';
 import {
@@ -16,6 +12,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { StatusLine } from '@/components/swoop/primitives';
+import { CheckIcon, ClockIcon, CloseIcon, EditIcon, PinIcon, StoreIcon } from '@/components/swoop/icons';
+import { CapIcon } from '../icons';
+import { PageHead, Spinner, TableState, gvCard, gvIconBtn, gvInput, gvMenu, gvRow, gvTableHead } from '../ui';
+
+/** Compact (28px) variant of the Godview surface input for inline row editing. */
+const EDIT_INPUT = cn(gvInput, 'h-7 min-w-0 rounded-[8px] bg-white px-2 text-[12px]');
 
 export default function StoresPage() {
     const [shops, setShops] = useState<Shop[]>([]);
@@ -106,40 +109,31 @@ export default function StoresPage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-6rem)]">
-            <div className="flex items-center justify-between px-1 pb-4">
-                <div>
-                    <h1 className="text-lg font-semibold text-zinc-900 tracking-tight">Stores</h1>
-                    <p className="text-xs text-zinc-500">Manage store details and operation status.</p>
-                </div>
-                <div className="text-xs text-zinc-500 font-medium">
-                    {shops.length} Active Stores
-                </div>
-            </div>
+        <div className="flex h-[calc(100vh-6rem)] flex-col">
+            <PageHead
+                title="Stores"
+                description="Manage store details and operation status."
+                actions={<span className="text-[12px] font-bold text-slate tabular-nums">{shops.length} Active Stores</span>}
+            />
 
-            <div className="flex-1 rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden flex flex-col">
-                <div className="grid grid-cols-12 gap-4 border-b border-zinc-100 bg-zinc-50/50 px-4 py-2 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">
-                    <div className="col-span-2 pl-8">Store Name</div>
+            <div className={cn(gvCard, 'flex min-h-0 flex-1 flex-col overflow-hidden')}>
+                <div className={cn(gvTableHead, 'grid grid-cols-12 gap-4 px-4 py-2')}>
+                    <div className="col-span-2 pl-10">Store name</div>
                     <div className="col-span-3">Address</div>
                     <div className="col-span-2">College</div>
                     <div className="col-span-2">Timings</div>
                     <div className="col-span-1">Status</div>
-                    <div className="col-span-1">Fee</div>
+                    <div className="col-span-1 text-right">Fee</div>
                     <div className="col-span-1 text-right">Actions</div>
                 </div>
 
-                <div className="overflow-y-auto flex-1">
+                <div className="flex-1 overflow-y-auto">
                     {loading ? (
-                        <div className="flex h-40 items-center justify-center">
-                            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
-                        </div>
+                        <TableState loading />
                     ) : shops.length === 0 ? (
-                        <div className="flex h-40 flex-col items-center justify-center text-zinc-400">
-                            <Store className="h-8 w-8 mb-2 opacity-20" />
-                            <p className="text-sm">No stores found</p>
-                        </div>
+                        <TableState icon={StoreIcon} title="No stores found" />
                     ) : (
-                        <div className="divide-y divide-zinc-50">
+                        <div>
                             {shops.map((shop) => {
                                 const isEditing = editingId === shop.id;
                                 const collegeName = getCollegeName(shop.collegeId);
@@ -147,38 +141,37 @@ export default function StoresPage() {
                                     <div
                                         key={shop.id}
                                         className={cn(
-                                            "group grid grid-cols-12 gap-4 items-center px-4 py-2 transition-colors text-[13px] relative min-h-[44px]",
-                                            isEditing ? "bg-indigo-50/30" : "hover:bg-zinc-50/80"
+                                            gvRow,
+                                            'group grid min-h-[44px] grid-cols-12 items-center gap-4 px-4 py-1.5 transition-colors',
+                                            isEditing ? 'bg-royal-tint/40' : 'hover:bg-surface/60'
                                         )}
                                     >
-                                        {!isEditing && (
-                                            <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        )}
-
                                         {/* Name */}
-                                        <div className="col-span-2 pl-4 flex items-center gap-3">
-                                            <div className="flex h-7 w-7 items-center justify-center rounded bg-zinc-100 text-zinc-500 border border-zinc-200/50 text-[10px] font-bold">
+                                        <div className="col-span-2 flex min-w-0 items-center gap-3">
+                                            <div className="grid h-7 w-7 shrink-0 place-items-center rounded-[8px] bg-surface text-[10.5px] font-extrabold text-text-secondary">
                                                 {shop.name.charAt(0)}
                                             </div>
                                             {isEditing ? (
-                                                <Input
+                                                <input
+                                                    aria-label="Store name"
                                                     value={editForm.name || ''}
                                                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                                    className="h-7 text-xs"
+                                                    className={EDIT_INPUT}
                                                 />
                                             ) : (
-                                                <span className="font-medium text-zinc-900 truncate">{shop.name}</span>
+                                                <span className="truncate font-bold text-ink">{shop.name}</span>
                                             )}
                                         </div>
 
                                         {/* Address */}
-                                        <div className="col-span-3 flex items-center gap-2 text-zinc-600">
-                                            <MapPin className="h-3 w-3 text-zinc-400 flex-shrink-0" />
+                                        <div className="col-span-3 flex min-w-0 items-center gap-1.5 text-text-secondary">
+                                            <PinIcon size={14} className="shrink-0 text-slate" />
                                             {isEditing ? (
-                                                <Input
+                                                <input
+                                                    aria-label="Store address"
                                                     value={editForm.address || ''}
                                                     onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                                                    className="h-7 text-xs w-full"
+                                                    className={EDIT_INPUT}
                                                 />
                                             ) : (
                                                 <span className="truncate">{shop.address || 'No address'}</span>
@@ -186,50 +179,52 @@ export default function StoresPage() {
                                         </div>
 
                                         {/* College */}
-                                        <div className="col-span-2 flex items-center gap-2 text-zinc-600">
+                                        <div className="col-span-2 flex min-w-0 items-center gap-2">
                                             {isEditing ? (
                                                 <Select
                                                     value={editForm.collegeId || ''}
                                                     onValueChange={(value) => setEditForm({ ...editForm, collegeId: value })}
                                                 >
-                                                    <SelectTrigger className="h-7 text-xs">
+                                                    <SelectTrigger className="h-7 rounded-[8px] border-transparent bg-white px-2 text-[12px] font-semibold text-ink focus:border-royal focus:ring-[3px] focus:ring-royal/15 focus:ring-offset-0">
                                                         <SelectValue placeholder="Select college" />
                                                     </SelectTrigger>
-                                                    <SelectContent>
+                                                    <SelectContent className={gvMenu}>
                                                         {colleges.map((college) => (
-                                                            <SelectItem key={college.id} value={college.id}>
+                                                            <SelectItem key={college.id} value={college.id} className="rounded-[8px] text-[12px] font-semibold text-ink focus:bg-surface">
                                                                 {college.shortName || college.name}
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
                                             ) : collegeName ? (
-                                                <Badge variant="outline" className="gap-1 text-[10px] font-normal">
-                                                    <GraduationCap className="h-2.5 w-2.5" />
-                                                    {collegeName}
-                                                </Badge>
+                                                <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-surface px-2 py-0.5 text-[11px] font-semibold text-ink">
+                                                    <CapIcon size={13} className="shrink-0 text-slate" />
+                                                    <span className="truncate">{collegeName}</span>
+                                                </span>
                                             ) : (
-                                                <span className="text-zinc-400 text-xs">Not assigned</span>
+                                                <span className="text-[11.5px] text-slate">Not assigned</span>
                                             )}
                                         </div>
 
                                         {/* Timings */}
-                                        <div className="col-span-2 flex items-center gap-2 text-zinc-600 font-mono text-xs">
-                                            <Clock className="h-3 w-3 text-zinc-400 flex-shrink-0" />
+                                        <div className="col-span-2 flex min-w-0 items-center gap-1.5 text-[12px] tabular-nums text-text-secondary">
+                                            <ClockIcon size={14} className="shrink-0 text-slate" />
                                             {isEditing ? (
                                                 <div className="flex items-center gap-1">
-                                                    <Input
+                                                    <input
                                                         type="time"
+                                                        aria-label="Opening time"
                                                         value={editForm.openingTime || ''}
                                                         onChange={(e) => setEditForm({ ...editForm, openingTime: e.target.value })}
-                                                        className="h-7 w-[60px] text-[10px] px-1"
+                                                        className={cn(EDIT_INPUT, 'w-[68px] px-1 text-[11px]')}
                                                     />
-                                                    <span className="text-zinc-400">-</span>
-                                                    <Input
+                                                    <span className="text-slate">-</span>
+                                                    <input
                                                         type="time"
+                                                        aria-label="Closing time"
                                                         value={editForm.closingTime || ''}
                                                         onChange={(e) => setEditForm({ ...editForm, closingTime: e.target.value })}
-                                                        className="h-7 w-[60px] text-[10px] px-1"
+                                                        className={cn(EDIT_INPUT, 'w-[68px] px-1 text-[11px]')}
                                                     />
                                                 </div>
                                             ) : (
@@ -240,21 +235,17 @@ export default function StoresPage() {
                                         {/* Status */}
                                         <div className="col-span-1">
                                             <button
+                                                type="button"
                                                 onClick={() => toggleOpen(shop)}
-                                                className={cn(
-                                                    "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors",
-                                                    shop.isOpen
-                                                        ? "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100"
-                                                        : "bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-200"
-                                                )}
+                                                title={shop.isOpen ? 'Mark closed' : 'Mark open'}
+                                                className="campus-press -ml-2 inline-flex h-7 items-center rounded-full px-2 transition-colors hover:bg-surface"
                                             >
-                                                <div className={cn("h-1.5 w-1.5 rounded-full", shop.isOpen ? "bg-emerald-500" : "bg-zinc-400")} />
-                                                {shop.isOpen ? 'Open' : 'Closed'}
+                                                <StatusLine open={!!shop.isOpen} label={shop.isOpen ? 'Open' : 'Closed'} />
                                             </button>
                                         </div>
 
                                         {/* Fee */}
-                                        <div className="col-span-1 text-zinc-600 tabular-nums">
+                                        <div className="col-span-1 text-right font-bold tabular-nums">
                                             ₹{shop.pricing?.convenienceFee ?? 0}
                                         </div>
 
@@ -262,34 +253,34 @@ export default function StoresPage() {
                                         <div className="col-span-1 flex justify-end">
                                             {isEditing ? (
                                                 <div className="flex items-center gap-1">
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        className="h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                                    <button
+                                                        type="button"
+                                                        aria-label="Save store"
+                                                        className={cn(gvIconBtn, 'text-go-text hover:bg-go-tint hover:text-go-text')}
                                                         onClick={saveEdit}
                                                         disabled={saving}
                                                     >
-                                                        <Check className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        className="h-6 w-6 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
+                                                        {saving ? <Spinner label="Saving" className="h-3.5 w-3.5" /> : <CheckIcon size={14} />}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        aria-label="Cancel editing"
+                                                        className={gvIconBtn}
                                                         onClick={cancelEdit}
                                                         disabled={saving}
                                                     >
-                                                        <X className="h-3.5 w-3.5" />
-                                                    </Button>
+                                                        <CloseIcon size={14} />
+                                                    </button>
                                                 </div>
                                             ) : (
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    className="h-6 w-6 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Edit ${shop.name}`}
+                                                    className={cn(gvIconBtn, 'opacity-0 hover:bg-royal-tint hover:text-royal focus-visible:opacity-100 group-hover:opacity-100')}
                                                     onClick={() => startEdit(shop)}
                                                 >
-                                                    <Edit2 className="h-3.5 w-3.5" />
-                                                </Button>
+                                                    <EditIcon size={14} />
+                                                </button>
                                             )}
                                         </div>
                                     </div>

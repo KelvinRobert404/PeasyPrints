@@ -1,12 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, doc, updateDoc, query, orderBy } from 'firebase/firestore';
-import { FileCheck, CheckCircle2, XCircle, Clock, Eye, ExternalLink, Tag, MapPin, Loader2, MoreHorizontal, AlertCircle, Search } from 'lucide-react';
 import type { Listing, ListingStatus } from '@/types/models';
 import { useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils/cn';
@@ -17,12 +14,16 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import { Segmented, swButton } from '@/components/swoop/primitives';
+import { CheckIcon, CloseIcon, ImageIcon, MarketIcon, SearchIcon } from '@/components/swoop/icons';
+import { EyeIcon, EyeOffIcon, MoreIcon } from '../icons';
+import { PageHead, SectionTitle, StatusTag, TableState, gvCard, gvIconBtn, gvMenu, gvMenuItem, gvRow, gvTableHead, type StatusTone } from '../ui';
 
-const STATUS_STYLES: Record<ListingStatus, { bg: string; text: string; label: string; icon: any }> = {
-    pending_moderation: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pending', icon: Clock },
-    active: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Active', icon: CheckCircle2 },
-    hidden: { bg: 'bg-zinc-100', text: 'text-zinc-700', label: 'Hidden', icon: Eye },
-    removed: { bg: 'bg-rose-50', text: 'text-rose-700', label: 'Removed', icon: XCircle },
+const STATUS_STYLES: Record<ListingStatus, { label: string; tone: StatusTone }> = {
+    pending_moderation: { label: 'Pending', tone: 'slate' },
+    active: { label: 'Active', tone: 'go' },
+    hidden: { label: 'Hidden', tone: 'slate' },
+    removed: { label: 'Removed', tone: 'market' },
 };
 
 export default function ListingsPage() {
@@ -93,154 +94,146 @@ export default function ListingsPage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-6rem)]">
-            <div className="flex items-center justify-between px-1 pb-4">
-                <div>
-                    <h1 className="text-lg font-semibold text-zinc-900 tracking-tight">Listing Moderation</h1>
-                    <p className="text-xs text-zinc-500">Review and moderate marketplace content.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
-                        <input
-                            type="text"
-                            placeholder="Search listings..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="h-8 w-64 rounded-md border border-zinc-200 bg-white pl-8 pr-3 text-xs text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-100/50 transition-all shadow-sm"
+        <div className="flex h-[calc(100vh-6rem)] flex-col">
+            <PageHead
+                title="Listing moderation"
+                description="Review and moderate marketplace content."
+                actions={
+                    <>
+                        <label className="flex h-8 w-64 items-center gap-2 rounded-full bg-surface pl-3 pr-3 transition-shadow focus-within:ring-[3px] focus-within:ring-royal/15">
+                            <SearchIcon size={14} className="shrink-0 text-ink" />
+                            <input
+                                type="text"
+                                aria-label="Search listings"
+                                placeholder="Search listings..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="min-w-0 flex-1 bg-transparent text-[12px] font-semibold text-ink outline-none placeholder:font-medium placeholder:text-slate"
+                            />
+                        </label>
+                        <Segmented
+                            label="Filter listings"
+                            value={filter}
+                            onChange={setFilter}
+                            className="w-[380px]"
+                            options={(['all', 'pending', 'active', 'removed'] as const).map((f) => ({
+                                value: f,
+                                label: (
+                                    <>
+                                        {f.charAt(0).toUpperCase() + f.slice(1)}
+                                        <span className="ml-1 font-semibold text-slate tabular-nums">
+                                            {f === 'all' ? listings.length : f === 'pending' ? pendingCount : f === 'active' ? activeCount : listings.length - pendingCount - activeCount}
+                                        </span>
+                                    </>
+                                ),
+                            }))}
                         />
-                    </div>
-                    <div className="flex bg-zinc-100/50 p-0.5 rounded-lg border border-zinc-200/50">
-                        {(['all', 'pending', 'active', 'removed'] as const).map((f) => (
-                            <button
-                                key={f}
-                                onClick={() => setFilter(f)}
-                                className={cn(
-                                    "px-3 py-1 text-[11px] font-medium rounded-md transition-all",
-                                    filter === f
-                                        ? "bg-white text-zinc-900 shadow-sm border border-zinc-200/50"
-                                        : "text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100"
-                                )}
-                            >
-                                {f.charAt(0).toUpperCase() + f.slice(1)}
-                                <span className="ml-1.5 opacity-60">
-                                    {f === 'all' ? listings.length : f === 'pending' ? pendingCount : f === 'active' ? activeCount : listings.length - pendingCount - activeCount}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
+                    </>
+                }
+            />
 
-            <div className="flex-1 rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden flex flex-col">
-                <div className="grid grid-cols-12 gap-4 border-b border-zinc-100 bg-zinc-50/50 px-4 py-2 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">
-                    <div className="col-span-5 pl-8">Listing</div>
+            <div className={cn(gvCard, 'flex min-h-0 flex-1 flex-col overflow-hidden')}>
+                <div className={cn(gvTableHead, 'grid grid-cols-12 gap-4 px-4 py-2')}>
+                    <div className="col-span-5 pl-11">Listing</div>
                     <div className="col-span-2">Price</div>
                     <div className="col-span-2">Date</div>
                     <div className="col-span-2">Status</div>
                     <div className="col-span-1 text-right"></div>
                 </div>
 
-                <div className="overflow-y-auto flex-1">
+                <div className="flex-1 overflow-y-auto">
                     {loading ? (
-                        <div className="flex h-40 items-center justify-center">
-                            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
-                        </div>
+                        <TableState loading />
                     ) : filtered.length === 0 ? (
-                        <div className="flex h-40 flex-col items-center justify-center text-zinc-400">
-                            <FileCheck className="h-8 w-8 mb-2 opacity-20" />
-                            <p className="text-sm">No listings found</p>
-                        </div>
+                        <TableState icon={MarketIcon} title="No listings found" />
                     ) : (
-                        <div className="divide-y divide-zinc-50">
+                        <div>
                             {filtered.map((listing) => {
                                 const style = STATUS_STYLES[listing.status];
-                                const StatusIcon = style.icon;
                                 return (
-                                    <div key={listing.id} className="group grid grid-cols-12 gap-4 items-center px-4 py-2 hover:bg-zinc-50/80 transition-colors text-[13px] relative min-h-[56px]">
+                                    <div key={listing.id} className={cn(gvRow, 'group grid min-h-[44px] grid-cols-12 items-center gap-4 px-4 py-1.5 transition-colors hover:bg-surface/60')}>
                                         {/* Listing Info */}
-                                        <div className="col-span-5 pl-4 flex items-center gap-3">
-                                            <div className="flex-shrink-0 h-10 w-10 rounded bg-zinc-100 border border-zinc-200 overflow-hidden">
+                                        <div className="col-span-5 flex min-w-0 items-center gap-3">
+                                            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-[10px] bg-surface">
                                                 {listing.images?.[0] ? (
                                                     <img src={listing.images[0]} alt="" className="h-full w-full object-cover" />
                                                 ) : (
-                                                    <div className="flex h-full items-center justify-center text-zinc-300">
-                                                        <FileCheck className="h-4 w-4" />
+                                                    <div className="grid h-full place-items-center text-text-muted">
+                                                        <ImageIcon size={15} />
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="flex flex-col min-w-0">
-                                                <span
-                                                    className="font-medium text-zinc-900 truncate cursor-pointer hover:underline decoration-zinc-400 underline-offset-2"
+                                            <div className="flex min-w-0 flex-col items-start">
+                                                <button
+                                                    type="button"
+                                                    className="max-w-full truncate text-left font-bold text-ink decoration-slate underline-offset-2 hover:underline"
                                                     onClick={() => handlePreview(listing)}
                                                 >
                                                     {listing.title}
-                                                </span>
-                                                <div className="flex items-center gap-1.5 text-zinc-500 text-[11px]">
-                                                    <Badge variant="secondary" className="px-1 py-0 h-4 text-[9px] font-normal border-zinc-200 bg-zinc-50 text-zinc-500">
+                                                </button>
+                                                <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-slate">
+                                                    <span className="shrink-0 rounded-full bg-surface px-1.5 py-px text-[10px] font-semibold text-text-secondary">
                                                         {listing.category}
-                                                    </Badge>
-                                                    <span className="truncate max-w-[120px]">{listing.location?.area || listing.collegeName}</span>
+                                                    </span>
+                                                    <span className="max-w-[160px] truncate">{listing.location?.area || listing.collegeName}</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Price */}
-                                        <div className="col-span-2 text-zinc-700 font-medium tabular-nums">
+                                        <div className="col-span-2 font-bold tabular-nums">
                                             {listing.price ? `₹${listing.price}` : '-'}
                                         </div>
 
                                         {/* Date */}
-                                        <div className="col-span-2 text-zinc-500 text-[11px]">
+                                        <div className="col-span-2 text-[11.5px] text-slate tabular-nums">
                                             {formatDate(listing.createdAt)}
                                         </div>
 
                                         {/* Status */}
                                         <div className="col-span-2">
-                                            <div className={cn(
-                                                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border",
-                                                style.bg, style.text, "border-opacity-50"
-                                            )}>
-                                                <StatusIcon className="h-3 w-3" />
-                                                {style.label}
-                                            </div>
+                                            <StatusTag tone={style.tone}>{style.label}</StatusTag>
                                         </div>
 
                                         {/* Actions */}
                                         <div className="col-span-1 flex justify-end">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-600 hover:bg-zinc-100 transition-all">
-                                                        <MoreHorizontal className="h-3.5 w-3.5" />
-                                                    </Button>
+                                                    <button
+                                                        type="button"
+                                                        aria-label={`Actions for ${listing.title}`}
+                                                        className={cn(gvIconBtn, 'opacity-0 focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:bg-surface data-[state=open]:opacity-100')}
+                                                    >
+                                                        <MoreIcon size={15} />
+                                                    </button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-[140px]">
-                                                    <DropdownMenuItem onClick={() => handlePreview(listing)} className="text-xs">
-                                                        <Eye className="h-3.5 w-3.5 mr-2 text-zinc-500" />
+                                                <DropdownMenuContent align="end" className={cn(gvMenu, 'w-[140px]')}>
+                                                    <DropdownMenuItem onClick={() => handlePreview(listing)} className={gvMenuItem}>
+                                                        <EyeIcon size={14} className="text-slate" />
                                                         Preview
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuSeparator className="bg-line" />
                                                     {listing.status === 'pending_moderation' && (
                                                         <>
-                                                            <DropdownMenuItem onClick={() => updateStatus(listing.id, 'active')} className="text-xs text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50">
-                                                                <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
+                                                            <DropdownMenuItem onClick={() => updateStatus(listing.id, 'active')} className={cn(gvMenuItem, 'text-go-text focus:bg-go-tint focus:text-go-text')}>
+                                                                <CheckIcon size={14} />
                                                                 Approve
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => updateStatus(listing.id, 'removed')} className="text-xs text-rose-600 focus:text-rose-700 focus:bg-rose-50">
-                                                                <XCircle className="h-3.5 w-3.5 mr-2" />
+                                                            <DropdownMenuItem onClick={() => updateStatus(listing.id, 'removed')} className={cn(gvMenuItem, 'text-market focus:bg-market-tint focus:text-market')}>
+                                                                <CloseIcon size={14} />
                                                                 Reject
                                                             </DropdownMenuItem>
                                                         </>
                                                     )}
                                                     {listing.status === 'active' && (
-                                                        <DropdownMenuItem onClick={() => updateStatus(listing.id, 'hidden')} className="text-xs text-amber-600 focus:text-amber-700 focus:bg-amber-50">
-                                                            <Eye className="h-3.5 w-3.5 mr-2" />
+                                                        <DropdownMenuItem onClick={() => updateStatus(listing.id, 'hidden')} className={gvMenuItem}>
+                                                            <EyeOffIcon size={14} className="text-slate" />
                                                             Hide
                                                         </DropdownMenuItem>
                                                     )}
                                                     {(listing.status === 'removed' || listing.status === 'hidden') && (
-                                                        <DropdownMenuItem onClick={() => updateStatus(listing.id, 'active')} className="text-xs text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50">
-                                                            <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
+                                                        <DropdownMenuItem onClick={() => updateStatus(listing.id, 'active')} className={cn(gvMenuItem, 'text-go-text focus:bg-go-tint focus:text-go-text')}>
+                                                            <CheckIcon size={14} />
                                                             Restore
                                                         </DropdownMenuItem>
                                                     )}
@@ -257,81 +250,78 @@ export default function ListingsPage() {
 
             {/* Preview Sheet */}
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0 border-l border-zinc-200 overflow-y-auto">
+                <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0 border-l border-line overflow-y-auto">
                     {previewListing && (
                         <div>
-                            <div className="relative h-64 bg-zinc-100">
+                            <div className="relative h-64 bg-surface">
                                 {previewListing.images?.[0] ? (
-                                    <img src={previewListing.images[0]} alt={previewListing.title} className="w-full h-full object-cover" />
+                                    <img src={previewListing.images[0]} alt={previewListing.title} className="h-full w-full object-cover" />
                                 ) : (
-                                    <div className="flex h-full items-center justify-center text-zinc-300">
-                                        <FileCheck className="h-16 w-16 opacity-50" />
+                                    <div className="grid h-full place-items-center text-text-muted">
+                                        <ImageIcon size={40} />
                                     </div>
                                 )}
-                                <div className="absolute top-4 left-4">
-                                    <div className={cn(
-                                        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border bg-white/90 backdrop-blur shadow-sm",
-                                        STATUS_STYLES[previewListing.status].text
-                                    )}>
+                                <div className="absolute left-3 top-3">
+                                    <StatusTag tone={STATUS_STYLES[previewListing.status].tone} className="shadow-[0_1px_3px_rgba(16,24,40,0.10)]">
                                         {STATUS_STYLES[previewListing.status].label}
-                                    </div>
+                                    </StatusTag>
                                 </div>
                             </div>
 
-                            <div className="p-6 space-y-6">
+                            <div className="space-y-4 p-4">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-zinc-900">{previewListing.title}</h2>
-                                    <div className="flex items-center gap-2 mt-2 text-sm text-zinc-500">
-                                        <Badge variant="secondary" className="bg-zinc-100 text-zinc-600 border-zinc-200 font-normal">{previewListing.category}</Badge>
-                                        <span>•</span>
-                                        <span className="font-medium text-emerald-600 text-base">₹{previewListing.price}</span>
+                                    <h2 className="font-heading text-[16px] leading-[1.15] text-ink">{previewListing.title}</h2>
+                                    <div className="mt-1.5 flex items-center gap-2 text-[12px] text-slate">
+                                        <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-semibold text-text-secondary">{previewListing.category}</span>
+                                        <span aria-hidden="true">•</span>
+                                        <span className="text-[13px] font-bold text-ink tabular-nums">₹{previewListing.price}</span>
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <div className="bg-zinc-50 p-4 rounded-lg border border-zinc-100 space-y-3">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-zinc-500">Location</span>
-                                            <span className="font-medium text-zinc-900">{previewListing.location?.area || previewListing.collegeName}</span>
+                                <div className="space-y-3.5">
+                                    <dl className="space-y-2 rounded-[12px] bg-surface p-3 text-[12.5px]">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <dt className="text-slate">Location</dt>
+                                            <dd className="truncate font-bold text-ink">{previewListing.location?.area || previewListing.collegeName}</dd>
                                         </div>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-zinc-500">Posted by</span>
-                                            <span className="font-medium text-zinc-900">{previewListing.authorName || 'Unknown'}</span>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <dt className="text-slate">Posted by</dt>
+                                            <dd className="truncate font-bold text-ink">{previewListing.authorName || 'Unknown'}</dd>
                                         </div>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-zinc-500">Date</span>
-                                            <span className="font-medium text-zinc-900">{formatDate(previewListing.createdAt)}</span>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <dt className="text-slate">Date</dt>
+                                            <dd className="font-bold text-ink tabular-nums">{formatDate(previewListing.createdAt)}</dd>
                                         </div>
-                                    </div>
+                                    </dl>
 
                                     <div>
-                                        <h3 className="text-sm font-medium text-zinc-900 mb-2">Description</h3>
-                                        <p className="text-sm text-zinc-600 leading-relaxed whitespace-pre-wrap">
+                                        <SectionTitle className="mb-1.5">Description</SectionTitle>
+                                        <p className="whitespace-pre-wrap text-[12.5px] leading-[1.5] text-text-secondary">
                                             {previewListing.description || 'No description provided.'}
                                         </p>
                                     </div>
 
                                     {previewListing.tags && previewListing.tags.length > 0 && (
                                         <div>
-                                            <h3 className="text-sm font-medium text-zinc-900 mb-2">Tags</h3>
-                                            <div className="flex flex-wrap gap-2">
+                                            <SectionTitle className="mb-1.5">Tags</SectionTitle>
+                                            <div className="flex flex-wrap gap-1.5">
                                                 {previewListing.tags.map(tag => (
-                                                    <Badge key={tag} variant="outline" className="text-zinc-500 border-zinc-200 font-normal">{tag}</Badge>
+                                                    <span key={tag} className="inline-flex h-[22px] items-center rounded-full bg-surface px-2 text-[11px] font-semibold text-ink">{tag}</span>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="border-t border-zinc-100 pt-6 flex gap-3">
+                                <div className="flex gap-2 border-t border-line pt-4">
                                     {previewListing.status === 'pending_moderation' && (
                                         <>
-                                            <Button onClick={() => { updateStatus(previewListing.id, 'active'); setSheetOpen(false); }} className="flex-1 bg-emerald-600 hover:bg-emerald-700">Approve</Button>
-                                            <Button onClick={() => { updateStatus(previewListing.id, 'removed'); setSheetOpen(false); }} variant="outline" className="flex-1 text-rose-600 border-rose-200 hover:bg-rose-50">Reject</Button>
+                                            <button type="button" onClick={() => { updateStatus(previewListing.id, 'active'); setSheetOpen(false); }} className={cn(swButton({ variant: 'primary', size: 'md' }), 'flex-1')}>Approve</button>
+                                            <button type="button" onClick={() => { updateStatus(previewListing.id, 'removed'); setSheetOpen(false); }} className={cn(swButton({ variant: 'danger', size: 'md' }), 'flex-1')}>Reject</button>
                                         </>
                                     )}
                                     {previewListing.status !== 'pending_moderation' && (
-                                        <Button variant="outline" onClick={() => setSheetOpen(false)} className="w-full">Close Preview</Button>
+                                        <button type="button" onClick={() => setSheetOpen(false)} className={cn(swButton({ variant: 'surface', size: 'md' }), 'w-full')}>Close Preview</button>
                                     )}
                                 </div>
                             </div>

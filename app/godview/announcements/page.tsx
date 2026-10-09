@@ -13,9 +13,11 @@ import {
     orderBy,
     serverTimestamp,
 } from 'firebase/firestore';
-import { Plus, Trash2, GripVertical, Eye, EyeOff, ImageIcon, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { EmptyState, swButton } from '@/components/swoop/primitives';
+import { ImageIcon, InfoIcon, PlusIcon, TrashIcon } from '@/components/swoop/icons';
+import { cn } from '@/lib/utils/cn';
+import { ArrowDownIcon, ArrowUpIcon, EyeIcon, EyeOffIcon } from '../icons';
+import { PageHead, SectionTitle, Spinner, StatusTag, gvCard, gvIconBtn, gvInput, gvLabel } from '../ui';
 
 type Announcement = {
     id: string;
@@ -142,7 +144,7 @@ export default function AnnouncementsPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+                <Spinner className="h-5 w-5" />
             </div>
         );
     }
@@ -150,49 +152,59 @@ export default function AnnouncementsPage() {
     return (
         <div className="max-w-3xl">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-xl font-bold text-zinc-900">Announcements</h1>
-                    <p className="text-sm text-zinc-500 mt-0.5">Manage homepage carousel slides</p>
-                </div>
-                <Button
-                    onClick={() => setShowAddForm(true)}
-                    className="gap-2"
-                    disabled={showAddForm}
-                >
-                    <Plus className="h-4 w-4" />
-                    Add Slide
-                </Button>
-            </div>
+            <PageHead
+                title="Announcements"
+                description="Manage homepage carousel slides."
+                actions={
+                    <button
+                        type="button"
+                        onClick={() => setShowAddForm(true)}
+                        className={swButton({ variant: 'primary', size: 'sm' })}
+                        disabled={showAddForm}
+                    >
+                        <PlusIcon size={14} />
+                        Add slide
+                    </button>
+                }
+            />
 
             {/* Add Form */}
             {showAddForm && (
-                <div className="mb-6 p-4 bg-white border border-zinc-200 rounded-xl shadow-sm">
-                    <h3 className="text-sm font-semibold text-zinc-900 mb-3">Add New Slide</h3>
+                <div className={cn(gvCard, 'mb-3 p-4')}>
+                    <SectionTitle className="mb-3">Add new slide</SectionTitle>
                     <div className="space-y-3">
                         <div>
-                            <label className="block text-xs font-medium text-zinc-600 mb-1">Image URL</label>
-                            <Input
+                            <label htmlFor="announcement-image" className={gvLabel}>Image URL</label>
+                            <input
+                                id="announcement-image"
                                 placeholder="https://example.com/image.jpg"
                                 value={newImageUrl}
                                 onChange={(e) => setNewImageUrl(e.target.value)}
+                                className={gvInput}
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-zinc-600 mb-1">Alt Text (optional)</label>
-                            <Input
+                            <label htmlFor="announcement-alt" className={gvLabel}>Alt text (optional)</label>
+                            <input
+                                id="announcement-alt"
                                 placeholder="Describe the image"
                                 value={newAlt}
                                 onChange={(e) => setNewAlt(e.target.value)}
+                                className={gvInput}
                             />
                         </div>
-                        <div className="flex gap-2 pt-2">
-                            <Button onClick={handleAdd} disabled={saving || !newImageUrl.trim()}>
-                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Slide'}
-                            </Button>
-                            <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                        <div className="flex gap-2 pt-1">
+                            <button
+                                type="button"
+                                onClick={handleAdd}
+                                disabled={saving || !newImageUrl.trim()}
+                                className={swButton({ variant: 'primary', size: 'sm' })}
+                            >
+                                {saving ? <Spinner label="Adding" className="h-3.5 w-3.5 border-white/40 border-t-white" /> : 'Add slide'}
+                            </button>
+                            <button type="button" onClick={() => setShowAddForm(false)} className={swButton({ variant: 'surface', size: 'sm' })}>
                                 Cancel
-                            </Button>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -200,84 +212,82 @@ export default function AnnouncementsPage() {
 
             {/* Slides List */}
             {announcements.length === 0 ? (
-                <div className="text-center py-16 bg-zinc-50 rounded-xl border-2 border-dashed border-zinc-200">
-                    <ImageIcon className="h-10 w-10 mx-auto text-zinc-300 mb-3" />
-                    <p className="text-sm text-zinc-500">No slides yet</p>
-                    <p className="text-xs text-zinc-400 mt-1">Add your first announcement slide</p>
-                </div>
+                <EmptyState icon={ImageIcon} title="No slides yet" body="Add your first announcement slide." />
             ) : (
-                <div className="space-y-2">
+                <div className={cn(gvCard, 'overflow-hidden')}>
                     {announcements.map((item, index) => (
                         <div
                             key={item.id}
-                            className={`flex items-center gap-3 p-3 bg-white border rounded-xl transition-all ${item.active ? 'border-zinc-200' : 'border-zinc-100 opacity-60'
-                                }`}
+                            className="flex items-center gap-3 border-b border-line px-3 py-2.5 last:border-b-0"
                         >
-                            {/* Drag handle / Order buttons */}
-                            <div className="flex flex-col gap-0.5">
+                            {/* Order buttons */}
+                            <div className="flex flex-col">
                                 <button
+                                    type="button"
                                     onClick={() => handleMoveUp(index)}
                                     disabled={index === 0}
-                                    className="p-1 text-zinc-400 hover:text-zinc-600 disabled:opacity-30"
+                                    aria-label="Move slide up"
+                                    className={cn(gvIconBtn, 'h-6 w-6')}
                                 >
-                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                    </svg>
+                                    <ArrowUpIcon size={12} />
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => handleMoveDown(index)}
                                     disabled={index === announcements.length - 1}
-                                    className="p-1 text-zinc-400 hover:text-zinc-600 disabled:opacity-30"
+                                    aria-label="Move slide down"
+                                    className={cn(gvIconBtn, 'h-6 w-6')}
                                 >
-                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    <ArrowDownIcon size={12} />
                                 </button>
                             </div>
 
                             {/* Thumbnail */}
-                            <div className="w-24 h-14 rounded-lg overflow-hidden bg-zinc-100 flex-shrink-0">
+                            <div className={cn('h-14 w-24 flex-shrink-0 overflow-hidden rounded-[10px] bg-surface', !item.active && 'opacity-50')}>
                                 {item.imageUrl ? (
                                     <img
                                         src={item.imageUrl}
                                         alt={item.alt}
-                                        className="w-full h-full object-cover"
+                                        className="h-full w-full object-cover"
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).src = '';
                                             (e.target as HTMLImageElement).className = 'hidden';
                                         }}
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <ImageIcon className="h-5 w-5 text-zinc-300" />
+                                    <div className="flex h-full w-full items-center justify-center text-text-muted">
+                                        <ImageIcon size={20} />
                                     </div>
                                 )}
                             </div>
 
                             {/* Info */}
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-zinc-900 truncate">{item.alt || 'Untitled'}</p>
-                                <p className="text-xs text-zinc-400 truncate">{item.imageUrl}</p>
+                            <div className="min-w-0 flex-1">
+                                <p className={cn('truncate text-[12.5px] font-bold', item.active ? 'text-ink' : 'text-slate')}>{item.alt || 'Untitled'}</p>
+                                <p className="truncate text-[11px] text-slate">{item.imageUrl}</p>
                             </div>
 
+                            <StatusTag tone={item.active ? 'go' : 'slate'}>{item.active ? 'Live' : 'Hidden'}</StatusTag>
+
                             {/* Actions */}
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-0.5">
                                 <button
+                                    type="button"
                                     onClick={() => handleToggleActive(item.id, item.active)}
-                                    className={`p-2 rounded-lg transition-colors ${item.active
-                                            ? 'text-emerald-600 hover:bg-emerald-50'
-                                            : 'text-zinc-400 hover:bg-zinc-100'
-                                        }`}
+                                    className={cn(gvIconBtn, 'h-8 w-8', item.active && 'text-go-text hover:bg-go-tint hover:text-go-text')}
                                     title={item.active ? 'Hide slide' : 'Show slide'}
+                                    aria-label={item.active ? 'Hide slide' : 'Show slide'}
                                 >
-                                    {item.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                                    {item.active ? <EyeIcon size={16} /> : <EyeOffIcon size={16} />}
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => handleDelete(item.id)}
-                                    className="p-2 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                    className={cn(gvIconBtn, 'h-8 w-8 hover:bg-market-tint hover:text-market')}
                                     title="Delete slide"
+                                    aria-label="Delete slide"
                                 >
-                                    <Trash2 className="h-4 w-4" />
+                                    <TrashIcon size={16} />
                                 </button>
                             </div>
                         </div>
@@ -286,9 +296,10 @@ export default function AnnouncementsPage() {
             )}
 
             {/* Info */}
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                <p className="text-xs text-blue-700">
-                    <strong>Tip:</strong> Slides auto-rotate every 3.5 seconds on the homepage.
+            <div className="mt-3 flex items-start gap-2 rounded-[14px] bg-royal-tint p-3 text-royal">
+                <InfoIcon size={16} className="mt-px shrink-0" />
+                <p className="text-[12px] leading-[1.45]">
+                    <strong className="font-bold">Tip:</strong> Slides auto-rotate every 3.5 seconds on the homepage.
                     Use high-quality images (recommended: 800×320px or similar aspect ratio).
                 </p>
             </div>

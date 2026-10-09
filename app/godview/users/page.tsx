@@ -1,11 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
-import { Users, CheckCircle2, XCircle, Clock, Mail, Phone, Calendar, ShieldCheck, Loader2, MoreHorizontal, Check, X, Search } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { cn } from '@/lib/utils/cn';
 import {
@@ -14,6 +11,10 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { Segmented } from '@/components/swoop/primitives';
+import { CheckIcon, CloseIcon, SearchIcon, UserIcon } from '@/components/swoop/icons';
+import { MailIcon, MoreIcon, PhoneIcon } from '../icons';
+import { PageHead, StatusTag, TableState, gvCard, gvIconBtn, gvMenu, gvMenuItem, gvRow, gvTableHead } from '../ui';
 
 interface MarketplaceUser {
     id: string;
@@ -101,114 +102,100 @@ export default function UsersPage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-6rem)]">
-            <div className="flex items-center justify-between px-1 pb-4">
-                <div>
-                    <h1 className="text-lg font-semibold text-zinc-900 tracking-tight">Users</h1>
-                    <p className="text-xs text-zinc-500">Verify and manage marketplace users.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
-                        <input
-                            type="text"
-                            placeholder="Search users..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="h-8 w-64 rounded-md border border-zinc-200 bg-white pl-8 pr-3 text-xs text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-100/50 transition-all shadow-sm"
+        <div className="flex h-[calc(100vh-6rem)] flex-col">
+            <PageHead
+                title="Users"
+                description="Verify and manage marketplace users."
+                actions={
+                    <>
+                        <label className="flex h-8 w-64 items-center gap-2 rounded-full bg-surface pl-3 pr-3 transition-shadow focus-within:ring-[3px] focus-within:ring-royal/15">
+                            <SearchIcon size={14} className="shrink-0 text-ink" />
+                            <input
+                                type="text"
+                                aria-label="Search users"
+                                placeholder="Search users..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="min-w-0 flex-1 bg-transparent text-[12px] font-semibold text-ink outline-none placeholder:font-medium placeholder:text-slate"
+                            />
+                        </label>
+                        <Segmented
+                            label="Filter users"
+                            value={filter}
+                            onChange={setFilter}
+                            className="w-[300px]"
+                            options={(['all', 'pending', 'verified'] as const).map((f) => ({
+                                value: f,
+                                label: (
+                                    <>
+                                        {f.charAt(0).toUpperCase() + f.slice(1)}
+                                        <span className="ml-1 font-semibold text-slate tabular-nums">
+                                            {f === 'all' ? users.length : f === 'pending' ? pendingCount : verifiedCount}
+                                        </span>
+                                    </>
+                                ),
+                            }))}
                         />
-                    </div>
-                    <div className="flex bg-zinc-100/50 p-0.5 rounded-lg border border-zinc-200/50">
-                        {(['all', 'pending', 'verified'] as const).map((f) => (
-                            <button
-                                key={f}
-                                onClick={() => setFilter(f)}
-                                className={cn(
-                                    "px-3 py-1 text-[11px] font-medium rounded-md transition-all",
-                                    filter === f
-                                        ? "bg-white text-zinc-900 shadow-sm border border-zinc-200/50"
-                                        : "text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100"
-                                )}
-                            >
-                                {f.charAt(0).toUpperCase() + f.slice(1)}
-                                <span className="ml-1.5 opacity-60">
-                                    {f === 'all' ? users.length : f === 'pending' ? pendingCount : verifiedCount}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
+                    </>
+                }
+            />
 
-            <div className="flex-1 rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden flex flex-col">
-                <div className="grid grid-cols-12 gap-4 border-b border-zinc-100 bg-zinc-50/50 px-4 py-2 text-[11px] font-medium text-zinc-500 uppercase tracking-wider">
-                    <div className="col-span-4 pl-8">User</div>
+            <div className={cn(gvCard, 'flex min-h-0 flex-1 flex-col overflow-hidden')}>
+                <div className={cn(gvTableHead, 'grid grid-cols-12 gap-4 px-4 py-2')}>
+                    <div className="col-span-4 pl-10">User</div>
                     <div className="col-span-3">Contact</div>
                     <div className="col-span-2">Joined</div>
                     <div className="col-span-2">Status</div>
                     <div className="col-span-1 text-right"></div>
                 </div>
 
-                <div className="overflow-y-auto flex-1">
+                <div className="flex-1 overflow-y-auto">
                     {loading ? (
-                        <div className="flex h-40 items-center justify-center">
-                            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
-                        </div>
+                        <TableState loading />
                     ) : filtered.length === 0 ? (
-                        <div className="flex h-40 flex-col items-center justify-center text-zinc-400">
-                            <Users className="h-8 w-8 mb-2 opacity-20" />
-                            <p className="text-sm">No users found</p>
-                        </div>
+                        <TableState icon={UserIcon} title="No users found" />
                     ) : (
-                        <div className="divide-y divide-zinc-50">
+                        <div>
                             {filtered.map((user) => (
-                                <div key={user.id} className="group grid grid-cols-12 gap-4 items-center px-4 py-2 hover:bg-zinc-50/80 transition-colors text-[13px] relative min-h-[44px]">
+                                <div key={user.id} className={cn(gvRow, 'group grid min-h-[44px] grid-cols-12 items-center gap-4 px-4 py-1.5 transition-colors hover:bg-surface/60')}>
                                     {/* Name */}
-                                    <div className="col-span-4 pl-4 flex items-center gap-3">
+                                    <div className="col-span-4 flex min-w-0 items-center gap-3">
                                         <div className={cn(
-                                            "flex h-7 w-7 items-center justify-center rounded text-[10px] font-bold border",
+                                            'grid h-7 w-7 shrink-0 place-items-center rounded-[8px] text-[10.5px] font-extrabold',
                                             user.verified
-                                                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                                : "bg-zinc-100 text-zinc-500 border-zinc-200"
+                                                ? 'bg-go-tint text-go-text'
+                                                : 'bg-surface text-text-secondary'
                                         )}>
                                             {user.name?.[0]?.toUpperCase() || '?'}
                                         </div>
-                                        <div className="flex flex-col">
-                                            <span className="font-medium text-zinc-900 truncate">{user.name || 'Unknown'}</span>
-                                        </div>
+                                        <span className="truncate font-bold">{user.name || 'Unknown'}</span>
                                     </div>
 
                                     {/* Contact */}
-                                    <div className="col-span-3 flex flex-col justify-center text-[11px] text-zinc-500">
-                                        <div className="flex items-center gap-1.5 text-zinc-600">
-                                            <Mail className="h-3 w-3 opacity-50" />
+                                    <div className="col-span-3 flex min-w-0 flex-col justify-center text-[11px] text-slate">
+                                        <div className="flex min-w-0 items-center gap-1.5 text-text-secondary">
+                                            <MailIcon size={13} className="shrink-0 text-slate" />
                                             <span className="truncate">{user.email}</span>
                                         </div>
                                         {user.phone && (
-                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                <Phone className="h-3 w-3 opacity-50" />
-                                                <span className="truncate">{user.phone}</span>
+                                            <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                                                <PhoneIcon size={13} className="shrink-0" />
+                                                <span className="truncate tabular-nums">{user.phone}</span>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Joined */}
-                                    <div className="col-span-2 text-zinc-500 text-[11px]">
+                                    <div className="col-span-2 text-[11.5px] text-slate tabular-nums">
                                         {formatDate(user.createdAt)}
                                     </div>
 
                                     {/* Status */}
                                     <div className="col-span-2">
                                         {user.verified ? (
-                                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50/50 text-emerald-700 border border-emerald-100">
-                                                <CheckCircle2 className="h-3 w-3" />
-                                                Verified
-                                            </div>
+                                            <StatusTag tone="go">Verified</StatusTag>
                                         ) : (
-                                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 text-zinc-500 border border-zinc-200">
-                                                <Clock className="h-3 w-3" />
-                                                Pending
-                                            </div>
+                                            <StatusTag tone="slate">Pending</StatusTag>
                                         )}
                                     </div>
 
@@ -216,19 +203,23 @@ export default function UsersPage() {
                                     <div className="col-span-1 flex justify-end">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-600 hover:bg-zinc-100 transition-all">
-                                                    <MoreHorizontal className="h-3.5 w-3.5" />
-                                                </Button>
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Actions for ${user.name || user.email}`}
+                                                    className={cn(gvIconBtn, 'opacity-0 focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:bg-surface data-[state=open]:opacity-100')}
+                                                >
+                                                    <MoreIcon size={15} />
+                                                </button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-[140px]">
+                                            <DropdownMenuContent align="end" className={cn(gvMenu, 'w-[140px]')}>
                                                 {user.verified ? (
-                                                    <DropdownMenuItem onClick={() => unverifyUser(user.id)} className="text-xs text-red-600 focus:text-red-700 focus:bg-red-50">
-                                                        <XCircle className="h-3.5 w-3.5 mr-2" />
+                                                    <DropdownMenuItem onClick={() => unverifyUser(user.id)} className={cn(gvMenuItem, 'text-market focus:bg-market-tint focus:text-market')}>
+                                                        <CloseIcon size={14} />
                                                         Revoke
                                                     </DropdownMenuItem>
                                                 ) : (
-                                                    <DropdownMenuItem onClick={() => verifyUser(user.id)} className="text-xs text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50">
-                                                        <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
+                                                    <DropdownMenuItem onClick={() => verifyUser(user.id)} className={cn(gvMenuItem, 'text-go-text focus:bg-go-tint focus:text-go-text')}>
+                                                        <CheckIcon size={14} />
                                                         Verify User
                                                     </DropdownMenuItem>
                                                 )}
