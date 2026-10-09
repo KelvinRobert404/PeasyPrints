@@ -2,13 +2,13 @@
 
 export const dynamic = 'force-dynamic';
 
+import { EmptyState } from '@/components/swoop/primitives';
+import { GridIcon } from '@/components/swoop/icons';
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="text-sm text-gray-600">Dashboard content coming soon...</div>
-      </main>
-    </div>
+    <main className="flex flex-1 flex-col bg-white px-3 pb-3 pt-3">
+      <EmptyState icon={GridIcon} title="Dashboard coming soon" body="Dashboard content is on its way." />
+    </main>
   );
 }

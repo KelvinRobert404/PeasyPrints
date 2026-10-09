@@ -4,10 +4,10 @@ export const dynamic = 'force-dynamic';
 
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
+import { AuthShell } from '@/components/auth/AuthShell';
+import { swButton } from '@/components/swoop/primitives';
+import { cn } from '@/lib/utils/cn';
 
 export default function OTPPage() {
   const { verifyOTP, loading, error, sendOTP, lastPhoneNumber, initRecaptcha, resetRecaptcha, recaptchaReady } = useAuthStore();
@@ -23,47 +23,50 @@ export default function OTPPage() {
   }, [initRecaptcha, resetRecaptcha]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b px-4 py-3">
-        <h1 className="text-lg font-semibold">Verify OTP</h1>
-      </header>
-      <main className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Enter Code</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form
-              className="space-y-4"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (code.length === 6) await verifyOTP(code);
-              }}
-            >
-              <Input
-                placeholder="------"
-                maxLength={6}
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                className="tracking-widest text-center"
-              />
-              {error && <div className="text-sm text-red-600">{error}</div>}
-              <Button className="w-full" disabled={loading || code.length !== 6}>
-                {loading ? 'Verifying...' : 'Verify'}
-              </Button>
-            </form>
-              <Button
-              variant="outline"
-              className="w-full"
-              disabled={loading || !lastPhoneNumber || !recaptchaReady}
-              onClick={() => lastPhoneNumber && sendOTP(lastPhoneNumber)}
-            >
-              Resend OTP
-            </Button>
-            <div id="recaptcha-container-otp" className="mt-2" />
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+    <AuthShell
+      title="Enter the code"
+      subtitle={lastPhoneNumber ? `We sent a 6-digit code to ${lastPhoneNumber}` : 'We sent a 6-digit code to your phone'}
+    >
+      <form
+        className="flex flex-col gap-2.5"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (code.length === 6) await verifyOTP(code);
+        }}
+      >
+        <label htmlFor="otp-code" className="text-[11.5px] font-bold text-ink">
+          Verification code
+        </label>
+        <input
+          id="otp-code"
+          placeholder="------"
+          maxLength={6}
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? 'otp-error' : undefined}
+          className="campus-input text-center text-[18px] font-bold tracking-[0.5em] tabular-nums"
+        />
+        {error && (
+          <p id="otp-error" role="alert" className="text-[11.5px] font-semibold text-market">
+            {error}
+          </p>
+        )}
+        <button type="submit" className={cn(swButton({ size: 'lg' }), 'mt-1 w-full')} disabled={loading || code.length !== 6}>
+          {loading ? 'Verifying...' : 'Verify'}
+        </button>
+      </form>
+      <button
+        type="button"
+        className={cn(swButton({ variant: 'surface', size: 'lg' }), 'mt-2 w-full')}
+        disabled={loading || !lastPhoneNumber || !recaptchaReady}
+        onClick={() => lastPhoneNumber && sendOTP(lastPhoneNumber)}
+      >
+        Resend OTP
+      </button>
+      <div id="recaptcha-container-otp" className="mt-2" />
+    </AuthShell>
   );
 }

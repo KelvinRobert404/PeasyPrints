@@ -5,10 +5,10 @@ export const dynamic = 'force-dynamic';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { safeRedirectPath } from '@/lib/utils/safeRedirect';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PhoneRegister } from '@/components/auth/PhoneRegister';
 import { SignUp } from '@clerk/nextjs';
 import { useEffect } from 'react';
+import { AuthShell } from '@/components/auth/AuthShell';
+import { clerkAppearance } from '@/components/auth/clerkAppearance';
 
 export default function RegisterPage() {
   const { verificationId, resetRecaptcha } = useAuthStore();
@@ -28,24 +28,14 @@ export default function RegisterPage() {
   }, [resetRecaptcha]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b px-4 py-3">
-        <h1 className="text-lg font-semibold">Register</h1>
-      </header>
-      <main className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create Account with Clerk</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SignUp
-              routing="hash"
-              signInUrl={`/login?redirect_url=${encodeURIComponent(redirect)}`}
-              afterSignUpUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
-            />
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+    <AuthShell>
+      {/* Clerk's header (title + subtitle) is the hero, so it can follow each sign-up step. */}
+      <SignUp
+        routing="hash"
+        appearance={clerkAppearance}
+        signInUrl={`/login?redirect_url=${encodeURIComponent(redirect)}`}
+        afterSignUpUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
+      />
+    </AuthShell>
   );
 }

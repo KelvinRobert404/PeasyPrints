@@ -7,6 +7,8 @@ import { useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { SignIn } from '@clerk/nextjs';
 import { safeRedirectPath } from '@/lib/utils/safeRedirect';
+import { AuthShell } from '@/components/auth/AuthShell';
+import { clerkAppearance } from '@/components/auth/clerkAppearance';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,29 +23,15 @@ export default function LoginPage() {
   }, [isLoaded, isSignedIn, redirect, router]);
 
   return (
-    <div className="relative min-h-screen bg-[#1155EE] flex items-center justify-center px-4">
-      <div className="absolute top-6 left-4 md:top-10 md:left-10 text-white">
-        <h1 className="text-2xl font-extrabold leading-tight tracking-tight uppercase">
-          Queues SUCK,
-          <br />
-          College doesn't.
-          <br />
-          Lets keep it that way.
-        </h1>
-      </div>
-
+    <AuthShell>
+      {/* Clerk's header (title + subtitle) is the hero, so it can follow each sign-in step. */}
       <SignIn
         routing="hash"
+        appearance={clerkAppearance}
         signUpUrl={`/register?redirect_url=${encodeURIComponent(redirect)}`}
         afterSignInUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
         afterSignUpUrl={`/sso-callback?redirect_url=${encodeURIComponent(redirect)}`}
       />
-
-      <div className="pointer-events-none fixed inset-x-0 bottom-3 md:bottom-6 text-center">
-        <span className="font-quinn text-white text-[40px] md:text-[30px] font-extrabold tracking-[0.02em]">
-          SWOOP
-        </span>
-      </div>
-    </div>
+    </AuthShell>
   );
 }

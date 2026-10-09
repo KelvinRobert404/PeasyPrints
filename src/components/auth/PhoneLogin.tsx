@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useRouter } from 'next/navigation';
+import { swButton } from '@/components/swoop/primitives';
+import { cn } from '@/lib/utils/cn';
 
 export function PhoneLogin() {
   const { initRecaptcha, startPhoneLogin, verificationId, loading, error, recaptchaReady } = useAuthStore();
@@ -18,16 +20,30 @@ export function PhoneLogin() {
   }, [verificationId, router]);
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-2.5">
+      <label htmlFor="phone-login" className="text-[11.5px] font-bold text-ink">
+        Phone number
+      </label>
       <input
-        className="w-full border rounded px-3 h-12"
+        id="phone-login"
+        className="campus-input"
         placeholder="+91XXXXXXXXXX"
         type="tel"
+        autoComplete="tel"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
       />
-      {error && <div className="text-sm text-red-600">{error}</div>}
-      <button className="w-full h-12 bg-blue-600 text-white rounded" disabled={loading || !recaptchaReady} onClick={() => startPhoneLogin(phone)}>
+      {error && (
+        <p role="alert" className="text-[11.5px] font-semibold text-market">
+          {error}
+        </p>
+      )}
+      <button
+        type="button"
+        className={cn(swButton({ size: 'lg' }), 'mt-1 w-full')}
+        disabled={loading || !recaptchaReady}
+        onClick={() => startPhoneLogin(phone)}
+      >
         {loading ? 'Sending...' : 'Send OTP'}
       </button>
       <div id="recaptcha-container-login" className="mt-2" />

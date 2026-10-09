@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSignIn, useSignUp, useAuth } from '@clerk/nextjs';
 import { safeRedirectPath } from '@/lib/utils/safeRedirect';
+import { SwoopLogo } from '@/components/swoop/Logo';
 
 export default function SsoCallbackPage() {
   const router = useRouter();
@@ -41,10 +42,9 @@ export default function SsoCallbackPage() {
   }, [isSignedIn, signInLoaded, signUpLoaded, signIn, signUp, setActive, router, redirect]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-sm text-gray-600">Finishing sign in…</p>
+    <div role="status" aria-live="polite" className="flex min-h-screen flex-col items-center justify-center gap-3 bg-white px-5">
+      <SwoopLogo size={28} className="animate-pulse" />
+      <p className="text-[12.5px] font-semibold text-slate">Finishing sign in…</p>
     </div>
   );
 }
-
-
