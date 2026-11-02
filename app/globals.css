@@ -9,6 +9,8 @@
 }
 
 @import "tailwindcss";
+/* Notes and exploration ledgers hold Windows paths that Tailwind misreads as CSS escapes */
+@source not "../docs";
 
 :root {
   /* Swoop design system v1 (locked 2026-10-09) — white ground, royal for action, ink for weight */
