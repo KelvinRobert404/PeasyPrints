@@ -36,7 +36,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | STORE | Pre-sign-in choice store, college picker and stay step | 2 | M | done | 4ff4c5a | Store sanitizes pick/stay on every write and rehydrate; a campus change keeps the stay type but clears its distance; Skip sets stay to null; no browser check (no env) |
 | SIGNIN | Custom sign-in: Continue with Google first, 6-digit email code second | 2 | M | done | 12181ed | SignInStep is pure UI: onEmailCode= sendCode,verifyCode object; hook returns AuthResult, never throws; email sign-up may hit missing_requirements live |
 | CPARTS | Shared campus UI parts: price, places, gender, photos, detail parts | 2 | L | done | b382323 | CPARTS built; typecheck/lint clean; browser check skipped (no env). Rent terms use local RentPriceTerms (no slightly_negotiable in PriceTerms); parts work uncontrolled. |
-| NTF | Notification queue, inbox API, rules and indexes | 3 | M | pending |  |  |
+| NTF | Notification queue, inbox API, rules and indexes | 3 | M | done | 6a4ea76 | NTF fix: inbox GET scans newest 200 by createdAt; missing deliverAfter counts as due. Fixture inbox now shows items. New userId+createdAt indexes must be deployed. |
 | HDR | Header campus chip, shell rules, CampusGate routing, shared session | 3 | L | done | 8795c64 | Shared session store with a Clerk userId refetch; refresh keeps old data; next is pathname only; /otp kept as auth page; browser checks skipped (no env) |
 | LOGIN | /login stepper, AuthShell trust line, dev preview | 3 | M | done | 578da0e | LOGIN: 3-screen stepper with step= pushState; in-app Back pushes previous step; client preview uses notFound in prod; clerkAppearance.ts now unused, not deleted |
 | VERIFY | /campus/verify onboarding: domain result, add college email, ID card, course step | 3 | L | pending |  |  |
@@ -87,6 +87,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:50 IST · MacBook · HDR done, 8795c64
 - 7 Nov 21:52 IST · MacBook · DEAD done, cbc9306
 - 7 Nov 21:56 IST · MacBook · HCARD done, 55e7e53
+- 7 Nov 21:57 IST · MacBook · NTF done, 6a4ea76
 
 
 ## Blocked
