@@ -26,7 +26,7 @@ type ContentType = CampusContentType;
 // Contact requests stay in the collection the [id] route and the session count read.
 const CONTACT_REQUESTS = 'campus_contact_requests';
 
-function whatsappText(serial: string, intent: unknown) {
+function whatsappText(serial: string, intent: ContactIntent) {
   return intent === 'offer' ? `Hey, I have what you asked for (${serial}) on Swoop` : `Hey, about ${serial} on Swoop`;
 }
 
@@ -111,7 +111,7 @@ async function serializeRequest(doc: QueryDocumentSnapshot | DocumentSnapshot, v
         : (await getAdminDb().collection('campus_private_profiles').doc(data.sellerId).get()).data()?.whatsappNumber;
       const phone = digits(String(number || ''));
       if (phone) {
-        const text = encodeURIComponent(whatsappText(String(data.serial || ''), data.intent));
+        const text = encodeURIComponent(whatsappText(String(data.serial || ''), contactRequestIntent(data)));
         item.whatsappUrl = `https://wa.me/${phone}?text=${text}`;
       }
     }
