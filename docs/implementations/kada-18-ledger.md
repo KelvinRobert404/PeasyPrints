@@ -50,7 +50,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | MFEED | Market v2 feed and the four See all screens | 4 | L | pending |  |  |
 | MFORM1 | New listing form v2, part 1: shell, item, wanted, bundle | 4 | L | done | 5066c50 | Bundle date and hand-over added to the description (not in schema); still_available PATCH not on server yet; AskCard sends title not q; browser checks skipped |
 | HOME | Home v2: greeting, seasonal slot, utility row, illustrations | 4 | L | done | 08c25b1 | Fixture Home shows a local copy of FIXTURE_SHOPS: core.ts imports firebase-admin, so a client page can t import it. Follow-up: client-safe shops fixture |
-| BLOOD | Blood donor alerts v1 (opt-in) | 4 | L | pending |  |  |
+| BLOOD | Blood donor alerts v1 (opt-in) | 4 | L | done | 6b80bd5 | Fix pass: split the consent label into two lines under 10 words each, keeping the delete-on-stop promise. Typecheck, lint and tests are clean. |
 | GAMES | Pickup games with slots v1 | 4 | L | done | aae8479 | Uses CAMPUS_COLLECTIONS.games ( campus_games ), not pickup_games ; lead should rename it in constants.ts so it matches the index. Browser check not done. |
 | DEAD | Remove dead auth, announcements and location code | 4 | S | done | cbc9306 | Typecheck fixed by regenerating .next types. RootShell.tsx:21 still checks /otp ; its owner package should drop it. |
 | HFEED | Housing feed v2 | 5 | L | pending |  |  |
@@ -99,6 +99,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:07 IST · MacBook · PRINTCAMPUS done, bb1d796
 - 7 Nov 22:07 IST · MacBook · GAMES done, aae8479
 - 7 Nov 22:08 IST · MacBook · MFORM1 done, 5066c50
+- 7 Nov 22:08 IST · MacBook · BLOOD done, 6b80bd5
 
 
 ## Blocked
