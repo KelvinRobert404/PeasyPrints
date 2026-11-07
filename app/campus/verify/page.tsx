@@ -1,148 +1,303 @@
 'use client';
 
-import { FormEvent, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { CheckIcon, ClockIcon, DocIcon, ShieldCheckIcon } from '@/components/swoop/icons';
-import { EmptyState, IconTile, PageHeader, Tag, swButton } from '@/components/swoop/primitives';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useClerk, useUser } from '@clerk/nextjs';
+import { CollegePicker } from '@/components/auth/CollegePicker';
+import { AddCollegeEmail, DomainMismatchStep, postOnboarding } from '@/components/campus/AddCollegeEmail';
+import { CourseStep, CourseSummary, type CourseSubmitResult } from '@/components/campus/CourseStep';
+import { GirlsSpaceSection, IdCardInReviewNote, IdCardPending, IdCardUpload } from '@/components/campus/IdCardUpload';
+import { ClockIcon, LockIcon, ShieldCheckIcon } from '@/components/swoop/icons';
+import { EmptyState, IconTile, PageHeader, swButton } from '@/components/swoop/primitives';
 import { useCampusSession } from '@/hooks/useCampusSession';
+import { getCampus } from '@/lib/campus/catalog';
+import { useHideDock } from '@/lib/stores/dockStore';
+import { useCollegeStore, type CollegePick } from '@/lib/stores/collegeStore';
+import { safeRedirectPath } from '@/lib/utils/safeRedirect';
+import type { CampusSession, MembershipCourse } from '@/types/campus';
 import { cn } from '@/lib/utils/cn';
 
-export default function CampusVerificationPage() {
-  const { session, loading, refresh } = useCampusSession();
-  const [busy, setBusy] = useState<'student' | 'girls_space' | null>(null);
-  const [message, setMessage] = useState('');
-  const studentFile = useRef<HTMLInputElement>(null);
-  const girlsFile = useRef<HTMLInputElement>(null);
+export default function CampusVerifyPage() {
+  return (
+    <Suspense fallback={<VerifySkeleton />}>
+      <CampusVerify />
+    </Suspense>
+  );
+}
 
-  const submit = async (event: FormEvent, kind: 'student' | 'girls_space') => {
-    event.preventDefault(); setBusy(kind); setMessage('');
-    const input = kind === 'student' ? studentFile.current : girlsFile.current;
-    const file = input?.files?.[0];
-    if (!file) { setMessage('Choose a clear photo or PDF of your college iCard.'); setBusy(null); return; }
-    const form = new FormData(); form.append('kind', kind); form.append('file', file);
-    try {
-      const response = await fetch('/api/campus/verifications', { method: 'POST', body: form });
-      // The platform rejects oversized bodies with a non-JSON 413.
-      const data = await response.json().catch(() => ({}));
-      setMessage(response.ok ? 'Submitted. The campus team will review it in Godview.'
-        : response.status === 413 ? 'That file is too large. Please upload a smaller photo (under 4 MB).'
-        : data.error || 'Could not submit verification.');
-      await refresh();
-    } catch {
-      setMessage('Could not submit verification. Check your connection and try again.');
-    } finally {
-      setBusy(null);
-    }
-  };
+function VerifySkeleton() {
+  return (
+    <div className="px-3 pt-3">
+      <div className="skeleton h-72 rounded-[14px]" />
+    </div>
+  );
+}
 
-  if (loading) return <div className="px-3 pt-3"><div className="skeleton h-72 rounded-[14px]" /></div>;
+/** Where to go once onboarding is done, or null to stay on this page. */
+function doneTarget(rawNext: string | null, session: CampusSession): string | null {
+  if (!rawNext) return null;
+  const next = safeRedirectPath(rawNext);
+  // Never bounce back here.
+  if (next === '/campus/verify' || next.startsWith('/campus/verify?') || next.startsWith('/campus/verify/')) return null;
+  // The Girls' space gate sends approved students here to ask for access.
+  if (next.startsWith('/girls-space') && !session.girlsSpaceApproved) return null;
+  return next;
+}
+
+/** True once the persisted college store has read localStorage. */
+function useStoreHydrated(): boolean {
+  return useSyncExternalStore(
+    (onChange) => useCollegeStore.persist.onFinishHydration(onChange),
+    () => useCollegeStore.persist.hasHydrated(),
+    () => false
+  );
+}
+
+function CampusVerify() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawNext = searchParams.get('next');
+  const { session: fetched, loading, refresh } = useCampusSession();
+  // Session returned by an onboarding POST, newer than the fetched one.
+  const [saved, setSaved] = useState<CampusSession | null>(null);
+  const session = saved ?? fetched;
+  const needs = session.signedIn ? session.onboarding?.needs ?? null : null;
+  const firstLoad = loading && !fetched.signedIn && !saved;
+  const redirectTo = !firstLoad && session.signedIn && needs === null ? doneTarget(rawNext, session) : null;
+
+  useHideDock(firstLoad || needs !== null || Boolean(redirectTo));
+
+  useEffect(() => {
+    if (redirectTo) router.replace(redirectTo);
+  }, [redirectTo, router]);
+
+  const reload = useCallback(async () => {
+    setSaved(null);
+    await refresh();
+  }, [refresh, setSaved]);
+
+  if (firstLoad || redirectTo) return <VerifySkeleton />;
+
+  const verifyHref = `/campus/verify${rawNext ? `?next=${encodeURIComponent(safeRedirectPath(rawNext))}` : ''}`;
   if (!session.signedIn) {
     return (
       <div className="pb-3">
-        <PageHeader title="Campus verification" kicker="KJU trust layer" />
+        <PageHeader title="Verify your account" kicker="Only verified students" />
         <div className="px-3 pt-2">
           <EmptyState
             icon={ShieldCheckIcon}
-            title="Sign in before verifying"
-            action={<Link href="/login?redirect_url=/campus/verify" className={cn(swButton({ size: 'sm' }), 'mt-1')}>Sign in</Link>}
+            title="Sign in first"
+            body="Then we check you’re a student."
+            action={
+              <Link
+                href={`/login?redirect_url=${encodeURIComponent(verifyHref)}`}
+                className={cn(swButton({ size: 'sm' }), 'mt-1')}
+              >
+                Sign in
+              </Link>
+            }
           />
         </div>
       </div>
     );
   }
 
-  const studentStatus = session.membership?.student.status || 'unverified';
-  const girlsStatus = session.membership?.girlsSpace.status || 'unverified';
+  const membership = session.membership;
+  const campusLabel = session.campus?.label ?? membership?.campusLabel ?? null;
+  const collegeCode = session.campus?.code ?? membership?.collegeCode ?? 'college';
+
   return (
-    <div className="pb-3">
-      <PageHeader title="Campus verification" kicker="KJU trust layer" />
-      <main className="px-3 pt-2">
-        <section className="flex items-start gap-2.5 rounded-[14px] bg-surface p-3">
-          <IconTile icon={ShieldCheckIcon} tone="royal" size={36} />
-          <div className="min-w-0">
-            <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">One real student, one trusted campus.</h2>
-            <p className="mt-1 text-[11.5px] leading-[1.45] text-slate">Verification is private. Public profiles show only a display name and verified badge.</p>
-          </div>
-        </section>
-        <ol className="pt-3.5">
-          <VerificationCard step={1} title="Student access" status={studentStatus} description="A verified college email is checked automatically when its KJU domain is configured. Use your iCard as the fallback." onSubmit={(event) => submit(event, 'student')} inputRef={studentFile} busy={busy === 'student'} disabled={studentStatus === 'approved' || studentStatus === 'pending'} />
-          <VerificationCard
-            step={2}
-            last
-            title="Girls’ space"
-            status={girlsStatus}
-            description="A separate manual review unlocks the private Marketplace and Housing entrances."
-            note={studentStatus !== 'approved' ? 'Complete student verification before requesting Girls’ space access.' : undefined}
-            onSubmit={(event) => submit(event, 'girls_space')}
-            inputRef={girlsFile}
-            busy={busy === 'girls_space'}
-            disabled={studentStatus !== 'approved' || girlsStatus === 'approved' || girlsStatus === 'pending'}
+    <div className="pb-6">
+      <PageHeader title={campusLabel ?? 'Swoop'} kicker={needs ? 'Verify your account' : 'Your account'} />
+      <main className="flex flex-col gap-3 px-3 pt-2">
+        {needs === 'college' ? (
+          <CollegeStep onSaved={setSaved} />
+        ) : needs === 'verify' ? (
+          <VerifyStep session={session} collegeCode={collegeCode} onSaved={setSaved} reload={reload} checking={loading} />
+        ) : needs === 'course' ? (
+          <CourseStep initial={membership?.course} onSubmit={(course) => saveCourse(course, setSaved)} />
+        ) : !session.verifiedStudent || !membership ? (
+          // The session route falls back to this when the lookup fails.
+          <EmptyState
+            icon={ShieldCheckIcon}
+            title="We couldn’t load your account"
+            body="Check your connection and try again."
+            action={
+              <button type="button" onClick={() => void reload()} disabled={loading} className={cn(swButton({ size: 'sm' }), 'mt-1')}>
+                {loading ? 'Checking…' : 'Try again'}
+              </button>
+            }
           />
-        </ol>
-        {message ? <div className="mt-1 rounded-[12px] bg-surface px-3 py-2.5 text-[12px] font-semibold text-ink" role="status">{message}</div> : null}
+        ) : (
+          <>
+            <CourseSummary
+              displayName={membership?.displayName}
+              campusLabel={campusLabel}
+              course={membership?.course}
+              action={
+                <Link href="/" className={swButton({ variant: 'white', size: 'md', className: 'w-full' })}>
+                  Go to Swoop
+                </Link>
+              }
+            />
+            <GirlsSpaceSection status={membership.girlsSpace.status} onSubmitted={reload} />
+          </>
+        )}
       </main>
     </div>
   );
 }
 
-function StatusTag({ status }: { status: string }) {
-  if (status === 'approved') return <Tag tone="go">Verified</Tag>;
-  if (status === 'pending') return <Tag tone="royal">In review</Tag>;
-  if (status === 'unverified') return <Tag className="bg-surface text-text-secondary">Not started</Tag>;
-  return <Tag className="bg-market-tint text-market">{status}</Tag>;
+async function saveCourse(course: MembershipCourse, onSaved: (session: CampusSession) => void): Promise<CourseSubmitResult> {
+  const result = await postOnboarding({ course });
+  if (!result.ok) return { ok: false, error: result.error };
+  onSaved(result.session);
+  return { ok: true };
 }
 
-function VerificationCard({ step, last = false, title, status, description, note, onSubmit, inputRef, busy, disabled }: { step: number; last?: boolean; title: string; status: string; description: string; note?: string; onSubmit: (event: FormEvent) => void; inputRef: React.RefObject<HTMLInputElement | null>; busy: boolean; disabled: boolean }) {
-  const [fileName, setFileName] = useState('');
-  const approved = status === 'approved';
-  const pending = status === 'pending';
-  const locked = disabled && !approved && !pending;
+/* Step: college (only when sign-in skipped the picker) -------- */
+
+function CollegeStep({ onSaved }: { onSaved: (session: CampusSession) => void }) {
+  const hydrated = useStoreHydrated();
+  const storedPick = useCollegeStore((state) => state.pick);
+  const storedStay = useCollegeStore((state) => state.stay);
+  const [pick, setPick] = useState<CollegePick | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // The stored pick is tried once; after a failure the picker takes over.
+  const [autoState, setAutoState] = useState<'waiting' | 'saving' | 'done'>('waiting');
+  const started = useRef(false);
+
+  const save = useCallback(
+    async (choice: CollegePick, stay: typeof storedStay) => {
+      setBusy(true);
+      setError(null);
+      const result = await postOnboarding({
+        collegeId: choice.collegeId,
+        campusId: choice.campusId,
+        ...(stay ? { stay: { type: stay.type, distanceM: stay.distanceM } } : {}),
+      });
+      setBusy(false);
+      if (!result.ok) {
+        setError(result.error);
+        return false;
+      }
+      onSaved(result.session);
+      return true;
+    },
+    [onSaved]
+  );
+
+  useEffect(() => {
+    if (!hydrated || started.current) return;
+    started.current = true;
+    if (!storedPick) {
+      setAutoState('done');
+      return;
+    }
+    setAutoState('saving');
+    setPick(storedPick);
+    void save(storedPick, storedStay).then(() => setAutoState('done'));
+  }, [hydrated, storedPick, storedStay, save]);
+
+  if (autoState !== 'done') {
+    const label = getCampus(storedPick?.campusId)?.label;
+    return (
+      <div className="flex items-center gap-2.5 rounded-[14px] bg-surface p-3" role="status">
+        <IconTile icon={ClockIcon} tone="royal" size={32} />
+        <p className="text-[12.5px] font-semibold text-ink">{label ? `Setting up ${label}…` : 'Getting things ready…'}</p>
+      </div>
+    );
+  }
 
   return (
-    <li className="flex gap-2.5">
-      <div className="flex flex-col items-center" aria-hidden="true">
-        <span
-          className={cn(
-            'grid h-7 w-7 shrink-0 place-items-center rounded-full text-[12px] font-extrabold',
-            approved ? 'bg-go-tint text-go-text' : pending ? 'bg-royal-tint text-royal' : locked ? 'bg-surface text-slate' : 'bg-ink text-white'
-          )}
+    <>
+      <CollegePicker value={pick} onChange={setPick} />
+      {error ? (
+        <p role="alert" className="text-[11.5px] font-semibold text-market">
+          {error}
+        </p>
+      ) : null}
+      <div className="sticky bottom-0 bg-white pb-[calc(8px+env(safe-area-inset-bottom))] pt-2">
+        <button
+          type="button"
+          disabled={!pick || busy}
+          onClick={() => pick && void save(pick, pick.campusId === storedPick?.campusId ? storedStay : null)}
+          className={swButton({ size: 'lg', className: 'w-full' })}
         >
-          {approved ? <CheckIcon size={14} /> : pending ? <ClockIcon size={14} /> : step}
-        </span>
-        {!last ? <span className="mt-1 w-px flex-1 bg-line" /> : null}
-      </div>
-      <form onSubmit={onSubmit} className={cn('min-w-0 flex-1', !last && 'pb-4')}>
-        <div className="flex min-h-7 items-center justify-between gap-2">
-          <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">{title}</h2>
-          <StatusTag status={status} />
-        </div>
-        <p className="mt-0.5 text-[11.5px] leading-[1.45] text-slate">{description}</p>
-        {note ? <p className="mt-1 text-[11px] font-semibold text-text-secondary">{note}</p> : null}
-        <label
-          className={cn(
-            'campus-press mt-2.5 flex h-12 items-center gap-2.5 rounded-[12px] bg-surface px-3 focus-within:ring-2 focus-within:ring-royal/40',
-            disabled ? 'pointer-events-none opacity-45' : 'cursor-pointer'
-          )}
-        >
-          <DocIcon size={20} className="shrink-0 text-ink" />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[12px] font-bold text-ink">{fileName || 'Choose your iCard'}</span>
-            <span className="block text-[10.5px] text-slate">Photo or PDF</span>
-          </span>
-          <span className="shrink-0 text-[11.5px] font-bold text-royal">{fileName ? 'Change' : 'Browse'}</span>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,application/pdf"
-            disabled={disabled}
-            onChange={(event) => setFileName(event.target.files?.[0]?.name || '')}
-            className="sr-only"
-          />
-        </label>
-        <button type="submit" disabled={disabled || busy} className={cn(swButton({ size: 'md' }), 'mt-2 w-full')}>
-          {busy ? 'Uploading securely…' : approved ? 'Verified' : pending ? 'Review pending' : 'Submit iCard'}
+          {busy ? 'Saving…' : 'Continue'}
         </button>
-      </form>
-    </li>
+      </div>
+    </>
+  );
+}
+
+/* Step: verify --------------------------------------------- */
+
+function VerifyStep({
+  session,
+  collegeCode,
+  onSaved,
+  reload,
+  checking,
+}: {
+  session: CampusSession;
+  collegeCode: string;
+  onSaved: (session: CampusSession) => void;
+  reload: () => Promise<void>;
+  checking: boolean;
+}) {
+  const router = useRouter();
+  const { signOut } = useClerk();
+  const { user } = useUser();
+  const membership = session.membership;
+  const status = membership?.student.status ?? 'unverified';
+
+  const switchAccount = async () => {
+    try {
+      await signOut({ redirectUrl: '/login' });
+    } catch {
+      router.push('/login');
+    }
+  };
+
+  if (status === 'pending') {
+    // A pending ID card still asks for the course, so the wait is useful.
+    if (!membership?.course) {
+      return (
+        <CourseStep
+          note={<IdCardInReviewNote />}
+          onSubmit={(course) => saveCourse(course, onSaved)}
+        />
+      );
+    }
+    return <IdCardPending onCheckAgain={() => void reload()} checking={checking} />;
+  }
+
+  if (status === 'revoked') {
+    return (
+      <EmptyState
+        icon={LockIcon}
+        title="Your access is paused"
+        body="Talk to the campus team to sort it out."
+        action={
+          <button type="button" onClick={() => void switchAccount()} className={cn(swButton({ variant: 'white', size: 'sm' }), 'mt-1')}>
+            Sign in with another account
+          </button>
+        }
+      />
+    );
+  }
+
+  return (
+    <DomainMismatchStep
+      collegeCode={collegeCode}
+      status={status}
+      email={user?.primaryEmailAddress?.emailAddress ?? null}
+      onSignOut={() => void switchAccount()}
+      emailPanel={<AddCollegeEmail collegeCode={collegeCode} onChecked={onSaved} />}
+      idCardPanel={<IdCardUpload kind="student" onSubmitted={reload} />}
+    />
   );
 }
