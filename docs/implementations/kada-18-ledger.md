@@ -62,7 +62,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | PRINTCAMPUS | Print shops follow the signed-in campus | 5 | M | done | bb1d796 | Fixture shops copied into /upload (core.ts is server only); selectedCollegeId in other packages files still hits the grep; stale .next/types needs typegen |
 | MYPOSTS | My posts and updates on /campus/activity | 5 | M | done | 91b7de4 | Updates sits above the tabs and marks items read on load; shared post pieces live in MarketMyPosts; the offer wording needs intent from the contact-requests API |
 | CRON | Maintenance planner for new lifecycles and account purge | 5 | L | done | a996ff6 | Collections from CAMPUS_COLLECTIONS, not the brief s old names. Purge also cancels hosted games and deletes prefs. Fixture HTTP GET not run (no .env.local). |
-| CLEAN | Legacy cleanup and final copy audit | 6 | L | pending |  |  |
+| CLEAN | Legacy cleanup and final copy audit | 6 | L | done | 0b55e1b | v1 types/serializers removed, godview on v2 collections; CampusSession left optional (useCampusSession.ts EMPTY_SESSION) and college_email kept; smoke skipped |
 
 ## Session log
 
@@ -109,6 +109,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:18 IST · MacBook · CRON done, a996ff6
 - 7 Nov 22:19 IST · MacBook · HFORM done, 57ae053
 - 7 Nov 22:20 IST · MacBook · MFORM2 done, a5cbd9b
+- 7 Nov 22:26 IST · MacBook · CLEAN done, 0b55e1b
 
 
 ## Blocked
