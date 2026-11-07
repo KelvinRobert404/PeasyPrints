@@ -70,13 +70,6 @@ export const OrdersIcon = (p: IconProps) => (
   </Svg>
 );
 
-export const CanteenIcon = (p: IconProps) => (
-  <Svg {...p}>
-    <path {...SK} opacity={D2} d="M8 3.5v4M12 2.5v5M16 3.5v4" />
-    <path d="M2.5 10.5h19a.5.5 0 0 1 .5.5A9.5 9.5 0 0 1 12.5 20.5h-1A9.5 9.5 0 0 1 2 11a.5.5 0 0 1 .5-.5Z" />
-  </Svg>
-);
-
 export const GirlsSpaceIcon = (p: IconProps) => (
   <Svg {...p}>
     <rect opacity={D2} x="4" y="10" width="16" height="11.5" rx="3" />
@@ -396,5 +389,246 @@ export const LayersIcon = (p: IconProps) => (
   <Svg {...p}>
     <path opacity={D2} d="m12 13 9-4.5-9-4.5-9 4.5Z" />
     <path d="m3 12.5 9 4.5 9-4.5v2.2l-9 4.5-9-4.5Z" />
+  </Svg>
+);
+
+/* ── Getting around ─────────────────────────────────────── */
+export const WalkIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path {...SK} opacity={D2} d="M12.5 8.5 8.5 11.5M11 14.5l-3 6" />
+    <circle cx="13.5" cy="4.5" r="2.3" />
+    <path {...SK} d="m12.5 8.5-1.5 6 3.5 2.5 1 3.5M12.5 8.5l3.5 3.5" />
+  </Svg>
+);
+
+export const BusIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect opacity={D2} x="4" y="2.5" width="16" height="16" rx="3" />
+    <rect x="6.5" y="5.5" width="11" height="5.5" rx="1.2" />
+    <circle cx="8.3" cy="14.6" r="1.4" />
+    <circle cx="15.7" cy="14.6" r="1.4" />
+    <rect x="5.5" y="17" width="3.5" height="4.5" rx="1.2" />
+    <rect x="15" y="17" width="3.5" height="4.5" rx="1.2" />
+  </Svg>
+);
+
+export const TrainIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect opacity={D2} x="5" y="2.5" width="14" height="15" rx="4" />
+    <rect x="7.5" y="5.5" width="9" height="5" rx="1.2" />
+    <circle cx="9" cy="13.8" r="1.4" />
+    <circle cx="15" cy="13.8" r="1.4" />
+    <path {...SK} d="M9 18 6.5 21.5M15 18l2.5 3.5" />
+  </Svg>
+);
+
+export const PlaneIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M10.6 8.5 2.5 13.6V16l8.1-2.4ZM13.4 8.5l8.1 5.1V16l-8.1-2.4Z" />
+    <path d="M12 2a1.6 1.6 0 0 1 1.6 1.6V18l2.4 1.8V22l-4-1.2L8 22v-2.2l2.4-1.8V3.6A1.6 1.6 0 0 1 12 2Z" />
+  </Svg>
+);
+
+export const CabIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M7.3 5.5h9.4a1.5 1.5 0 0 1 1.4 1L20 12H4l1.9-5.5a1.5 1.5 0 0 1 1.4-1Z" />
+    <rect x="9.5" y="2" width="5" height="2.5" rx=".8" />
+    <path
+      fillRule="evenodd"
+      d="M5 11h14a2.5 2.5 0 0 1 2.5 2.5V16a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-2.5A2.5 2.5 0 0 1 5 11Zm2 2.3a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Zm10 0a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Z"
+    />
+    <rect x="4.5" y="17" width="3.5" height="4" rx="1.2" />
+    <rect x="16" y="17" width="3.5" height="4" rx="1.2" />
+  </Svg>
+);
+
+export const CycleIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle opacity={D2} cx="6" cy="16" r="4" />
+    <circle opacity={D2} cx="18" cy="16" r="4" />
+    <circle {...SK} strokeWidth={2.2} cx="6" cy="16" r="4" />
+    <circle {...SK} strokeWidth={2.2} cx="18" cy="16" r="4" />
+    <path {...SK} strokeWidth={2.2} d="M6 16 9.5 9h6.5L18 16M9.5 9l3.5 7H6M8 6h3M16 9l-1-3h2" />
+  </Svg>
+);
+
+export const ScooterIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M3 16a5 5 0 0 1 5-5h5v5Z" />
+    <rect x="4.5" y="7.5" width="6.5" height="2.4" rx="1.2" />
+    <path {...SK} d="M9 16h6.5M18 18 15.5 6.5H13" />
+    <circle cx="6.5" cy="18" r="2.8" />
+    <circle cx="18" cy="18" r="2.8" />
+  </Svg>
+);
+
+export const SeatIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M6.5 2.5h3A1.5 1.5 0 0 1 11 4v9H6.5A1.5 1.5 0 0 1 5 11.5V4a1.5 1.5 0 0 1 1.5-1.5Z" />
+    <path d="M5 12.5h12.5a2 2 0 0 1 2 2V17H7a2 2 0 0 1-2-2Z" />
+    <path {...SK} d="M8 17v4M16.5 17v4" />
+  </Svg>
+);
+
+export const PassIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect opacity={D2} x="2.5" y="5" width="19" height="14" rx="2.5" />
+    <path d="M5 5h14a2.5 2.5 0 0 1 2.5 2.5V9h-19V7.5A2.5 2.5 0 0 1 5 5Z" />
+    <circle cx="7.5" cy="14" r="1.8" />
+    <circle cx="16.5" cy="14" r="1.8" />
+    <path {...SK} strokeWidth={2} d="M10 14h4" />
+  </Svg>
+);
+
+/* ── Rooms, places & distance ───────────────────────────── */
+export const BedIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect opacity={D2} x="4.5" y="11.5" width="17" height="5" rx="1.5" />
+    <rect x="2.5" y="5" width="2.4" height="15.5" rx="1.2" />
+    <rect x="6.5" y="8" width="5" height="3.5" rx="1.5" />
+    <rect x="2.5" y="16" width="19" height="2.5" rx="1" />
+    <rect x="19.2" y="16" width="2.3" height="4.5" rx="1" />
+  </Svg>
+);
+
+export const BoxIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M12 2.5 20.5 7 12 11.5 3.5 7Z" />
+    <path d="M3.5 8.7 11 12.6v8.9L4.3 18a1.5 1.5 0 0 1-.8-1.3ZM20.5 8.7 13 12.6v8.9l6.7-3.5a1.5 1.5 0 0 0 .8-1.3Z" />
+  </Svg>
+);
+
+export const LandmarkIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M5 9.5h2.4v8H5ZM10.8 9.5h2.4v8h-2.4ZM16.6 9.5H19v8h-2.4Z" />
+    <path d="M11.3 2.7a1.5 1.5 0 0 1 1.4 0l7.6 4.1c.7.4.4 1.4-.4 1.4H4.1c-.8 0-1.1-1-.4-1.4Z" />
+    <rect x="3" y="18.5" width="18" height="2.5" rx="1" />
+  </Svg>
+);
+
+export const RadiusIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle opacity={D2} cx="12" cy="12" r="9" />
+    <circle {...SK} strokeWidth={2} strokeDasharray="3 2.6" cx="12" cy="12" r="9" />
+    <path {...SK} strokeWidth={2.2} d="M12 12 17 7" />
+    <circle cx="12" cy="12" r="2.4" />
+  </Svg>
+);
+
+/* ── People & community ─────────────────────────────────── */
+export const ClipboardIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect opacity={D2} x="4.5" y="4" width="15" height="17.5" rx="2.5" />
+    <rect x="8.5" y="2.5" width="7" height="4" rx="1.5" />
+    <rect x="8" y="10.5" width="8" height="2" rx="1" />
+    <rect x="8" y="14.5" width="5.5" height="2" rx="1" />
+  </Svg>
+);
+
+export const UsersIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle opacity={D2} cx="16.5" cy="7.5" r="3.2" />
+    <path opacity={D2} d="M15 13.7a7.6 7.6 0 0 1 1.5-.2c3.3 0 5.5 2.1 5.5 5.5 0 .6-.4 1-1 1h-3.5c0-2.6-.9-4.8-2.5-6.3Z" />
+    <circle cx="9" cy="8" r="3.8" />
+    <path d="M2 20c0-3.6 3.1-6 7-6s7 2.4 7 6c0 .5-.4 1-.9 1H2.9c-.5 0-.9-.5-.9-1Z" />
+  </Svg>
+);
+
+export const LanguageIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M5 3h9a2.5 2.5 0 0 1 2.5 2.5v6A2.5 2.5 0 0 1 14 14H9l-4 3.5V14a2.5 2.5 0 0 1-2.5-2.5v-6A2.5 2.5 0 0 1 5 3Z" />
+    <path {...SK} strokeWidth={2} d="m7 11.5 2.5-5.5 2.5 5.5M7.9 9.6h3.2" />
+    <path d="M18 8.5h1.5a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2v3l-3.5-3h-3a2 2 0 0 1-2-1.5H14a4 4 0 0 0 4-4Z" />
+  </Svg>
+);
+
+export const BellIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M12 3a6 6 0 0 0-6 6v4l-2 3.5h16L18 13V9a6 6 0 0 0-6-6Z" />
+    <rect x="3.5" y="15.5" width="17" height="2.5" rx="1.25" />
+    <path d="M9.5 19.5h5a2.5 2.5 0 0 1-5 0Z" />
+  </Svg>
+);
+
+export const HandIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M7.4 11h11.5v3.5a7 7 0 0 1-7 7h-.5a6.5 6.5 0 0 1-5.2-2.6l-2.6-3.5a1.6 1.6 0 0 1 2.4-2.1l1.4 1.4Z" />
+    <rect x="7.4" y="4" width="2.2" height="9" rx="1.1" />
+    <rect x="10.5" y="2.5" width="2.2" height="10.5" rx="1.1" />
+    <rect x="13.6" y="3.5" width="2.2" height="9.5" rx="1.1" />
+    <rect x="16.7" y="6" width="2.2" height="7.5" rx="1.1" />
+  </Svg>
+);
+
+/* ── Deals, status & campus life ────────────────────────── */
+export const HourglassIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M7 5h10v2.5c0 2-1.2 3.4-3.2 4.5 2 1.1 3.2 2.5 3.2 4.5V19H7v-2.5c0-2 1.2-3.4 3.2-4.5C8.2 10.9 7 9.5 7 7.5Z" />
+    <rect x="5" y="2.5" width="14" height="2.4" rx="1.2" />
+    <rect x="5" y="19.1" width="14" height="2.4" rx="1.2" />
+    <path d="M9.3 8h5.4c-.4 1-1.3 1.7-2.7 2.4-1.4-.7-2.3-1.4-2.7-2.4ZM8.8 19c.3-1.8 1.6-2.8 3.2-3.5 1.6.7 2.9 1.7 3.2 3.5Z" />
+  </Svg>
+);
+
+export const PriceDropIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M3 6.5 9 12.5l4-4 7.5 7.5v4.5H3Z" />
+    <path {...SK} d="M3 6.5 9 12.5l4-4 7.5 7.5M20.5 10.5V16H15" />
+  </Svg>
+);
+
+export const DealIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M3 4.5V11c0 .5.2 1 .6 1.4l8.5 8.5a2 2 0 0 0 2.8 0l6-6a2 2 0 0 0 0-2.8L12.4 3.6A2 2 0 0 0 11 3H4.5A1.5 1.5 0 0 0 3 4.5Z" />
+    <circle cx="7.3" cy="7.3" r="1.6" />
+    <circle cx="11" cy="11" r="1.5" />
+    <circle cx="15.5" cy="15.5" r="1.5" />
+    <path {...SK} strokeWidth={2} d="m16 10.5-5.5 5.5" />
+  </Svg>
+);
+
+export const LostFoundIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle opacity={D2} cx="10.5" cy="10.5" r="6.5" />
+    <circle {...SK} cx="10.5" cy="10.5" r="6.5" />
+    <path {...SK} strokeWidth={3} d="m15.6 15.6 4.9 4.9" />
+    <path {...SK} strokeWidth={2} d="M8.8 9a1.8 1.8 0 1 1 2.6 1.6c-.6.3-.9.7-.9 1.3" />
+    <circle cx="10.5" cy="14" r="1.1" />
+  </Svg>
+);
+
+export const IdCardIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect opacity={D2} x="2.5" y="5" width="19" height="14" rx="2.5" />
+    <circle cx="8" cy="10.5" r="2" />
+    <path d="M4.8 16c0-1.8 1.4-3 3.2-3s3.2 1.2 3.2 3Z" />
+    <rect x="13" y="9" width="6" height="2" rx="1" />
+    <rect x="13" y="13" width="4.5" height="2" rx="1" />
+  </Svg>
+);
+
+export const BloodDropIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path opacity={D2} d="M12 2.5a1 1 0 0 0-.8.4C9.5 5 5 10.4 5 14.5a7 7 0 0 0 14 0c0-4.1-4.5-9.5-6.2-11.6a1 1 0 0 0-.8-.4Z" />
+    <path {...SK} d="M12 11.5v6M9 14.5h6" />
+  </Svg>
+);
+
+export const BallIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle opacity={D2} cx="12" cy="12" r="9.5" />
+    <path {...SK} strokeWidth={2} d="M12 2.5v19M2.5 12h19M6 4.8c2.6 2 2.6 12.4 0 14.4M18 4.8c-2.6 2-2.6 12.4 0 14.4" />
+  </Svg>
+);
+
+export const SunIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle opacity={D2} cx="12" cy="12" r="6.8" />
+    <circle cx="12" cy="12" r="4.2" />
+    <path
+      {...SK}
+      strokeWidth={2.2}
+      d="M12 2v1.4M12 20.6V22M2 12h1.4M20.6 12H22M4.9 4.9l1 1M19.1 19.1l-1-1M4.9 19.1l1-1M19.1 4.9l-1 1"
+    />
   </Svg>
 );
