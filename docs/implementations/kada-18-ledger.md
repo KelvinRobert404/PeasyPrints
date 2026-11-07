@@ -8,12 +8,14 @@ Statuses: `pending`, `building`, `verifying`, `done` (verified, committed and pu
 
 **Working:** siyonroy · MacBook (macOS, ~/Desktop/Developer/PeasyPrints-kada18) · chat "KADA-18 · 7 Nov/redesign-run1" (claude://claude.ai/epitaxy/local_fa979743-9896-41c1-b141-2e451fc40f12) · since 7 Nov 21:18 IST
 
+**Released:** siyonroy · MacBook · 7 Nov 22:41 IST · run finished: 47/47 packages done and pushed, 0 blocked; next: owner review, .env.local + fixture smoke test, Clerk/Firestore checks
+
 Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21:15 IST):
 - **No Linear connector in this chat.** The owner chose to run without Linear: this ledger is the only claim and progress record for this run. The owner copies the Preflight and report text into KADA-18. Before every push, check this ledger (on GitHub) for a newer `**Reclaimed:**` line.
 - **Not running anywhere else.** The owner confirmed KADA-18 is not running or claimed on the Windows machine or by anyone else.
 - **No `.env.local` on this Mac.** The owner chose to run without it. Typecheck, lint, tests and builds still run. Every browser check (375/1280 px, fixture smoke tests, before/after screenshots) is a skipped verification, because `ClerkProvider` can't render without `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`.
 - **Power:** caffeinate -dims (72 h) and the app's keep-awake hold. First resume at 8 Nov 02:03 IST.
-- **ETA:** ~6 h of work · done about Sun 8 Nov 10:00 IST (44 packages in 6 waves, every wave has L packages; ~220M effective tokens, expect about 3 usage resets).
+- **ETA:** finished 7 Nov 22:41 IST, after ~1 h 25 min of work (first estimate was Sun 8 Nov 10:00 IST; the dependency-driven run and far lower token use than estimated made it faster, with no usage reset needed).
 
 ## Packages
 
@@ -120,6 +122,9 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:36 IST · MacBook · SEAMSESSION done, 21fe7dc
 - 7 Nov 22:37 IST · MacBook · SEAMROUTES done, 8312bf0
 - 7 Nov 22:38 IST · MacBook · SEAMIDX done, 489b779
+- 7 Nov 22:38 IST · MacBook · wave 7 finished: 3/3 done, no fix passes (9 agents, ~0.58M subagent tokens)
+- 7 Nov 22:40 IST · MacBook · final checks: typecheck 0 errors, lint clean, tests 326/326; npm run build compiles, fails only at prerender on missing env; CLEAN audit greps clean except app/godview/campus/page.tsx:22 college_email label
+- 7 Nov 22:41 IST · MacBook · run finished: 47/47 packages done, 0 blocked, 0 skipped; 5-hour window ~55%, weekly 22%; resume cron cancelled, caffeinate stopped
 
 
 ## Blocked
@@ -138,6 +143,8 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - Waves 2-7 · every browser check, fixture smoke test and before/after screenshot · no .env.local on this Mac · add .env.local and run the fixture smoke on /, /marketplace, /housing, /campus/activity, /campus/verify and one market and one housing detail at 375/1280 px
 - SIGNIN, LOGIN, HDR, MEM · Clerk round trips (Google, email code, redirects, Google-linked auto-approval) · need a Clerk dev instance
 - NTF, HAPI, GAMES, LOST, MACT, CRON · Firestore index deploy, rules emulator test, Timestamp writes, maintenance GET and purge DELETE · need Firestore (emulator with Java, or staging)
+- SEAMROUTES · save, share, report and contact-approve against market_listings / housing_listings, and the lazy firebase-admin import in serial.ts under a real server · needs Firestore + a running server · test in fixture mode once .env.local exists
+- SEAMIDX · firebase deploy --only firestore:indexes,firestore:rules and the emulator rules test · live deploy is the owner's call; emulator needs Java · tests/security/firebase-rules.test.mjs still lists the v1 names in SERVER_ONLY_CAMPUS_COLLECTIONS (logic still passes; trim it)
 
 
 ## Decided at night
@@ -147,3 +154,4 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - From wave 2 on (owner in chat: use as many subagents as needed) · options: wave barriers, or start each package as soon as its dependencies are verified · chose dependency-driven start, max 14 agents (16 CPUs), FIX added as an implicit dependency of DEAD (both touch proxy.ts), one verify agent and at most one fix pass per package, then serial commits · lives in the run's workflow script only · undo: go back to wave-by-wave runs
 - Wave 7, integration seams · after wave 6 the agents' reports and a grep showed v2 listings unreachable from 3 places outside every package's file list (save/share/report in app/api/campus/actions, contact approve in app/api/contact-requests/[id], Firestore indexes still on v1 collections), plus CampusSession left optional and PILOT_COLLEGE/college_email still in fixtures · options: list them for the morning, or fix them tonight as 3 extra packages through the same build/verify/land steps · chose to fix (the plan says no backward compatibility; each is its own commit on the run branch) · wave 7 in kada-18-packages.json · undo: git revert the SEAM commits
 - 'Bring it back' (still_available) needed no fix: MFORM1 flagged it missing, but MACT added it to src/lib/campus/marketActions.ts afterwards
+- Left for the morning, not fixed tonight (small, outside every package): app/godview/campus/page.tsx:22 still labels 'college_email'; tests/security/firebase-rules.test.mjs v1 names; HOME and PRINTCAMPUS each keep a local copy of the fixture shops because fixtures/core.ts is server-only (a client-safe shops fixture would remove both); app/api/contact-requests/route.ts:114 whatsappText reads the stored intent instead of the derived one
