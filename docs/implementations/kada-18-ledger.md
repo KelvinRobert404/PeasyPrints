@@ -57,7 +57,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | HFORM | Housing post form v2 with landmark picker and WhatsApp paste | 5 | L | pending |  |  |
 | HDETAIL | Housing detail with owner lifecycle | 5 | M | done | ef0f642 | Housing detail v2 with owner panel. Beds minus stops at 1 and booking asks twice. Seed has no reserved or price-drop data. Browser check skipped (no .env.local). |
 | MFORM2 | New listing form v2, part 2: seat, cab split, ticket, pass, vehicle | 5 | M | pending |  |  |
-| MDETAIL | Market detail screen | 5 | L | pending |  |  |
+| MDETAIL | Market detail screen | 5 | L | done | da59674 | Own Ask/I-have-this CTA (ContactButton label fixed); pass fair price skipped, no paid price in model; plate/RC from plateState/papersOk; no browser check |
 | CONTACT | Contact requests and availability for v2 listings | 5 | M | done | 890201a | Route reads v2 collections; requests stay in campus_contact_requests. id route approve still reads old collections and fails until fixed; fixture GET misses seeds. |
 | PRINTCAMPUS | Print shops follow the signed-in campus | 5 | M | done | bb1d796 | Fixture shops copied into /upload (core.ts is server only); selectedCollegeId in other packages files still hits the grep; stale .next/types needs typegen |
 | MYPOSTS | My posts and updates on /campus/activity | 5 | M | done | 91b7de4 | Updates sits above the tabs and marks items read on load; shared post pieces live in MarketMyPosts; the offer wording needs intent from the contact-requests API |
@@ -105,6 +105,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:12 IST · MacBook · HDETAIL done, ef0f642
 - 7 Nov 22:14 IST · MacBook · MYPOSTS done, 91b7de4
 - 7 Nov 22:15 IST · MacBook · HFEED done, 8363756
+- 7 Nov 22:15 IST · MacBook · MDETAIL done, da59674
 
 
 ## Blocked
