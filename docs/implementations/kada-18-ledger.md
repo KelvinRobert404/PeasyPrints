@@ -49,7 +49,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | MACT | Market listing actions API | 4 | M | pending |  |  |
 | MFEED | Market v2 feed and the four See all screens | 4 | L | pending |  |  |
 | MFORM1 | New listing form v2, part 1: shell, item, wanted, bundle | 4 | L | pending |  |  |
-| HOME | Home v2: greeting, seasonal slot, utility row, illustrations | 4 | L | pending |  |  |
+| HOME | Home v2: greeting, seasonal slot, utility row, illustrations | 4 | L | done | 08c25b1 | Fixture Home shows a local copy of FIXTURE_SHOPS: core.ts imports firebase-admin, so a client page can t import it. Follow-up: client-safe shops fixture |
 | BLOOD | Blood donor alerts v1 (opt-in) | 4 | L | pending |  |  |
 | GAMES | Pickup games with slots v1 | 4 | L | pending |  |  |
 | DEAD | Remove dead auth, announcements and location code | 4 | S | done | cbc9306 | Typecheck fixed by regenerating .next types. RootShell.tsx:21 still checks /otp ; its owner package should drop it. |
@@ -91,6 +91,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:58 IST · MacBook · VERIFY done, 197ff3f
 - 7 Nov 21:59 IST · MacBook · MAPI done, c384daa
 - 7 Nov 22:00 IST · MacBook · DEAL done, 2eb4264
+- 7 Nov 22:00 IST · MacBook · HOME done, 08c25b1
 
 
 ## Blocked
