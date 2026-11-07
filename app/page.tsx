@@ -6,75 +6,123 @@ import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { AnnouncementCarousel } from '@/components/AnnouncementCarousel';
+import { UtilityRow } from '@/components/home/UtilityRow';
 import { useCampusSession } from '@/hooks/useCampusSession';
+import { useCurrentCampus } from '@/hooks/useCurrentCampus';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useOrdersStore } from '@/lib/stores/ordersStore';
 import { useShopsStore } from '@/lib/stores/shopsStore';
-import { useCollegeStore } from '@/lib/stores/collegeStore';
 import { useDockSlot } from '@/lib/stores/dockStore';
+import { isFixtureMode } from '@/lib/firebase/fixtureMode';
+import { homeSeasonalSlot } from '@/lib/campus/season';
 import { Chip, IconTile, ListRow, SectionHeader, ServiceTile, SmallTile, swButton } from '@/components/swoop/primitives';
 import {
   GirlsSpaceIcon,
   HelpIcon,
   HousingIcon,
   InfoIcon,
-  MarketIcon,
   SearchIcon,
   ShieldCheckIcon,
   StoreIcon,
   UploadIcon,
   type IconProps
 } from '@/components/swoop/icons';
+import { MarketArt, PrinterArt } from '@/components/swoop/illustrations';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { orderStatusMeta, toDate } from '@/components/orders/orderStatus';
 import { ShopCard } from '@/components/shops/ShopCard';
+import type { Shop, ShopPricing } from '@/types/models';
 
 /** A ready order older than this is treated as stale and doesn't take over the dock. */
 const PICKUP_SLOT_MAX_AGE_MS = 48 * 60 * 60 * 1000;
 const HOME_SHOP_LIMIT = 4;
 
-/** Printer illustration for the Print tile (from the approved Home mockup). */
-function PrinterArt() {
-  return (
-    <svg viewBox="0 0 120 110" width="62" height="57" aria-hidden="true" className="block translate-x-[10px] translate-y-[14px]">
-      <rect x="30" y="6" width="60" height="36" rx="4" fill="#FFFFFF" />
-      <rect x="40" y="16" width="34" height="4" rx="2" fill="var(--royal-tint)" />
-      <rect x="40" y="25" width="24" height="4" rx="2" fill="var(--royal-tint)" />
-      <rect x="8" y="36" width="104" height="46" rx="14" fill="var(--cream)" />
-      <circle cx="96" cy="50" r="4.5" fill="var(--go)" />
-      <rect x="22" y="62" width="76" height="8" rx="4" fill="var(--ink)" />
-      <rect x="32" y="66" width="56" height="42" rx="3" fill="#FFFFFF" />
-      <rect x="40" y="78" width="40" height="4" rx="2" fill="var(--royal)" />
-      <rect x="40" y="87" width="28" height="4" rx="2" fill="var(--royal)" />
-    </svg>
-  );
-}
+/**
+ * Print shops for fixture mode. Same data as FIXTURE_SHOPS in
+ * src/lib/campus/fixtures/core.ts, which is server only: it imports
+ * firebase-admin, which a client page cannot bundle. Keep the two in sync.
+ */
+const FIXTURE_PRICING: ShopPricing = {
+  a4: { singleBW: 2, doubleBW: 3, singleColor: 10, doubleColor: 18 },
+  a3: { singleBW: 5, doubleBW: 8, singleColor: 25, doubleColor: 45 },
+  services: { softBinding: 30, spiralBinding: 40, hardBinding: 120, emergency: 20, afterDark: 15 }
+};
+const FIXTURE_SHOPS: readonly Shop[] = [
+  {
+    id: 'shop-main-block',
+    name: 'Main Block Prints',
+    address: 'Ground floor, Main Block',
+    timing: '8:30 am to 6 pm',
+    openingTime: '08:30',
+    closingTime: '18:00',
+    isOpen: true,
+    collegeId: 'kju-main',
+    pricing: FIXTURE_PRICING
+  },
+  {
+    id: 'shop-gulabi-road',
+    name: 'Gulabi Road Xerox',
+    address: 'Gulabi Road, near Royal Mart',
+    timing: '9 am to 9 pm',
+    openingTime: '09:00',
+    closingTime: '21:00',
+    isOpen: true,
+    collegeId: 'kju-main',
+    pricing: {
+      ...FIXTURE_PRICING,
+      a4: { singleBW: 1.5, doubleBW: 2.5, singleColor: 8, doubleColor: 15 }
+    }
+  },
+  {
+    id: 'shop-airport-a1',
+    name: 'A1 Print Desk',
+    address: 'Next to A1 auditorium',
+    timing: '9 am to 5 pm',
+    openingTime: '09:00',
+    closingTime: '17:00',
+    isOpen: false,
+    collegeId: 'kju-airport-road',
+    pricing: FIXTURE_PRICING
+  }
+];
 
 type Tile = { label: string; href: string; icon: ComponentType<IconProps>; tone: 'ink' | 'royal' | 'market' | 'girls' };
 
+/** First word of a name, or null when there is none. */
+function firstName(name: string | null | undefined): string | null {
+  const word = name?.trim().split(/\s+/)[0];
+  return word ? word : null;
+}
+
 export default function HomePage() {
   const { session, loading } = useCampusSession();
+  const campus = useCurrentCampus();
   const { user } = useAuthStore();
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
   const { orders, subscribeByUser } = useOrdersStore();
-  const { shops, subscribe: subscribeShops, loading: shopsLoading } = useShopsStore();
-  const { selectedCollege, colleges } = useCollegeStore();
+  const { shops: liveShops, subscribe: subscribeShops, loading: liveShopsLoading } = useShopsStore();
   const [openOnly, setOpenOnly] = useState(false);
+
+  // Fixture mode has no client Firestore: skip the live subscriptions.
+  const fixtures = isFixtureMode();
+  const shops = useMemo(() => (fixtures ? [...FIXTURE_SHOPS] : liveShops), [fixtures, liveShops]);
+  const shopsLoading = fixtures ? false : liveShopsLoading;
 
   const userId = (isClerkLoaded && clerkUser?.id) || user?.uid || '';
 
   useEffect(() => {
+    if (fixtures) return;
     const unsub = subscribeShops();
     return () => unsub();
-  }, [subscribeShops]);
+  }, [fixtures, subscribeShops]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (fixtures || !userId) return;
     const unsub = subscribeByUser(userId);
     return () => unsub();
-  }, [userId, subscribeByUser]);
+  }, [fixtures, userId, subscribeByUser]);
 
-  const myOrders = useMemo(() => (userId ? orders : []), [userId, orders]);
+  const myOrders = useMemo(() => (userId && !fixtures ? orders : []), [userId, fixtures, orders]);
   const lastOrder = myOrders[0];
 
   // Newest order that's ready to collect (orders are sorted newest first).
@@ -100,14 +148,24 @@ export default function HomePage() {
       : null
   );
 
-  // Shops on the selected campus (all shops when the campus isn't known), open first.
+  // The season's card leads the carousel (exams, moving out, room set-up, next sem).
+  const seasonal = useMemo(() => homeSeasonalSlot(Date.now()), []);
+
+  // Shops on the student's campus (all shops when the campus isn't known), open first.
+  // shop.collegeId holds a catalog campus id.
+  const campusId = campus?.campusId ?? null;
   const campusShops = useMemo(() => {
-    const college = colleges.find((c) => c.name === selectedCollege);
-    const list = college ? shops.filter((s) => s.collegeId === college.id) : shops;
+    const list = campusId ? shops.filter((s) => s.collegeId === campusId) : shops;
     return [...list].sort((a, b) => Number(Boolean(b.isOpen)) - Number(Boolean(a.isOpen)));
-  }, [shops, colleges, selectedCollege]);
+  }, [shops, campusId]);
   const visibleShops = (openOnly ? campusShops.filter((s) => s.isOpen) : campusShops).slice(0, HOME_SHOP_LIMIT);
 
+  const name =
+    firstName(session.membership?.displayName) ??
+    (isClerkLoaded ? firstName(clerkUser?.firstName) ?? firstName(clerkUser?.fullName) : null);
+  const greetingPending = !name && (loading || !isClerkLoaded);
+
+  const code = campus?.code ?? session.membership?.collegeCode ?? null;
   const showVerify = !loading && session.signedIn && !session.verifiedStudent;
   const hasRecent = showVerify || Boolean(lastOrder);
 
@@ -124,6 +182,14 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-1 flex-col bg-white pb-3">
+      {/* Greeting */}
+      <h1
+        className={`font-heading truncate px-3 pt-2 text-[20px] leading-[1.15] text-ink ${greetingPending ? 'invisible' : ''}`}
+        aria-hidden={greetingPending || undefined}
+      >
+        {name ? `Hey ${name}` : 'Hey there'}
+      </h1>
+
       {/* Search → marketplace (there is no global search yet) + Upload */}
       <div className="px-3 pt-1.5">
         <div className="flex h-[42px] items-center gap-2 rounded-full bg-surface pl-[13px] pr-[5px]">
@@ -147,8 +213,8 @@ export default function HomePage() {
               href="/campus/verify"
               divider={Boolean(lastOrder)}
               leading={<IconTile icon={ShieldCheckIcon} tone="royal" size={32} />}
-              title="Unlock campus products"
-              subtitle="Verify your KJU student account"
+              title={code ? `Verify you're a ${code} student` : "Verify you're a student"}
+              subtitle="Unlock deals, housing and more"
             />
           )}
           {lastOrder && <OrderCard order={lastOrder} divider={false} />}
@@ -159,14 +225,21 @@ export default function HomePage() {
       <section className="flex flex-col gap-2 px-3 pt-3.5">
         <SectionHeader title="Suggestions" />
         <div className="grid grid-cols-2 gap-1.5">
-          <ServiceTile title="Print" subtitle="by PeasyPrints" href="/upload" tone="royal" art={<PrinterArt />} />
+          <ServiceTile
+            title="Print"
+            subtitle="Upload, pick up nearby"
+            href="/upload"
+            tone="royal"
+            art={<PrinterArt width={62} height={57} className="block translate-x-[10px] translate-y-[14px]" />}
+          />
           <ServiceTile
             title="Marketplace"
-            subtitle="Buy & sell on campus"
+            subtitle="Buy and sell on campus"
             href="/marketplace"
-            art={<MarketIcon size={34} className="text-market" />}
+            art={<MarketArt width={62} height={57} className="block translate-x-[8px] translate-y-[10px]" />}
           />
         </div>
+        <UtilityRow className="pt-0.5" />
         <div className="grid grid-cols-4 gap-1.5 pt-0.5">
           {smallTiles.map((t) => (
             <SmallTile key={t.href} label={t.label} href={t.href} icon={t.icon} tone={t.tone} />
@@ -174,10 +247,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Announcements */}
-      <section className="flex flex-col gap-2 pt-3.5">
-        <SectionHeader title="Announcements" className="px-3" />
-        <AnnouncementCarousel />
+      {/* Seasonal card, then promos */}
+      <section className="flex flex-col pt-3.5" aria-label="What's on">
+        <AnnouncementCarousel seasonal={seasonal} />
       </section>
 
       {/* Print shops near you */}
@@ -203,7 +275,13 @@ export default function HomePage() {
                 </div>
               ))}
             {visibleShops.map((shop, i) => (
-              <ShopCard key={shop.id} shop={shop} href={`/shops/${shop.id}`} divider={i < visibleShops.length - 1} />
+              // Home shows no photos: the shop thumb falls back to its icon tile.
+              <ShopCard
+                key={shop.id}
+                shop={{ ...shop, logoUrl: undefined }}
+                href={`/shops/${shop.id}`}
+                divider={i < visibleShops.length - 1}
+              />
             ))}
             {openOnly && visibleShops.length === 0 && campusShops.length > 0 && (
               <p className="py-3 text-[11.5px] text-slate">No shops are open right now.</p>
@@ -212,8 +290,12 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Quiet footer links */}
-      <nav aria-label="About Swoop" className="flex items-center justify-center gap-3 px-3 pt-5 text-[11.5px] font-semibold text-slate">
+      {/* Trust line and quiet footer links */}
+      <p className="flex items-center justify-center gap-1 px-3 pt-5 text-[11.5px] font-semibold text-slate">
+        <ShieldCheckIcon size={13} className="shrink-0 text-royal" />
+        {code ? `Only verified ${code} students` : 'Only verified students'}
+      </p>
+      <nav aria-label="About Swoop" className="flex items-center justify-center gap-3 px-3 pt-1 text-[11.5px] font-semibold text-slate">
         <Link href="/about" className="flex min-h-6 items-center hover:text-ink">
           About us
         </Link>
