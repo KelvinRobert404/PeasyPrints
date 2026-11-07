@@ -54,7 +54,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | GAMES | Pickup games with slots v1 | 4 | L | done | aae8479 | Uses CAMPUS_COLLECTIONS.games ( campus_games ), not pickup_games ; lead should rename it in constants.ts so it matches the index. Browser check not done. |
 | DEAD | Remove dead auth, announcements and location code | 4 | S | done | cbc9306 | Typecheck fixed by regenerating .next types. RootShell.tsx:21 still checks /otp ; its owner package should drop it. |
 | HFEED | Housing feed v2 | 5 | L | done | 8363756 | A place search ignores the ring. Posts with no distance stay in the near list. Agent means postedAs agent or brokerage charged. Browser check skipped (no .env.local). |
-| HFORM | Housing post form v2 with landmark picker and WhatsApp paste | 5 | L | pending |  |  |
+| HFORM | Housing post form v2 with landmark picker and WhatsApp paste | 5 | L | done | 57ae053 | Deleted HousingCard.tsx (nothing imports it). Roommate title placeholder now uses campusLabel. Kept the Meals chip as a PG amenity, not meal plans. |
 | HDETAIL | Housing detail with owner lifecycle | 5 | M | done | ef0f642 | Housing detail v2 with owner panel. Beds minus stops at 1 and booking asks twice. Seed has no reserved or price-drop data. Browser check skipped (no .env.local). |
 | MFORM2 | New listing form v2, part 2: seat, cab split, ticket, pass, vehicle | 5 | M | pending |  |  |
 | MDETAIL | Market detail screen | 5 | L | done | da59674 | Own Ask/I-have-this CTA (ContactButton label fixed); pass fair price skipped, no paid price in model; plate/RC from plateState/papersOk; no browser check |
@@ -107,6 +107,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:15 IST · MacBook · HFEED done, 8363756
 - 7 Nov 22:15 IST · MacBook · MDETAIL done, da59674
 - 7 Nov 22:18 IST · MacBook · CRON done, a996ff6
+- 7 Nov 22:19 IST · MacBook · HFORM done, 57ae053
 
 
 ## Blocked
