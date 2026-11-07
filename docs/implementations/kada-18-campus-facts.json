@@ -1,0 +1,374 @@
+{
+ "about": "KADA-18 campus facts. Researched 2 Nov 2026 (official sites, NIRF 2026, OpenStreetMap, OSRM) and from the KJU United chat analysis (KADA-13, 7 Nov). Coordinates are present only where a source gave them; otherwise mark origin approx. Excluded: PES Hanumanth Nagar (PU and diploma only) and Jain Jayanagar 3rd Block CPGS (likely closed).",
+ "kju_main_origin": {
+  "lat": 13.059,
+  "lng": 77.6428,
+  "approx": false,
+  "source": "OSRM route origin used in the research"
+ },
+ "campuses": [
+  {
+   "college": "CHRIST",
+   "campus": "Bangalore Central Campus",
+   "address": "Dharmaram College P.O., Hosur Road (near Bangalore Dairy Circle), Bengaluru, Karnataka 560029",
+   "locality": "Dharmaram / Dairy Circle, Hosur Road (S.G. Palya side, between Koramangala, Adugodi and Lakkasandra)",
+   "pincode": "560029",
+   "students_estimate": "Not published. Estimate ~16,000-19,000 (midpoint ~17,500), low confidence.",
+   "road_km_from_kju_main": "~17 km by road, south (OSRM driving route 16.9 km from KJU via Hennur ",
+   "nearby_student_areas": "S.G. Palya (Suddaguntepalya), Tavarekere, Koramangala (1st, 6th-8th Blocks), Venkatapura, BTM Layout 1st Stage, Adugodi, Lakkasandra, Wilson Garden, Bhavani Nagar",
+   "status": "active",
+   "coords": {
+    "lat": 12.9338,
+    "lng": 77.6052,
+    "approx": false
+   }
+  },
+  {
+   "college": "CHRIST",
+   "campus": "Bangalore Bannerghatta Road Campus",
+   "address": "Hulimavu P.O., Bannerghatta Main Road, Hulimavu, Bengaluru, Karnataka 560076",
+   "locality": "Hulimavu, Bannerghatta Road",
+   "pincode": "560076",
+   "students_estimate": "Not published. Estimate ~4,000-6,000, low confidence.",
+   "road_km_from_kju_main": "~23-25 km by road, south (OSRM 23.0 km via Hennur Rd > Cox Town > St J",
+   "nearby_student_areas": "Hulimavu, Arekere, Bilekahalli, Kalena Agrahara, Gottigere, JP Nagar 6th-8th Phase, Vijaya Bank Layout, BTM 4th Stage",
+   "status": "active",
+   "coords": {
+    "lat": 12.8779,
+    "lng": 77.5961,
+    "approx": false
+   }
+  },
+  {
+   "college": "CHRIST",
+   "campus": "Bangalore Yeshwanthpur Campus",
+   "address": "Nagasandra, Near Tumkur Road, Bengaluru, Karnataka 560073. The building is on Andrahalli / Nelagadaranahalli Main Road, south of NH-48.",
+   "locality": "Nelagadaranahalli / Nagasandra, off Tumkur Road (NH-48); ~2 km from Nagasandra metro, ~3 km from Peenya Industrial Area",
+   "pincode": "560073",
+   "students_estimate": "Not published. Estimate ~4,500-6,500, low confidence. Still growing.",
+   "road_km_from_kju_main": "~20-22 km by road, west (OSRM 19.7 km via Thanisandra > Nagawara > Heb",
+   "nearby_student_areas": "Nelagadaranahalli, Nagasandra, Andrahalli, Peenya 2nd Stage, Rajagopal Nagar, T. Dasarahalli, Chokkasandra, Jalahalli Cross, 8th Mile, Chikkabidarakallu",
+   "status": "active",
+   "coords": {
+    "lat": 13.0357,
+    "lng": 77.5057,
+    "approx": false
+   }
+  },
+  {
+   "college": "CHRIST",
+   "campus": "Bangalore Kengeri Campus",
+   "address": "Kanmanike, Kumbalgodu P.O., Mysore Road, Bengaluru, Karnataka 560074",
+   "locality": "Kumbalgodu, Mysore Road / Bengaluru-Mysuru Expressway (NH-275), beyond Kengeri",
+   "pincode": "560074",
+   "students_estimate": "~4,500 (estimate; range 4,000-5,000). About 3,500 of this is hard data from NIRF filings.",
+   "road_km_from_kju_main": "~35 km by road through the city centre (OSRM 35.3 km: Hennur Rd > Cox ",
+   "nearby_student_areas": "Kumbalgodu, Kengeri, Kengeri Satellite Town, Kambipura, Gonipura, Rajarajeshwari Nagar (further in toward the city)",
+   "status": "active",
+   "coords": {
+    "lat": 12.863,
+    "lng": 77.4379,
+    "approx": false
+   }
+  },
+  {
+   "college": "JAIN",
+   "campus": "JAIN Knowledge Campus",
+   "address": "#44/4, District Fund Road, behind Big Bazaar, Jayanagar 9th Block, Bengaluru 560069",
+   "locality": "Jayanagar 9th Block (District Fund Road / 41st Cross)",
+   "pincode": "560069",
+   "students_estimate": "not published",
+   "road_km_from_kju_main": "about 20.5 km by road, S/SSW (OSRM routing on OpenStreetMap)",
+   "nearby_student_areas": "Jayanagar 4th T and 9th Block, JP Nagar 1st and 2nd Phase, BTM Layout 2nd Stage, Tilak Nagar, Byrasandra, Bannerghatta Road (Dairy Circle, Gurappanapalya), Banashankari",
+   "status": "active",
+   "coords": null
+  },
+  {
+   "college": "JAIN",
+   "campus": "Center for Management Studies",
+   "address": "#133, Lalbagh Road, Bengaluru 560027",
+   "locality": "Lalbagh Road (Shanthinagar / Wilson Garden / Sudhama Nagar edge)",
+   "pincode": "560027",
+   "students_estimate": "not published",
+   "road_km_from_kju_main": "about 15.4 km by road, SSW (OSRM)",
+   "nearby_student_areas": "Wilson Garden, Shanthinagar, Sudhama Nagar, Lalbagh Fort Road, Basavanagudi, Siddapura, Richmond Town",
+   "status": "active (the official BBA page lists it as the study campus)",
+   "coords": null
+  },
+  {
+   "college": "JAIN",
+   "campus": "School of Sciences, JC Road",
+   "address": "#34, 1st Cross, JC Road, Bengaluru 560027",
+   "locality": "JC Road / New Mission Road junction (near Minerva Circle)",
+   "pincode": "560027",
+   "students_estimate": "not published",
+   "road_km_from_kju_main": "about 15.0 km by road, SSW (OSRM)",
+   "nearby_student_areas": "Sampangiramnagar, Shanthinagar, Wilson Garden, Chamarajpet, Basavanagudi, Shankarapuram, KR Market area",
+   "status": "active. Official 2026 programme pages (BSc Psychology, BSc Forensic Science) and the homepage footer name this as the Sc",
+   "coords": null
+  },
+  {
+   "college": "JAIN",
+   "campus": "CMS Business School, Sheshadri Road",
+   "address": "#17, Sheshadri Road, Gandhi Nagar, Bengaluru 560009",
+   "locality": "Gandhi Nagar / Sheshadri Road (near Freedom Park and Majestic)",
+   "pincode": "560009",
+   "students_estimate": "~2,050",
+   "road_km_from_kju_main": "about 13.4 km by road, SW (OSRM). This is the JAIN site closest to KJU",
+   "nearby_student_areas": "Gandhi Nagar, Seshadripuram, Malleshwaram, Kumara Park, Majestic, Vasanth Nagar, Chamarajpet",
+   "status": "active (official MBA page: 'Campus: Sheshadri Road, Bengaluru')",
+   "coords": null
+  },
+  {
+   "college": "JAIN",
+   "campus": "School of Law, Shankarapuram",
+   "address": "Municipal New No. 8 (Old No. 29), Shankar Mutt Main Road, 4th Cross, Shankarapuram, Bengaluru 560004",
+   "locality": "Shankarapuram / Basavanagudi",
+   "pincode": "560004",
+   "students_estimate": "not published",
+   "road_km_from_kju_main": "about 17.7 km by road, SW (OSRM)",
+   "nearby_student_areas": "Basavanagudi, Shankarapuram, Chamarajpet, Hanumanthanagar, Gavipuram, NR Colony, Srinagar",
+   "status": "active (Careers360 article on 2026 admissions, plus a contact directory). The official school-of-law page did not render",
+   "coords": null
+  },
+  {
+   "college": "JAIN",
+   "campus": "School of Allied Healthcare & Sciences",
+   "address": "Next to ITPL, KIADB Area, Whitefield, Bengaluru 560066",
+   "locality": "Whitefield / ITPL (EPIP–KIADB)",
+   "pincode": "560066",
+   "students_estimate": "not published",
+   "road_km_from_kju_main": "about 19.6 km by road, ESE (OSRM, to ITPL / 8th Road, KIADB)",
+   "nearby_student_areas": "Pattandur Agrahara, Hoodi, Brookefield, Kundalahalli, Mahadevapura, Kadugodi, Whitefield Main Road",
+   "status": "active (official SAHS page lists it as the 'Study Campus')",
+   "coords": null
+  },
+  {
+   "college": "JAIN",
+   "campus": "School of Design, Media & Creative Arts",
+   "address": "No 840/12/2, Sugatta Village, Hunasamaranahalli Post, Jala Hobli, Bengaluru 562157",
+   "locality": "Sugatta (Suggatta), Yelahanka taluk (Bettahalasur gram panchayat), Bengaluru Urban. It is west of NH44 near Hunasamaranahalli, about 5 km no",
+   "pincode": "562157",
+   "students_estimate": "not published",
+   "road_km_from_kju_main": "about 15.4 km by road, NNW (OSRM). It is the closest JAIN site in stra",
+   "nearby_student_areas": "Yelahanka New Town, Yelahanka Old Town, Bettahalasur, Hunasamaranahalli, Chikkajala, Kogilu, Jakkur, Doddaballapur Road",
+   "status": "active (official SDMCA About and B.Des pages list it as the study campus; JAIN announced the Yelahanka creative campus i",
+   "coords": null
+  },
+  {
+   "college": "JAIN",
+   "campus": "JP Nagar 6th Phase campus",
+   "address": "#319, 17th Cross, 25th Main Road, KR Layout, JP Nagar 6th Phase, Bengaluru 560078",
+   "locality": "JP Nagar 6th Phase / KR Layout (near Puttenahalli Main Road)",
+   "pincode": "560078",
+   "students_estimate": "not published",
+   "road_km_from_kju_main": "about 22.8 km by road, S (OSRM)",
+   "nearby_student_areas": "JP Nagar 5th–7th Phase, Puttenahalli, Sarakki, Jaraganahalli, Bannerghatta Road (Arekere, Hulimavu), Konanakunte",
+   "status": "active (teaching site per the official 2026 Interior Design programme pages)",
+   "coords": null
+  },
+  {
+   "college": "JAIN",
+   "campus": "JAIN Global Campus",
+   "address": "JAIN Global Campus, 45th km, NH-209 / NH-948 (Bengaluru–Kanakapura Road), Jakkasandra Post, Kanakapura Taluk, Ramanagara District 562112. This is the official wording; the area is now Harohalli taluk ",
+   "locality": "Jakkasandra, Kanakapura Road. It is outside Bengaluru city limits, in Harohalli taluk of Bengaluru South (formerly Ramanagara) district.",
+   "pincode": "562112",
+   "students_estimate": "~4,900–5,100",
+   "road_km_from_kju_main": "about 58 km by road, SSW (OSRM, through the city then Kanakapura Road ",
+   "nearby_student_areas": "Mostly on-campus hostels. Off-campus students stay in Harohalli or Kanakapura town, or commute by bus from Konanakunte, JP Nagar, Banashankari and Jayanagar.",
+   "status": "active (official footer and SET pages). It is outside city limits and JAIN still brands it as 'Bengaluru'.",
+   "coords": null
+  },
+  {
+   "college": "Presidency University",
+   "campus": "Main campus, Itgalpura",
+   "address": "Presidency University, Itgalpur, Rajanakunte, Yelahanka, Bengaluru, Karnataka 560064. The university's own 2025-26 factsheet uses this address. On the ground the campus is on Kakolu Road (Rajanukunte–",
+   "locality": "Ittagalapura / Dibburu villages, west of Rajanukunte, north of Yelahanka. Yelahanka taluk, formerly part of Bengaluru North taluk, Bengaluru",
+   "pincode": "560064",
+   "students_estimate": "~18,900 (THE WUR 2027 student total 18,863). This is the whole university's figure, becaus",
+   "road_km_from_kju_main": "About 22-24 km by road, to the NORTH-WEST of Kristu Jayanti, K. Naraya",
+   "nearby_student_areas": "Confirmed: Rajanukunte has branded PGs/co-living listed on Houssed: Stanza Living (Albury, Watford, Zomba, Glencoe, Serov) and Zolo (Tucana, Rigel, Hercules), at about Rs 9,900-13,000 a month. Rajanukunte is shared with other colleges on Doddaballapur Road. Also confirmed: Yelahanka New Town, where ",
+   "status": "active",
+   "coords": {
+    "lat": 13.1693192,
+    "lng": 77.5347979,
+    "approx": false
+   }
+  },
+  {
+   "college": "REVA University",
+   "campus": "REVA University main campus, Rukmini Knowledge Park",
+   "address": "Rukmini Knowledge Park, Kattigenahalli, Yelahanka, Bengaluru, Karnataka 560064",
+   "locality": "Kattigenahalli / Bellahalli, North Bengaluru. OpenStreetMap places the campus on Bellahalli Main Road in the Kogilu area, Bengaluru North Ci",
+   "pincode": "560064",
+   "students_estimate": "15,897 enrolled (AY 2024-25), about 15,200 attending daily",
+   "road_km_from_kju_main": "About 7.4-7.5 km by road (not 11-13 km), heading almost due north (abo",
+   "nearby_student_areas": "Kattigenahalli, Bellahalli and Bellahalli Circle, Dwarka Nagar, Bagalur Cross, Kogilu and Kogilu Cross, Chokkanahalli (Thanisandra Main Rd north), Chikkajala, Yelahanka New Town and Old Town; further out, Jakkur and Thanisandra.",
+   "status": "active",
+   "coords": {
+    "lat": 13.1168745,
+    "lng": 77.6346118,
+    "approx": false
+   }
+  },
+  {
+   "college": "Kristu Jayanti",
+   "campus": "Central Campus",
+   "address": "Kristu Jayanti (Deemed to be University), K. Narayanapura, Kothanur (PO), Bengaluru, Karnataka 560077. The university's own Google Maps link gives 13.0584821, 77.643084. OpenStreetMap places it on K. ",
+   "locality": "K. Narayanapura / Kothanur, off Hennur-Bagalur Road, North-East Bengaluru (Bengaluru East City Corporation area)",
+   "pincode": "560077",
+   "students_estimate": "Not published per campus. Estimates:\n- About 11,000-12,500 at all levels, including law an",
+   "road_km_from_kju_main": "0 km (this is the main campus)",
+   "nearby_student_areas": "K. Narayanapura (Colonia Santa Maria Layout, Cozy Layout, Reddy Layout / V R Reddy Layout, Moorty Layout / Defence Enclave, Munishamappa Kempanna Layout, KJ College Road), Kothanur, Geddalahalli, Gubbi Cross, Byrathi, Hennur / Hennur Cross, Horamavu, Kalyan Nagar, HRBR Layout, Babusapalya, Thanisand",
+   "status": "active",
+   "coords": {
+    "lat": 13.059,
+    "lng": 77.6428,
+    "approx": false
+   }
+  },
+  {
+   "college": "Kristu Jayanti",
+   "campus": "Airport Road Campus",
+   "address": "Official text: 'Airport Road Campus (ARC), Kristu Jayanti (Deemed to be University), Bagalur, New Airport Road, North Bengaluru, Karnataka 562149'. The Google Maps listing linked from the site reads '",
+   "locality": "Chagalahatti / Dasanayakanahalli, Bagalur area (Yelahanka taluk, Bengaluru Urban), on the Hennur-Bagalur Main Road towards the airport",
+   "pincode": "562149",
+   "students_estimate": "About 3,500-4,500 (estimate; not published)",
+   "road_km_from_kju_main": "About 9.5 km by road (OSRM route 9.45 km via K. Narayanapura Main Road",
+   "nearby_student_areas": "Chagalahatti, Bagalur, Dasanayakanahalli, Kannur, and towards Kothanur via Gubbi Cross / Byrathi. Kothanur and K. Narayanapura are reachable by the shuttle. This is an emerging student cluster that ARC shares with CMR University's campus at Chagalahatti, off the same Hennur-Bagalur Main Road.",
+   "status": "active (opened July 2026 for academic year 2026-27; the university runs a shuttle bus from the Central Campus)",
+   "coords": null
+  },
+  {
+   "college": "PES University",
+   "campus": "Ring Road",
+   "address": "PES University, 100 Feet Ring Road, BSK III Stage (Hosakerehalli), Banashankari, Bengaluru, Karnataka 560085",
+   "locality": "Hosakerehalli / Banashankari 3rd Stage (Outer Ring Road). The campus also backs onto M Srinivas Road and the NICE Road side.",
+   "pincode": "560085",
+   "students_estimate": "~8,400 university students (estimate, range about 8,100 to 8,700, on 2024-25 data), plus m",
+   "road_km_from_kju_main": "About 22 km by road (OSRM fastest route, about 26 min with free-flowin",
+   "nearby_student_areas": "Hosakerehalli, Banashankari 3rd Stage, Girinagar, Kathriguppe, Ittamadu, Kumaraswamy Layout, Banashankari 2nd Stage, Padmanabhanagar, Srinivasanagar, Bangarappa Nagar/D'Souza Nagar, and Nayandahalli/Rajarajeshwari Nagar",
+   "status": "active",
+   "coords": {
+    "lat": 12.9342,
+    "lng": 77.5343,
+    "approx": false
+   }
+  },
+  {
+   "college": "PES University",
+   "campus": "Electronic City",
+   "address": "PES University EC Campus, Hosur Road, 1 km before Electronic City, Konappana Agrahara, Bengaluru, Karnataka 560100",
+   "locality": "Konappana Agrahara / Electronic City (Hosur Road). OSM maps the campus at the Chikkathoguru / Doddanagamangala Road edge.",
+   "pincode": "560100",
+   "students_estimate": "~3,600 to 4,000 university students in the NIRF count (estimate, 2024-25 data), plus about",
+   "road_km_from_kju_main": "About 29 km by road (OSRM fastest route, about 36 min with free-flowin",
+   "nearby_student_areas": "Konappana Agrahara, Chikkathoguru, Doddathoguru/Neeladri Nagar, Electronic City Phase 1 and Phase 2, Doddanagamangala, Beratena Agrahara, Hosa Road, Kudlu Gate, Singasandra, Basapura and Bommasandra",
+   "status": "active and expanding (medical college and teaching hospital: PESUIMSR says launched 2023, MBBS admissions from 2024-25; ",
+   "coords": {
+    "lat": 12.8616,
+    "lng": 77.6645,
+    "approx": false
+   }
+  },
+  {
+   "college": "St Joseph's University",
+   "campus": "Main Campus",
+   "address": "36, Lalbagh Road, Bengaluru 560027. The site sits where Lalbagh Road meets Langford Road, next to the Richmond Circle flyover.",
+   "locality": "Langford Gardens / Shanthinagar / Richmond Town",
+   "pincode": "560027",
+   "students_estimate": "~10,688 (2024-25)",
+   "road_km_from_kju_main": "~15-17 km by road, SSW of Kristu Jayanti (Kothanur), via Hennur Road, ",
+   "nearby_student_areas": "Shanthinagar, Wilson Garden, Richmond Town, Langford Town, Austin Town, Vivek Nagar, Victoria Layout, Ejipura, Adugodi, Koramangala (1st-8th Blocks), Sudhama Nagar, Lakkasandra, Jayanagar (north blocks)",
+   "status": "active",
+   "coords": null
+  },
+  {
+   "college": "St Joseph's University",
+   "campus": "SJU B-Block",
+   "address": "St Joseph's University B-Block, SOS Post, Kalena Agrahara, Bannerghatta Road, Bengaluru 560076. The block covers about 5 acres inside the Jesuit Mount St Joseph campus, at the same postal address as L",
+   "locality": "Kalena Agrahara, Bannerghatta Road (Gottigere/Hulimavu side, near Meenakshi Temple)",
+   "pincode": "560076",
+   "students_estimate": "~377 (first-semester UG, Oct 2026)",
+   "road_km_from_kju_main": "~25-30 km by road, south (slightly SSW) of Kristu Jayanti (Kothanur). ",
+   "nearby_student_areas": "Kalena Agrahara, Gottigere, Hulimavu, Arekere, Bilekahalli, Nobo Nagar, Yelenahalli, BTM Layout 2nd/4th Stage, JP Nagar 7th/8th Phase, Begur, Akshayanagar",
+   "status": "active. The first semester was under way by Sept 2026; the exact class start date is not published, and the first notice",
+   "coords": null
+  }
+ ],
+ "kju_lists": {
+  "Landmarks near KJU Main campus, ranked by distinct posters (campus config: landmark chips and pickup points). Format: canonical | aliases | posters/msgs | area cluster | stated distance to campus": [
+   "Falcon Hospital (Falcon area) | falcon, falcon hospital, falcon healthcare, falcon road, falcon side, falcon 2nd cross | 34/62 | Gulabi Rd / K Narayanapura | 300-600 m (median ~360 m, n=6)",
+   "Bhartiya City / Bhartiya Mall (PVR) | bharthiya, bhartiya, bharatiya, bharitya, bharathiya, barthiya, Leela Bhartiya City, Bhartiya Mall of Bengaluru | 16/55 | Thanisandra side | 1.2-1.6 km (n=9); also movies, events, gigs",
+   "Livesta hostel / PG (E block, Premium PG for girls, mess) | livesta, levista | 14/15 | Kothanur | n/a; also mess card and an Onam pass rush (30-31 Aug 2025)",
+   "Navajyothi study house / hostel | nava jyoti, nava jyothi, navajyothi, navajyoti | 10/37 | Kothanur | ~500 m (n=1)",
+   "Amber Mega Store / Amber Mart | amber, amber mega store, amber mart, opposite amber | 9/46 (agent-heavy) | Byrathi | ~1-1.4 km via Byrathi",
+   "Hanuman arch (also gate, temple, mandir) | hanuman arch, hanuman arc, hanuman gate, hanuman temple, hanuman mandir | 9/27 (arch alone 4/20) | Sainikpuri / Murthy Layout side | 400-700 m (median 700, n=7)",
+   "Manyata Tech Park | manyata, manyatha, MTP | 9/11 | Nagawara / Hebbal side | far; working professionals and jobs",
+   "Empire restaurant / Empire hotel | empire, empire byrathi, empire hennur, empire kothanur | 6/49 (agent-heavy) | Kothanur / Hennur | ~1-1.6 km (paired with Teayos)",
+   "Shelter apartments | shelter | 6/9 | Defence Enclave / Murthy Layout | n/a",
+   "Udupi Vaibhav (food strip opposite campus) | udupi, udupi vaibhav | 5/10 | K Narayanapura Main Rd, opposite KJC | ~250 m (n=1)",
+   "Humanities Block (on campus) | humanities block | 5/6 | Main campus | on campus; stalls and E-Bazaar",
+   "Puma outlet | puma, puma outlet | 5/6 | Kothanur | n/a",
+   "Teayos | teayos, teayose, teaos | 4/8 | Kothanur (with Empire) | ~1.6 km (n=1)",
+   "St Mary's Church | st marys, st mary's | 3/5 | opposite KJU | close (said to be opposite KJU)",
+   "Vishal Mart | vishal mart, vishal mega mart | 3/4 | Kothanur | n/a",
+   "Hanumanta Gowda Circle | hanumanta circle | 3/3 | K Narayanapura | ~700 m (n=1)",
+   "Westside / T-Hut | westside, t-hut | 3/3 | Kothanur | n/a",
+   "Good Health Hospital | good health | 2/7 | K Narayanapura | ~1 km (n=3)",
+   "Royal Mart (Gulabi Rd) | royal mart, royal fresh mart | 2/5 | Gulabi Rd | 500-600 m (n=2)",
+   "Golden Palms (apartments) | golden palms | 2/3 | Kothanur | n/a",
+   "Ganesha temple | ganesha temple | 2/2 | n/a | n/a",
+   "Carmel Girls Hostel / St John's Boys Hostel (mess locations) | carmel, st john's | 2/2 | Kothanur | n/a",
+   "Ferns Residency, YMR Lichen (named once each, Sainikpuri cluster) | ferns, lichen | 1/1-4 | Sainikpuri / Defence Enclave | ~1-1.5 km"
+  ],
+  "Area chips for KJU Main campus, ranked by distinct posters. Format: canonical | aliases | posters/msgs | typical distance": [
+   "Byrathi (incl. Byrathi Cross, Byrathi village) | byrathi, byrthi, byrtahi, byrathy, byrathicross | 23/98 (Cross 6/28) | 0.65-1.5 km (median 1.4)",
+   "Kothanur (umbrella; incl. MLA Layout) | kothanur, kothnur | 23/56 | 0.4 km+ (wide area)",
+   "BDS Nagar / BDS Garden | bds, bds nagar, bds garden(s) | 20/62 | ~1 km",
+   "Hennur (incl. Hennur Cross) | hennur | 12/17 | 1.5 km+",
+   "Murthy Layout | murthy, murthi, murty layout, murthylayout | 10/21 | 500-700 m",
+   "Sainikpuri Colony / Layout (Kothanur, not Hyderabad) | sainikpuri, sanik puri, sainik puri, senikpuri | 9/56 (agent-heavy) | 1-1.5 km",
+   "Manyata | manyata, manyatha | 9/11 | far",
+   "Gulabi Road / Gulabi Gali (by Falcon) | gulabi, gulabi road, gulabi gali | 8/20 | 300-600 m",
+   "K Narayanapura (campus's own road; incl. Arkavathy, Nanjappa layouts) | narayanapura, narayanpura, k narayanapura | 7/15 | 0.25 km (main road) to 2.5 km (interior)",
+   "Defence Enclave (Kothanur) | defence enclave, defense enclave | 6/10 | ~1 km",
+   "Kalyan Nagar | kalyan nagar, kaliyan nagar | 5/8 | far (seeker 'side' choice with Horamavu and Banaswadi)",
+   "Horamavu | hormavu, horamavu | 5/8 | far",
+   "Yelahanka | yelahanka | 5/5 | far",
+   "Banaswadi | banaswadi | 4/4 | far",
+   "Airport Road campus area / Bagaluru (separate sub-campus) | airport campus, new campus, new kju, airport road campus, bagaluru, bagalur, baglur | 14/32 | its own origin, e.g. 400 m from the new campus"
+  ],
+  "Campus name aliases (search and copy)": [
+   "Display: KJU. Casual copy: 'college' ('near college', 'walk to college')",
+   "KJU = KJC = Kristu = Kristu Jayanti = Kristujayanti = Kristu Jayanthi = KJ College = Kristu Jayanti University = Kristu Jayanti College",
+   "college = clg = cllg = collage = campus = uni = university (all mean your campus)",
+   "Sub-campus 'Main campus' = KJU Main = Kothanur / K Narayanapura campus",
+   "Sub-campus 'Airport Road campus' = airport campus = new campus = new KJU = airport KJU campus = KJU Bagaluru branch = New Airport Road campus",
+   "Timeline: KJC only until Jul 2025; KJU first seen 14 Jul 2025; KJU about 4x KJC by 2026-Q2"
+  ],
+  "Campus name synonyms to map in search": [
+   "KJU",
+   "KJC",
+   "Kristu Jayanti",
+   "Kristu Jayanti College",
+   "Kristu Jayanti University / Kristu Jayanti (Deemed to be University)",
+   "college",
+   "clg",
+   "colg",
+   "campus",
+   "main campus → Main (Kothanur) site",
+   "new campus / new KJU campus / airport campus / airport road campus / New Airport Road campus → Airport Road site"
+  ],
+  "KJU sites and on-campus spots students name (candidate Print pickup points and meet-up spots)": [
+   "Main campus (Kothanur): Humanities Block (student stalls; a food bazaar behind it)",
+   "Main campus: Main Block",
+   "Main campus: Utility Block",
+   "Main campus: Quadrangle",
+   "Main campus: first gate / 'KJU gate'",
+   "Main campus: Sports Arena ('KJU / Kristu Jayanti arena', also a landmark used in housing posts)",
+   "Main campus: Jubilee Auditorium",
+   "Airport Road campus (new, toward Bagalur): A1 auditorium (OD sessions, orientation)"
+  ]
+ }
+}

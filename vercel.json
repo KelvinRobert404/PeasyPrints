@@ -1,5 +1,13 @@
 {
   "crons": [
-    { "path": "/api/internal/campus-maintenance", "schedule": "15 * * * *" }
-  ]
+    {
+      "path": "/api/internal/campus-maintenance",
+      "schedule": "15 * * * *"
+    }
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "kada-18/**": false
+    }
+  }
 }

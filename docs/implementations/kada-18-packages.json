@@ -1,0 +1,988 @@
+{
+  "issue": "KADA-18",
+  "branch": "kada-18/implement-redesign",
+  "base": "dev",
+  "fixture_flag": "NEXT_PUBLIC_SWOOP_FIXTURES=1",
+  "common_rules": "Repo: worktree C:/Developer/PeasyPrints-kada18, branch kada-18/implement-redesign (from dev). Swoop (Next 16, React, Tailwind, Clerk, Firebase Admin). Edit only the files listed in your package; do not commit or push (the lead does).\nNo live services: never call Firebase, Clerk, Razorpay or any database. Build against types, the in-memory fakes and fixtures. Fixture mode: NEXT_PUBLIC_SWOOP_FIXTURES=1 in dev (src/lib/firebase/fixtureMode.ts); pick the user with /api/dev/fixture-user?id=<fixture id>&next=<path>. Dev server: npm run dev -- -p 3018.\nNext 16 is not the Next you know: read the matching guide in node_modules/next/dist/docs/ before using routing, params, searchParams, useSearchParams or proxy APIs. params and searchParams are Promises.\nPure modules that node tests import: '@/...' only as `import type`; runtime imports relative with the .ts extension; no enums or constructor parameter properties. Tests live at tests/<dir>/<name>.test.ts and use node:test with node:assert/strict.\nDesign: Swoop design system v1 in src/components/swoop (primitives, icons, illustrations). Dense layout. Sentence case, never the `uppercase` class. Copy in plain English, each line under 10 words, 'Hey' greetings. Trust line 'Only verified students'; never 'Free. No broker. Student to student.'. Prices via formatPrice ('Rs 1.5k', 'Rs 8.5k pp', 'Rs 1.2L dep'), never the rupee sign. Distance via formatFromCampus ('650 m from KJU, 8 min walk'). Gender options 'For girls / For boys / Anyone'. No stock photos: student uploads only, else an illustration or icon tile. Never ask students which campus or area: campus comes from the session (useCurrentCampus), location only as optional phone GPS kept as a distance; posters of listings may pick a landmark. Headers show the campus label, e.g. 'KJU Main'.\nDropped, never build: events, hiring, jobs, internships, gigs, food surfaces (meal plans, late-night kitchens, kitchen storefronts, student shops), the DM button rename, going-home, survey board, past papers, pets.\nNot launched: change the data model freely, no backfill, no backward compatibility, delete replaced code. Never delete asset files (images, fonts, sounds); list them instead.\nDone means: npm run typecheck and npm run lint pass, npm test passes for your tests, and for UI the fixture-mode browser check at 375 px and 1280 px (no horizontal scroll). End with a self-review of at most 8 lines: what you built, files touched, checks run and results, anything skipped, anything that needs a live service later.",
+  "waves": [
+    {
+      "wave": 1,
+      "packages": [
+        {
+          "id": "TYP",
+          "title": "Types and shared constants",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/types/campus.ts",
+            "src/types/market.ts",
+            "src/types/housing.ts",
+            "src/types/utilities.ts",
+            "src/types/notifications.ts",
+            "src/lib/campus/constants.ts",
+            "package.json"
+          ],
+          "depends_on": [],
+          "acceptance": "typecheck, lint and npm test green with no consumer file touched; no dropped-feature word in any enum",
+          "brief": "Additive type foundation; touch no consumer file. campus.ts: method adds 'google'|'email_code' (keep 'college_email'); membership adds optional campusId, campusLabel, stay {type pg|flat|hostel|home, distanceM|null} (never lat/lng), course {programmeId, specialisation|null, semester}; session adds optional campus {id, collegeId, code, label}|null and onboarding {needs 'college'|'verify'|'course'|null}; add GenderPref girls|boys|anyone, ListingPlace {landmarkId|null, label, area, lat|null, lng|null, campusId, roughDistanceM|null}; re-export the new files. market.ts: MarketKind item|wanted|bundle|seat|cab_split|ticket|pass|vehicle, MarketCategory, PriceTerms (5), MarketStatus (+reserved, booked, expired), details union by kind, MarketListingDoc + serialized MarketListing. housing.ts: HousingListingDoc/HousingListing (postedAs, brokerage, whoCanStay, houseRules, moveIn, bedsLeft, rent pp, deposit, rentTerms, place, roommate). utilities.ts (deals, lost and found, blood, games), notifications.ts. constants.ts: CAMPUS_COLLECTIONS, DEFAULT_CAMPUS_ID, label maps, PAY_ON_PICKUP, TRUST_LINE, RESERVE_HOURS 24, NUDGE_DAYS 3, PRICE_DROP_BADGE_DAYS 7. package.json: quote the test glob."
+        },
+        {
+          "id": "CAT",
+          "title": "College, campus and course catalog",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/types/college.ts",
+            "src/lib/campus/catalog.ts",
+            "src/lib/campus/courses.ts",
+            "tests/campus/catalog.test.ts",
+            "tests/campus/courses.test.ts"
+          ],
+          "depends_on": [],
+          "acceptance": "npm test: 7 colleges, 21 campuses, unique ids, codes /^[A-Z]{2,8}$/, KJU origins >1 km apart, landmarks within 5 km, alias search, course validation",
+          "brief": "Static TS catalog. src/types/college.ts: CollegeId christ|jain|kju|pes|presidency|reva|sju; College {id, code (CHRIST, JAIN, KJU, PES, PU, REVA, SJU), name, shortName, aliases, emailDomains [], launchState live|waitlist, semesterStarts}; Campus {id, collegeId, name, label, origin {lat,lng,approx}, pickupPoints, landmarks}; Landmark {id, label, area, lat, lng, aliases}; CollegeConfig. catalog.ts: 21 campuses: Christ x4 (Central, Bannerghatta Rd, Kengeri, Yeshwanthpur), Jain x9 (names, localities and pincodes in docs/implementations/kada-18-campus-facts.json), kju-main 'KJU Main' + kju-airport-road 'KJU Airport Rd', PES x2, Presidency, REVA, SJU x2. KJU live, rest waitlist. KJU aliases kjc, clg, kristu. 8+ landmarks per KJU campus with area aliases (kothnur, knp, Hennur, Hormavu), 2+ elsewhere. Helpers: listColleges, getCollege, getCampus, campusesOf, campusLabel, searchColleges, findLandmark, mergeCollegeConfig. courses.ts: UG/PG programmes, semester counts, specialisations; validateCourse. Accept: npm test: counts, unique ids, codes, KJU origins >1 km apart, landmarks within 5 km (local haversine), alias search, bad semester rejected. Source of truth for names, localities, pincodes, nearby areas, known coordinates and KJU landmarks/areas/aliases: docs/implementations/kada-18-campus-facts.json (use real names; approx:true only where it has no coords).",
+          "reads": [
+            "docs/implementations/kada-18-campus-facts.json"
+          ]
+        },
+        {
+          "id": "FMT",
+          "title": "Price and distance helpers",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/lib/format/price.ts",
+            "src/lib/format/distance.ts",
+            "tests/format/price.test.ts",
+            "tests/format/distance.test.ts"
+          ],
+          "depends_on": [],
+          "acceptance": "npm test covers every format/parse example, haversine within 1%, pass fair price 12/30 days of Rs 3000 = Rs 1200",
+          "brief": "Pure leaf modules, no imports. price.ts: formatPrice(n, suffix?: 'pp'|'dep'|'/mo'): under 1,000 'Rs 650'; 1,000-99,999 as k, one decimal, no trailing .0 ('Rs 1k', 'Rs 1.5k', 'Rs 12k'); 1,00,000+ as L ('Rs 1.2L'); suffix after a space ('Rs 8.5k pp', 'Rs 1.2L dep'); 0 gives 'Free'. parsePriceInput: '1.5k', '1L', '1.2 lakh', '12,000', 'Rs 8.5k', '₹900' -> number, else null. parsePriceQuery: under/below/upto/within/</max and above/over -> {min?, max?, rest} ('cycle under 12k' -> max 12000, rest 'cycle'). fairPassPrice({paid, validFrom, validUntil, now}) pro-rata by days left, down to Rs 10. isPriceDrop(prev, next) strictly lower only. distance.ts: haversineMeters; roundForPrivacy (50 m); formatDistance ('650 m' to 10 m, '1.2 km'); walkMinutes = max(1, round(m/80)); formatFromCampus(650, 'KJU') -> '650 m from KJU, 8 min walk'; DISTANCE_RINGS [500,1000,2000], DEFAULT_RING 1000, ringLabel, withinRing. Accept: npm test covers every example, a known haversine pair within 1%, and 12 of 30 days at Rs 3000 -> 1200."
+        },
+        {
+          "id": "RUL",
+          "title": "Season, lifecycle and notification-slot rules",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/season.ts",
+            "src/lib/campus/listingRules.ts",
+            "src/lib/campus/notifySlots.ts",
+            "tests/campus/season.test.ts",
+            "tests/campus/listing-rules.test.ts",
+            "tests/campus/notify-slots.test.ts"
+          ],
+          "depends_on": [],
+          "acceptance": "npm test with fixed dates: month edges, 7 Nov exams slot, 24 h reserve lapse, nudge once, slot times, urgent quiet hours",
+          "brief": "Pure, own input types (no src/types imports), IST fixed +05:30. season.ts: seasonalPrompt(date) 'moving_out' Apr-May, 'set_up_room' Jun-Aug, else null; homeSeasonalSlot(date) {id, title, href}|null: exams 15 Oct-30 Nov and 15-31 Mar -> /upload; Apr-May -> /marketplace/new?kind=bundle; Jun-Aug -> /marketplace/all/near-you; Dec-Jan 'Next sem room?' -> /housing; isPeakHousingSeason Apr-Aug; nextSemStart(now, ['06-01','11-15']); resolveMoveIn, moveInLabel. listingRules.ts: effectiveStatus (reserved past reservedUntil -> active; past hardExpiresAt -> expired; active past availabilityExpiresAt -> needs_confirmation), reserveUntil (+24 h), computeExpiry(kind, details, now) (departure, showtime, availableUntil, validUntil; availability = min(+7 d, hard)), stillAvailableDue (72 h, once), canLowerPrice, priceDropActive (7 d), isDuplicateTitle, plateState, documentValidity valid|expiring(<30 d)|expired. notifySlots.ts: nextSlot(now, {urgent?}) 12:30 or 19:30 IST, else next day 12:30; nothing 22:00-07:00; urgent goes now 07:00-22:00; dedupeKey. Accept: npm test: month edges, 7 Nov, 24 h lapse, nudge once, 11:00->12:30, 13:00->19:30, 21:00->next 12:30, urgent 23:30->07:00."
+        },
+        {
+          "id": "FIX",
+          "title": "Offline fixture mode (fake Admin DB and bucket, proxy bypass)",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/firebase/fixtureMode.ts",
+            "src/lib/firebase/fakeAdmin.ts",
+            "src/lib/firebase/fakeSeed.ts",
+            "src/lib/firebase/admin.ts",
+            "proxy.ts",
+            ".env.example",
+            "app/api/dev/fixture-user/route.ts",
+            "tests/firebase/fake-admin.test.ts"
+          ],
+          "depends_on": [],
+          "acceptance": "npm test on the fake DB; typecheck, lint; with the flag unset no fixture code path runs",
+          "brief": "fixtureMode.ts: isFixtureMode() = NEXT_PUBLIC_SWOOP_FIXTURES === '1' && NODE_ENV !== 'production' ; FIXTURE_USER_IDS new-user, unverified-kju, pending-id-card, verified-kju-main (default), verified-kju-airport, girls-approved, admin; fixtureUserId() reads cookie swoop_fixture_user. fakeAdmin.ts: in-memory Firestore for what the code uses: collection/doc/get/set(merge)/update (dotted)/create (fails if exists)/delete, where (==, !=, in, array-contains, <, <=, >, >=), orderBy, limit, getAll, runTransaction (serial), batch, FieldValue increment/delete/serverTimestamp/arrayUnion/arrayRemove, real Timestamp; bucket stub (save, delete, download, getSignedUrl). fakeSeed.ts: empty seedFakeDb(db) hook. admin.ts: return the seeded fakes in fixture mode, unchanged otherwise. proxy.ts: in fixture mode keep the origin check for unsafe /api methods, then NextResponse.next() without clerkMiddleware. .env.example: NEXT_PUBLIC_SWOOP_FIXTURES= (dev only). app/api/dev/fixture-user: GET ?id=&next= sets the cookie, redirects via safeRedirectPath; 404 unless fixture mode. Accept: npm test on the fake (create conflict, increment, dotted update, queries, merge, transaction); flag unset = no fixture path."
+        },
+        {
+          "id": "ICO",
+          "title": "Shared icon additions",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/components/swoop/icons.tsx"
+          ],
+          "depends_on": [],
+          "acceptance": "typecheck, lint; git diff shows only additions (plus CanteenIcon removal if unused)",
+          "brief": "You are the only package editing src/components/swoop/icons.tsx tonight (its README normally forbids edits; tonight additions only). Add duotone icons in the existing Svg/SK/D2 pattern (24 viewBox, currentColor, aria-hidden, 0.32 secondary layer): WalkIcon, BusIcon, TrainIcon, PlaneIcon, CabIcon, CycleIcon, ScooterIcon, SeatIcon, PassIcon, BedIcon, BoxIcon (bundles), LandmarkIcon, RadiusIcon (distance ring), ClipboardIcon (paste a WhatsApp post), UsersIcon (We are N looking), LanguageIcon, BellIcon, HourglassIcon (Reserved 24 h), PriceDropIcon, DealIcon (percent tag), LostFoundIcon, IdCardIcon, BloodDropIcon, BallIcon, SunIcon (seasonal), HandIcon (I have this). No renames, no changes to existing icons. Remove CanteenIcon only if grep shows no users outside this file (food surfaces are dropped). No Google mark here. Keep each icon simple, legible at 20 px and consistent with HomeIcon and MarketIcon. Accept: typecheck, lint; git diff shows only additions apart from CanteenIcon; visual check happens later on /dev/parts and the kit pages."
+        },
+        {
+          "id": "ART",
+          "title": "Swoop illustration series, room art and pickup kitten swap",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/components/swoop/illustrations.tsx",
+            "src/components/swoop/illustrations-room.tsx",
+            "src/components/swoop/README.md",
+            "app/orders/[id]/pickup/page.tsx"
+          ],
+          "depends_on": [],
+          "acceptance": "typecheck, lint; grep '/figma/' in app and src empty; only #FFFFFF as a hex colour",
+          "brief": "A1: Swoop draws its own inline-SVG art; no stock photos. illustrations.tsx: PrinterArt (copy of the inline one in app/page.tsx), MarketArt, HousingArt, MovingOutArt, SetUpRoomArt, ExamPrintArt, NextSemRoomArt, DealsArt, LostFoundArt, BloodArt, GamesArt, VerifyArt, EmptyArt, PickupWaitArt. illustrations-room.tsx: RoomItemId (bed, mattress, study_table, chair, fan, cooler, wardrobe, bucket_set, kettle, lamp, curtains, shelf), one Art each and ROOM_ART: Record<RoomItemId, Component>. Style: 120x110 viewBox, props {width?, height?, className?}, aria-hidden, colours only CSS vars (--royal, --royal-tint, --royal-soft, --ink, --cream, --go, --market, --girls) plus white, flat, no gradients, no text. Pickup page: replace the /figma kitten <img> with PickupWaitArt and 'Show this at the counter.'. README: add an Illustrations section; rule 4 becomes 'Photos only from student uploads; otherwise an illustration or an icon tile'; Caps tags rule becomes sentence-case tags. Accept: grep '/figma/' in app and src empty; only #FFFFFF as a hex colour; pickup page read-through only (needs live order data)."
+        },
+        {
+          "id": "COPY",
+          "title": "Copy pass: sentence-case tags, no ALL CAPS, no food leftovers",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/components/swoop/primitives.tsx",
+            "app/globals.css",
+            "app/about/page.tsx",
+            "app/contact/page.tsx",
+            "app/settings/privacy/page.tsx",
+            "app/api/users/me/deletion-request/route.ts",
+            "app/godview/ui.tsx",
+            "app/godview/fees/page.tsx",
+            "app/godview/orders/page.tsx",
+            "app/shopfront/dashboard/page.tsx",
+            "app/shopfront/layout.tsx",
+            "app/shopfront/profile/page.tsx",
+            "src/components/upload/PrintConfigurator.tsx",
+            "src/components/upload/PrintUpgrades.tsx"
+          ],
+          "depends_on": [],
+          "acceptance": "typecheck, lint; 'uppercase' left only in coupon inputs, the SWOOP wordmark and files later packages rewrite; 'DELETE MY ACCOUNT' gone",
+          "brief": "B4, B7, H3 on files nobody else owns. primitives.tsx: Tag loses uppercase and tracking (sentence case, 9.5px bold, capitalise only the first letter of string children so 'sell' reads 'Sell'); remove the unused 'canteen' tone from IconTile/SmallTile and the --canteen tokens in app/globals.css (food is dropped). About: 'Print, Market and Housing for verified KJU students.' (no canteen, no wallet). Contact: lines under 10 words. Account deletion phrase becomes 'delete my account', compared case-insensitively in the client and the API zod schema (change both). Remove uppercase classes from godview/ui.tsx gvTableHead, godview fees and orders, shopfront dashboard labels and tab title ('New orders waiting'), shopfront layout shop name, shopfront profile labels, PrintConfigurator 'Unavailable' and the PrintUpgrades badge. Keep coupon code inputs uppercase and the SWOOP wordmark. Do not edit terms or privacy legal text; list 'PeasyPrints' hits there. Accept: grep uppercase in app and src leaves only coupons, the wordmark and files later packages rewrite; 'DELETE MY ACCOUNT' gone."
+        }
+      ]
+    },
+    {
+      "wave": 2,
+      "packages": [
+        {
+          "id": "MEM",
+          "title": "Membership server: multi-college principal, onboarding, session, config",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/membership.ts",
+            "src/lib/campus/collegeConfig.ts",
+            "src/lib/campus/auth.ts",
+            "app/api/campus/onboarding/route.ts",
+            "app/api/campus/session/route.ts",
+            "app/api/campus/config/route.ts",
+            "app/api/campus/verifications/route.ts",
+            "src/hooks/useCampusConfig.ts",
+            "tests/campus/membership.test.ts"
+          ],
+          "depends_on": [
+            "TYP",
+            "CAT",
+            "FMT",
+            "FIX"
+          ],
+          "acceptance": "npm test for membership.ts; no PILOT_COLLEGE in auth.ts or these routes; fixture mode session returns KJU Main / KJU Airport Rd per fixture user",
+          "brief": "membership.ts (pure): emailMatchesDomains: exact or subdomain, lowercased, rejects 'notkju.in' and 'kju.in.evil.io'; applyOnboardingInput(current, {collegeId, campusId, stay?, course?}): college change 409 'Your college is locked after verification' while pending or approved; campus change allowed; distance via roundForPrivacy, 0-50000; rejects lat/lng; validateCourse; computeNeeds -> college|verify|course|null. collegeConfig.ts: loadCollegeConfig = mergeCollegeConfig + college_configs/{id}. auth.ts: no PILOT_COLLEGE; auto-approve when any verified Clerk email matches the member's college domains, method 'google' if from a Google account else 'email_code'; gate = launchState live + product flag; keep revoked/blocked guards; in fixture mode principal and admin come from the cookie + fake DB, never Clerk. POST /api/campus/onboarding writes the patch, runs the domain check, returns session + domainMismatch. Session adds campus + onboarding.needs. Config: member's campus, origin, landmarks, pickupPoints, flags. Verifications: college/campus from membership (409 'Pick your college first'). useCampusConfig hook. Accept: npm test; fixture session 'KJU Main'/'KJU Airport Rd'."
+        },
+        {
+          "id": "GVC",
+          "title": "Godview campus config for all colleges and trust-queue columns",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/collegeConfigSchema.ts",
+            "app/api/godview/campus/config/route.ts",
+            "app/godview/campus/page.tsx",
+            "app/godview/campus/CollegeConfigEditor.tsx",
+            "app/api/godview/campus/memberships/route.ts",
+            "app/api/godview/campus/verifications/route.ts",
+            "app/api/godview/campus/verifications/[id]/route.ts",
+            "docs/campus-pilot-operations.md"
+          ],
+          "depends_on": [
+            "TYP",
+            "CAT"
+          ],
+          "acceptance": "typecheck, lint; no PILOT_COLLEGE in godview campus routes; editor PUT passes the schema (browser check skipped if the Godview admin gate needs live Clerk)",
+          "brief": "collegeConfigSchema.ts: zod for the CollegeConfig PUT (emailDomains lowercased, launchState live|waitlist, marketplaceEnabled, housingEnabled, campuses[] with origin, pickupPoints, landmarks {id,label,area,lat,lng,aliases}). Config route GET/PUT take ?collegeId (default kju): GET merges with the catalog (mergeCollegeConfig), PUT validates; both return that college's serial namespaces; no PILOT_COLLEGE. CollegeConfigEditor.tsx on the Godview campus page: college select, Live/Waitlist, email domains one per line (hint 'kristujayanti.com, one per line; subdomains count'), product toggles, per campus: origin lat/lng, pickup points, landmark rows to add or remove. Memberships and verifications lists add campusLabel, method, course and a ?collegeId filter in memory (no new index). Approval in [id] copies campusId/campusLabel to the membership. docs/campus-pilot-operations.md: per-college setup and the owner's Clerk dashboard steps (Google with Swoop's OAuth client, email code on, username/phone/password off, several emails per user). Accept: no PILOT_COLLEGE there; fixture admin: switch college, add/remove a landmark (skip if the Godview gate needs live Clerk)."
+        },
+        {
+          "id": "SEED",
+          "title": "Fixture data for every section and utility",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/fixtures/core.ts",
+            "src/lib/campus/fixtures/market.ts",
+            "src/lib/campus/fixtures/housing.ts",
+            "src/lib/campus/fixtures/utilities.ts",
+            "src/lib/campus/fixtures/index.ts",
+            "src/lib/firebase/fakeSeed.ts",
+            "tests/campus/fixtures.test.ts"
+          ],
+          "depends_on": [
+            "TYP",
+            "CAT",
+            "FMT",
+            "FIX"
+          ],
+          "acceptance": "npm test: catalog ids exist, required fields present, no ALL CAPS, no stock URLs; seeding a fresh fake DB fills every collection",
+          "brief": "Typed doc fixtures (src/types/*, catalog ids), dates relative to seed time. core.ts: a membership per FIXTURE_USER_ID with campus, course, stay (new-user none, pending-id-card pending); college_configs/kju with test domain kju.test; FIXTURE_SHOPS: 3 print shops whose collegeId is a catalog campus id. market.ts: 30+ listings on KJU Main and Airport Road: 3+ bundles, 2 vehicles (one insurance expiring), 2 tickets (one past showtime), 2 passes, 3 bus/train seats with seat gender, 1 airport cab split, 4 wanted; every price term; reserved, sold, price-dropped, needs-confirmation; verified-kju-main owns one confirmed 4 days ago and one 1 day ago; 4 girls posts. housing.ts: 12+ posts: room, roommate (We are 2 looking, languages, home state), replacement, sublet; student/owner/agent with brokerage; every move-in kind; 1 bed left; one 1.8 km away; reserved; price dropped; nudge due; 2 girls posts. utilities.ts: deals (live, expired, marked sample), lost and found with an ID card, donors + an open request, games (open, full, past). fakeSeed.ts loads all with serials. Images [] or /api/campus/media/*. Accept: npm test: ids exist, fields set, no caps, no stock URLs, all seeded."
+        },
+        {
+          "id": "SRCH",
+          "title": "Campus search: aliases, places, price phrases, one-tap ask",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/lib/search/campusSearch.ts",
+            "tests/search/campus-search.test.ts"
+          ],
+          "depends_on": [
+            "CAT",
+            "FMT"
+          ],
+          "acceptance": "npm test: 'kjc cycle under 2k', 'pg near kothnur', 'clg', 'under 12k girls kjc', 'mattress near clg', askText <10 words",
+          "brief": "Pure; relative .ts imports (../campus/catalog.ts, ../format/price.ts). normalize(): lowercase, strip punctuation, collapse spaces. parseQuery(text, {viewerCollegeId, campusId}) -> {collegeId?, areaIds[], landmarkIds[], category?, gender?, min?, max?, terms[]}: college aliases from the catalog (kjc, kristu -> kju); 'clg'/'college' -> viewer's college; place aliases from campus areas and landmarks ('kothnur' -> Kothanur); 'near X' -> landmark or area; category synonyms (bike/scooty/activa -> vehicles; mattress/bucket/table/chair -> room; mess/gym -> passes; bus/train/seat/cab -> trips; ticket -> tickets; book/notes -> books_notes); girls/ladies/female -> girls, boys/gents/male -> boys; price phrases via parsePriceQuery. matchItem(item, parsed): structural match over title, description, serial, category, place label/area/landmarkId, price. askText(q) -> 'Any cycle available?' (under 10 words; trims long queries); wantedPlaceholder(). Accept: npm test: 'kjc cycle under 2k' -> kju, ['cycle'], max 2000; 'pg near kothnur' -> Kothanur; 'clg' -> viewer college; 'under 12k girls kjc' -> 12000, girls; 'mattress near clg' matches; askText under 10 words."
+        },
+        {
+          "id": "MSCH",
+          "title": "Market schema, constants and feed grouping",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/market.ts",
+            "src/lib/campus/marketSchema.ts",
+            "src/lib/campus/marketFeed.ts",
+            "tests/campus/market-schema.test.ts",
+            "tests/campus/market-feed.test.ts"
+          ],
+          "depends_on": [
+            "TYP",
+            "RUL",
+            "FMT",
+            "ART"
+          ],
+          "acceptance": "npm test: ticket above face value, seat without departure, scooter without plate, bundle 0/21 items rejected; empty-description wanted accepted; grouping correct",
+          "brief": "market.ts: labels for kinds and categories; FURNISH_TILES (mattress, study_table, chair, fan, cooler, bucket_set, kettle, shelf: ids from RoomItemId in src/components/swoop/illustrations-room.tsx, with typical prices); ALSO_CHIPS Vehicles/Tickets/Trips/+; plate state codes (KA default); MARKET_SECTIONS clearing-out|seats|near-you|wanted titled 'Rooms clearing out', 'Seats, tickets and passes', 'Everything near you', 'Wanted'. marketSchema.ts: zod discriminatedUnion on kind: ticket price <= faceValue; bundle 1-20 items, 8 photos, others 5; description optional (one-tap ask); whatsappNumber optional with useSavedNumber; landmarkId required for item, bundle, vehicle; seat/cab need departureAt; motor vehicles need plateState; PATCH union still_available, sold, booked, reserve, unreserve, lower_price, bundle_item_sold, seats_left, close, promotion. marketFeed.ts: groupMarketFeed(items, now) -> {clearingOut, seats (by soonest end), nearYou (by distanceM then newest), wanted, furnishCounts} using listingRules.ts and distance.ts. Accept: npm test: bad ticket, seat without departure, scooter without plate, bundle 0/21 items rejected; empty wanted accepted; grouping right."
+        },
+        {
+          "id": "HMOD",
+          "title": "Housing model, schema and WhatsApp paste parser",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/housing/model.ts",
+            "src/lib/campus/housing/schema.ts",
+            "src/lib/campus/housing/parseWhatsAppPost.ts",
+            "tests/campus/housing-model.test.ts",
+            "tests/campus/housing-whatsapp.test.ts"
+          ],
+          "depends_on": [
+            "TYP",
+            "FMT",
+            "RUL",
+            "CAT"
+          ],
+          "acceptance": "npm test: agent without brokerage and phone-in-description rejected, rules exclusivity, 6+ sample posts parsed exactly",
+          "brief": "model.ts: label maps (room/roommate/replacement/sublet, house rules, posted as); housingPriceLabels(item) -> 'Rs 8.5k pp' / 'Rs 1.2L dep'; containsPhoneNumber; roommateChips(item) in H2 order (move-in, rules, gender, 'We are N looking', languages, home state). schema.ts: create zod: whoCanStay required (girls route forces girls); houseRules min 1, 'no_restrictions' exclusive; moveIn required; brokerage required for agent; rent pp and deposit >= 0; rentTerms fixed|negotiable|slightly_negotiable; place landmarkId or 'other' + typed area + rough distance; no phone in description; PATCH union confirm|reserve|unreserve|booked|close|lower_price|beds|promotion. parseWhatsAppPost(text, landmarks) -> {draft, filled, phone?, cleanedDescription, flags}: no network or LLM; rent (8.5k, Rs, '/-'), deposit, sharing, gender (girls/ladies/boys/gents/co-living), veg rules, furnishing, move-in (immediate, from 1st, month names, next sem), area via landmark aliases, agent vs owner; 10-digit numbers moved to phone and stripped; door numbers flagged. Accept: npm test: agent without brokerage and phone in description rejected, rules exclusivity, 6+ English and Hinglish samples parsed exactly."
+        },
+        {
+          "id": "STORE",
+          "title": "Pre-sign-in choice store, college picker and stay step",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/lib/stores/collegeStore.ts",
+            "src/components/auth/CollegePicker.tsx",
+            "src/components/auth/StayStep.tsx",
+            "next.config.js"
+          ],
+          "depends_on": [
+            "TYP",
+            "CAT",
+            "FMT"
+          ],
+          "acceptance": "typecheck, lint; no lat/lng in store state or request bodies; persist includes pick and stay; geolocation allowed for self",
+          "brief": "collegeStore.ts: add persisted pick {collegeId, campusId}|null and stay {type, distanceM|null}|null with setPick, setStay, clearPick; keep the legacy selectedCollege API for now (PRINTCAMPUS removes it). CollegePicker.tsx (presentational, value/onChange): 'Hey, which college are you at?', SearchPill using searchColleges (kjc, clg, kristu find KJU), 7 college rows, then campus rows when a college has more than one; waitlist colleges selectable, marked 'Opening soon'. StayStep.tsx: chips PG, Flat, Hostel, Home; 'Use my location' calls navigator.geolocation.getCurrentPosition, computes haversineMeters to the chosen campus origin on the phone, keeps only roundForPrivacy(distance) and drops coordinates at once; line 'We keep only the distance'; Skip; denied or failed location falls back to the chips. Never ask for an area. next.config.js: Permissions-Policy geolocation=(self) (geolocation=() blocks GPS); nothing else. Accept: read-through: no lat/lng in store state or request bodies; persist includes pick and stay; visual check via LOGIN's preview."
+        },
+        {
+          "id": "SIGNIN",
+          "title": "Custom sign-in: Continue with Google first, 6-digit email code second",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/components/auth/useCollegeSignIn.ts",
+            "src/components/auth/SignInStep.tsx",
+            "src/components/auth/EmailCodeForm.tsx",
+            "src/components/auth/GoogleMark.tsx",
+            "app/(auth)/sso-callback/page.tsx",
+            "app/(auth)/register/page.tsx"
+          ],
+          "depends_on": [
+            "CAT"
+          ],
+          "acceptance": "typecheck, lint; no afterSignInUrl/afterSignUpUrl or 'as any' in touched files; live round trip is a morning item",
+          "brief": "Step 2 per the canvas: Continue with Google first, email code second. useCollegeSignIn.ts wraps Clerk 6.39 useSignIn/useSignUp: google(next) -> signIn.authenticateWithRedirect({strategy 'oauth_google', redirectUrl '/sso-callback', redirectUrlComplete '/campus/verify?next=' + safeRedirectPath(next), oidcPrompt 'select_account'}); sendCode(email) -> signIn.create + prepareFirstFactor email_code, or signUp.create + prepareEmailAddressVerification for a new email; verifyCode -> attempt, setActive, push /campus/verify?next. Errors plain. SignInStep.tsx (props collegeCode, onGoogle, onEmailCode): 'Sign in with your KJU email', Google button with GoogleMark.tsx (official G, own file), link 'Get a 6-digit code instead', line 'No college email? Use your ID card after signing in'. EmailCodeForm.tsx exports CodeInput (6 boxes, one-time-code autofill). sso-callback: AuthenticateWithRedirectCallback, fallbacks /campus/verify?next, continueSignUpUrl '/login', logo spinner, no 'as any'. register: redirect to /login keeping redirect_url; drop the /otp redirect. Accept: no afterSignInUrl/afterSignUpUrl or 'as any' in touched files; live round trip is a morning item."
+        },
+        {
+          "id": "CPARTS",
+          "title": "Shared campus UI parts: price, places, gender, photos, detail parts",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/components/campus/fields/PriceInput.tsx",
+            "src/components/campus/fields/PriceTermsChips.tsx",
+            "src/components/campus/fields/GenderChips.tsx",
+            "src/components/campus/fields/PhotoField.tsx",
+            "src/components/campus/places/LandmarkPicker.tsx",
+            "src/components/campus/places/RingChips.tsx",
+            "src/components/campus/places/DistanceLine.tsx",
+            "src/components/campus/detail/Gallery.tsx",
+            "src/components/campus/detail/ReportSheet.tsx",
+            "src/components/campus/detail/ContactButton.tsx",
+            "src/components/campus/detail/SaveShare.tsx",
+            "app/dev/parts/page.tsx"
+          ],
+          "depends_on": [
+            "TYP",
+            "FMT",
+            "CAT",
+            "ICO"
+          ],
+          "acceptance": "typecheck, lint; fixture mode /dev/parts at 375 px and 1280 px: price preview, landmark distance line, ring default 1 km, locked gender, no horizontal scroll",
+          "brief": "Shared parts; nobody builds their own. fields/: PriceInput (1.5k, 1L via parsePriceInput, live 'Rs 1.5k' preview, suffix pp/dep), PriceTermsChips (5 terms; rent mode limits to fixed/negotiable/slightly_negotiable; Free sets price null), GenderChips (For girls / For boys / Anyone; locked prop for Girls' space), PhotoField (up to N student uploads via POST /api/campus/media). places/: LandmarkPicker (props landmarks, origin, campusCode, value, onChange; alias search; fills area, shows '650 m from KJU, 8 min walk'; 'Other' = typed area + rough distance; for posters only), RingChips (500 m / 1 km / 2 km, default 1 km), DistanceLine (formatFromCampus). detail/: Gallery, ReportSheet, ContactButton (WhatsApp access via /api/contact-requests; disabledLabel for reserved), SaveShare: copied and cleaned from ContentDetail.tsx without editing it. app/dev/parts/page.tsx renders every part with sample props, notFound() unless isFixtureMode(). Touch targets >= 32 px. Accept: fixture mode /dev/parts at 375 and 1280 px: price preview, landmark distance, ring default 1 km, locked gender, no horizontal scroll."
+        }
+      ]
+    },
+    {
+      "wave": 3,
+      "packages": [
+        {
+          "id": "NTF",
+          "title": "Notification queue, inbox API, rules and indexes",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/notify.ts",
+            "app/api/campus/notifications/route.ts",
+            "firestore.rules",
+            "firestore.indexes.json",
+            "tests/security/firebase-rules.test.mjs",
+            "docs/35-campus-data-model.md",
+            "docs/30-data-models.md"
+          ],
+          "depends_on": [
+            "TYP",
+            "RUL",
+            "FIX",
+            "MEM"
+          ],
+          "acceptance": "typecheck, lint; indexes JSON parses; rules test only with local Java + emulator (else skipped); fixture mode GET returns only due items",
+          "brief": "E4 in-app queue plus data hygiene. notify.ts: enqueue(userIds, {kind, title, body, href, ref, urgent?}) writes campus_notifications/{dedupeKey} with deliverAfter = nextSlot (notifySlots.ts), idempotent; notifySavers(contentType, contentId, kind, payload) reads campus_saves, owner excluded. Titles under 10 words. GET /api/campus/notifications: viewer's due items (deliverAfter <= now, newest first, limit 50); PATCH {ids} marks read. No push. firestore.rules: every new CAMPUS_COLLECTIONS entry joins the server-only deny list. firestore.indexes.json: marketplace_listings and housing_posts (collegeId, status, createdAt desc), campus_notifications (userId, deliverAfter), pickup_games (campusId, startsAt), lost_found_items (campusId, status, createdAt desc), blood_donors (collegeId, bloodGroup, optedIn), student_deals (collegeId, validUntil). Rules test: client read and write fail on each new collection. docs/35-campus-data-model.md: every campus collection, fields, writer, retention; docs/30-data-models.md links it. Never deploy. Accept: indexes JSON parses; rules test only with local Java + emulator (else skipped); fixture GET returns only due items."
+        },
+        {
+          "id": "HDR",
+          "title": "Header campus chip, shell rules, CampusGate routing, shared session",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/components/layout/SwoopNavbar.tsx",
+            "src/components/layout/RootShell.tsx",
+            "src/components/layout/Dock.tsx",
+            "src/components/campus/CampusGate.tsx",
+            "src/hooks/useCampusSession.ts",
+            "src/hooks/useCurrentCampus.ts"
+          ],
+          "depends_on": [
+            "TYP",
+            "CAT",
+            "MEM",
+            "STORE",
+            "ICO"
+          ],
+          "acceptance": "typecheck, lint; no useCollegeNames or uppercase in SwoopNavbar; fixture mode chip 'KJU Main' / 'KJU Airport Rd', one session request per page, gate links carry next",
+          "brief": "useCampusSession.ts: same return shape, one module-level zustand store so navbar, gate and pages share one /api/campus/session fetch; refresh() refetches for all. useCurrentCampus.ts -> {campusId, collegeId, code, label} from session.campus, else the collegeStore pick (getCampus), else null. SwoopNavbar: delete CollegeSelector and the uppercase 'Choose campus'; read-only chip (PinIcon + label, no dropdown), 'Pick college' linking to /login when unknown; keep inbox badge and UserButton. CampusGate routes on onboarding.needs: signed out -> /login?redirect_url=<path>; college/verify/course -> /campus/verify?next=<path>; copy 'Hey, sign in to see KJU posts' / 'Verify once to buy, sell and rent' / 'Only verified students' with the session college code; girlsOnly review unchanged. RootShell: auth pages = paths starting /login plus /register, /sso-callback (no navbar, no dock); hide the navbar on /campus/deals, /campus/lost-found, /campus/blood, /campus/games. Dock: Home tab also active on those four; tabs unchanged. Accept: no useCollegeNames or uppercase in SwoopNavbar; fixture 375 px: chip 'KJU Main', 'KJU Airport Rd' for that user, one session request per load, gate links carry next."
+        },
+        {
+          "id": "LOGIN",
+          "title": "/login stepper, AuthShell trust line, dev preview",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "app/(auth)/login/page.tsx",
+            "src/components/auth/AuthShell.tsx",
+            "app/(auth)/login/preview/page.tsx"
+          ],
+          "depends_on": [
+            "STORE",
+            "SIGNIN"
+          ],
+          "acceptance": "typecheck, lint; fixture mode /login/preview at 375 px and 1280 px: every step, 'KJC' finds KJU, KJU shows 2 campuses, stay skippable, no ALL CAPS, no horizontal scroll",
+          "brief": "Step 1 college, then campus (picker with optional GPS distance), then stay (optional), then step 2 sign in. login/page.tsx composes CollegePicker and StayStep (src/components/auth) with SignInStep + useCollegeSignIn; step in client state mirrored to ?step= so Back works; a stored collegeStore pick opens at sign-in with a 'Change' link; keep redirect_url through safeRedirectPath. Stop using clerkAppearance and the prebuilt SignIn. AuthShell: optional onBack, step dots, trust line 'Only verified students. Never a fee.'; never the rival line. login/preview/page.tsx: dev-only (notFound() in production), every step with fixture props and no-op handlers, so screens can be checked without Clerk. Read node_modules/next/dist/docs on useSearchParams and Suspense first. Accept: fixture mode 375 and 1280 px on /login/preview: every step renders, 'KJC' finds KJU, KJU shows 2 campuses, stay can be skipped, no ALL CAPS, no horizontal scroll."
+        },
+        {
+          "id": "VERIFY",
+          "title": "/campus/verify onboarding: domain result, add college email, ID card, course step",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "app/campus/verify/page.tsx",
+            "src/components/campus/CourseStep.tsx",
+            "src/components/campus/AddCollegeEmail.tsx",
+            "src/components/campus/IdCardUpload.tsx",
+            "app/(auth)/login/preview/verify/page.tsx"
+          ],
+          "depends_on": [
+            "MEM",
+            "STORE",
+            "SIGNIN"
+          ],
+          "acceptance": "typecheck, lint; fixture mode 375 px: new-user, unverified-kju and pending-id-card each show the right step; semester list follows programme",
+          "brief": "Step 2 outcome and step 3 (H1). The page reads session.onboarding.needs. needs 'college' with a stored pick: POST /api/campus/onboarding with pick and stay; nothing stored: CollegePicker (the only post-sign-in place that asks). needs 'verify': on domainMismatch 'That's not a KJU email' with 'Add your college email' (AddCollegeEmail: user.createEmailAddress, prepareVerification email_code, CodeInput from EmailCodeForm.tsx, re-POST onboarding), 'Sign in with another account' (signOut, /login) and 'Use your ID card' (IdCardUpload, moved out of the current page, plain copy). needs 'course': CourseStep 'What do you study?': programme select, specialisation with suggestions (courses.ts), semester 1..length; POST onboarding {course}; a pending ID card still asks for course. needs null: router.replace(safeRedirectPath(next)). Girls' space section stays below once approved. Hide the dock while onboarding (useHideDock). login/preview/verify: dev-only preview of mismatch, ID pending, course, done. Accept: fixture 375 px: new-user, unverified-kju, pending-id-card each show the right step; semester list follows programme; no ALL CAPS."
+        },
+        {
+          "id": "MAPI",
+          "title": "Market listing API v2: read, create, serializer",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "app/api/marketplace/listings/route.ts",
+            "app/api/marketplace/listings/[id]/route.ts",
+            "src/lib/campus/marketSerialize.ts"
+          ],
+          "depends_on": [
+            "TYP",
+            "MSCH",
+            "RUL",
+            "FMT",
+            "MEM",
+            "SEED"
+          ],
+          "acceptance": "typecheck, lint, npm test; fixture mode: GET items carry distanceM, a ticket POST expires at showtime, a duplicate returns 409",
+          "brief": "marketSerialize.ts: serializeMarketListing(doc, viewer, savedIds, origin): effectiveStatus; distanceM from place lat/lng to the viewer's campus origin (roughDistanceM only on the same campus); priceDropped. GET /api/marketplace/listings: status in ['active','reserved'] limit 200, audience and viewer college filtered in memory -> {campus {id, code, label}, items} plus a temporary own/other alias (CLEAN removes); mine=1 returns all the author's posts. POST: marketSchema; place resolved from loadCollegeConfig landmarks on the server (never trust client coordinates); computeExpiry; campusId from membership; duplicate guard: same author, live or needs-confirmation, same normalised title -> 409 {existingId, error 'You already posted this'}; WhatsApp: useSavedNumber copies campus_private_profiles/{uid}.lastNumber[audience], else saves it there per audience (Girls' space numbers never reach campus posts). Keep serial, media check, rate limit. [id] GET uses the new serializer; PATCH left for MACT. Girls re-export routes unchanged. Accept: npm test; fixture mode: GET items have distanceM, a ticket POST expires at showtime, a duplicate returns 409."
+        },
+        {
+          "id": "MKIT",
+          "title": "Market UI kit",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/components/campus/market/ListingCard.tsx",
+            "src/components/campus/market/BundleCard.tsx",
+            "src/components/campus/market/PassRow.tsx",
+            "src/components/campus/market/WantedCard.tsx",
+            "src/components/campus/market/FurnishTiles.tsx",
+            "src/components/campus/market/AlsoChips.tsx",
+            "src/components/campus/market/AskCard.tsx",
+            "src/components/campus/market/SeasonPrompt.tsx",
+            "src/components/campus/market/PriceBits.tsx",
+            "app/dev/market-kit/page.tsx"
+          ],
+          "depends_on": [
+            "TYP",
+            "FMT",
+            "ICO",
+            "ART",
+            "MSCH",
+            "SEED",
+            "CPARTS"
+          ],
+          "acceptance": "typecheck, lint; rg 'uppercase|₹' src/components/campus/market empty; fixture mode /dev/market-kit at 375 px: prices, distance, all states, targets >= 32 px",
+          "brief": "Market v2 canvas components on Swoop primitives. ListingCard (3-up): student photo or duotone icon tile, formatPrice, terms chip, DistanceLine, Reserved / Sold (TapeStrip) / Booked, 'Price dropped' with old price struck through, save. BundleCard: '6 items · from Rs 200 · until 30 Apr', ROOM_ART when no photo. PassRow (seat, cab_split, ticket, pass): route and time, gender label, '2 seats left', 'Ends at showtime', 'Fair price Rs 1.2k'. WantedCard: 'Any cycle available?' + 'I have this'. FurnishTiles: FURNISH_TILES (src/lib/campus/market.ts) with ROOM_ART, typical price, count near you. AlsoChips: Vehicles, Tickets, Trips, +. AskCard: 'Any {q} available?' + 'Ask KJU' (code prop). SeasonPrompt: 'Moving out? Clear your room in one post.' / 'Set up your room for less.'. PriceBits: price, terms, drop helpers. Don't edit icons.tsx or illustrations-room.tsx. app/dev/market-kit/page.tsx renders all from SEED market fixtures via a small local doc-to-card adapter, notFound() unless isFixtureMode(). Accept: rg 'uppercase|₹' src/components/campus/market empty; fixture /dev/market-kit at 375 px: prices, distance, all states, targets >= 32 px."
+        },
+        {
+          "id": "HCARD",
+          "title": "Housing card v2",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/components/campus/housing/HousingListingCard.tsx",
+            "app/dev/housing-kit/page.tsx"
+          ],
+          "depends_on": [
+            "TYP",
+            "HMOD",
+            "FMT",
+            "ART",
+            "ICO",
+            "CPARTS",
+            "SEED"
+          ],
+          "acceptance": "typecheck, lint; fixture mode /dev/housing-kit at 375 px and 1280 px: every fixture card shows the right lines without overflow",
+          "brief": "New card for HousingListing (src/types/housing.ts); the legacy HousingCard.tsx stays until HFEED/HFORM switch. Props {item, href, onSave, variant 'grid'|'row'} (row is for the agents digest). Photo only from student uploads, else HousingArt (src/components/swoop/illustrations.tsx). Price chip via housingPriceLabels ('Rs 8.5k pp', 'Rs 1.2L dep') plus the rent terms chip. Meta: DistanceLine with the viewer's campus code, move-in ('Move in: Immediate' / '1st Dec' / 'Next sem'), 'N beds left', For girls / For boys / Anyone. Badges: Reserved, Price dropped, 'Agent · Rs 10k brokerage'. Roommate posts follow the H2 order: move-in, rules, gender, 'We are N looking', then languages and home state as chips (shown only, never filters). Sentence case, no uppercase classes, no ₹, Swoop primitives and icons. app/dev/housing-kit/page.tsx shows every SEED housing fixture in both variants through a small local doc-to-card adapter, notFound() unless isFixtureMode(). Accept: typecheck, lint; fixture mode /dev/housing-kit at 375 px and 1280 px: every card shows the right lines without overflow."
+        },
+        {
+          "id": "DEAL",
+          "title": "Student deals v1 (verified only)",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/studentDeals.ts",
+            "app/api/campus/student-deals/route.ts",
+            "app/campus/deals/page.tsx",
+            "tests/campus/student-deals.test.ts"
+          ],
+          "depends_on": [
+            "TYP",
+            "FMT",
+            "MEM",
+            "SEED",
+            "ICO",
+            "ART",
+            "CPARTS"
+          ],
+          "acceptance": "npm test: expired hidden, distance sort stable; fixture mode 375 px: verified sees deals by distance, unverified gets the gate and API 403",
+          "brief": "J5: deals are free for students, verified only, never paid. studentDeals.ts (pure, relative .ts imports): isDealLive(deal, now), sortByDistance(deals, origin) with haversineMeters. API GET (getCampusPrincipal requireVerified) returns live deals for the viewer's college sorted by distance from the viewer's campus origin; POST/PATCH/DELETE admin only via requireAdminPrincipal (no Godview UI tonight). Collection student_deals (CAMPUS_COLLECTIONS). Page /campus/deals inside CampusGate: PageHeader with the campus label kicker, DealsArt hero, rows with merchant, offer, DistanceLine and 'Valid till 30 Nov', and a 'Show at counter' sheet with the student's first name, a verified badge and a live clock (deters screenshots). Seed deals are sample data; never present them as real offers. Copy under 10 words, sentence case, Swoop primitives, DealIcon. Accept: npm test: expired deals hidden, distance sort stable; typecheck, lint; fixture mode at 375 px: verified-kju-main sees deals sorted by distance, unverified-kju gets the gate and the API returns 403."
+        },
+        {
+          "id": "LOST",
+          "title": "Lost and found v1 (hides ID details)",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/lostFound.ts",
+            "app/api/campus/lost-found/route.ts",
+            "app/api/campus/lost-found/[id]/route.ts",
+            "app/campus/lost-found/page.tsx",
+            "tests/campus/lost-found.test.ts"
+          ],
+          "depends_on": [
+            "TYP",
+            "CAT",
+            "MEM",
+            "SEED",
+            "ICO",
+            "ART",
+            "CPARTS"
+          ],
+          "acceptance": "npm test: non-owner sees a redacted ID-card post, owner sees all; fixture mode 375 px: seeded ID card redacted, claim sent and approved",
+          "brief": "U2. lostFound.ts (pure): redactForViewer(item, viewerId): id_card and wallet titles become 'ID card' / 'Wallet' plus place; description scrubbed of register numbers (e.g. 23BCAA12), 6+ digit runs, phones, emails, names after 'name:'; images hidden from all but the poster; claimQuestion, verifyClaimAnswer (case-insensitive). API: GET open lost and found posts on my campus; POST creates (place from campus landmarks, images via /api/campus/media); [id] PATCH claim {answer}, approve_claim (reveals the poster's chosen contact to that claimant only), returned, close. Collection lost_found_items. Page /campus/lost-found in CampusGate: PageHeader with campus kicker, LostFoundArt, Segmented Lost/Found, rows, a Report sheet with LandmarkPicker and PhotoField, and a claim sheet 'Is it yours? Ask'. Icons LostFoundIcon, IdCardIcon. Accept: npm test: a non-owner gets no images, no roll or phone digits and the generic title on an ID card; the owner sees all; fixture 375 px: seeded ID card redacted, a claim sent and approved."
+        }
+      ]
+    },
+    {
+      "wave": 4,
+      "packages": [
+        {
+          "id": "HAPI",
+          "title": "Housing API v2: serializer, create, lifecycle actions",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/housing/serialize.ts",
+            "tests/campus/housing-serialize.test.ts",
+            "app/api/housing/posts/route.ts",
+            "app/api/housing/posts/[id]/route.ts"
+          ],
+          "depends_on": [
+            "HMOD",
+            "NTF",
+            "MEM",
+            "RUL",
+            "FMT",
+            "SEED"
+          ],
+          "acceptance": "npm test (fake snapshots): reserved lapse, owner-only nudge at 72 h, per-campus distance, price-drop fields; fixture mode: reserve then GET shows reserved",
+          "brief": "housing/serialize.ts (pure): serializeHousingListing(doc, viewer, savedIds, origin): effectiveStatus (reserved lapse -> active); distanceM from place coords to the viewer's campus origin (roughDistanceM only on the poster's campus); priceDropped; needsNudge for the owner only, 3 days after the last confirm. GET: status in ['active','reserved'], viewer college in memory, limit 200 -> {campus, items} plus a temporary own/other alias (CLEAN removes). POST: housing schema; place from loadCollegeConfig landmarks on the server; girls route forces whoCanStay 'girls'; reject phones in the description; keep serial, media check, rate limit, 7-day availability, per-post WhatsApp contact. [id] PATCH: reserve (+24 h, owner, from active), unreserve, booked, close, beds (0 -> booked), confirm (re-arms 7 days, clears nudge), lower_price (strictly lower, once a day; previousRent, priceDroppedAt; notifySavers), promotion (campus only). Leave src/lib/campus/serialize.ts and girls re-exports alone. Accept: npm test with fake snapshots: reserved lapse, owner-only nudge at 72 h, per-campus distance, price-drop fields; fixture: GET has distanceM; reserve then GET shows reserved."
+        },
+        {
+          "id": "MACT",
+          "title": "Market listing actions API",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "app/api/marketplace/listings/[id]/route.ts",
+            "src/lib/campus/marketActions.ts"
+          ],
+          "depends_on": [
+            "MAPI",
+            "NTF",
+            "MSCH"
+          ],
+          "acceptance": "typecheck, lint, npm test; self-review action matrix; fixture mode: reserve + lower_price on a seeded post, a saver notification doc exists",
+          "brief": "marketActions.ts: applyMarketAction(ref, doc, action, principal), validated by the PATCH union in marketSchema.ts; the [id] PATCH delegates to it (GET stays). Owner only (403); removed posts 409. still_available re-arms 7 days (capped by hardExpiresAt), clears nudgeSentAt; sold for item, bundle, ticket, pass, vehicle; booked for seat and cab_split only (400 otherwise); reserve only from active, reservedUntil = now + 24 h (409 on sold); unreserve; lower_price {price} strictly lower (400), sets previousPrice and priceDroppedAt, then notifySavers (notify.ts) 'Price dropped on something you saved' at the next 12:30/19:30 slot, owner excluded; bundle_item_sold {itemId}, all sold -> sold; seats_left {n} for cab_split, 0 -> booked; close; promotion (campus only). Saves and reports stay in app/api/campus/actions. Accept: npm test; self-review lists the matrix (non-owner 403, reserve on sold 409, booked on item 400, raise price 400, fan-out excludes owner); fixture: reserve + lower_price a seeded post, GET shows both, a saver notification doc exists."
+        },
+        {
+          "id": "MFEED",
+          "title": "Market v2 feed and the four See all screens",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/components/campus/MarketplaceExperience.tsx",
+            "src/components/campus/market/MarketSeeAll.tsx",
+            "src/hooks/useMarketFeed.ts",
+            "app/marketplace/all/[section]/page.tsx",
+            "app/girls-space/marketplace/all/[section]/page.tsx",
+            "src/components/campus/MarketplaceCard.tsx"
+          ],
+          "deletes": [
+            "src/components/campus/MarketplaceCard.tsx"
+          ],
+          "depends_on": [
+            "MKIT",
+            "MAPI",
+            "MSCH",
+            "SRCH",
+            "HDR",
+            "CPARTS",
+            "RUL"
+          ],
+          "acceptance": "typecheck, lint; fixture mode 375/1280 px: section order, each See all, /marketplace/all/x 404, 'cycle under 12k' and 'mattress near clg', ask on empty search, girls mirror, no horizontal scroll",
+          "brief": "Rewrite MarketplaceExperience (canvas order): header with the useCurrentCampus label ('KJU Main · only verified students'), Post and My posts (no college selector, hero or 'Explore other colleges'); a 'Price dropped on 2 things you saved' strip (isSaved && priceDropped); SearchPill with parseQuery/matchItem, AskCard when nothing matches; SeasonPrompt in season; Furnish a room; AlsoChips; Rooms clearing out; Seats, tickets and passes; Everything near you (3-up); Wanted. SectionHeader with 'See all' each. useMarketFeed.ts: GET /api/marketplace/listings (or girls), optimistic save, groupMarketFeed. See all: app/marketplace/all/[section] and app/girls-space/marketplace/all/[section] (clearing-out|seats|near-you|wanted, else notFound()) render MarketSeeAll; near-you has RingChips (1 km) and a 'No pin yet' group. One-tap ask posts wanted 'Any {q} available?' with useSavedNumber, else routes to /marketplace/new?kind=wanted&q=. Keep the Dock slot. Delete MarketplaceCard.tsx. Accept: fixture 375 and 1280 px: section order, each See all, /marketplace/all/x 404, 'cycle under 12k' and 'mattress near clg' filter, ask on empty search, girls mirror."
+        },
+        {
+          "id": "MFORM1",
+          "title": "New listing form v2, part 1: shell, item, wanted, bundle",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "app/marketplace/new/page.tsx",
+            "src/components/campus/market-form/BundleItemsField.tsx",
+            "src/components/campus/market-form/registry.tsx",
+            "src/components/campus/market-form/payload.ts",
+            "tests/campus/market-form-payload.test.ts"
+          ],
+          "depends_on": [
+            "MSCH",
+            "CPARTS",
+            "MAPI",
+            "HDR",
+            "SRCH",
+            "MEM"
+          ],
+          "acceptance": "npm test: item, wanted, bundle payloads pass marketSchema; fixture mode 375 px: 1.5k preview, landmark distance, bundle rows, ?kind=wanted&q=cycle prefill, post lands in feed",
+          "brief": "new/page.tsx: step 1 kind picker (Sell, Wanted, Clear out room, Seat, Cab split, Ticket, Pass, Vehicle; kinds without registered fields stay hidden until MFORM2); read ?kind, ?audience, ?q from the server page's searchParams; ?q prefills 'Any {q} available?'; wanted placeholder from wantedPlaceholder(); kicker shows the useCurrentCampus label (never ask campus). Common fields: title, PriceInput, PriceTermsChips, LandmarkPicker (landmarks from useCampusConfig), PhotoField (5, or 8 for bundles), description, WhatsApp number or 'Use my saved number'. BundleItemsField: rows with title and price, add/remove, available-until, hand-over line (<= 80 chars). registry.tsx: kind -> fields component. payload.ts: pure buildMarketPayload(state) validated by marketSchema. On 409 existingId: 'You already posted this. Bring it back?' calling still_available. Promo note says Swoop, not PeasyPrints. Girls' space locks gender to For girls. Accept: npm test: item, wanted, bundle payloads pass marketSchema; fixture 375 px: 1.5k shows Rs 1.5k, landmark fills area and distance, bundle rows add/remove, ?kind=wanted&q=cycle prefills, a post lands in the feed."
+        },
+        {
+          "id": "HOME",
+          "title": "Home v2: greeting, seasonal slot, utility row, illustrations",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "app/page.tsx",
+            "src/components/AnnouncementCarousel.tsx",
+            "src/components/home/UtilityRow.tsx"
+          ],
+          "depends_on": [
+            "ICO",
+            "ART",
+            "RUL",
+            "HDR",
+            "SEED"
+          ],
+          "acceptance": "typecheck, lint; fixture mode 375/1280 px: no <img>, no caps, exams card on 7 Nov, 4 tiles link correctly, campus chip, 'Hey ...' greeting",
+          "brief": "app/page.tsx: 'Hey <firstName>' (session displayName first, then Clerk user, else 'Hey there') above search; verify row 'Verify you're a KJU student' with the campus code; Print tile subtitle 'Upload, pick up nearby'; PrinterArt and MarketArt from swoop/illustrations.tsx (remove the inline PrinterArt); drop the Announcements heading; homeSeasonalSlot (season.ts) as the first carousel card; UtilityRow after the service tiles; print shops filtered by useCurrentCampus().campusId against shop.collegeId (catalog campus ids) instead of collegeStore.selectedCollege; footer trust line 'Only verified KJU students'. In fixture mode use FIXTURE_SHOPS (src/lib/campus/fixtures/core.ts), not the live Firestore subscription. UtilityRow.tsx: 4 SmallTiles: Student deals /campus/deals, Lost and found /campus/lost-found, Blood donors /campus/blood, Games /campus/games (DealIcon, LostFoundIcon, BloodDropIcon, BallIcon). AnnouncementCarousel: seasonal card first, then Print/Market/Housing promos with illustrations, no Tag eyebrow. No <img> on Home. Accept: fixture 375 and 1280 px: no <img>, no caps, exams card on 7 Nov, 4 tiles link right, campus chip, 'Hey ...' greeting."
+        },
+        {
+          "id": "BLOOD",
+          "title": "Blood donor alerts v1 (opt-in)",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/blood.ts",
+            "app/api/campus/blood/route.ts",
+            "app/campus/blood/page.tsx",
+            "tests/campus/blood.test.ts"
+          ],
+          "depends_on": [
+            "TYP",
+            "MEM",
+            "NTF",
+            "SEED",
+            "ICO",
+            "ART"
+          ],
+          "acceptance": "npm test: compatibility table and matcher; fixture mode 375 px: opt in, post a request, it shows; unverified gets the gate",
+          "brief": "U1, verified only. Blood group is sensitive: explicit opt-in with consent, deleted on opt-out; donor names and numbers never listed. blood.ts (pure): BLOOD_GROUPS, canDonateTo(donor, recipient), matchDonors(donors, group). API (blood_donors, blood_requests): GET my donor status, counts per group at my college, open requests; POST actions opt_in {group, consent}, opt_out (deletes), request {group, units, hospital, neededBy} (rate-limited), close (requester), can_help (requester sees a count and first names and may share their WhatsApp with a responder). A request notifies matching opted-in donors via enqueue (notify.ts) as urgent: now between 07:00 and 22:00 IST, never 22:00-07:00. Page /campus/blood in CampusGate: PageHeader with campus kicker, BloodArt, opt-in card with group picker, 'Need blood?' form, open requests with 'I can help'; line 'Only KJU requests. Never after 10 pm.' No push. Accept: npm test: O- gives to all, AB+ receives from all, matcher; fixture 375 px: opt in, post a request, it shows; unverified-kju sees the gate."
+        },
+        {
+          "id": "GAMES",
+          "title": "Pickup games with slots v1",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/games.ts",
+            "app/api/campus/games/route.ts",
+            "app/api/campus/games/[id]/route.ts",
+            "app/campus/games/page.tsx",
+            "tests/campus/games.test.ts"
+          ],
+          "depends_on": [
+            "TYP",
+            "CAT",
+            "MEM",
+            "NTF",
+            "SEED",
+            "ICO",
+            "ART",
+            "CPARTS"
+          ],
+          "acceptance": "npm test: can't join full or started, no double join, leave frees a slot; fixture mode 375 px: join drops the count, full shows Full",
+          "brief": "U4: pickup games only, no events listings (events are dropped). games.ts (pure): SPORTS football|cricket|badminton|basketball|volleyball|other; slotsLeft (never negative); canJoin (verified, not in, not full, not started); join/leave transitions; isOver; slotLabel ('Today 5:30 pm'). API (collection pickup_games): GET upcoming games on my campus by startsAt; POST hosts {sport, landmarkId, startsAt, capacity} (rate-limited; venue from campus landmarks); [id] PATCH join, leave, cancel (host only) inside a transaction so slots never go negative. Joining queues a reminder via enqueue (src/lib/campus/notify.ts) for the slot before start. Page /campus/games inside CampusGate: PageHeader with campus kicker, GamesArt, sport chips, rows 'Football · Today 5:30 pm · 3 of 10 left' with Join/Leave, a Full state, and a 'Start a game' sheet with LandmarkPicker. Copy under 10 words, sentence case, BallIcon. Accept: npm test: can't join a full or started game, no double join, leave frees a slot; typecheck, lint; fixture mode at 375 px: joining a seeded game drops the count, a full game shows Full."
+        },
+        {
+          "id": "DEAD",
+          "title": "Remove dead auth, announcements and location code",
+          "size": "S",
+          "model": "standard",
+          "files": [
+            "app/(auth)/otp/page.tsx",
+            "src/components/auth/PhoneLogin.tsx",
+            "src/components/auth/PhoneRegister.tsx",
+            "src/components/auth/clerkAppearance.ts",
+            "src/lib/stores/authStore.ts",
+            "src/lib/utils/location.ts",
+            "app/api/announcements/route.ts",
+            "proxy.ts"
+          ],
+          "deletes": [
+            "app/(auth)/otp/page.tsx",
+            "src/components/auth/PhoneLogin.tsx",
+            "src/components/auth/PhoneRegister.tsx",
+            "src/components/auth/clerkAppearance.ts",
+            "src/lib/utils/location.ts",
+            "app/api/announcements/route.ts"
+          ],
+          "depends_on": [
+            "SIGNIN",
+            "LOGIN"
+          ],
+          "acceptance": "typecheck, lint, npm test; grep for the deleted modules in app and src is empty; fixture mode / and /login still load",
+          "brief": "Swoop is not launched: delete code the new sign-in replaced. Before each delete grep for imports; delete only if nothing uses it, otherwise leave it and say why. Delete app/(auth)/otp/page.tsx, src/components/auth/PhoneLogin.tsx, PhoneRegister.tsx, clerkAppearance.ts (unused after the /login rewrite), src/lib/utils/location.ts (unused; distance lives in src/lib/format/distance.ts) and app/api/announcements/route.ts (no callers). authStore.ts: strip only the Firebase phone-OTP state and functions (verificationId, send/verify OTP and the like); orders, profile, shopfront pages and CheckoutButton still use the rest. proxy.ts: remove the '/otp' public route and the /api/announcements exception; keep the fixture-mode bypass untouched. Never delete files under public/ (assets need the owner). Accept: typecheck, lint, npm test; grep for 'otp/page', PhoneLogin, PhoneRegister, clerkAppearance, 'utils/location' and 'api/announcements' in app and src is empty; fixture mode: / and /login still load."
+        }
+      ]
+    },
+    {
+      "wave": 5,
+      "packages": [
+        {
+          "id": "HFEED",
+          "title": "Housing feed v2",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/components/campus/HousingExperience.tsx",
+            "src/components/campus/housing/HousingFilters.tsx",
+            "src/hooks/useHousingFeed.ts"
+          ],
+          "depends_on": [
+            "HCARD",
+            "HAPI",
+            "SRCH",
+            "CPARTS",
+            "HDR",
+            "RUL"
+          ],
+          "acceptance": "typecheck, lint; fixture mode 375/1280 px: 1.8 km post hidden at 1 km and shown at 2 km, 'under 9k', 'kjc', 'Kristu', 'Kothnur', ask on empty, girls route only girls",
+          "brief": "Housing v2 feed (canvas). Header 'Housing · KJU Main' (useCurrentCampus) plus 'Only verified students'; remove the college chips and the 'Worth the commute' other-colleges section. useHousingFeed.ts: GET /api/housing/posts (or /api/girls-space/housing), optimistic save. Cards: HousingListingCard. HousingFilters.tsx: search with parseQuery/matchItem ('under 9k', 'kjc', 'Kothnur', 'girls'); RingChips (1 km default) with 'Show N farther'; type chips; a 'From students' toggle, on by default in Apr-Aug (isPeakHousingSeason), collapsing agent posts into one expandable digest row ('5 agent posts · brokerage shown', row variant). Empty search shows 'Any room near {q} available?' linking to /housing/new?type=roommate&area=... The girls route hides gender chips. Don't edit HousingCard.tsx (HFORM deletes it). Accept: fixture 375 and 1280 px: the 1.8 km post hidden at 1 km, shown at 2 km; 'under 9k' filters; 'kjc' and 'Kristu' return all; 'Kothnur' matches Kothanur; empty result shows the ask; /girls-space/housing only girls posts."
+        },
+        {
+          "id": "HFORM",
+          "title": "Housing post form v2 with landmark picker and WhatsApp paste",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "app/housing/new/page.tsx",
+            "src/components/campus/housing/HousingPostForm.tsx",
+            "src/components/campus/housing/FormFields.tsx",
+            "src/components/campus/HousingCard.tsx"
+          ],
+          "deletes": [
+            "src/components/campus/HousingCard.tsx"
+          ],
+          "depends_on": [
+            "HMOD",
+            "CPARTS",
+            "HAPI",
+            "HDR",
+            "MEM"
+          ],
+          "acceptance": "typecheck, lint; fixture mode 375 px: submit blocked without move-in/who can stay/rules, agent needs brokerage, paste fills fields, ?type=roommate&area=Kothanur prefills, post appears in feed",
+          "brief": "Housing post after (canvas). new/page.tsx: server page awaiting searchParams (audience, type, area, title) rendering HousingPostForm. Top: 'Paste a WhatsApp post' sheet with parseWhatsAppPost: fills fields, highlights what it filled, moves the phone to the WhatsApp field, keeps it out of the description. FormFields.tsx: Posting as Student/Owner/Agent (Agent needs brokerage); rent per person and deposit with PriceInput ('Rs 8.5k pp', 'Rs 1L dep'); rent terms (fixed, negotiable, slightly negotiable); move-in chips Immediate / 1st of next month / Next sem / Pick date (required); beds-left stepper; GenderChips (locked For girls on ?audience=girls); house rules chips (required, 'No restrictions' exclusive); LandmarkPicker (useCampusConfig; 'Other' = typed area + rough distance); roommate block (We are N looking, optional home state, languages). Kicker shows the campus label; never ask campus. Validate with the housing schema before POST. Delete HousingCard.tsx once nothing imports it. Accept: fixture 375 px: submit blocked without move-in, who can stay or rules; agent needs brokerage; a pasted sample fills fields; ?type=roommate&area=Kothanur prefills; a new post shows in the feed."
+        },
+        {
+          "id": "HDETAIL",
+          "title": "Housing detail with owner lifecycle",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/components/campus/housing/HousingDetail.tsx",
+            "app/housing/[id]/page.tsx",
+            "app/girls-space/housing/[id]/page.tsx"
+          ],
+          "depends_on": [
+            "HAPI",
+            "CPARTS",
+            "HMOD"
+          ],
+          "acceptance": "typecheck, lint; fixture mode 375 px: reserved, price-dropped, agent and owner-nudge fixtures render; reserve, lower rent and beds update the fake DB",
+          "brief": "Housing detail v2; do not edit ContentDetail.tsx (CLEAN deletes it). Use Gallery, ReportSheet, ContactButton and SaveShare (src/components/campus/detail) and fetch GET /api/housing/posts/[id] (or the girls route). Show 'Rs 8.5k pp · Rs 1.2L dep' with the terms chip, 'Price dropped from Rs 9k', 'Reserved until 7:30 pm', move-in, beds left, who can stay, house rules, posted as plus brokerage, DistanceLine, roommate chips in H2 order (roommateChips), and 'Only verified students'. Contact is disabled while reserved. Owner panel: a prominent 'Still available?' card when needsNudge; Reserve 24 h / Unreserve; Mark booked; a Lower rent sheet with PriceInput that rejects values not lower; beds -/+. Actions call PATCH and refresh. Pages: params is a Promise (Next 16). Sentence case, copy under 10 words. Accept: typecheck, lint; fixture mode at 375 px: the reserved, price-dropped, agent and owner-nudge fixtures render correctly, and reserve, lower rent and beds update the fake DB."
+        },
+        {
+          "id": "MFORM2",
+          "title": "New listing form v2, part 2: seat, cab split, ticket, pass, vehicle",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/components/campus/market-form/TripFields.tsx",
+            "src/components/campus/market-form/TicketFields.tsx",
+            "src/components/campus/market-form/PassFields.tsx",
+            "src/components/campus/market-form/VehicleFields.tsx",
+            "src/components/campus/market-form/registry.tsx",
+            "src/components/campus/market-form/payload.ts",
+            "tests/campus/market-form-payload.test.ts"
+          ],
+          "depends_on": [
+            "MFORM1",
+            "RUL",
+            "FMT",
+            "CPARTS"
+          ],
+          "acceptance": "npm test: payload test covers all 8 kinds; fixture mode 375 px: fair price updates, ticket above face value blocked, cycle hides plate/RC/insurance, seat lands in Seats section",
+          "brief": "Remaining kinds for the Market post form (registry.tsx maps kind -> fields; payload.ts builds marketSchema input). TripFields: seat (bus/train, from, to, departure, operator/train, GenderChips; train shows 'Name change rules apply') and cab split (to or from the airport, time, seats total and left, fare per person, preference). TicketFields: event, venue, showtime, face value, count; price capped at face value; 'Ends at showtime'. PassFields: mess or gym, provider, paid, valid from/until; live fairPassPrice as the default price, 'Above fair price' warning, 'Check your mess allows transfer'. VehicleFields: cycle/scooter/bike/car; plate state, RC with seller or not, insurance date only for motor types; past insurance shows 'Insurance lapsed' (documentValidity). Register all and unhide them in the picker. Girls' space locks seat gender to For girls. Accept: npm test: payload test covers all 8 kinds; fixture 375 px: fair price follows the dates, a ticket above face value is blocked, a cycle hides plate/RC/insurance, a posted seat shows under Seats, tickets and passes."
+        },
+        {
+          "id": "MDETAIL",
+          "title": "Market detail screen",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/components/campus/MarketDetail.tsx",
+            "app/marketplace/[id]/page.tsx",
+            "app/girls-space/marketplace/[id]/page.tsx"
+          ],
+          "depends_on": [
+            "MACT",
+            "MKIT",
+            "CPARTS",
+            "MSCH"
+          ],
+          "acceptance": "typecheck, lint; fixture mode 375 px one detail per kind: owner actions per kind, reserved disables buyer CTA, pay-on-pickup line present",
+          "brief": "Market v2 detail, rendered by both [id] pages (params is a Promise); do not edit ContentDetail.tsx (CLEAN deletes it). Use Gallery, ReportSheet, ContactButton and SaveShare (src/components/campus/detail); fetch GET /api/marketplace/listings/[id] (or the girls route). Show formatPrice, the terms chip, 'Price dropped' with the old price struck through; kind meta: bundle item list with per-item Sold, trip route/time/gender, ticket showtime, pass fair price and days left, vehicle plate/RC/insurance; place area plus DistanceLine; one line 'Pay on pickup: UPI or cash' (PAY_ON_PICKUP); trust row 'Verified KJU student'; CTA 'I have this' for wanted, else 'Ask for WhatsApp'; when reserved the CTA is disabled 'Reserved till 6:30 pm'. Owner panel: Still available?, Mark sold or Mark booked by kind, Reserve 24 h / Unreserve, a Lower price sheet with PriceInput, per-item sold for bundles, seats left for cab splits; each calls PATCH and refreshes. Sentence case, no ALL CAPS. Accept: typecheck, lint; fixture mode at 375 px, one detail per kind: owner actions are right per kind (booked only for seat and cab split), a reserved post disables the buyer CTA, the pay-on-pickup line is present."
+        },
+        {
+          "id": "CONTACT",
+          "title": "Contact requests and availability for v2 listings",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "app/api/contact-requests/route.ts",
+            "src/lib/campus/serialize.ts"
+          ],
+          "depends_on": [
+            "MAPI",
+            "HAPI",
+            "NTF"
+          ],
+          "acceptance": "typecheck, lint, npm test; no 'PeasyPrints' in the route; fixture mode: reserved post returns 409, wanted post stores intent offer",
+          "brief": "Shared server touches for Market and Housing v2. serialize.ts: isAvailable treats 'reserved' as live (an approved contact survives a reservation) and understands the v2 statuses (booked, expired); do not touch serializeMarketplace/serializeHousing (CLEAN removes them). contact-requests POST: a reserved listing returns 409 'Reserved for someone right now'; store intent 'offer' when the market listing kind is wanted, else 'ask'; WhatsApp prefill 'Hey, about KJU-M1234 on Swoop' and for offers 'Hey, I have what you asked for (KJU-M1234) on Swoop' (no PeasyPrints); read v2 fields (kind, status, place) for both marketplace_listings and housing_posts; when a request is created, enqueue a 'contact_request' notification for the owner (src/lib/campus/notify.ts). Keep the existing audience, expiry and contact-exposure rules (policy.ts). Accept: typecheck, lint, npm test; grep 'PeasyPrints' in the route is empty; fixture mode: requesting a reserved seeded post returns 409, a request on a wanted post stores intent offer."
+        },
+        {
+          "id": "PRINTCAMPUS",
+          "title": "Print shops follow the signed-in campus",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "app/upload/page.tsx",
+            "app/godview/stores/page.tsx",
+            "app/godview/layout.tsx",
+            "src/types/models.ts",
+            "src/lib/stores/collegeStore.ts",
+            "app/godview/colleges/page.tsx"
+          ],
+          "deletes": [
+            "app/godview/colleges/page.tsx"
+          ],
+          "depends_on": [
+            "HDR",
+            "HOME",
+            "SEED",
+            "STORE"
+          ],
+          "acceptance": "typecheck, lint; grep useCollegeNames, LEGACY_COLLEGES, selectedCollege in app and src empty; fixture mode /upload lists KJU Main fixture shops",
+          "brief": "Retire the legacy name-based college filter. app/upload/page.tsx: filter shops by useCurrentCampus().campusId against shop.collegeId (now a catalog campus id; not launched, so no backfill), use FIXTURE_SHOPS (src/lib/campus/fixtures/core.ts) in fixture mode, and drop 'PeasyPrints' from the kicker. Godview stores page: assign a shop's campus from the catalog (listColleges/campusesOf in src/lib/campus/catalog.ts) instead of the Firestore colleges collection. src/types/models.ts: document Shop.collegeId as a catalog campus id; remove the legacy College type if nothing uses it. collegeStore.ts: remove selectedCollege, colleges, LEGACY_COLLEGES, the colleges subscription and useCollegeNames; keep pick and stay. Delete app/godview/colleges/page.tsx (dead page) and its nav item in app/godview/layout.tsx. Do not touch Firestore colleges data or its rules (morning item). Accept: typecheck, lint; grep useCollegeNames, LEGACY_COLLEGES and selectedCollege in app and src is empty; fixture mode at 375 px: /upload lists the KJU Main fixture shops."
+        },
+        {
+          "id": "MYPOSTS",
+          "title": "My posts and updates on /campus/activity",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "app/campus/activity/page.tsx",
+            "src/components/campus/market/MarketMyPosts.tsx",
+            "src/components/campus/housing/HousingMyPosts.tsx"
+          ],
+          "depends_on": [
+            "MACT",
+            "HAPI",
+            "NTF",
+            "MKIT",
+            "HCARD"
+          ],
+          "acceptance": "typecheck, lint; fixture mode 375 px /campus/activity?tab=posts: 4-day-old confirm shows 'Still available?', 1-day-old does not; Updates lists due notifications",
+          "brief": "G1, G2 and E4 visible without push. MarketMyPosts and HousingMyPosts (fetch ?mine=1 from the listing routes): a 'Still available?' card with Yes / Sold (Booked for seats, cab splits and housing) when the post is due (3 days after the last confirm), no repost button; a reserved countdown with Unreserve; a Lower price shortcut; hidden posts (needs_confirmation) show 'Bring it back' (still_available for market, confirm for housing). activity/page.tsx: swap the old PostSection for these two; RequestSection words intent 'offer' as '{name} has what you asked for'; add an 'Updates' list from GET /api/campus/notifications (price dropped, still available, game reminders, contact requests) that marks items read. Status tags Reserved / Booked / Sold in sentence case. Accept: typecheck, lint; fixture mode at 375 px on /campus/activity?tab=posts as verified-kju-main: a post confirmed 4 days ago shows 'Still available?', one confirmed 1 day ago does not; Updates lists due notifications."
+        },
+        {
+          "id": "CRON",
+          "title": "Maintenance planner for new lifecycles and account purge",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/lib/campus/maintenance.ts",
+            "app/api/internal/campus-maintenance/route.ts",
+            "app/api/internal/campus-users/[id]/route.ts",
+            "tests/campus/maintenance.test.ts"
+          ],
+          "depends_on": [
+            "RUL",
+            "NTF",
+            "SEED",
+            "MAPI",
+            "HAPI",
+            "BLOOD",
+            "GAMES",
+            "LOST"
+          ],
+          "acceptance": "npm test with fixed now values; typecheck, lint; fixture mode maintenance GET with the CRON_SECRET bearer returns counts and updates the fake DB",
+          "brief": "maintenance.ts: pure planMaintenance(docs, now) -> {updates, notifications}: reserved past reservedUntil -> active, notify the owner; tickets, seats and cab splits past hardExpiresAt -> expired; bundles past availableUntil -> needs_confirmation; day-3 'Still available?' nudge once per confirm (sets nudgeSentAt); games 2 h after start -> done; lost and found open 30+ days -> closed; blood requests past neededBy -> closed; delivered notifications 30+ days -> deleted. Uses listingRules.ts and notifySlots.ts (relative .ts imports). The maintenance route keeps its jobs, auth and schedule (vercel.json untouched), loads marketplace_listings, housing_posts and the utility collections, applies the plan and enqueues via notify.ts. campus-users/[id] purge also deletes blood_donors/{id}, the user's campus_notifications, campus_saves and lost_found_items, and removes the user from pickup_games players. Print jobs unchanged. Accept: npm test with fixed now values (reserve release, ticket expiry, nudge never repeats, game done); fixture: GET /api/internal/campus-maintenance with the CRON_SECRET bearer returns counts and updates the fake DB."
+        }
+      ]
+    },
+    {
+      "wave": 6,
+      "packages": [
+        {
+          "id": "CLEAN",
+          "title": "Legacy cleanup and final copy audit",
+          "size": "L",
+          "model": "strongest",
+          "files": [
+            "src/types/campus.ts",
+            "src/lib/campus/constants.ts",
+            "src/lib/campus/serialize.ts",
+            "src/components/campus/ContentDetail.tsx",
+            "app/api/godview/campus/content/route.ts",
+            "app/api/godview/render-packs/route.ts",
+            "app/api/marketplace/listings/route.ts",
+            "app/api/housing/posts/route.ts"
+          ],
+          "deletes": [
+            "src/components/campus/ContentDetail.tsx"
+          ],
+          "depends_on": [
+            "MFEED",
+            "MFORM2",
+            "MDETAIL",
+            "HFEED",
+            "HFORM",
+            "HDETAIL",
+            "CONTACT",
+            "MYPOSTS",
+            "CRON",
+            "PRINTCAMPUS",
+            "DEAD",
+            "GVC",
+            "VERIFY"
+          ],
+          "acceptance": "typecheck, lint, npm test; legacy symbol grep empty or justified; fixture smoke of /, /marketplace, /housing, /campus/activity and one detail each",
+          "brief": "Remove what v2 replaced (no backward compatibility). types/campus.ts: delete MarketplacePostType, MarketplaceCategory, MarketplaceListing, HousingPostType, HousingPost, CampusContentStatus if unused, 'college_email'; make CampusSession campus/onboarding required. constants.ts: delete MARKETPLACE_CATEGORIES and labels, DEFAULT_PICKUP_POINTS if unused, PILOT_COLLEGE once unused. serialize.ts: delete serializeMarketplace and serializeHousing; point app/api/godview/campus/content at serializeMarketListing and serializeHousingListing. render-packs: formatPrice, kind and place.label instead of postType, pickupLabel, commuteLabel. Market and housing GET routes: drop the own/other alias. Delete ContentDetail.tsx if nothing imports it. Audit: rg 'uppercase|₹|PeasyPrints|No broker' in app/marketplace, app/housing, app/girls-space, app/campus, app/page.tsx, src/components/campus, src/components/auth; fix hits in your files, list the rest. Accept: rg 'MarketplaceListing|serializeMarketplace|postType|commuteLabel|availableFrom|PILOT_COLLEGE' app src empty or justified; fixture smoke of /, /marketplace, /housing, /campus/activity, one market and one housing detail."
+        }
+      ]
+    }
+  ]
+}
