@@ -19,7 +19,6 @@ function membershipTone(status: string): StatusTone {
 }
 
 const METHOD_LABELS: Record<string, string> = {
-  college_email: 'College email',
   google: 'Google',
   email_code: 'Email code',
   id_card: 'iCard',
