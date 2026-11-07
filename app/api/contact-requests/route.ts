@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DocumentSnapshot, QueryDocumentSnapshot, Timestamp } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { getAdminDb } from '@/lib/firebase/admin';
+import type { CampusAudience } from '@/types/campus';
 import { CampusHttpError, campusErrorResponse, getCampusPrincipal } from '@/lib/campus/auth';
-import { CONTACT_REQUEST_HOURS, addHours } from '@/lib/campus/constants';
-import { isAvailable, toIso } from '@/lib/campus/serialize';
+import { CAMPUS_COLLECTIONS, CONTACT_REQUEST_HOURS, addHours } from '@/lib/campus/constants';
+import { enqueue } from '@/lib/campus/notify';
+import { isAvailable, liveStatus, toIso } from '@/lib/campus/serialize';
 import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
 
 const createSchema = z.object({
@@ -12,8 +14,65 @@ const createSchema = z.object({
   contentId: z.string().min(1).max(100),
 });
 
-function collectionFor(type: 'marketplace' | 'housing') {
-  return type === 'marketplace' ? 'marketplace_listings' : 'housing_posts';
+type ContentType = 'marketplace' | 'housing';
+/** 'offer' answers a wanted post; 'ask' is about a listing. */
+type ContactIntent = 'ask' | 'offer';
+
+// Contact requests stay in the collection the [id] route and the session count read.
+const CONTACT_REQUESTS = 'campus_contact_requests';
+
+function collectionFor(type: ContentType) {
+  return type === 'marketplace' ? CAMPUS_COLLECTIONS.market : CAMPUS_COLLECTIONS.housing;
+}
+
+function intentFor(type: ContentType, data: Record<string, unknown>): ContactIntent {
+  return type === 'marketplace' && data.kind === 'wanted' ? 'offer' : 'ask';
+}
+
+function whatsappText(serial: string, intent: unknown) {
+  return intent === 'offer' ? `Hey, I have what you asked for (${serial}) on Swoop` : `Hey, about ${serial} on Swoop`;
+}
+
+function listingHref(type: ContentType, id: string, audience: unknown) {
+  const base = audience === 'girls' ? '/girls-space' : '';
+  return `${base}/${type === 'marketplace' ? 'marketplace' : 'housing'}/${encodeURIComponent(id)}`;
+}
+
+function firstName(displayName: string) {
+  return displayName.trim().split(/\s+/)[0] || 'A student';
+}
+
+function placeLabel(place: unknown): string | null {
+  const label = (place as { label?: unknown } | null | undefined)?.label;
+  return typeof label === 'string' && label.trim() ? label.trim() : null;
+}
+
+/** Tells the owner about a new request. A failed enqueue never fails the request. */
+async function notifyOwner(input: {
+  requestId: string;
+  ownerId: string;
+  type: ContentType;
+  contentId: string;
+  data: Record<string, unknown>;
+  intent: ContactIntent;
+  buyerDisplayName: string;
+}) {
+  const name = firstName(input.buyerDisplayName);
+  const serial = String(input.data.serial || '');
+  const listingTitle = typeof input.data.title === 'string' ? input.data.title.trim() : '';
+  try {
+    await enqueue([input.ownerId], {
+      kind: 'contact_request',
+      title: input.intent === 'offer' ? `${name} has what you asked for` : `${name} asked about ${serial}`,
+      body: listingTitle ? `${listingTitle}. Approve to share your number.` : 'Approve to share your number.',
+      href: listingHref(input.type, input.contentId, input.data.audience),
+      ref: { type: 'contact_request', id: input.requestId },
+      campusId: typeof input.data.campusId === 'string' ? input.data.campusId : null,
+      actorDisplayName: name,
+    });
+  } catch (error) {
+    console.error('[contact-requests] notify failed', error);
+  }
 }
 
 function digits(value: string) {
@@ -27,6 +86,9 @@ async function serializeRequest(doc: QueryDocumentSnapshot | DocumentSnapshot, v
     contentType: data.contentType,
     contentId: data.contentId,
     serial: data.serial,
+    intent: data.intent === 'offer' ? 'offer' : 'ask',
+    title: data.title ?? null,
+    placeLabel: data.placeLabel ?? null,
     buyerId: data.buyerId,
     sellerId: data.sellerId,
     buyerDisplayName: data.buyerDisplayName,
@@ -51,7 +113,7 @@ async function serializeRequest(doc: QueryDocumentSnapshot | DocumentSnapshot, v
         : (await getAdminDb().collection('campus_private_profiles').doc(data.sellerId).get()).data()?.whatsappNumber;
       const phone = digits(String(number || ''));
       if (phone) {
-        const text = encodeURIComponent(`Hi, I’m interested in ${data.serial} on PeasyPrints.`);
+        const text = encodeURIComponent(whatsappText(String(data.serial || ''), data.intent));
         item.whatsappUrl = `https://wa.me/${phone}?text=${text}`;
       }
     }
@@ -65,7 +127,7 @@ export async function GET(request: NextRequest) {
     const principal = await getCampusPrincipal({ requireVerified: true, audience });
     const role = request.nextUrl.searchParams.get('role') === 'buyer' ? 'buyer' : 'seller';
     const field = role === 'buyer' ? 'buyerId' : 'sellerId';
-    const snapshot = await getAdminDb().collection('campus_contact_requests').where(field, '==', principal.userId).limit(150).get();
+    const snapshot = await getAdminDb().collection(CONTACT_REQUESTS).where(field, '==', principal.userId).limit(150).get();
     const visible = snapshot.docs.filter((doc) => doc.data().audience === audience);
     const items = await Promise.all(visible.map((doc) => serializeRequest(doc, principal.userId)));
     items.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
@@ -83,11 +145,11 @@ export async function POST(request: NextRequest) {
     const body = createSchema.parse(await request.json());
     const content = await getAdminDb().collection(collectionFor(body.contentType)).doc(body.contentId).get();
     if (!content.exists || !isAvailable(content.data())) throw new CampusHttpError(404, 'Post is no longer available');
-    const data = content.data()!;
-    await getCampusPrincipal({ requireVerified: true, audience: data.audience, product: body.contentType });
+    const data = content.data() as Record<string, unknown>;
+    await getCampusPrincipal({ requireVerified: true, audience: data.audience as CampusAudience, product: body.contentType });
     if (data.authorId === principal.userId) throw new CampusHttpError(409, 'You own this post');
     const id = `${body.contentType}_${body.contentId}_${principal.userId}`;
-    const ref = getAdminDb().collection('campus_contact_requests').doc(id);
+    const ref = getAdminDb().collection(CONTACT_REQUESTS).doc(id);
     const existing = await ref.get();
     // A declined request is final; re-requesting would let a buyer spam the seller.
     if (existing.exists && existing.data()!.status === 'declined') throw new CampusHttpError(409, 'The seller declined this request');
@@ -97,11 +159,18 @@ export async function POST(request: NextRequest) {
         && (existingData.expiresAt?.toDate?.().getTime() || 0) <= Date.now();
       if (!pendingExpired) return NextResponse.json({ id, status: existingData.status });
     }
+    // A live reserve holds the post; contacts approved before it still work (isAvailable).
+    if (liveStatus(data) === 'reserved') throw new CampusHttpError(409, 'Reserved for someone right now');
+    const intent = intentFor(body.contentType, data);
     const now = new Date();
     await ref.set({
       contentType: body.contentType,
       contentId: body.contentId,
       serial: data.serial,
+      intent,
+      listingKind: body.contentType === 'marketplace' && typeof data.kind === 'string' ? data.kind : null,
+      title: typeof data.title === 'string' ? data.title : null,
+      placeLabel: placeLabel(data.place),
       audience: data.audience,
       collegeId: data.collegeId,
       buyerId: principal.userId,
@@ -112,7 +181,16 @@ export async function POST(request: NextRequest) {
       updatedAt: Timestamp.fromDate(now),
       expiresAt: Timestamp.fromDate(addHours(now, CONTACT_REQUEST_HOURS)),
     });
-    return NextResponse.json({ id, status: 'pending' }, { status: 201 });
+    await notifyOwner({
+      requestId: id,
+      ownerId: String(data.authorId || ''),
+      type: body.contentType,
+      contentId: body.contentId,
+      data,
+      intent,
+      buyerDisplayName: String(principal.displayName || ''),
+    });
+    return NextResponse.json({ id, status: 'pending', intent }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: 'Invalid contact request' }, { status: 400 });
     return campusErrorResponse(error);
