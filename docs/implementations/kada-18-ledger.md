@@ -38,7 +38,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | CPARTS | Shared campus UI parts: price, places, gender, photos, detail parts | 2 | L | done | b382323 | CPARTS built; typecheck/lint clean; browser check skipped (no env). Rent terms use local RentPriceTerms (no slightly_negotiable in PriceTerms); parts work uncontrolled. |
 | NTF | Notification queue, inbox API, rules and indexes | 3 | M | pending |  |  |
 | HDR | Header campus chip, shell rules, CampusGate routing, shared session | 3 | L | pending |  |  |
-| LOGIN | /login stepper, AuthShell trust line, dev preview | 3 | M | pending |  |  |
+| LOGIN | /login stepper, AuthShell trust line, dev preview | 3 | M | done | 578da0e | LOGIN: 3-screen stepper with step= pushState; in-app Back pushes previous step; client preview uses notFound in prod; clerkAppearance.ts now unused, not deleted |
 | VERIFY | /campus/verify onboarding: domain result, add college email, ID card, course step | 3 | L | pending |  |  |
 | MAPI | Market listing API v2: read, create, serializer | 3 | L | pending |  |  |
 | MKIT | Market UI kit | 3 | L | pending |  |  |
@@ -81,6 +81,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:44 IST · MacBook · GVC done, 775aa4c
 - 7 Nov 21:44 IST · MacBook · MEM done, 010da12
 - 7 Nov 21:45 IST · MacBook · CPARTS done, b382323
+- 7 Nov 21:47 IST · MacBook · LOGIN done, 578da0e
 
 
 ## Blocked
