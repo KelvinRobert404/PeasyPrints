@@ -1,4 +1,4 @@
-import { after, before, beforeEach, test } from 'node:test';
+import { after, before, beforeEach, test as nodeTest } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { assertFails, assertSucceeds, initializeTestEnvironment } from '@firebase/rules-unit-testing';
@@ -8,7 +8,13 @@ import { ref, uploadString } from 'firebase/storage';
 const projectId = 'demo-peasyprints';
 let environment;
 
+// These tests need the Firebase emulators (local Java). Run them with
+// `firebase emulators:exec "npm run test:rules"`; without an emulator they skip.
+const emulatorReady = Boolean(process.env.FIRESTORE_EMULATOR_HOST || process.env.FIREBASE_EMULATOR_HUB);
+const test = emulatorReady ? nodeTest : nodeTest.skip;
+
 before(async () => {
+  if (!emulatorReady) return;
   const [firestoreRules, storageRules] = await Promise.all([
     readFile(new URL('../../firestore.rules', import.meta.url), 'utf8'),
     readFile(new URL('../../storage.rules', import.meta.url), 'utf8'),
@@ -21,6 +27,7 @@ before(async () => {
 });
 
 beforeEach(async () => {
+  if (!emulatorReady) return;
   await environment.clearFirestore();
   await environment.clearStorage();
 });
@@ -109,6 +116,44 @@ test('orders and campus-private collections cannot be written by Firebase client
   await assertFails(setDoc(doc(admin.firestore(), 'orders', 'order-2'), { userId: 'student-1', shopId: 'shop-1' }));
   await assertFails(getDoc(doc(user.firestore(), 'campus_private_profiles', 'student-1')));
   await assertFails(setDoc(doc(user.firestore(), 'campus_memberships', 'student-1'), { collegeId: 'kju' }));
+});
+
+// Every CAMPUS_COLLECTIONS value plus the plan's collection names. Keep in step
+// with the server-only list in firestore.rules.
+const SERVER_ONLY_CAMPUS_COLLECTIONS = [
+  'market_listings',
+  'housing_listings',
+  'contact_requests',
+  'campus_reports',
+  'campus_deals',
+  'lost_found',
+  'blood_requests',
+  'blood_donors',
+  'campus_games',
+  'notifications',
+  'notification_prefs',
+  'campus_notifications',
+  'student_deals',
+  'lost_found_items',
+  'pickup_games',
+];
+
+test('Firebase clients cannot read or write the new campus collections', async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    for (const name of SERVER_ONLY_CAMPUS_COLLECTIONS) {
+      await setDoc(doc(context.firestore(), name, 'seeded'), { userId: 'student-1', collegeId: 'kju' });
+    }
+  });
+  const user = environment.authenticatedContext('student-1');
+  const admin = environment.authenticatedContext('admin-1', { admin: true });
+  const anonymous = environment.unauthenticatedContext();
+  for (const name of SERVER_ONLY_CAMPUS_COLLECTIONS) {
+    for (const context of [user, admin, anonymous]) {
+      await assertFails(getDoc(doc(context.firestore(), name, 'seeded')));
+      await assertFails(setDoc(doc(context.firestore(), name, 'client-write'), { userId: 'student-1' }));
+      await assertFails(updateDoc(doc(context.firestore(), name, 'seeded'), { read: true }));
+    }
+  }
 });
 
 test('the server-minted admin claim gates legacy Godview collections', async () => {

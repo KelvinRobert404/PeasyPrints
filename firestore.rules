@@ -28,6 +28,9 @@ service cloud.firestore {
 
     // Campus products are server-only. Firebase Admin validates Clerk sessions,
     // college membership, audience entitlement, lifecycle and field projection.
+    // Every CAMPUS_COLLECTIONS value (src/lib/campus/constants.ts) belongs here,
+    // plus the names the campus routes write today. See docs/35-campus-data-model.md.
+    // Nothing else in this file grants these names, so clients always get denied.
     match /{collection}/{document} {
       allow read, write: if false
         && collection in [
@@ -45,7 +48,23 @@ service cloud.firestore {
           'campus_media',
           'campus_serial_reservations',
           'campus_serial_metrics',
-          'campus_render_packs'
+          'campus_render_packs',
+          'campus_verification_locks',
+          'market_listings',
+          'housing_listings',
+          'contact_requests',
+          'campus_reports',
+          'campus_deals',
+          'lost_found',
+          'blood_requests',
+          'blood_donors',
+          'campus_games',
+          'notifications',
+          'notification_prefs',
+          'campus_notifications',
+          'student_deals',
+          'lost_found_items',
+          'pickup_games'
         ];
     }
 

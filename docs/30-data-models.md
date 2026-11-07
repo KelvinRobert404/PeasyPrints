@@ -5,6 +5,7 @@ Canonical types, example documents, and indexes.
 - Strongly-typed models for shops, orders, history, payouts.
 - Example docs to seed environments.
 - Complete indexes for core queries.
+- Campus app collections (market, housing, utilities, inbox): see [35-campus-data-model.md](./35-campus-data-model.md).
 
 ### TypeScript interfaces
 ```ts
