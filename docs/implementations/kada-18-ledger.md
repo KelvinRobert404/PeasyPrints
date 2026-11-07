@@ -19,14 +19,14 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 
 | Package | Title | Wave | Size | Status | Commit | Notes |
 |---|---|---|---|---|---|---|
-| TYP | Types and shared constants | 1 | M | pending |  |  |
-| CAT | College, campus and course catalog | 1 | L | pending |  |  |
-| FMT | Price and distance helpers | 1 | M | pending |  |  |
-| RUL | Season, lifecycle and notification-slot rules | 1 | M | pending |  |  |
-| FIX | Offline fixture mode (fake Admin DB and bucket, proxy bypass) | 1 | L | pending |  |  |
-| ICO | Shared icon additions | 1 | M | pending |  |  |
-| ART | Swoop illustration series, room art and pickup kitten swap | 1 | L | pending |  |  |
-| COPY | Copy pass: sentence-case tags, no ALL CAPS, no food leftovers | 1 | M | pending |  |  |
+| TYP | Types and shared constants | 1 | M | done | d973b62 | Additive types; new collections market_listings/housing_listings; DocTime structural; test glob quoted in package.json |
+| CAT | College, campus and course catalog | 1 | L | done | 2f91a40 | 7 colleges, 21 campuses; emailDomains left empty (no guessed domains); landmark and 12 origin coordinates are estimates; semesterStarts placeholder |
+| FMT | Price and distance helpers | 1 | M | done | 0697643 | 'Rs 6k /mo' (space before suffix); 0/NaN show 'Free'; fairPassPrice floor Rs 10 |
+| RUL | Season, lifecycle and notification-slot rules | 1 | M | done | d484a84 | Placeholder seasonal slot titles; exams slot wins; date-only means end of IST day |
+| FIX | Offline fixture mode (fake Admin DB and bucket, proxy bypass) | 1 | L | done | 4b4f2f5 | Fixture mode skips clerkMiddleware; principal from fixture cookie comes with MEM; getAdminApp throws in fixture mode |
+| ICO | Shared icon additions | 1 | M | done | d7b41c8 | CanteenIcon removed (no users); ScooterIcon drawn as a moped |
+| ART | Swoop illustration series, room art and pickup kitten swap | 1 | L | done | acc3d93 | app/page.tsx keeps its inline PrinterArt (HOME can swap); pickup 'Paid' stat still has the rupee sign (file now formats later) |
+| COPY | Copy pass: sentence-case tags, no ALL CAPS, no food leftovers | 1 | M | done | 7f616b3 | Removed --tint-canteen token; uppercase badges to sentence case; deletion copy shortened |
 | MEM | Membership server: multi-college principal, onboarding, session, config | 2 | L | pending |  |  |
 | GVC | Godview campus config for all colleges and trust-queue columns | 2 | L | pending |  |  |
 | SEED | Fixture data for every section and utility | 2 | L | pending |  |  |
@@ -70,6 +70,11 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 
 - 7 Nov 21:16 IST · MacBook · preflight GO (system sleep covered by caffeinate -dims); baseline typecheck, lint and 11 tests pass
 - 7 Nov 21:18 IST · MacBook · run started; next resume 8 Nov 02:03 IST
+- 7 Nov 21:19 IST · MacBook · wave 1 started (8 build agents)
+- 7 Nov 21:29 IST · MacBook · wave 1 built (8/8, ~9.5 min, ~0.76M subagent tokens)
+- 7 Nov 21:31 IST · MacBook · wave 1 verified: typecheck 0 errors, lint clean, tests 101/101; npm run build compiled (fails only at prerender on missing env)
+- 7 Nov 21:32 IST · MacBook · wave 1 committed: d973b62 TYP, 2f91a40 CAT, 0697643 FMT, d484a84 RUL, 4b4f2f5 FIX, d7b41c8 ICO, acc3d93 ART, 7f616b3 COPY
+
 
 ## Blocked
 
@@ -80,7 +85,14 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 <!-- One entry per check not run tonight: package id · the check · why it was skipped (needs Clerk / Firebase / Storage / emulator / Godview admin gate) · what to run in the morning. -->
 
 - ALL UI packages · browser checks at 375/1280 px, fixture smoke tests, before/after screenshots · no `.env.local` on this Mac (owner's choice), so ClerkProvider can't render · in the morning: add `.env.local` per the runbook and run the fixture smoke test on every changed route
+- Wave 1 · npm run build prerender · compiles fine (so relative .ts imports resolve under webpack) but prerender needs the production env vars · run npm run build with real env in the morning
+- CAT · real college email domains and map-checked landmark coordinates · not in the facts file · confirm before distances or email verification go live
+- ART · pickup page PickupWaitArt against a real ready order · needs Firestore onSnapshot · check at 375/1280 px with a real order
+- COPY · deletion-request API case-insensitive confirm · needs Clerk + Firestore · test with a live session
+
 
 ## Decided at night
 
 <!-- One entry per decision the run made without the owner: what · the options · the choice (always the safest reversible one) · where it lives in the code · how to undo it. -->
+- Verification per wave, not per package as each agent returns · options: per-package checks while other agents still edit the same worktree, or whole-wave checks once all are in · chose whole-wave typecheck/lint/test, then one commit per package with exact file staging · runbook section 2 · undo: none needed (commits are still per package)
+- From wave 2 on (owner in chat: use as many subagents as needed) · options: wave barriers, or start each package as soon as its dependencies are verified · chose dependency-driven start, max 14 agents (16 CPUs), FIX added as an implicit dependency of DEAD (both touch proxy.ts), one verify agent and at most one fix pass per package, then serial commits · lives in the run's workflow script only · undo: go back to wave-by-wave runs
