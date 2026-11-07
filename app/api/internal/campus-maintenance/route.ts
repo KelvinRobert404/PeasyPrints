@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DocumentReference, FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { getAdminBucket, getAdminDb } from '@/lib/firebase/admin';
-import { isAvailable, toDate } from '@/lib/campus/serialize';
+import { CAMPUS_COLLECTIONS } from '@/lib/campus/constants';
+import { contactOpen, planMaintenance, type MaintenanceDoc } from '@/lib/campus/maintenance';
+import { enqueue } from '@/lib/campus/notify';
+import { toDate } from '@/lib/campus/serialize';
 import { bearerToken, safeTokenEqual } from '@/lib/server/secrets';
+
+/** Delivered inbox items older than this are loaded for deletion, at most NOTIFICATION_SCAN per run. */
+const NOTIFICATION_KEEP_DAYS = 30;
+const NOTIFICATION_SCAN = 500;
 
 function authorized(request: NextRequest) {
   const token = bearerToken(request.headers.get('authorization'));
@@ -14,16 +21,22 @@ export async function GET(request: NextRequest) {
   const db = getAdminDb();
   const now = Date.now();
   const nowTimestamp = Timestamp.now();
-  const [memberships, marketplace, housing, contacts, runningRenders, rateLimits, printTickets, fileOrders, payments] = await Promise.all([
+  const c = CAMPUS_COLLECTIONS;
+  const notificationCutoff = Timestamp.fromMillis(now - NOTIFICATION_KEEP_DAYS * 24 * 60 * 60 * 1000);
+  const [memberships, marketplace, housing, contacts, runningRenders, rateLimits, printTickets, fileOrders, payments, games, lostFound, bloodRequests, notifications] = await Promise.all([
     db.collection('campus_memberships').get(),
-    db.collection('marketplace_listings').get(),
-    db.collection('housing_posts').get(),
+    db.collection(c.market).get(),
+    db.collection(c.housing).get(),
     db.collection('campus_contact_requests').get(),
     db.collection('campus_render_packs').where('status', '==', 'running').get(),
     db.collection('_rate_limits').where('expiresAt', '<=', nowTimestamp).limit(500).get(),
     db.collection('print_tickets').where('expiresAt', '<=', nowTimestamp).limit(500).get(),
     db.collection('orders').where('fileDeleteAfter', '<=', nowTimestamp).limit(200).get(),
     db.collection('payments').where('status', '==', 'paid').limit(500).get(),
+    db.collection(c.games).where('status', 'in', ['open', 'full']).get(),
+    db.collection(c.lostFound).where('status', '==', 'open').get(),
+    db.collection(c.bloodRequests).where('status', '==', 'open').get(),
+    db.collection(c.notifications).where('deliverAfter', '<=', notificationCutoff).limit(NOTIFICATION_SCAN).get(),
   ]);
   const files = new Set<string>();
   const updates: Array<{ ref: DocumentReference; data: Record<string, unknown> }> = [];
@@ -45,11 +58,25 @@ export async function GET(request: NextRequest) {
     if (Object.keys(patch).length) updates.push({ ref: doc.ref, data: { ...patch, updatedAt: Timestamp.now() } });
   });
 
-  for (const [type, snapshot] of [['marketplace', marketplace], ['housing', housing]] as const) snapshot.docs.forEach((doc) => {
-    if (isAvailable(doc.data())) availableContent.add(`${type}_${doc.id}`);
-    if (doc.data().status === 'active' && (toDate(doc.data().availabilityExpiresAt)?.getTime() || 0) <= now) {
-      updates.push({ ref: doc.ref, data: { status: 'needs_confirmation', updatedAt: Timestamp.now() } });
-    }
+  // Listing and utility lifecycles: the pure planner decides, this route writes.
+  const toDocs = (snapshot: { docs: Array<{ id: string; data(): Record<string, unknown> }> }): MaintenanceDoc[] =>
+    snapshot.docs.map((doc) => ({ id: doc.id, data: doc.data() }));
+  const plan = planMaintenance({
+    market: toDocs(marketplace),
+    housing: toDocs(housing),
+    games: toDocs(games),
+    lostFound: toDocs(lostFound),
+    bloodRequests: toDocs(bloodRequests),
+    notifications: toDocs(notifications),
+  }, now);
+  const planned = new Map(plan.updates.map((update) => [`${update.collection}/${update.id}`, update.data]));
+  plan.updates.forEach((update) => updates.push({ ref: db.collection(c[update.collection]).doc(update.id), data: update.data }));
+  plan.deletes.forEach((item) => deletes.push(db.collection(c[item.collection]).doc(item.id)));
+
+  // Contact requests follow each listing's status after this run's changes.
+  for (const [type, collection, snapshot] of [['marketplace', 'market', marketplace], ['housing', 'housing', housing]] as const) snapshot.docs.forEach((doc) => {
+    const data = { ...doc.data(), ...planned.get(`${collection}/${doc.id}`) };
+    if (contactOpen(collection, data, now)) availableContent.add(`${type}_${doc.id}`);
   });
 
   contacts.docs.forEach((doc) => {
@@ -113,5 +140,36 @@ export async function GET(request: NextRequest) {
     deletes.slice(index, index + 450).forEach((ref) => batch.delete(ref));
     await batch.commit();
   }
-  return NextResponse.json({ ok: true, updatedRecords: updates.length, deletedStorageObjects: files.size, retainedPrintFilesDeleted, expiredEphemeralRecords: deletes.length, reconciliationFlags });
+
+  // Inbox items go out after the writes: a failed send loses one notice, a failed write never repeats one.
+  let notificationsQueued = 0;
+  let notificationsFailed = 0;
+  for (const item of plan.notifications) {
+    try {
+      const result = await enqueue([item.userId], {
+        kind: item.kind,
+        title: item.title,
+        body: item.body,
+        href: item.href,
+        ref: item.ref,
+        campusId: item.campusId,
+      }, { now: new Date(now), db });
+      notificationsQueued += result.queued;
+    } catch (error) {
+      notificationsFailed += 1;
+      console.error('campus-maintenance: enqueue failed', item.kind, error);
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    updatedRecords: updates.length,
+    deletedStorageObjects: files.size,
+    retainedPrintFilesDeleted,
+    expiredEphemeralRecords: deletes.length,
+    reconciliationFlags,
+    lifecycle: plan.counts,
+    notificationsQueued,
+    notificationsFailed,
+  });
 }
