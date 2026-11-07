@@ -1,132 +1,228 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { HousingIcon, InboxIcon } from '@/components/swoop/icons';
-import { Chip, EmptyState, IconButton, PageHeader, SearchPill, SectionHeader, swButton } from '@/components/swoop/primitives';
+import { CaretDownIcon, HousingIcon, InboxIcon, ShieldCheckIcon } from '@/components/swoop/icons';
+import { EmptyState, IconButton, PageHeader, swButton } from '@/components/swoop/primitives';
+import { useCurrentCampus } from '@/hooks/useCurrentCampus';
+import {
+  housingAsk,
+  housingPaths,
+  searchedPlace,
+  selectHousingView,
+  useHousingFeed,
+  type HousingFeedListing,
+  type HousingFilterState,
+  type HousingPaths,
+} from '@/hooks/useHousingFeed';
+import { isPeakHousingSeason } from '@/lib/campus/season';
+import { DEFAULT_RING, formatDistance } from '@/lib/format/distance';
 import { useDockSlot } from '@/lib/stores/dockStore';
+import { cn } from '@/lib/utils/cn';
 import { CampusGate } from './CampusGate';
-import { HOUSING_TYPE_LABELS, HousingCard } from './HousingCard';
-import type { CampusAudience, HousingPost, HousingPostType } from '@/types/campus';
+import { HousingFilters } from './housing/HousingFilters';
+import { HousingListingCard } from './housing/HousingListingCard';
+import type { CampusAudience } from '@/types/campus';
 
-const TYPE_FILTERS = ['all', 'room', 'roommate', 'replacement', 'sublet'] as const;
+const GRID = 'grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3 lg:grid-cols-4';
+
+function initialFilters(): HousingFilterState {
+  return {
+    q: '',
+    ring: DEFAULT_RING,
+    kind: 'all',
+    gender: 'anyone',
+    // Apr to Aug is peak season: agents flood the feed, so students come first.
+    fromStudents: isPeakHousingSeason(new Date()),
+    showFarther: false,
+  };
+}
 
 export function HousingExperience({ audience = 'campus' }: { audience?: CampusAudience }) {
-  const [own, setOwn] = useState<HousingPost[]>([]);
-  const [other, setOther] = useState<HousingPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [type, setType] = useState<'all' | HousingPostType>('all');
-  const [query, setQuery] = useState('');
-  const [selectedCollegeId, setSelectedCollegeId] = useState('kju');
+  const { items, campus: apiCampus, status, error, reload, toggleSave } = useHousingFeed(audience);
+  const current = useCurrentCampus();
+  const [filters, setFilters] = useState<HousingFilterState>(initialFilters);
+  const paths = housingPaths(audience);
+  const girls = audience === 'girls';
 
-  const load = async () => {
-    setLoading(true); setError('');
-    try {
-      const endpoint = audience === 'girls' ? '/api/girls-space/housing' : '/api/housing/posts';
-      const response = await fetch(endpoint, { cache: 'no-store' });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Could not load housing');
-      setOwn(data.own || []); setOther(data.other || []);
-    } catch (cause: any) { setError(cause.message || 'Could not load housing'); }
-    finally { setLoading(false); }
-  };
-  useEffect(() => { void load(); }, [audience]);
+  const campusLabel = current?.label ?? apiCampus?.label ?? null;
+  const campusCode = current?.code ?? apiCampus?.code;
+  const campusId = current?.campusId ?? apiCampus?.id ?? null;
+  const collegeId = current?.collegeId ?? null;
 
-  const filter = (items: HousingPost[]) => items.filter((item) => (type === 'all' || item.postType === type) && (!query.trim() || `${item.title} ${item.area} ${item.serial}`.toLowerCase().includes(query.toLowerCase())));
-  const allItems = useMemo(() => [...own, ...other], [own, other]);
-  const colleges = useMemo(() => Array.from(new Map(allItems.map((item) => [item.collegeId, { id: item.collegeId, code: item.collegeCode }])).values()), [allItems]);
-  const filteredOwn = useMemo(() => filter(allItems.filter((item) => item.collegeId === selectedCollegeId)), [allItems, selectedCollegeId, type, query]);
-  const filteredOther = useMemo(() => filter(allItems.filter((item) => item.collegeId !== selectedCollegeId)), [allItems, selectedCollegeId, type, query]);
-  const detailBase = audience === 'girls' ? '/girls-space/housing' : '/housing';
-  const createUrl = audience === 'girls' ? '/housing/new?audience=girls' : '/housing/new';
-  const postsUrl = `/campus/activity?tab=posts&audience=${audience}`;
-  const collegeCode = colleges.find((college) => college.id === selectedCollegeId)?.code || 'KJU';
-  const save = async (item: HousingPost) => {
-    const action = item.isSaved ? 'unsave' : 'save';
-    setOwn((list) => list.map((entry) => entry.id === item.id ? { ...entry, isSaved: !entry.isSaved } : entry));
-    setOther((list) => list.map((entry) => entry.id === item.id ? { ...entry, isSaved: !entry.isSaved } : entry));
-    const response = await fetch('/api/campus/actions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, contentType: 'housing', contentId: item.id }) });
-    if (!response.ok) void load();
-  };
+  const view = useMemo(
+    () => selectHousingView(items, filters, { audience, viewerCollegeId: collegeId, campusId }),
+    [items, filters, audience, collegeId, campusId],
+  );
+  const place = searchedPlace(view.parsed);
+  const update = (patch: Partial<HousingFilterState>) => setFilters((state) => ({ ...state, ...patch }));
+
+  const title = campusLabel ? `Housing · ${campusLabel}` : 'Housing';
+  const loading = status === 'loading';
+  const ready = status === 'ready';
+  const searching = filters.q.trim().length > 0;
+  const shown = view.near.length + view.farther.length + view.agents.length;
+  const card = (item: HousingFeedListing, variant: 'grid' | 'row' = 'grid') => (
+    <HousingListingCard
+      key={item.id}
+      item={item}
+      href={paths.detail(item.id)}
+      onSave={toggleSave}
+      variant={variant}
+      campusCode={campusCode}
+    />
+  );
 
   return (
-    <CampusGate girlsOnly={audience === 'girls'}>
-      <PostSlot audience={audience} href={createUrl} />
+    <CampusGate girlsOnly={girls}>
+      <PostSlot audience={audience} href={paths.create} />
       <div className="pb-3">
-        {audience === 'girls' ? (
+        {girls ? (
           <PageHeader
-            backHref="/girls-space"
-            kicker={`Girls’ space · ${collegeCode}`}
-            title="Housing"
-            actions={<IconButton label="My housing posts" icon={InboxIcon} href={postsUrl} />}
+            backHref={paths.back}
+            kicker="Girls’ space · Only verified students"
+            title={title}
+            actions={<IconButton label="My housing posts" icon={InboxIcon} href={paths.myPosts} />}
           />
         ) : (
-          <div className="flex items-end justify-between gap-3 px-3 pt-2">
+          <header className="flex items-end justify-between gap-3 px-3 pt-2">
             <div className="min-w-0">
-              <p className="truncate text-[10.5px] font-semibold text-slate">Rooms and roommates · {collegeCode}</p>
-              <h1 className="font-heading truncate text-[16px] leading-[1.05] text-ink">Housing</h1>
+              <p className="flex items-center gap-1 truncate text-[10.5px] font-semibold text-slate">
+                <ShieldCheckIcon size={12} className="shrink-0 text-go-text" aria-hidden="true" />
+                Only verified students
+              </p>
+              <h1 className="font-heading truncate text-[16px] leading-[1.05] text-ink">{title}</h1>
             </div>
-            <Link href={postsUrl} className={swButton({ variant: 'surface', size: 'pill' })}>My posts</Link>
-          </div>
+            <Link href={paths.myPosts} className={swButton({ variant: 'surface', size: 'pill' })}>
+              My posts
+            </Link>
+          </header>
         )}
 
         <main className="px-3 pt-2.5">
-          <SearchPill
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search area or serial"
-            aria-label="Search housing by area or serial"
-          />
-          <div role="group" aria-label="Filter by post type" className="-mx-3 mt-2 flex gap-1.5 overflow-x-auto px-3 no-scrollbar">
-            {TYPE_FILTERS.map((item) => (
-              <Chip key={item} selected={type === item} onClick={() => setType(item)}>
-                {item === 'all' ? 'All' : HOUSING_TYPE_LABELS[item]}
-              </Chip>
-            ))}
-          </div>
-          {colleges.length > 1 ? (
-            <div role="group" aria-label="Choose a campus" className="-mx-3 mt-1.5 flex gap-1.5 overflow-x-auto px-3 no-scrollbar">
-              {colleges.map((college) => (
-                <Chip key={college.id} selected={selectedCollegeId === college.id} onClick={() => setSelectedCollegeId(college.id)}>
-                  {college.code}
-                </Chip>
-              ))}
-            </div>
-          ) : null}
+          <HousingFilters audience={audience} value={filters} onChange={update} searchedPlace={place} />
 
-          <section className="pt-3.5">
-            <div className="flex items-end justify-between gap-3">
-              <SectionHeader className="min-w-0" kicker="Best for your commute" title={`Around ${collegeCode}`} />
-              {!loading ? <span className="shrink-0 text-[11px] font-semibold text-slate">{filteredOwn.length} {filteredOwn.length === 1 ? 'post' : 'posts'}</span> : null}
-            </div>
+          <section className="pt-3" aria-label="Housing posts">
+            {ready ? (
+              <p className="text-[11px] font-semibold text-slate" aria-live="polite">
+                {countLine(view.near.length + view.farther.length, view.placeSearch ? null : filters.ring)}
+              </p>
+            ) : null}
+
             {loading ? (
-              <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-3" aria-busy="true" aria-label="Loading housing">
-                {[0, 1, 2, 3].map((item) => <div key={item} className="skeleton h-[168px] rounded-[12px]" />)}
+              <div className={cn(GRID, 'mt-2')} aria-busy="true" aria-label="Loading housing">
+                {[0, 1, 2, 3].map((item) => (
+                  <div key={item} className="skeleton h-[168px] rounded-[12px]" />
+                ))}
               </div>
             ) : null}
-            {error ? <div role="alert" className="mt-2 rounded-[12px] bg-market-tint px-3 py-2.5 text-[12px] font-semibold text-market">{error}</div> : null}
-            {!loading && filteredOwn.length ? (
-              <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-3">
-                {filteredOwn.map((item) => <HousingCard key={item.id} item={item} href={`${detailBase}/${item.id}`} onSave={save} />)}
+
+            {status === 'error' ? (
+              <div role="alert" className="mt-2 flex items-center justify-between gap-2 rounded-[12px] bg-market-tint px-3 py-2.5">
+                <span className="min-w-0 text-[12px] font-semibold text-market">{error}</span>
+                <button type="button" onClick={() => void reload()} className={swButton({ variant: 'surface', size: 'pill' })}>
+                  Try again
+                </button>
               </div>
             ) : null}
-            {!loading && !error && !filteredOwn.length ? (
-              <EmptyState className="mt-2" icon={HousingIcon} title="No matching homes yet" body="Post what you need and let campus find you." />
+
+            {ready && view.near.length ? <div className={cn(GRID, 'mt-2')}>{view.near.map((item) => card(item))}</div> : null}
+
+            {ready && view.agents.length ? (
+              <AgentDigest className="mt-3" items={view.agents} render={(item) => card(item, 'row')} />
+            ) : null}
+
+            {ready && view.hiddenFarther > 0 ? (
+              <div className="mt-3 flex flex-col items-center gap-1">
+                {!view.near.length && !view.agents.length ? (
+                  <p className="text-[12px] font-semibold text-slate">Nothing within {formatDistance(filters.ring)} yet</p>
+                ) : null}
+                <button type="button" onClick={() => update({ showFarther: true })} className={swButton({ variant: 'surface', size: 'pill' })}>
+                  Show {view.hiddenFarther} farther
+                </button>
+              </div>
+            ) : null}
+
+            {ready && view.farther.length ? (
+              <div className="pt-3.5">
+                <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">Farther out</h2>
+                <div className={cn(GRID, 'mt-2')}>{view.farther.map((item) => card(item))}</div>
+              </div>
+            ) : null}
+
+            {ready && view.matched === 0 ? (
+              searching ? (
+                <AskCard q={filters.q} place={place} paths={paths} />
+              ) : (
+                <EmptyState
+                  className="mt-2"
+                  icon={HousingIcon}
+                  title={items.length ? 'No posts match these filters' : 'No rooms posted yet'}
+                  body="Post what you need. Students nearby will see it."
+                  action={
+                    <Link href={paths.create} className={swButton({ variant: 'primary', size: 'pill' })}>
+                      Post
+                    </Link>
+                  }
+                />
+              )
+            ) : null}
+
+            {ready && view.matched > 0 && shown === 0 && view.hiddenFarther === 0 ? (
+              <EmptyState className="mt-2" icon={HousingIcon} title="No posts match these filters" />
             ) : null}
           </section>
-
-          {filteredOther.length ? (
-            <section className="pt-3.5">
-              <SectionHeader kicker="Explore other campuses" title="Worth the commute" />
-              <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-3">
-                {filteredOther.map((item) => <HousingCard key={item.id} item={item} href={`${detailBase}/${item.id}`} onSave={save} />)}
-              </div>
-            </section>
-          ) : null}
         </main>
       </div>
     </CampusGate>
+  );
+}
+
+function countLine(count: number, ring: number | null): string {
+  const posts = `${count} ${count === 1 ? 'post' : 'posts'}`;
+  return ring === null ? posts : `${posts} within ${formatDistance(ring)}`;
+}
+
+/** Empty search: one tap to ask for a room near the searched place. */
+function AskCard({ q, place, paths }: { q: string; place: string | null; paths: HousingPaths }) {
+  const ask = housingAsk(q, place);
+  return (
+    <div className="mt-2 flex flex-col items-center gap-2 rounded-[14px] bg-surface px-5 py-6 text-center">
+      <HousingIcon size={28} className="text-text-muted" />
+      <p className="font-heading text-[14px] text-ink">No posts match yet</p>
+      <p className="max-w-[260px] text-[11.5px] leading-[1.45] text-slate">Ask, and students nearby can reply.</p>
+      <Link href={paths.ask(ask.area)} className={cn(swButton({ variant: 'primary', size: 'pill' }), 'max-w-full')}>
+        <span className="truncate">{ask.text}</span>
+      </Link>
+    </div>
+  );
+}
+
+/** From students on: agent posts fold into one row that opens on tap. */
+function AgentDigest({
+  items,
+  render,
+  className,
+}: {
+  items: HousingFeedListing[];
+  render: (item: HousingFeedListing) => ReactNode;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const label = `${items.length} agent ${items.length === 1 ? 'post' : 'posts'} · brokerage shown`;
+  return (
+    <div className={cn('rounded-[14px] border border-line bg-white', className)}>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="campus-press flex w-full min-w-0 items-center justify-between gap-2 px-3 py-2.5 text-left"
+      >
+        <span className="min-w-0 truncate text-[12.5px] font-bold text-ink">{label}</span>
+        <CaretDownIcon size={14} className={cn('shrink-0 text-ink transition-transform', open && 'rotate-180')} aria-hidden="true" />
+      </button>
+      {open ? <div className="grid gap-2 px-2 pb-2 lg:grid-cols-2">{items.map((item) => render(item))}</div> : null}
+    </div>
   );
 }
 
@@ -138,7 +234,7 @@ function PostSlot({ audience, href }: { audience: CampusAudience; href: string }
     subtitle: audience === 'girls' ? 'Visible to Girls’ space members only' : 'Visible to verified students only',
     tone: 'white',
     icon: 'plus',
-    action: { label: 'Post', href }
+    action: { label: 'Post', href },
   });
   return null;
 }
