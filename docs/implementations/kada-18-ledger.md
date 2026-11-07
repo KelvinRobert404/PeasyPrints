@@ -51,7 +51,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | MFORM1 | New listing form v2, part 1: shell, item, wanted, bundle | 4 | L | pending |  |  |
 | HOME | Home v2: greeting, seasonal slot, utility row, illustrations | 4 | L | done | 08c25b1 | Fixture Home shows a local copy of FIXTURE_SHOPS: core.ts imports firebase-admin, so a client page can t import it. Follow-up: client-safe shops fixture |
 | BLOOD | Blood donor alerts v1 (opt-in) | 4 | L | pending |  |  |
-| GAMES | Pickup games with slots v1 | 4 | L | pending |  |  |
+| GAMES | Pickup games with slots v1 | 4 | L | done | aae8479 | Uses CAMPUS_COLLECTIONS.games ( campus_games ), not pickup_games ; lead should rename it in constants.ts so it matches the index. Browser check not done. |
 | DEAD | Remove dead auth, announcements and location code | 4 | S | done | cbc9306 | Typecheck fixed by regenerating .next types. RootShell.tsx:21 still checks /otp ; its owner package should drop it. |
 | HFEED | Housing feed v2 | 5 | L | pending |  |  |
 | HFORM | Housing post form v2 with landmark picker and WhatsApp paste | 5 | L | pending |  |  |
@@ -97,6 +97,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:06 IST · MacBook · HAPI done, a48a639
 - 7 Nov 22:06 IST · MacBook · MACT done, 1096348
 - 7 Nov 22:07 IST · MacBook · PRINTCAMPUS done, bb1d796
+- 7 Nov 22:07 IST · MacBook · GAMES done, aae8479
 
 
 ## Blocked
