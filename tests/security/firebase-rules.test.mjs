@@ -118,8 +118,8 @@ test('orders and campus-private collections cannot be written by Firebase client
   await assertFails(setDoc(doc(user.firestore(), 'campus_memberships', 'student-1'), { collegeId: 'kju' }));
 });
 
-// Every CAMPUS_COLLECTIONS value plus the plan's collection names. Keep in step
-// with the server-only list in firestore.rules.
+// Every CAMPUS_COLLECTIONS value plus the plan's collection names (the v1 names are gone;
+// the default deny covers them). Keep in step with the server-only list in firestore.rules.
 const SERVER_ONLY_CAMPUS_COLLECTIONS = [
   'market_listings',
   'housing_listings',
@@ -132,10 +132,6 @@ const SERVER_ONLY_CAMPUS_COLLECTIONS = [
   'campus_games',
   'notifications',
   'notification_prefs',
-  'campus_notifications',
-  'student_deals',
-  'lost_found_items',
-  'pickup_games',
 ];
 
 test('Firebase clients cannot read or write the new campus collections', async () => {
