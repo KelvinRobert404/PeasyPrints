@@ -29,7 +29,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | COPY | Copy pass: sentence-case tags, no ALL CAPS, no food leftovers | 1 | M | done | 7f616b3 | Removed --tint-canteen token; uppercase badges to sentence case; deletion copy shortened |
 | MEM | Membership server: multi-college principal, onboarding, session, config | 2 | L | done | 010da12 | MEM: fixture users seeded lazily in auth.ts; unread count still reads campus_contact_requests; godview config route still writes the legacy top-level pickupPoints |
 | GVC | Godview campus config for all colleges and trust-queue columns | 2 | L | done | 775aa4c | GVC built; also writes top-level pickupPoints for old readers; subdomains count needs suffix match in auth.ts; browser check skipped (Clerk gate) |
-| SEED | Fixture data for every section and utility | 2 | L | pending |  |  |
+| SEED | Fixture data for every section and utility | 2 | L | done | 6708b90 | Type gaps put in copy: housing kind, rent drop and reserved; insurance date; sample deal via createdBy. Shops use campus ids. All listing images are . |
 | SRCH | Campus search: aliases, places, price phrases, one-tap ask | 2 | M | done | 5191b02 | SRCH built: item words set a category and stay search words; typo place matching; a lone 2k reads as a max; girls also finds anyone listings; clg with no viewer college sets nothing. |
 | MSCH | Market schema, constants and feed grouping | 2 | L | done | 599426f | Schema input names (departureAt, faceValue, plateState, landmarkId, whatsappNumber) not yet on src/types/market.ts; API package must map. needs_confirmation stays in feed. |
 | HMOD | Housing model, schema and WhatsApp paste parser | 2 | L | done | ae01a22 | Housing model types live in model.ts (agent, no_restrictions, rentTerms enum, kind) because src/types/housing.ts differs; a later package must align the doc type. |
@@ -83,6 +83,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:45 IST · MacBook · CPARTS done, b382323
 - 7 Nov 21:47 IST · MacBook · LOGIN done, 578da0e
 - 7 Nov 21:49 IST · MacBook · HMOD done, ae01a22
+- 7 Nov 21:49 IST · MacBook · SEED done, 6708b90
 
 
 ## Blocked
