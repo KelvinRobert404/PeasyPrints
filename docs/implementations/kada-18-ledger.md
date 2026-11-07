@@ -42,7 +42,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | VERIFY | /campus/verify onboarding: domain result, add college email, ID card, course step | 3 | L | pending |  |  |
 | MAPI | Market listing API v2: read, create, serializer | 3 | L | pending |  |  |
 | MKIT | Market UI kit | 3 | L | pending |  |  |
-| HCARD | Housing card v2 | 3 | M | pending |  |  |
+| HCARD | Housing card v2 | 3 | M | done | 55e7e53 | Card prop type adds optional v2 fields HousingListing lacks; booked shows Reserved; kit fills those fields from fixture text; browser check not run |
 | DEAL | Student deals v1 (verified only) | 3 | M | pending |  |  |
 | LOST | Lost and found v1 (hides ID details) | 3 | L | pending |  |  |
 | HAPI | Housing API v2: serializer, create, lifecycle actions | 4 | L | pending |  |  |
@@ -86,6 +86,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:49 IST · MacBook · SEED done, 6708b90
 - 7 Nov 21:50 IST · MacBook · HDR done, 8795c64
 - 7 Nov 21:52 IST · MacBook · DEAD done, cbc9306
+- 7 Nov 21:56 IST · MacBook · HCARD done, 55e7e53
 
 
 ## Blocked
