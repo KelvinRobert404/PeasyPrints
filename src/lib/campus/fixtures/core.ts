@@ -8,7 +8,7 @@ import type { CollegeConfigOverride } from '@/types/college';
 import type { Shop } from '@/types/models';
 import type { FixtureUserId } from '../../firebase/fixtureMode.ts';
 import { getCampus, getCollege } from '../catalog.ts';
-import { PILOT_COLLEGE, VERIFICATION_DAYS } from '../constants.ts';
+import { VERIFICATION_DAYS } from '../constants.ts';
 import { haversineMeters, roundForPrivacy } from '../../format/distance.ts';
 
 /** A document and the id it is stored under. */
@@ -17,10 +17,13 @@ export interface FixtureDoc<T> {
   data: T;
 }
 
+const KJU_COLLEGE = getCollege('kju');
+if (!KJU_COLLEGE) throw new Error('Fixture college kju is missing from the catalog');
+
 export const KJU = {
-  collegeId: PILOT_COLLEGE.id,
-  collegeCode: PILOT_COLLEGE.code,
-  collegeName: PILOT_COLLEGE.name,
+  collegeId: KJU_COLLEGE.id,
+  collegeCode: KJU_COLLEGE.code,
+  collegeName: KJU_COLLEGE.name,
 } as const;
 
 export const KJU_MAIN = 'kju-main';
@@ -197,7 +200,7 @@ export function buildMemberships(now: Date): FixtureDoc<MembershipFixtureDoc>[] 
       {
         stay: { type: 'pg', distanceM: 650 },
         course: { programmeId: 'bcom', specialisation: null, semester: 3 },
-        studentVerification: approved(now, 'college_email', 60),
+        studentVerification: approved(now, 'email_code', 60),
       },
       60,
     ),

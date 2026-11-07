@@ -109,7 +109,7 @@ export type MembershipDoc = Record<string, unknown>;
 type RawVerification = { status?: unknown; method?: unknown; expiresAt?: unknown } | null | undefined;
 
 const VERIFICATION_STATUSES: readonly VerificationStatus[] = ['unverified', 'pending', 'approved', 'rejected', 'expired', 'revoked'];
-const VERIFICATION_METHODS: readonly VerificationMethod[] = ['college_email', 'google', 'email_code', 'id_card'];
+const VERIFICATION_METHODS: readonly VerificationMethod[] = ['google', 'email_code', 'id_card'];
 const STAY_TYPES: readonly StayType[] = ['pg', 'flat', 'hostel', 'home'];
 
 /** Reads a Firestore Timestamp, Date, ISO string or millis. */

@@ -2,12 +2,7 @@ import type { CampusRef, GenderPref, StayType } from '@/types/campus';
 import type { HouseRule, HousingPostedAs, HousingStatus, RentPeriod } from '@/types/housing';
 import type { MarketCategory, MarketKind, MarketStatus, PriceTerms } from '@/types/market';
 import type { BloodGroup, DealCategory, GameSport, LostFoundCategory, LostFoundKind } from '@/types/utilities';
-
-export const PILOT_COLLEGE = {
-  id: 'kju',
-  code: 'KJU',
-  name: 'Kristu Jayanti University',
-} as const;
+import { getCampus, getCollege } from './catalog.ts';
 
 export const AVAILABILITY_DAYS = 7;
 export const CONTACT_REQUEST_HOURS = 72;
@@ -47,12 +42,15 @@ export type CampusCollection = (typeof CAMPUS_COLLECTIONS)[keyof typeof CAMPUS_C
 
 export const DEFAULT_CAMPUS_ID = 'kju-main';
 
-export const DEFAULT_CAMPUS: CampusRef = {
-  id: DEFAULT_CAMPUS_ID,
-  collegeId: PILOT_COLLEGE.id,
-  code: PILOT_COLLEGE.code,
-  label: 'KJU Main',
-};
+/** The pilot campus, read from the static catalog. */
+function defaultCampusRef(): CampusRef {
+  const campus = getCampus(DEFAULT_CAMPUS_ID);
+  const college = getCollege(campus?.collegeId);
+  if (!campus || !college) throw new Error(`Default campus ${DEFAULT_CAMPUS_ID} is missing from the catalog`);
+  return { id: campus.id, collegeId: college.id, code: college.code, label: campus.label };
+}
+
+export const DEFAULT_CAMPUS: CampusRef = defaultCampusRef();
 
 export const TRUST_LINE = 'Only verified students';
 export const PAY_ON_PICKUP = 'Pay on pickup';

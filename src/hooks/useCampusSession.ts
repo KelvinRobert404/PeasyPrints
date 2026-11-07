@@ -11,6 +11,8 @@ const EMPTY_SESSION: CampusSession = {
   verifiedStudent: false,
   girlsSpaceApproved: false,
   unreadContactRequests: 0,
+  campus: null,
+  onboarding: { needs: null },
 };
 
 type SessionState = {

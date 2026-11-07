@@ -2,7 +2,7 @@ export type CampusAudience = 'campus' | 'girls';
 export type VerificationKind = 'student' | 'girls_space';
 export type VerificationStatus = 'unverified' | 'pending' | 'approved' | 'rejected' | 'expired' | 'revoked';
 /** How a student proved they belong. 'google' is a college Google account, 'email_code' a code sent to the college inbox. */
-export type VerificationMethod = 'college_email' | 'google' | 'email_code' | 'id_card';
+export type VerificationMethod = 'google' | 'email_code' | 'id_card';
 
 export interface VerificationState {
   status: VerificationStatus;
@@ -62,8 +62,9 @@ export interface CampusSession {
   verifiedStudent: boolean;
   girlsSpaceApproved: boolean;
   unreadContactRequests: number;
-  campus?: CampusRef | null;
-  onboarding?: CampusOnboarding;
+  /** Null when signed out or the campus is not known yet. */
+  campus: CampusRef | null;
+  onboarding: CampusOnboarding;
 }
 
 /** Who a listing is for. Shown as 'For girls / For boys / Anyone'. */

@@ -17,8 +17,7 @@ function isUnder(pathname: string | null, base: string): boolean {
 /** Auth pages: no navbar, no dock. */
 function isAuthPath(pathname: string | null): boolean {
   if (!pathname) return false;
-  // /otp stays until its route is removed.
-  return pathname.startsWith('/login') || pathname === '/register' || pathname === '/otp' || pathname === '/sso-callback';
+  return pathname.startsWith('/login') || pathname === '/register' || pathname === '/sso-callback';
 }
 
 export function RootShell({ children }: { children: ReactNode }) {
