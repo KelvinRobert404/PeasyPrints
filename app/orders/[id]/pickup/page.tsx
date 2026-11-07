@@ -8,6 +8,7 @@ import type { OrderDoc } from '@/types/models';
 import { haptics } from '@/lib/utils/haptics';
 import { EmptyState, IconButton, ListRow, IconTile, Tag } from '@/components/swoop/primitives';
 import { SwoopLogo } from '@/components/swoop/Logo';
+import { PickupWaitArt } from '@/components/swoop/illustrations';
 import { BackIcon, DocIcon, HelpIcon, OrdersIcon } from '@/components/swoop/icons';
 import { formatOrderDate, formatOrderTime, orderStatusMeta } from '@/components/orders/orderStatus';
 
@@ -121,13 +122,8 @@ export default function PickupPage() {
         </div>
 
         <div className="mt-auto flex items-end gap-2 pt-2">
-          <img
-            src="/figma/3282e2fcd344b844a08c5e470da99b46d1dc9445.png"
-            alt=""
-            aria-hidden
-            className="pointer-events-none h-[92px] w-[88px] select-none object-contain"
-          />
-          <p className="pb-2 text-[11.5px] text-slate">Show this screen at the counter. Our kitten pal will wait with you.</p>
+          <PickupWaitArt width={88} height={81} className="pointer-events-none shrink-0 select-none" />
+          <p className="pb-2 text-[11.5px] text-slate">Show this at the counter.</p>
         </div>
       </main>
     </div>

@@ -1,6 +1,6 @@
 # Swoop design system v1 (locked 2026-10-09)
 
-Uber's structure with Swoop's attitude. **Mini and dense**, white ground, royal blue for action, ink for weight, real photos.
+Uber's structure with Swoop's attitude. **Mini and dense**, white ground, royal blue for action, ink for weight, student photos or Swoop's own art.
 Reference canvas: https://claude.ai/artifact/5UR1mJqa6t4eoLnuJYRg8h (Home, Marketplace, logo, design system boards).
 
 ## Tokens (Tailwind classes — defined in `app/globals.css`)
@@ -23,7 +23,7 @@ No gradients. No cream outside illustrations. No emoji. Replace old palette: `#F
 ## Type
 - `font-sans` (default): **Figtree** for body, labels and buttons. Sizes 10–13px. Row titles `text-[12.5px] font-bold`, meta `text-[11px]–[11.5px] text-slate`.
 - `font-heading`: **Bricolage Grotesque 700, 88% width**, headings only. Page title **16px**, section and tile title **14.5px**, item title (shop/listing name) **12.5px**. App headings never go above 16px (one exception: a single hero number like a pickup code).
-- Caps tags: `text-[8.5px]–[9.5px] font-extrabold uppercase tracking-[0.06em]` (use `<Tag>`).
+- Tags: sentence case, `text-[9.5px] font-bold` (use `<Tag>`). Never the `uppercase` class.
 - `font-logo`: Archivo Black Italic, **logo and SOLD tape only**.
 - Retired: `font-quinn`, `font-poster`, `font-coolvetica` (temporarily aliased). Migrate to `font-heading` / `font-sans`. Uppercase poster headlines become sentence case.
 
@@ -42,6 +42,14 @@ If something is missing, add it to your feature folder (e.g. `src/components/upl
 `IconTile` · `ListRow` (inset divider) · `ServiceTile` (royal or surface, 74px) · `SmallTile` (icon tile + label below) · `EmptyState` · `Card` ·
 `SwoopLogo` (tape, never rotate) · `TapeStrip` (**only** for SOLD across a sold listing).
 
+## Illustrations (`@/components/swoop/illustrations`, `@/components/swoop/illustrations-room`)
+Swoop draws its own art. No stock photos, ever.
+- Series: `PrinterArt` `MarketArt` `HousingArt` `MovingOutArt` `SetUpRoomArt` `ExamPrintArt` `NextSemRoomArt` `DealsArt` `LostFoundArt` `BloodArt` `GamesArt` `VerifyArt` `EmptyArt` `PickupWaitArt`.
+- Room items: `ROOM_ART[id]` for `RoomItemId` (bed, mattress, study_table, chair, fan, cooler, wardrobe, bucket_set, kettle, lamp, curtains, shelf), or the named `BedArt` … `ShelfArt`.
+- Props: `{ width?, height?, className? }`. Default 120x110; keep that ratio. Decorative only (`aria-hidden`), so put the meaning in nearby text.
+- Style for new art: 120x110 viewBox, flat shapes, no gradients, no text. Colours only `var(--royal)` `var(--royal-tint)` `var(--royal-soft)` `var(--ink)` `var(--cream)` `var(--go)` `var(--market)` `var(--girls)` plus white (`ART_WHITE`). Use `ArtFrame` and `ArtGround`.
+- Use art for empty states, service tiles and listings without a student photo. Never as a fake photo.
+
 ## Shell (already done, don't re-implement)
 - `RootShell` renders the app header (`SwoopNavbar`: logo, campus chip, inbox, account) on every student screen except `/marketplace*`, `/girls-space*` and `/upload*`. Those screens render their own `PageHeader`.
 - The **Dock** (live slot + 5 tabs: Home, Print, Market, Housing, Orders) is global and fixed, and the shell adds the bottom spacer. **Remove page-level bottom navs and big bottom paddings** (`pb-24`/`pb-28` etc.). Keep normal content padding (~`pb-3`).
@@ -52,5 +60,5 @@ If something is missing, add it to your feature folder (e.g. `src/components/upl
 1. Presentation only. **Don't change data fetching, API calls, routes, stores, business logic or props contracts** used by other files.
 2. Dense, not cramped: fit more, and keep hierarchy through weight and colour, not size.
 3. Tape is the logo, not a UI pattern. The only in-product tape is SOLD.
-4. Real photos when data has them. Otherwise a `bg-surface` tile with a duotone icon.
+4. Photos only from student uploads; otherwise an illustration or an icon tile.
 5. Accessibility: real `<button>`/`<Link>`, `aria-label` on icon-only buttons, text contrast ≥ 4.5:1 (use `text-slate`, never lighter, for readable text).
