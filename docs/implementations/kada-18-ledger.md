@@ -31,7 +31,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | GVC | Godview campus config for all colleges and trust-queue columns | 2 | L | pending |  |  |
 | SEED | Fixture data for every section and utility | 2 | L | pending |  |  |
 | SRCH | Campus search: aliases, places, price phrases, one-tap ask | 2 | M | done | 5191b02 | SRCH built: item words set a category and stay search words; typo place matching; a lone 2k reads as a max; girls also finds anyone listings; clg with no viewer college sets nothing. |
-| MSCH | Market schema, constants and feed grouping | 2 | L | pending |  |  |
+| MSCH | Market schema, constants and feed grouping | 2 | L | done | 599426f | Schema input names (departureAt, faceValue, plateState, landmarkId, whatsappNumber) not yet on src/types/market.ts; API package must map. needs_confirmation stays in feed. |
 | HMOD | Housing model, schema and WhatsApp paste parser | 2 | L | pending |  |  |
 | STORE | Pre-sign-in choice store, college picker and stay step | 2 | M | done | 4ff4c5a | Store sanitizes pick/stay on every write and rehydrate; a campus change keeps the stay type but clears its distance; Skip sets stay to null; no browser check (no env) |
 | SIGNIN | Custom sign-in: Continue with Google first, 6-digit email code second | 2 | M | done | 12181ed | SignInStep is pure UI: onEmailCode= sendCode,verifyCode object; hook returns AuthResult, never throws; email sign-up may hit missing_requirements live |
@@ -77,6 +77,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:41 IST · MacBook · STORE done, 4ff4c5a
 - 7 Nov 21:41 IST · MacBook · SIGNIN done, 12181ed
 - 7 Nov 21:42 IST · MacBook · SRCH done, 5191b02
+- 7 Nov 21:42 IST · MacBook · MSCH done, 599426f
 
 
 ## Blocked
