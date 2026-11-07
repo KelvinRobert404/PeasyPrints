@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAdminBucket, getAdminDb } from '@/lib/firebase/admin';
 import { CampusHttpError, campusErrorResponse, getCampusPrincipal } from '@/lib/campus/auth';
-import { PILOT_COLLEGE } from '@/lib/campus/constants';
+import { CAMPUS_COLLECTIONS } from '@/lib/campus/constants';
+import { PICK_COLLEGE_FIRST_MESSAGE } from '@/lib/campus/membership';
 import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
 import { matchesDeclaredFileType } from '@/lib/server/fileValidation';
 
@@ -12,17 +13,20 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     const principal = await getCampusPrincipal();
+    // College and campus come from the membership, set during onboarding.
+    const membership = principal.membership;
+    if (!membership?.collegeId || !membership.campusId) {
+      return NextResponse.json({ error: PICK_COLLEGE_FIRST_MESSAGE }, { status: 409 });
+    }
     const rate = await checkRateLimit('campus-verification', principal.userId, 5, 86400);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
     const form = await request.formData();
     const kind = form.get('kind') === 'girls_space' ? 'girls_space' : 'student';
-    const currentVerification = kind === 'student'
-      ? principal.membership?.student
-      : principal.membership?.girlsSpace;
+    const currentVerification = kind === 'student' ? membership.student : membership.girlsSpace;
     if (currentVerification?.status === 'approved' && currentVerification.expiresAt && new Date(currentVerification.expiresAt).getTime() > Date.now()) {
       return NextResponse.json({ error: 'This verification is already active' }, { status: 409 });
     }
-    if (kind === 'girls_space' && principal.membership?.student.status !== 'approved') {
+    if (kind === 'girls_space' && membership.student.status !== 'approved') {
       return NextResponse.json({ error: 'Complete student verification first' }, { status: 409 });
     }
     const file = form.get('file');
@@ -74,9 +78,10 @@ export async function POST(request: NextRequest) {
         userId: principal.userId,
         kind,
         status: 'pending',
-        collegeId: PILOT_COLLEGE.id,
-        collegeCode: PILOT_COLLEGE.code,
-        collegeName: PILOT_COLLEGE.name,
+        collegeId: membership.collegeId,
+        collegeCode: membership.collegeCode,
+        collegeName: membership.collegeName,
+        campusId: membership.campusId,
         displayName: principal.displayName,
         email: principal.email,
         idCardPath: path,
@@ -84,10 +89,7 @@ export async function POST(request: NextRequest) {
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
-      batch.set(db.collection('campus_memberships').doc(principal.userId), {
-        collegeId: PILOT_COLLEGE.id,
-        collegeCode: PILOT_COLLEGE.code,
-        collegeName: PILOT_COLLEGE.name,
+      batch.set(db.collection(CAMPUS_COLLECTIONS.memberships).doc(principal.userId), {
         displayName: principal.displayName,
         [kind === 'student' ? 'studentVerification' : 'girlsSpaceVerification']: {
           status: 'pending',

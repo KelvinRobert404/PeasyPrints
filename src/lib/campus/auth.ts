@@ -1,121 +1,175 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAdminBucket, getAdminDb } from '@/lib/firebase/admin';
+import { fixtureUserId, isFixtureMode, type FixtureUserId } from '@/lib/firebase/fixtureMode';
 import { isAdminUser, verifiedPrimaryEmail } from '@/lib/admin/config';
-import { PILOT_COLLEGE, VERIFICATION_DAYS, addDays } from './constants';
-import type { CampusAudience, CollegeMembership } from '@/types/campus';
+import { CAMPUS_COLLECTIONS, VERIFICATION_DAYS, addDays } from './constants';
+import { loadCollegeConfig } from './collegeConfig';
+import {
+  CAMPUS_PRODUCT_LABELS,
+  PICK_COLLEGE_FIRST_MESSAGE,
+  buildCampusSession,
+  campusRefOf,
+  dateValue,
+  fixtureIdentity,
+  isActiveVerification,
+  matchCollegeEmail,
+  serializeMembership,
+  type CampusProduct,
+  type IdentityEmail,
+  type LoadedCollegeConfig,
+  type MembershipDoc,
+} from './membership';
+import type { CampusAudience, CampusRef, CampusSession, CollegeMembership } from '@/types/campus';
 
 export class CampusHttpError extends Error {
-  constructor(public status: number, message: string) {
+  status: number;
+
+  constructor(status: number, message: string) {
     super(message);
+    this.status = status;
   }
 }
 
-function dateValue(value: unknown): Date | null {
-  if (!value) return null;
-  if (value instanceof Date) return value;
-  if (typeof (value as { toDate?: unknown }).toDate === 'function') return (value as { toDate: () => Date }).toDate();
-  const parsed = new Date(String(value));
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
+export interface CampusPrincipal {
+  userId: string;
+  membership: CollegeMembership | null;
+  displayName: string;
+  /** Verified primary email, or null. */
+  email: string | null;
+  campus: CampusRef | null;
+  /** The member's college config, or null before a college is picked. */
+  config: LoadedCollegeConfig | null;
+  blocked: boolean;
 }
 
-function activeVerification(state: any) {
-  return state?.status === 'approved' && Boolean(dateValue(state?.expiresAt) && dateValue(state.expiresAt)!.getTime() > Date.now());
+/** Who is signed in. Fixture mode reads the fixture cookie and never touches Clerk. */
+interface Identity {
+  userId: string;
+  displayName: string | null;
+  primaryEmail: string | null;
+  emails: IdentityEmail[];
+  admin: boolean;
 }
 
-// An 'approved' state that isn't active (expired or missing expiry) must never be
-// reported as approved; it gates Girls' Space access.
-function verificationStatus(state: any) {
-  if (activeVerification(state)) return 'approved';
-  if (state?.status === 'approved') return 'expired';
-  return state?.status || 'unverified';
+// Clerk user shape this file needs, kept structural so it stays SDK-version proof.
+type ClerkEmail = {
+  id: string;
+  emailAddress: string;
+  verification: { status: string; strategy?: string } | null;
+  linkedTo?: Array<{ type: string }>;
+};
+
+function clerkEmails(emails: readonly ClerkEmail[]): IdentityEmail[] {
+  return emails.map((item) => ({
+    address: item.emailAddress,
+    verified: item.verification?.status === 'verified',
+    google: Boolean(item.linkedTo?.some((link) => link.type === 'oauth_google')) || item.verification?.strategy === 'from_oauth_google',
+  }));
 }
 
-function serializeMembership(userId: string, data: any): CollegeMembership {
+async function fixtureId(): Promise<FixtureUserId> {
+  return fixtureUserId(await cookies());
+}
+
+/** Writes the fixture user's starting membership into the fake DB the first time it is seen. */
+async function ensureFixtureMembership(userId: FixtureUserId) {
+  const seed = fixtureIdentity(userId).membership;
+  if (!seed) return;
+  const ref = getAdminDb().collection(CAMPUS_COLLECTIONS.memberships).doc(userId);
+  if (!(await ref.get()).exists) await ref.set({ ...seed, createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
+}
+
+async function currentIdentity(): Promise<Identity | null> {
+  if (isFixtureMode()) {
+    const userId = await fixtureId();
+    const fixture = fixtureIdentity(userId);
+    await ensureFixtureMembership(userId);
+    const primary = fixture.emails.find((email) => email.verified)?.address ?? null;
+    return { userId, displayName: fixture.displayName, primaryEmail: primary, emails: fixture.emails, admin: fixture.admin };
+  }
+  const { userId } = await auth();
+  if (!userId) return null;
+  const user = await currentUser();
   return {
     userId,
-    collegeId: data.collegeId || PILOT_COLLEGE.id,
-    collegeCode: data.collegeCode || PILOT_COLLEGE.code,
-    collegeName: data.collegeName || PILOT_COLLEGE.name,
-    displayName: data.displayName || 'Student',
-    student: {
-      status: verificationStatus(data.studentVerification),
-      method: data.studentVerification?.method,
-      expiresAt: dateValue(data.studentVerification?.expiresAt)?.toISOString() || null,
-    },
-    girlsSpace: {
-      status: verificationStatus(data.girlsSpaceVerification),
-      method: data.girlsSpaceVerification?.method,
-      expiresAt: dateValue(data.girlsSpaceVerification?.expiresAt)?.toISOString() || null,
-    },
+    displayName: user?.firstName || user?.fullName || null,
+    primaryEmail: verifiedPrimaryEmail(user),
+    emails: user ? clerkEmails(user.emailAddresses) : [],
+    admin: isAdminUser(user),
   };
 }
 
-async function maybeVerifyCollegeEmail(userId: string, membershipData: any | null) {
-  const user = await currentUser();
-  if (!user) return membershipData;
-  const primary = user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId) || user.emailAddresses[0];
-  const email = primary?.emailAddress?.toLowerCase();
-  const verified = primary?.verification?.status === 'verified';
-  if (!email || !verified || activeVerification(membershipData?.studentVerification)) return membershipData;
-  // Re-approving a revoked member here would silently undo the admin's revocation
-  // on the user's next request.
-  if (membershipData?.studentVerification?.status === 'revoked' || membershipData?.blocked) return membershipData;
+/** The signed-in user id without loading the membership. Fixture mode: the fixture cookie. */
+export async function getSignedInUserId(): Promise<string | null> {
+  if (isFixtureMode()) return fixtureId();
+  const { userId } = await auth();
+  return userId ?? null;
+}
 
-  const configSnap = await getAdminDb().collection('college_configs').doc(PILOT_COLLEGE.id).get();
-  const domains = (configSnap.data()?.emailDomains || []).map((domain: string) => String(domain).toLowerCase());
-  const domain = email.split('@')[1];
-  if (!domain || !domains.includes(domain)) return membershipData;
+function verificationRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : null;
+}
 
-  const displayName = user.firstName || user.fullName || email.split('@')[0] || 'Student';
+/**
+ * Auto-approves a member when any verified email on the account is on their college's domains.
+ * Never re-approves a revoked or blocked member: that would undo an admin decision.
+ */
+async function maybeApproveByCollegeEmail(identity: Identity, data: MembershipDoc | null, config: LoadedCollegeConfig | null) {
+  if (!data || !config || data.collegeId !== config.college.id) return data;
+  const student = verificationRecord(data.studentVerification);
+  if (isActiveVerification(student)) return data;
+  if (student?.status === 'revoked' || data.blocked) return data;
+  const match = matchCollegeEmail(identity.emails, config.college.emailDomains);
+  if (!match) return data;
+
   const patch = {
-    collegeId: PILOT_COLLEGE.id,
-    collegeCode: PILOT_COLLEGE.code,
-    collegeName: PILOT_COLLEGE.name,
-    displayName,
+    displayName: typeof data.displayName === 'string' && data.displayName.trim() ? data.displayName : identity.displayName || match.address.split('@')[0] || 'Student',
     studentVerification: {
       status: 'approved',
-      method: 'college_email',
+      method: match.method,
       approvedAt: Timestamp.now(),
       expiresAt: Timestamp.fromDate(addDays(new Date(), VERIFICATION_DAYS)),
     },
     updatedAt: Timestamp.now(),
   };
-  await getAdminDb().collection('campus_memberships').doc(userId).set(patch, { merge: true });
-  return { ...(membershipData || {}), ...patch };
+  await getAdminDb().collection(CAMPUS_COLLECTIONS.memberships).doc(identity.userId).set(patch, { merge: true });
+  return { ...data, ...patch };
 }
 
-async function expireIdCardVerifications(userId: string, membershipData: any | null) {
-  if (!membershipData) return membershipData;
+/** Expired ID-card approvals flip to 'expired' and their card image is deleted. */
+async function expireIdCardVerifications(userId: string, data: MembershipDoc | null) {
+  if (!data) return data;
+  const next: MembershipDoc = { ...data };
   const updates: Record<string, unknown> = {};
   const files: string[] = [];
-  for (const [field, value] of [
-    ['studentVerification', membershipData.studentVerification],
-    ['girlsSpaceVerification', membershipData.girlsSpaceVerification],
-  ] as const) {
+  for (const field of ['studentVerification', 'girlsSpaceVerification'] as const) {
+    const value = verificationRecord(data[field]);
     const expiresAt = dateValue(value?.expiresAt);
     if (value?.status === 'approved' && (!expiresAt || expiresAt.getTime() <= Date.now())) {
-      if (value.idCardPath) files.push(value.idCardPath);
+      if (typeof value.idCardPath === 'string' && value.idCardPath) files.push(value.idCardPath);
       updates[field] = { ...value, status: 'expired', idCardPath: null, expiredAt: Timestamp.now() };
-      membershipData[field] = updates[field];
+      next[field] = updates[field];
     }
   }
   if (Object.keys(updates).length) {
-    await getAdminDb().collection('campus_memberships').doc(userId).set({ ...updates, updatedAt: Timestamp.now() }, { merge: true });
+    await getAdminDb().collection(CAMPUS_COLLECTIONS.memberships).doc(userId).set({ ...updates, updatedAt: Timestamp.now() }, { merge: true });
     await Promise.all(files.map((path) => getAdminBucket().file(path).delete({ ignoreNotFound: true })));
   }
-  return membershipData;
+  return next;
 }
 
-export async function getCampusPrincipal(options?: { requireVerified?: boolean; audience?: CampusAudience; product?: 'marketplace' | 'housing' }) {
-  const { userId } = await auth();
-  if (!userId) throw new CampusHttpError(401, 'Sign in required');
-  const ref = getAdminDb().collection('campus_memberships').doc(userId);
-  const snapshot = await ref.get();
-  const current = await expireIdCardVerifications(userId, snapshot.exists ? snapshot.data() : null);
-  const data = await maybeVerifyCollegeEmail(userId, current);
-  const membership = data ? serializeMembership(userId, data) : null;
+export async function getCampusPrincipal(options?: { requireVerified?: boolean; audience?: CampusAudience; product?: CampusProduct }): Promise<CampusPrincipal> {
+  const identity = await currentIdentity();
+  if (!identity) throw new CampusHttpError(401, 'Sign in required');
+  const snapshot = await getAdminDb().collection(CAMPUS_COLLECTIONS.memberships).doc(identity.userId).get();
+  const stored = snapshot.exists ? ((snapshot.data() ?? {}) as MembershipDoc) : null;
+  const current = await expireIdCardVerifications(identity.userId, stored);
+  const config = typeof current?.collegeId === 'string' ? await loadCollegeConfig(current.collegeId) : null;
+  const data = await maybeApproveByCollegeEmail(identity, current, config);
+  const membership = data ? serializeMembership(identity.userId, data, config) : null;
 
   if (options?.requireVerified && membership?.student.status !== 'approved') {
     throw new CampusHttpError(403, 'Student verification required');
@@ -123,28 +177,41 @@ export async function getCampusPrincipal(options?: { requireVerified?: boolean; 
   if (options?.audience === 'girls' && membership?.girlsSpace.status !== 'approved') {
     throw new CampusHttpError(403, 'Girls’ Space approval required');
   }
-  if (options?.product && membership) {
-    if (membership.collegeId !== PILOT_COLLEGE.id) throw new CampusHttpError(403, 'This campus pilot is not enabled for your college');
-    const config = await getAdminDb().collection('college_configs').doc(membership.collegeId).get();
-    const enabled = config.data()?.[`${options.product}Enabled`] !== false;
-    if (!enabled) throw new CampusHttpError(404, `${options.product === 'marketplace' ? 'Marketplace' : 'Housing'} is not enabled for this campus`);
+  if (options?.product) {
+    if (!membership?.collegeId || !config) throw new CampusHttpError(409, PICK_COLLEGE_FIRST_MESSAGE);
+    if (config.college.launchState !== 'live') throw new CampusHttpError(403, 'Swoop is not live at your college yet');
+    if (!config.flags[options.product]) throw new CampusHttpError(404, `${CAMPUS_PRODUCT_LABELS[options.product]} is not on at your campus`);
   }
 
-  const user = await currentUser();
   return {
-    userId,
+    userId: identity.userId,
     membership,
-    displayName: membership?.displayName || user?.firstName || user?.fullName || 'Student',
-    email: verifiedPrimaryEmail(user),
+    displayName: membership?.displayName || identity.displayName || 'Student',
+    email: identity.primaryEmail,
+    campus: campusRefOf(membership, config),
+    config,
+    blocked: Boolean(data?.blocked),
   };
 }
 
 export async function requireAdminPrincipal() {
-  const { userId } = await auth();
-  if (!userId) throw new CampusHttpError(401, 'Sign in required');
-  const user = await currentUser();
-  if (!isAdminUser(user)) throw new CampusHttpError(403, 'Admin access required');
-  return { userId, email: verifiedPrimaryEmail(user) };
+  const identity = await currentIdentity();
+  if (!identity) throw new CampusHttpError(401, 'Sign in required');
+  if (!identity.admin) throw new CampusHttpError(403, 'Admin access required');
+  return { userId: identity.userId, email: identity.primaryEmail };
+}
+
+/** The session payload for a signed-in principal: membership, campus, onboarding step, unread requests. */
+export async function campusSessionFor(principal: CampusPrincipal): Promise<CampusSession> {
+  // Contact requests still live in the collection the contact-request routes write.
+  const pending = await getAdminDb()
+    .collection('campus_contact_requests')
+    .where('sellerId', '==', principal.userId)
+    .where('status', '==', 'pending')
+    .limit(100)
+    .get();
+  const unread = pending.docs.filter((item) => (dateValue(item.data().expiresAt)?.getTime() || 0) > Date.now()).length;
+  return buildCampusSession(principal.membership, principal.config, unread);
 }
 
 export function campusErrorResponse(error: unknown) {
