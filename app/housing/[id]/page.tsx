@@ -1,7 +1,6 @@
-import { ContentDetail } from '@/components/campus/ContentDetail';
+import { HousingDetail } from '@/components/campus/housing/HousingDetail';
 
 export default async function HousingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <ContentDetail id={id} type="housing" />;
+  return <HousingDetail id={id} />;
 }
-
