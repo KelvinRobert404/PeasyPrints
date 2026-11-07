@@ -41,7 +41,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | LOGIN | /login stepper, AuthShell trust line, dev preview | 3 | M | done | 578da0e | LOGIN: 3-screen stepper with step= pushState; in-app Back pushes previous step; client preview uses notFound in prod; clerkAppearance.ts now unused, not deleted |
 | VERIFY | /campus/verify onboarding: domain result, add college email, ID card, course step | 3 | L | done | 197ff3f | Fix pass: two copy lines shortened to 8 words (CourseStep subtitle, IdCardPending body). Typecheck and lint clean. Browser check still skipped (no env). |
 | MAPI | Market listing API v2: read, create, serializer | 3 | L | done | c384daa | Uses market_listings via a cast on serial.ts type; viewer-relative roughDistanceM; hard expiry derived from details; dup guard per audience; PATCH collection switched only |
-| MKIT | Market UI kit | 3 | L | pending |  |  |
+| MKIT | Market UI kit | 3 | L | done | b098bd8 | MKIT built; typecheck and lint pass. No browser check (no .env.local). Links are placeholder defaults; pass fair price uses sample paid amounts (schema lacks paid). |
 | HCARD | Housing card v2 | 3 | M | done | 55e7e53 | Card prop type adds optional v2 fields HousingListing lacks; booked shows Reserved; kit fills those fields from fixture text; browser check not run |
 | DEAL | Student deals v1 (verified only) | 3 | M | done | 2eb4264 | PATCH no longer wipes code/howToClaim when they are left out; only a present /null clears them. Collection stays CAMPUS_COLLECTIONS.deals (campus_deals). |
 | LOST | Lost and found v1 (hides ID details) | 3 | L | done | b95526c | Used lost_found (seeded) not lost_found_items ; photos hidden from non-posters on all posts; contact required on create; browser check skipped. |
@@ -93,6 +93,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:00 IST · MacBook · DEAL done, 2eb4264
 - 7 Nov 22:00 IST · MacBook · HOME done, 08c25b1
 - 7 Nov 22:00 IST · MacBook · LOST done, b95526c
+- 7 Nov 22:00 IST · MacBook · MKIT done, b098bd8
 
 
 ## Blocked
