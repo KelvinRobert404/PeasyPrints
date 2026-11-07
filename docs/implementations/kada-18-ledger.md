@@ -44,7 +44,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | MKIT | Market UI kit | 3 | L | pending |  |  |
 | HCARD | Housing card v2 | 3 | M | done | 55e7e53 | Card prop type adds optional v2 fields HousingListing lacks; booked shows Reserved; kit fills those fields from fixture text; browser check not run |
 | DEAL | Student deals v1 (verified only) | 3 | M | done | 2eb4264 | PATCH no longer wipes code/howToClaim when they are left out; only a present /null clears them. Collection stays CAMPUS_COLLECTIONS.deals (campus_deals). |
-| LOST | Lost and found v1 (hides ID details) | 3 | L | pending |  |  |
+| LOST | Lost and found v1 (hides ID details) | 3 | L | done | b95526c | Used lost_found (seeded) not lost_found_items ; photos hidden from non-posters on all posts; contact required on create; browser check skipped. |
 | HAPI | Housing API v2: serializer, create, lifecycle actions | 4 | L | pending |  |  |
 | MACT | Market listing actions API | 4 | M | pending |  |  |
 | MFEED | Market v2 feed and the four See all screens | 4 | L | pending |  |  |
@@ -92,6 +92,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:59 IST · MacBook · MAPI done, c384daa
 - 7 Nov 22:00 IST · MacBook · DEAL done, 2eb4264
 - 7 Nov 22:00 IST · MacBook · HOME done, 08c25b1
+- 7 Nov 22:00 IST · MacBook · LOST done, b95526c
 
 
 ## Blocked
