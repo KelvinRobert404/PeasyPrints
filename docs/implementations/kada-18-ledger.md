@@ -60,7 +60,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | MDETAIL | Market detail screen | 5 | L | pending |  |  |
 | CONTACT | Contact requests and availability for v2 listings | 5 | M | done | 890201a | Route reads v2 collections; requests stay in campus_contact_requests. id route approve still reads old collections and fails until fixed; fixture GET misses seeds. |
 | PRINTCAMPUS | Print shops follow the signed-in campus | 5 | M | done | bb1d796 | Fixture shops copied into /upload (core.ts is server only); selectedCollegeId in other packages files still hits the grep; stale .next/types needs typegen |
-| MYPOSTS | My posts and updates on /campus/activity | 5 | M | pending |  |  |
+| MYPOSTS | My posts and updates on /campus/activity | 5 | M | done | 91b7de4 | Updates sits above the tabs and marks items read on load; shared post pieces live in MarketMyPosts; the offer wording needs intent from the contact-requests API |
 | CRON | Maintenance planner for new lifecycles and account purge | 5 | L | pending |  |  |
 | CLEAN | Legacy cleanup and final copy audit | 6 | L | pending |  |  |
 
@@ -103,6 +103,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:10 IST · MacBook · MFEED done, ee0f33d
 - 7 Nov 22:12 IST · MacBook · CONTACT done, 890201a
 - 7 Nov 22:12 IST · MacBook · HDETAIL done, ef0f642
+- 7 Nov 22:14 IST · MacBook · MYPOSTS done, 91b7de4
 
 
 ## Blocked
