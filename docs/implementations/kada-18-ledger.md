@@ -6,7 +6,14 @@ Statuses: `pending`, `building`, `verifying`, `done` (verified, committed and pu
 
 ## Claim
 
-No claim. The run is planned and ready for anyone to start. The chat that starts the run posts `**Working:**` on KADA-18 in Linear and repeats that line here.
+**Working:** siyonroy · MacBook (macOS, ~/Desktop/Developer/PeasyPrints-kada18) · chat "KADA-18 · 7 Nov/redesign-run1" (claude://claude.ai/epitaxy/local_fa979743-9896-41c1-b141-2e451fc40f12) · since 7 Nov 21:18 IST
+
+Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21:15 IST):
+- **No Linear connector in this chat.** The owner chose to run without Linear: this ledger is the only claim and progress record for this run. The owner copies the Preflight and report text into KADA-18. Before every push, check this ledger (on GitHub) for a newer `**Reclaimed:**` line.
+- **Not running anywhere else.** The owner confirmed KADA-18 is not running or claimed on the Windows machine or by anyone else.
+- **No `.env.local` on this Mac.** The owner chose to run without it. Typecheck, lint, tests and builds still run. Every browser check (375/1280 px, fixture smoke tests, before/after screenshots) is a skipped verification, because `ClerkProvider` can't render without `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`.
+- **Power:** caffeinate -dims (72 h) and the app's keep-awake hold. First resume at 8 Nov 02:03 IST.
+- **ETA:** ~6 h of work · done about Sun 8 Nov 10:00 IST (44 packages in 6 waves, every wave has L packages; ~220M effective tokens, expect about 3 usage resets).
 
 ## Packages
 
@@ -61,6 +68,9 @@ No claim. The run is planned and ready for anyone to start. The chat that starts
 
 <!-- One line per event: <d Mon HH:MM IST> · <who/device> · <what happened> (wave started, package done with commit, wave verified, usage pause and resume time, run finished). -->
 
+- 7 Nov 21:16 IST · MacBook · preflight GO (system sleep covered by caffeinate -dims); baseline typecheck, lint and 11 tests pass
+- 7 Nov 21:18 IST · MacBook · run started; next resume 8 Nov 02:03 IST
+
 ## Blocked
 
 <!-- One entry per blocked package: id · what failed (command and first error line) · what was tried · files restored · packages skipped because of it. -->
@@ -68,6 +78,8 @@ No claim. The run is planned and ready for anyone to start. The chat that starts
 ## Skipped verifications
 
 <!-- One entry per check not run tonight: package id · the check · why it was skipped (needs Clerk / Firebase / Storage / emulator / Godview admin gate) · what to run in the morning. -->
+
+- ALL UI packages · browser checks at 375/1280 px, fixture smoke tests, before/after screenshots · no `.env.local` on this Mac (owner's choice), so ClerkProvider can't render · in the morning: add `.env.local` per the runbook and run the fixture smoke test on every changed route
 
 ## Decided at night
 
