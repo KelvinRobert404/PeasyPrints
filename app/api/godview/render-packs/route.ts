@@ -3,7 +3,12 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { CampusHttpError, campusErrorResponse, requireAdminPrincipal } from '@/lib/campus/auth';
-import { isAvailable, toIso } from '@/lib/campus/serialize';
+import { CAMPUS_COLLECTIONS, MARKET_CATEGORY_LABELS, MARKET_KIND_LABELS } from '@/lib/campus/constants';
+import { toIso } from '@/lib/campus/serialize';
+import { serializeMarketListing, type MarketDocSnapshot, type SerializedMarketListing } from '@/lib/campus/marketSerialize';
+import { serializeHousingListing, type SerializedHousingListing } from '@/lib/campus/housing/serialize';
+import { HOUSING_KIND_LABELS } from '@/lib/campus/housing/model';
+import { formatPrice } from '@/lib/format/price';
 
 const createSchema = z.object({
   type: z.enum(['marketplace', 'housing']),
@@ -11,10 +16,61 @@ const createSchema = z.object({
   templateId: z.string().min(1).max(80),
 });
 
-function priceLabel(type: 'marketplace' | 'housing', data: any) {
-  const value = type === 'marketplace' ? data.price : data.rent;
-  if (typeof value !== 'number') return type === 'marketplace' && data.postType === 'free' ? 'Free' : 'Ask for details';
-  return type === 'housing' ? `₹${value.toLocaleString('en-IN')}/month` : `₹${value.toLocaleString('en-IN')}`;
+/** Admin reads: no viewer, so no distance or owner flags. */
+const ADMIN_VIEWER = '__admin__';
+const LIVE_STATUSES: ReadonlySet<string> = new Set(['active', 'reserved']);
+
+/** 'Rs 1.5k', 'Rs 400 pp', 'Free' or 'Swap'. Never the rupee sign. */
+function marketPriceLabel(item: SerializedMarketListing): string {
+  if (item.priceTerms === 'free' || item.price === 0) return 'Free';
+  if (item.price === null) return item.priceTerms === 'swap' ? 'Swap' : 'Ask for details';
+  return item.priceTerms === 'per_person' ? formatPrice(item.price, 'pp') : formatPrice(item.price);
+}
+
+/** Housing rent is per person: 'Rs 8.5k pp'. */
+function housingPriceLabel(item: SerializedHousingListing): string {
+  return item.rentPp > 0 ? formatPrice(item.rentPp, 'pp') : 'Ask for details';
+}
+
+/** What it is (the category for a plain item), then where. */
+function marketMetadata(item: SerializedMarketListing): string[] {
+  const what = item.kind === 'item' ? MARKET_CATEGORY_LABELS[item.category] : MARKET_KIND_LABELS[item.kind];
+  return [what, item.place?.label || item.place?.area].filter((value): value is string => Boolean(value));
+}
+
+function housingMetadata(item: SerializedHousingListing): string[] {
+  return [item.place.label || item.place.area, HOUSING_KIND_LABELS[item.kind]].filter((value): value is string => Boolean(value));
+}
+
+type PackListing = SerializedMarketListing | SerializedHousingListing;
+
+/** One reel card. Only live campus posts open for promotion qualify. */
+function packItem(type: 'marketplace' | 'housing', snapshot: MarketDocSnapshot, origin: string) {
+  let listing: PackListing;
+  let priceLabel: string;
+  let metadata: string[];
+  if (type === 'marketplace') {
+    const market = serializeMarketListing(snapshot, ADMIN_VIEWER);
+    [listing, priceLabel, metadata] = [market, marketPriceLabel(market), marketMetadata(market)];
+  } else {
+    const housing = serializeHousingListing(snapshot, ADMIN_VIEWER);
+    [listing, priceLabel, metadata] = [housing, housingPriceLabel(housing), housingMetadata(housing)];
+  }
+  if (listing.audience !== 'campus' || !listing.promotionEligible || !LIVE_STATUSES.has(listing.status)) {
+    throw new CampusHttpError(409, `${listing.serial || snapshot.id} is not eligible for public promotion`);
+  }
+  const imagePath = listing.images[0] || '';
+  const mediaId = imagePath.match(/\/api\/campus\/media\/([^/?]+)/)?.[1] || null;
+  return {
+    id: snapshot.id,
+    serial: listing.serial,
+    title: listing.title,
+    mediaId,
+    collegeCode: listing.collegeCode,
+    priceLabel,
+    metadata,
+    deepLink: `${origin}/${type}/${snapshot.id}`,
+  };
 }
 
 export async function GET() {
@@ -39,30 +95,11 @@ export async function POST(request: NextRequest) {
     if (body.contentIds.length < minimum || body.contentIds.length > maximum) {
       return NextResponse.json({ error: `${body.type === 'marketplace' ? 'Marketplace' : 'Housing'} packs require ${minimum}–${maximum} posts` }, { status: 400 });
     }
-    const collection = body.type === 'marketplace' ? 'marketplace_listings' : 'housing_posts';
+    const collection = body.type === 'marketplace' ? CAMPUS_COLLECTIONS.market : CAMPUS_COLLECTIONS.housing;
     const snapshots = await Promise.all(body.contentIds.map((id) => getAdminDb().collection(collection).doc(id).get()));
     if (snapshots.some((snapshot) => !snapshot.exists)) throw new CampusHttpError(404, 'One or more selected posts no longer exist');
     const origin = request.nextUrl.origin;
-    const items = snapshots.map((snapshot) => {
-      const data = snapshot.data()!;
-      if (data.audience !== 'campus' || data.promotionEligible === false || !isAvailable(data)) {
-        throw new CampusHttpError(409, `${data.serial || snapshot.id} is not eligible for public promotion`);
-      }
-      const imagePath = Array.isArray(data.images) ? data.images[0] || '' : '';
-      const mediaId = imagePath.match(/\/api\/campus\/media\/([^/?]+)/)?.[1] || null;
-      return {
-        id: snapshot.id,
-        serial: data.serial,
-        title: data.title,
-        mediaId,
-        collegeCode: data.collegeCode,
-        priceLabel: priceLabel(body.type, data),
-        metadata: body.type === 'marketplace'
-          ? [data.category, data.pickupLabel || data.area].filter(Boolean)
-          : [data.area, data.commuteLabel, data.postType].filter(Boolean),
-        deepLink: `${origin}/${body.type === 'marketplace' ? 'marketplace' : 'housing'}/${snapshot.id}`,
-      };
-    });
+    const items = snapshots.map((snapshot) => packItem(body.type, snapshot, origin));
     const ref = getAdminDb().collection('campus_render_packs').doc();
     const now = Timestamp.now();
     await ref.set({
@@ -73,7 +110,7 @@ export async function POST(request: NextRequest) {
       requestedBy: admin.email,
       propsSnapshot: {
         packId: ref.id,
-        brand: 'PeasyPrints',
+        brand: 'Swoop',
         college: { code: 'KJU', name: 'Kristu Jayanti University' },
         items,
       },

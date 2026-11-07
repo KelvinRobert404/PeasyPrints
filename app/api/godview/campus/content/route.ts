@@ -2,14 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { CampusHttpError, campusErrorResponse, requireAdminPrincipal } from '@/lib/campus/auth';
-import { serializeHousing, serializeMarketplace, toIso } from '@/lib/campus/serialize';
+import { CAMPUS_COLLECTIONS } from '@/lib/campus/constants';
+import { toIso } from '@/lib/campus/serialize';
+import { serializeMarketListing } from '@/lib/campus/marketSerialize';
+import { serializeHousingListing } from '@/lib/campus/housing/serialize';
+
+/** Admin reads: no viewer, so isOwner and isSaved stay false and no distance is shown. */
+const ADMIN_VIEWER = '__admin__';
 
 export async function GET(request: NextRequest) {
   try {
     await requireAdminPrincipal();
     const type = request.nextUrl.searchParams.get('type') === 'housing' ? 'housing' : 'marketplace';
     const search = (request.nextUrl.searchParams.get('q') || '').trim().toLowerCase();
-    const collection = type === 'housing' ? 'housing_posts' : 'marketplace_listings';
+    const collection = type === 'housing' ? CAMPUS_COLLECTIONS.housing : CAMPUS_COLLECTIONS.market;
     const [content, reports] = await Promise.all([
       getAdminDb().collection(collection).limit(300).get(),
       getAdminDb().collection('campus_content_reports').where('status', '==', 'open').limit(300).get(),
@@ -19,7 +25,7 @@ export async function GET(request: NextRequest) {
     const items = content.docs
       .filter((doc) => !search || String(doc.data().serial || '').toLowerCase().includes(search) || String(doc.data().title || '').toLowerCase().includes(search))
       .map((doc) => ({
-        ...(type === 'housing' ? serializeHousing(doc, '__admin__') : serializeMarketplace(doc, '__admin__')),
+        ...(type === 'housing' ? serializeHousingListing(doc, ADMIN_VIEWER) : serializeMarketListing(doc, ADMIN_VIEWER)),
         authorId: doc.data().authorId,
         reportCount: reportCounts.get(doc.id) || 0,
         updatedAt: toIso(doc.data().updatedAt),
@@ -35,7 +41,7 @@ export async function PATCH(request: NextRequest) {
     const admin = await requireAdminPrincipal();
     const body = await request.json();
     const type = body.type === 'housing' ? 'housing' : 'marketplace';
-    const collection = type === 'housing' ? 'housing_posts' : 'marketplace_listings';
+    const collection = type === 'housing' ? CAMPUS_COLLECTIONS.housing : CAMPUS_COLLECTIONS.market;
     const status = String(body.status || '');
     if (!['active', 'removed', 'closed'].includes(status)) return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     const ref = getAdminDb().collection(collection).doc(String(body.id || ''));

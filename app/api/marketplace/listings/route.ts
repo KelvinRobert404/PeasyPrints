@@ -78,9 +78,7 @@ export async function GET(request: NextRequest) {
     const items = orderCampusItems(serialized, collegeId);
 
     const campusRef = principal.campus ? { id: principal.campus.id, code: principal.campus.code, label: principal.campus.label } : null;
-    // own/other: temporary alias for the old feed, removed by CLEAN.
-    const body = mine ? { campus: campusRef, items } : { campus: campusRef, items, own: items, other: [] as typeof items };
-    return NextResponse.json(body, { headers: NO_STORE });
+    return NextResponse.json({ campus: campusRef, items }, { headers: NO_STORE });
   } catch (error) {
     return campusErrorResponse(error);
   }
