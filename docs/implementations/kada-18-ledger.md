@@ -35,7 +35,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | HMOD | Housing model, schema and WhatsApp paste parser | 2 | L | pending |  |  |
 | STORE | Pre-sign-in choice store, college picker and stay step | 2 | M | done | 4ff4c5a | Store sanitizes pick/stay on every write and rehydrate; a campus change keeps the stay type but clears its distance; Skip sets stay to null; no browser check (no env) |
 | SIGNIN | Custom sign-in: Continue with Google first, 6-digit email code second | 2 | M | done | 12181ed | SignInStep is pure UI: onEmailCode= sendCode,verifyCode object; hook returns AuthResult, never throws; email sign-up may hit missing_requirements live |
-| CPARTS | Shared campus UI parts: price, places, gender, photos, detail parts | 2 | L | pending |  |  |
+| CPARTS | Shared campus UI parts: price, places, gender, photos, detail parts | 2 | L | done | b382323 | CPARTS built; typecheck/lint clean; browser check skipped (no env). Rent terms use local RentPriceTerms (no slightly_negotiable in PriceTerms); parts work uncontrolled. |
 | NTF | Notification queue, inbox API, rules and indexes | 3 | M | pending |  |  |
 | HDR | Header campus chip, shell rules, CampusGate routing, shared session | 3 | L | pending |  |  |
 | LOGIN | /login stepper, AuthShell trust line, dev preview | 3 | M | pending |  |  |
@@ -80,6 +80,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:42 IST · MacBook · MSCH done, 599426f
 - 7 Nov 21:44 IST · MacBook · GVC done, 775aa4c
 - 7 Nov 21:44 IST · MacBook · MEM done, 010da12
+- 7 Nov 21:45 IST · MacBook · CPARTS done, b382323
 
 
 ## Blocked
