@@ -117,48 +117,6 @@
       ]
     },
     {
-      "collectionGroup": "marketplace_listings",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "collegeId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "housing_posts",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "collegeId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "campus_notifications",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "deliverAfter", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "campus_notifications",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "notifications",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "deliverAfter", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "notifications",
       "queryScope": "COLLECTION",
       "fields": [
@@ -167,37 +125,11 @@
       ]
     },
     {
-      "collectionGroup": "pickup_games",
+      "collectionGroup": "campus_games",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "campusId", "order": "ASCENDING" },
         { "fieldPath": "startsAt", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "lost_found_items",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "campusId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "blood_donors",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "collegeId", "order": "ASCENDING" },
-        { "fieldPath": "bloodGroup", "order": "ASCENDING" },
-        { "fieldPath": "optedIn", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "student_deals",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "collegeId", "order": "ASCENDING" },
-        { "fieldPath": "validUntil", "order": "ASCENDING" }
       ]
     }
   ],
