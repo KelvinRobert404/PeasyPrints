@@ -43,7 +43,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | MAPI | Market listing API v2: read, create, serializer | 3 | L | done | c384daa | Uses market_listings via a cast on serial.ts type; viewer-relative roughDistanceM; hard expiry derived from details; dup guard per audience; PATCH collection switched only |
 | MKIT | Market UI kit | 3 | L | pending |  |  |
 | HCARD | Housing card v2 | 3 | M | done | 55e7e53 | Card prop type adds optional v2 fields HousingListing lacks; booked shows Reserved; kit fills those fields from fixture text; browser check not run |
-| DEAL | Student deals v1 (verified only) | 3 | M | pending |  |  |
+| DEAL | Student deals v1 (verified only) | 3 | M | done | 2eb4264 | PATCH no longer wipes code/howToClaim when they are left out; only a present /null clears them. Collection stays CAMPUS_COLLECTIONS.deals (campus_deals). |
 | LOST | Lost and found v1 (hides ID details) | 3 | L | pending |  |  |
 | HAPI | Housing API v2: serializer, create, lifecycle actions | 4 | L | pending |  |  |
 | MACT | Market listing actions API | 4 | M | pending |  |  |
@@ -90,6 +90,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:57 IST · MacBook · NTF done, 6a4ea76
 - 7 Nov 21:58 IST · MacBook · VERIFY done, 197ff3f
 - 7 Nov 21:59 IST · MacBook · MAPI done, c384daa
+- 7 Nov 22:00 IST · MacBook · DEAL done, 2eb4264
 
 
 ## Blocked
