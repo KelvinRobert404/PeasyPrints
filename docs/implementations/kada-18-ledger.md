@@ -32,7 +32,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | SEED | Fixture data for every section and utility | 2 | L | pending |  |  |
 | SRCH | Campus search: aliases, places, price phrases, one-tap ask | 2 | M | done | 5191b02 | SRCH built: item words set a category and stay search words; typo place matching; a lone 2k reads as a max; girls also finds anyone listings; clg with no viewer college sets nothing. |
 | MSCH | Market schema, constants and feed grouping | 2 | L | done | 599426f | Schema input names (departureAt, faceValue, plateState, landmarkId, whatsappNumber) not yet on src/types/market.ts; API package must map. needs_confirmation stays in feed. |
-| HMOD | Housing model, schema and WhatsApp paste parser | 2 | L | pending |  |  |
+| HMOD | Housing model, schema and WhatsApp paste parser | 2 | L | done | ae01a22 | Housing model types live in model.ts (agent, no_restrictions, rentTerms enum, kind) because src/types/housing.ts differs; a later package must align the doc type. |
 | STORE | Pre-sign-in choice store, college picker and stay step | 2 | M | done | 4ff4c5a | Store sanitizes pick/stay on every write and rehydrate; a campus change keeps the stay type but clears its distance; Skip sets stay to null; no browser check (no env) |
 | SIGNIN | Custom sign-in: Continue with Google first, 6-digit email code second | 2 | M | done | 12181ed | SignInStep is pure UI: onEmailCode= sendCode,verifyCode object; hook returns AuthResult, never throws; email sign-up may hit missing_requirements live |
 | CPARTS | Shared campus UI parts: price, places, gender, photos, detail parts | 2 | L | done | b382323 | CPARTS built; typecheck/lint clean; browser check skipped (no env). Rent terms use local RentPriceTerms (no slightly_negotiable in PriceTerms); parts work uncontrolled. |
@@ -82,6 +82,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:44 IST · MacBook · MEM done, 010da12
 - 7 Nov 21:45 IST · MacBook · CPARTS done, b382323
 - 7 Nov 21:47 IST · MacBook · LOGIN done, 578da0e
+- 7 Nov 21:49 IST · MacBook · HMOD done, ae01a22
 
 
 ## Blocked
