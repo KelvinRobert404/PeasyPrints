@@ -237,7 +237,12 @@ export function Segmented<T extends string>({
   );
 }
 
-/* Caps tag (SELL / EXAM WEEK) ------------------------------- */
+/* Sentence-case tag (Sell / Exam week) ---------------------- */
+function sentenceStart(children: ReactNode): ReactNode {
+  if (typeof children !== 'string' || children.length === 0) return children;
+  return children.charAt(0).toUpperCase() + children.slice(1);
+}
+
 export function Tag({ children, tone = 'ink', className }: { children: ReactNode; tone?: 'ink' | 'royal' | 'white' | 'go'; className?: string }) {
   const tones = {
     ink: 'bg-ink/85 text-white',
@@ -246,8 +251,8 @@ export function Tag({ children, tone = 'ink', className }: { children: ReactNode
     go: 'bg-go-tint text-go-text'
   };
   return (
-    <span className={cn('inline-flex items-center rounded-full px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-[0.06em]', tones[tone], className)}>
-      {children}
+    <span className={cn('inline-flex items-center rounded-full px-1.5 py-0.5 text-[9.5px] font-bold', tones[tone], className)}>
+      {sentenceStart(children)}
     </span>
   );
 }
@@ -278,7 +283,7 @@ export function IconTile({
   className
 }: {
   icon: ComponentType<IconProps>;
-  tone?: 'surface' | 'royal' | 'go' | 'canteen' | 'market' | 'girls' | 'ink';
+  tone?: 'surface' | 'royal' | 'go' | 'market' | 'girls' | 'ink';
   shape?: 'circle' | 'square';
   size?: number;
   iconSize?: number;
@@ -288,7 +293,6 @@ export function IconTile({
     surface: 'bg-surface text-ink',
     royal: 'bg-royal-tint text-royal',
     go: 'bg-go-tint text-go-text',
-    canteen: 'bg-canteen-tint text-canteen',
     market: 'bg-market-tint text-market',
     girls: 'bg-girls-tint text-girls',
     ink: 'bg-ink text-white'
@@ -386,11 +390,11 @@ export function SmallTile({
   label: string;
   href: string;
   icon: ComponentType<IconProps>;
-  tone?: 'ink' | 'royal' | 'canteen' | 'market' | 'girls';
+  tone?: 'ink' | 'royal' | 'market' | 'girls';
   badge?: string;
   className?: string;
 }) {
-  const tones = { ink: 'text-ink', royal: 'text-royal', canteen: 'text-canteen', market: 'text-market', girls: 'text-girls' };
+  const tones = { ink: 'text-ink', royal: 'text-royal', market: 'text-market', girls: 'text-girls' };
   return (
     <Link href={href} className={cn('campus-press relative flex flex-col items-center gap-1 text-ink', className)}>
       <span className={cn('grid h-[52px] w-full place-items-center rounded-[12px] bg-surface', tones[tone])}>

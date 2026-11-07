@@ -48,7 +48,7 @@ function UpgradeTile({
       <span className="mt-1 text-[11px] leading-[1.35] text-slate">{description}</span>
       <span className="mt-2 flex justify-end">
         {unavailable ? (
-          <span className="rounded-full bg-market-tint px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-[0.06em] text-market">
+          <span className="rounded-full bg-market-tint px-1.5 py-0.5 text-[9.5px] font-bold text-market">
             Unavailable
           </span>
         ) : (

@@ -35,8 +35,6 @@
   --go-tint: #DCFCE7;
 
   /* Category accents */
-  --canteen: #15803D;
-  --canteen-tint: #DCFCE7;
   --market: #C81E1E;
   --market-tint: #FFE4E4;
   --girls: #7E22CE;
@@ -65,7 +63,6 @@
   /* Legacy tokens – kept for compatibility, do not use in new UI */
   --tint-print: #F2F3F5;
   --tint-marketplace: #F2F3F5;
-  --tint-canteen: #F2F3F5;
   --tint-support: #F2F3F5;
   --peasyprints: #FCF6B1;
   --marketplace: #FF4D4D;
@@ -124,8 +121,6 @@
   --color-go: var(--go);
   --color-go-text: var(--go-text);
   --color-go-tint: var(--go-tint);
-  --color-canteen: var(--canteen);
-  --color-canteen-tint: var(--canteen-tint);
   --color-market: var(--market);
   --color-market-tint: var(--market-tint);
   --color-girls: var(--girls);

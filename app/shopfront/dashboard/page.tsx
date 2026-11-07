@@ -59,7 +59,7 @@ export default function ShopfrontDashboardPage() {
   const { isIdle } = useIdle(idleMs);
   const hasPending = (orders as any).some((o: any) => o.status === 'processing' || o.status === 'printing');
   useTabAttention(isOpen && hasPending && isIdle, {
-    message: 'NEW ORDERS WAITING',
+    message: 'New orders waiting',
     intervalMs: 500,
   });
 
@@ -278,7 +278,7 @@ export default function ShopfrontDashboardPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Orders</p>
+                <p className="text-xs font-medium text-gray-500">Total orders</p>
                 <div className="mt-2 text-3xl font-bold font-quinn text-gray-900">{totalOrders}</div>
               </div>
               <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
@@ -293,7 +293,7 @@ export default function ShopfrontDashboardPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</p>
+                <p className="text-xs font-medium text-gray-500">Pending</p>
                 <div className="mt-2 text-3xl font-bold font-quinn text-blue-600">{pendingCount}</div>
               </div>
               <div className="h-8 w-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
@@ -309,7 +309,7 @@ export default function ShopfrontDashboardPage() {
             <div className="flex items-start justify-between relative z-10">
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Today's Revenue</p>
+                  <p className="text-xs font-medium text-gray-500">Today's revenue</p>
                   <button onClick={() => setShowRevenue(!showRevenue)} className="text-gray-400 hover:text-gray-600 transition-colors">
                     {showRevenue ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                   </button>
@@ -332,7 +332,7 @@ export default function ShopfrontDashboardPage() {
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Revenue</p>
+                  <p className="text-xs font-medium text-gray-500">Total revenue</p>
                   <button onClick={() => setShowRevenue(!showRevenue)} className="text-gray-400 hover:text-gray-600 transition-colors">
                     {showRevenue ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                   </button>

@@ -205,7 +205,7 @@ export default function OrdersPage() {
                                                 </button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className={cn(gvMenu, 'w-[160px]')}>
-                                                <DropdownMenuLabel className="px-2 py-1 text-[10.5px] font-extrabold uppercase tracking-[0.06em] text-slate">Order actions</DropdownMenuLabel>
+                                                <DropdownMenuLabel className="px-2 py-1 text-[10.5px] font-bold text-slate">Order actions</DropdownMenuLabel>
                                                 <DropdownMenuSeparator className="bg-line" />
                                                 <DropdownMenuItem className={gvMenuItem}>View Details</DropdownMenuItem>
                                                 <DropdownMenuItem className={gvMenuItem}>View User</DropdownMenuItem>

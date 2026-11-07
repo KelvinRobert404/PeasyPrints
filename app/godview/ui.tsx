@@ -22,7 +22,7 @@ export const gvLabel = 'mb-1 block text-[11px] font-bold text-text-secondary';
 export const gvCard = 'rounded-[14px] border border-line bg-white';
 
 /** Table header row cells (apply to the header row container). */
-export const gvTableHead = 'border-b border-line bg-surface text-[10.5px] font-extrabold uppercase tracking-[0.06em] text-slate';
+export const gvTableHead = 'border-b border-line bg-surface text-[10.5px] font-bold text-slate';
 
 /** Table body row (apply to each row container). */
 export const gvRow = 'border-b border-line text-[12.5px] text-ink last:border-b-0';

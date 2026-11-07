@@ -46,7 +46,7 @@ export default function ContactPage() {
       <PageHeader title="Help & support" backHref="/" />
 
       <main className="flex flex-col px-3 pb-3">
-        <p className="pt-1 text-[12px] leading-[1.45] text-slate">Need help? We&apos;re here for you.</p>
+        <p className="pt-1 text-[12px] leading-[1.45] text-slate">Hey, need help? We&apos;re here.</p>
 
         <section className="pt-3">
           <SectionHeader title="Talk to us" />
@@ -71,16 +71,21 @@ export default function ContactPage() {
           <SectionHeader title="Common questions" />
           <Card className="mt-2 px-3">
             <TopicRow icon={RupeeIcon} title="Payment issues">
-              If money gets debited but the order isn&apos;t showing up, don&apos;t worry. You can safely place a second order—we&apos;ll refund the
-              first one. Any amount less than ₹100 will be refunded automatically.
+              Paid but no order? Place it again.
+              <br />
+              We refund the first payment.
+              <br />
+              Under Rs 100 comes back on its own.
             </TopicRow>
             <TopicRow icon={BugIcon} title="App or technical glitches">
-              If you run into an error or a page that won&apos;t load, just take a screenshot and send it to us. Our team will look into it right
-              away.
+              Page broken or not loading?
+              <br />
+              Send us a screenshot. We&apos;ll check fast.
             </TopicRow>
             <TopicRow icon={BulbIcon} title="Feedback & ideas" divider={false}>
-              Got suggestions? Think we should add new features? We&apos;d love to hear from you. Every bit of feedback helps us improve Swoop for
-              your campus.
+              Got an idea or a wish?
+              <br />
+              Tell us. It shapes what we build next.
             </TopicRow>
           </Card>
         </section>

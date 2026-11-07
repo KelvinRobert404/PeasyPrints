@@ -8,7 +8,7 @@ export default function AboutPage() {
       <SwoopLogo size={22} className="self-start" />
       <h1 className="font-heading mt-3 text-[16px] leading-[1.1] text-ink">Campus, sorted.</h1>
       <p className="mt-1 max-w-[340px] text-[12.5px] leading-[1.5] text-text-secondary">
-        Print, marketplace, housing and canteen for your campus. One account, one wallet, pickup nearby.
+        Print, Market and Housing for verified KJU students.
       </p>
 
       <div className="mt-3.5 grid grid-cols-2 gap-2">

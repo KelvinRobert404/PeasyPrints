@@ -118,7 +118,7 @@ export default function ShopfrontLayout({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-3 ml-auto">
               {currentShop ? (
                 <>
-                  <span className="hidden sm:block uppercase text-xs font-semibold tracking-wider text-gray-500 truncate max-w-[200px]">{currentShop?.name}</span>
+                  <span className="hidden sm:block text-xs font-semibold text-gray-500 truncate max-w-[200px]">{currentShop?.name}</span>
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"

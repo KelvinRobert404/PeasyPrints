@@ -248,7 +248,7 @@ export default function FeesPage() {
                                 </div>
                             ) : (
                                 <div className="space-y-1.5">
-                                    <div className="grid grid-cols-12 gap-2 px-2 text-[10.5px] font-extrabold uppercase tracking-[0.06em] text-slate">
+                                    <div className="grid grid-cols-12 gap-2 px-2 text-[10.5px] font-bold text-slate">
                                         <div className="col-span-3">Min pages</div>
                                         <div className="col-span-3">Max pages</div>
                                         <div className="col-span-4">Fee (₹)</div>

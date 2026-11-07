@@ -291,23 +291,23 @@ export default function ShopfrontProfilePage() {
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Soft Bind</label>
+                            <label className="text-[10px] font-bold text-gray-400">Soft bind</label>
                             <Input type="number" className="h-8 text-xs px-2" value={softBinding} onChange={(e) => setSoftBinding(Number(e.target.value))} />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Spiral</label>
+                            <label className="text-[10px] font-bold text-gray-400">Spiral</label>
                             <Input type="number" className="h-8 text-xs px-2" value={spiralBinding} onChange={(e) => setSpiralBinding(Number(e.target.value))} />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Hard Bind</label>
+                            <label className="text-[10px] font-bold text-gray-400">Hard bind</label>
                             <Input type="number" className="h-8 text-xs px-2" value={hardBinding} onChange={(e) => setHardBinding(Number(e.target.value))} />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Emergency</label>
+                            <label className="text-[10px] font-bold text-gray-400">Emergency</label>
                             <Input type="number" className="h-8 text-xs px-2" value={emergency} onChange={(e) => setEmergency(Number(e.target.value))} />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">After Dark</label>
+                            <label className="text-[10px] font-bold text-gray-400">After dark</label>
                             <Input type="number" className="h-8 text-xs px-2" value={afterDark} onChange={(e) => setAfterDark(Number(e.target.value))} />
                         </div>
                     </div>
@@ -327,20 +327,20 @@ export default function ShopfrontProfilePage() {
                     <div className="overflow-x-auto pb-4">
                         <div className="min-w-[900px]">
                             {/* Table Header */}
-                            <div className="grid grid-cols-12 gap-2 text-[10px] uppercase font-bold text-gray-500 bg-gray-50 p-2 rounded-t-lg items-center text-center">
+                            <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-gray-500 bg-gray-50 p-2 rounded-t-lg items-center text-center">
                                 <div className="col-span-2 grid grid-cols-2 gap-1 text-gray-800">
                                     <span>Min Pg</span>
                                     <span>Max Pg</span>
                                 </div>
                                 <div className="col-span-4 grid grid-cols-4 gap-1 border-l border-r border-gray-200 px-1">
-                                    <span className="col-span-4 text-center border-b border-gray-200 pb-1 mb-1 bg-blue-50/50 rounded">A4 Prices</span>
+                                    <span className="col-span-4 text-center border-b border-gray-200 pb-1 mb-1 bg-blue-50/50 rounded">A4 prices</span>
                                     <span>BW 1S</span>
                                     <span>BW 2S</span>
                                     <span>Col 1S</span>
                                     <span>Col 2S</span>
                                 </div>
                                 <div className="col-span-4 grid grid-cols-4 gap-1 border-r border-gray-200 px-1">
-                                    <span className="col-span-4 text-center border-b border-gray-200 pb-1 mb-1 bg-purple-50/50 rounded">A3 Prices</span>
+                                    <span className="col-span-4 text-center border-b border-gray-200 pb-1 mb-1 bg-purple-50/50 rounded">A3 prices</span>
                                     <span>BW 1S</span>
                                     <span>BW 2S</span>
                                     <span>Col 1S</span>

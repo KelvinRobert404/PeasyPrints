@@ -6,7 +6,10 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
 import { isAllowedOrigin } from '@/lib/utils/origin';
 
-const schema = z.object({ confirmation: z.literal('DELETE MY ACCOUNT') });
+const CONFIRMATION_PHRASE = 'delete my account';
+const schema = z.object({
+  confirmation: z.string().refine((value) => value.trim().toLowerCase() === CONFIRMATION_PHRASE),
+});
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
@@ -16,7 +19,7 @@ export async function POST(request: NextRequest) {
   }
   // Validate before spending the rate limit so a typo doesn't lock the user out for a day.
   const parsed = schema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: 'Type the confirmation exactly' }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: 'Type delete my account to confirm' }, { status: 400 });
   const rate = await checkRateLimit('account-deletion', userId, 3, 24 * 60 * 60);
   if (!rate.allowed) return rateLimitResponse(rate.retryAfter);
   const ref = getAdminDb().collection('account_deletion_requests').doc(userId);

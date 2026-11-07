@@ -7,6 +7,8 @@ import { DocIcon, TrashIcon } from '@/components/swoop/icons';
 import { ChartIcon } from '@/components/auth/icons';
 import { cn } from '@/lib/utils/cn';
 
+const CONFIRMATION_PHRASE = 'delete my account';
+
 export default function PrivacySettingsPage() {
   const [confirmation, setConfirmation] = useState('');
   const [message, setMessage] = useState('');
@@ -28,7 +30,7 @@ export default function PrivacySettingsPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Could not request deletion');
-      setMessage('Your request is queued. We will remove or anonymize account data after retaining records required for payments, fraud prevention, and law.');
+      setMessage('Request queued. We will remove or anonymize your data.');
       setConfirmation('');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not request deletion');
@@ -64,8 +66,11 @@ export default function PrivacySettingsPage() {
             <div className="flex gap-2.5">
               <IconTile icon={TrashIcon} tone="market" />
               <p className="text-[12px] leading-[1.5] text-text-secondary">
-                This starts a verified deletion request. Type <strong className="font-bold text-ink">DELETE MY ACCOUNT</strong>. Active orders must still be
-                completed, and legally required transaction records may be anonymized and retained.
+                Type <strong className="font-bold text-ink">{CONFIRMATION_PHRASE}</strong> to start.
+                <br />
+                Active orders still need to finish.
+                <br />
+                Payment records required by law stay, anonymized.
               </p>
             </div>
             <label htmlFor="delete-confirmation" className="mt-3 block text-[11.5px] font-bold text-ink">
@@ -76,13 +81,13 @@ export default function PrivacySettingsPage() {
               value={confirmation}
               onChange={(event) => setConfirmation(event.target.value)}
               className="campus-input mt-1.5"
-              placeholder="DELETE MY ACCOUNT"
+              placeholder={CONFIRMATION_PHRASE}
               autoComplete="off"
             />
             <button
               type="button"
               onClick={requestDeletion}
-              disabled={loading || confirmation !== 'DELETE MY ACCOUNT'}
+              disabled={loading || confirmation.trim().toLowerCase() !== CONFIRMATION_PHRASE}
               className={cn(swButton({ variant: 'danger', size: 'md' }), 'mt-2.5 w-full')}
             >
               {loading ? 'Requesting…' : 'Request deletion'}

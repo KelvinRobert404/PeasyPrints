@@ -44,7 +44,7 @@ function OptionGroup<T extends string>({
             >
               {o.label}
               {o.showTag && (
-                <span className="mt-1 text-[8.5px] font-extrabold uppercase tracking-[0.06em] text-market">Unavailable</span>
+                <span className="mt-1 text-[9.5px] font-bold text-market">Unavailable</span>
               )}
             </button>
           );
