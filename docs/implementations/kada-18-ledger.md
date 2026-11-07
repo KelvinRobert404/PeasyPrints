@@ -56,7 +56,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | HFEED | Housing feed v2 | 5 | L | done | 8363756 | A place search ignores the ring. Posts with no distance stay in the near list. Agent means postedAs agent or brokerage charged. Browser check skipped (no .env.local). |
 | HFORM | Housing post form v2 with landmark picker and WhatsApp paste | 5 | L | done | 57ae053 | Deleted HousingCard.tsx (nothing imports it). Roommate title placeholder now uses campusLabel. Kept the Meals chip as a PG amenity, not meal plans. |
 | HDETAIL | Housing detail with owner lifecycle | 5 | M | done | ef0f642 | Housing detail v2 with owner panel. Beds minus stops at 1 and booking asks twice. Seed has no reserved or price-drop data. Browser check skipped (no .env.local). |
-| MFORM2 | New listing form v2, part 2: seat, cab split, ticket, pass, vehicle | 5 | M | pending |  |  |
+| MFORM2 | New listing form v2, part 2: seat, cab split, ticket, pass, vehicle | 5 | M | done | a5cbd9b | Schema-less extras go into description lines; mess and car map to other ; cab ends are landmark or campus label plus Airport ; browser check skipped, no .env.local. |
 | MDETAIL | Market detail screen | 5 | L | done | da59674 | Own Ask/I-have-this CTA (ContactButton label fixed); pass fair price skipped, no paid price in model; plate/RC from plateState/papersOk; no browser check |
 | CONTACT | Contact requests and availability for v2 listings | 5 | M | done | 890201a | Route reads v2 collections; requests stay in campus_contact_requests. id route approve still reads old collections and fails until fixed; fixture GET misses seeds. |
 | PRINTCAMPUS | Print shops follow the signed-in campus | 5 | M | done | bb1d796 | Fixture shops copied into /upload (core.ts is server only); selectedCollegeId in other packages files still hits the grep; stale .next/types needs typegen |
@@ -108,6 +108,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:15 IST · MacBook · MDETAIL done, da59674
 - 7 Nov 22:18 IST · MacBook · CRON done, a996ff6
 - 7 Nov 22:19 IST · MacBook · HFORM done, 57ae053
+- 7 Nov 22:20 IST · MacBook · MFORM2 done, a5cbd9b
 
 
 ## Blocked
