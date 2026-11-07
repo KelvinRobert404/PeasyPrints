@@ -125,6 +125,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:38 IST · MacBook · wave 7 finished: 3/3 done, no fix passes (9 agents, ~0.58M subagent tokens)
 - 7 Nov 22:40 IST · MacBook · final checks: typecheck 0 errors, lint clean, tests 326/326; npm run build compiles, fails only at prerender on missing env; CLEAN audit greps clean except app/godview/campus/page.tsx:22 college_email label
 - 7 Nov 22:41 IST · MacBook · run finished: 47/47 packages done, 0 blocked, 0 skipped; 5-hour window ~55%, weekly 22%; resume cron cancelled, caffeinate stopped
+- 8 Nov 04:58 IST · MacBook · owner in chat: fix the four leftovers · 12e10e3 Godview college_email label dropped · 90017e0 WhatsApp text uses contactRequestIntent · a0c2ea6 rules test SERVER_ONLY list trimmed to the v2 names · 0190443 fixture shops moved to client-safe src/lib/campus/fixtures/shops.ts, used by app/page.tsx, app/upload/page.tsx and fixtures/core.ts · typecheck 0 errors, lint clean, tests 326/326
 
 
 ## Blocked
@@ -155,3 +156,4 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - Wave 7, integration seams · after wave 6 the agents' reports and a grep showed v2 listings unreachable from 3 places outside every package's file list (save/share/report in app/api/campus/actions, contact approve in app/api/contact-requests/[id], Firestore indexes still on v1 collections), plus CampusSession left optional and PILOT_COLLEGE/college_email still in fixtures · options: list them for the morning, or fix them tonight as 3 extra packages through the same build/verify/land steps · chose to fix (the plan says no backward compatibility; each is its own commit on the run branch) · wave 7 in kada-18-packages.json · undo: git revert the SEAM commits
 - 'Bring it back' (still_available) needed no fix: MFORM1 flagged it missing, but MACT added it to src/lib/campus/marketActions.ts afterwards
 - Left for the morning, not fixed tonight (small, outside every package): app/godview/campus/page.tsx:22 still labels 'college_email'; tests/security/firebase-rules.test.mjs v1 names; HOME and PRINTCAMPUS each keep a local copy of the fixture shops because fixtures/core.ts is server-only (a client-safe shops fixture would remove both); app/api/contact-requests/route.ts:114 whatsappText reads the stored intent instead of the derived one
+- Four leftovers fixed on 8 Nov after the owner said so in chat (see the session log); the 'Left for the morning' entry above is done · undo: git revert 0190443 a0c2ea6 90017e0 12e10e3
