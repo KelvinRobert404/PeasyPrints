@@ -4,7 +4,7 @@
 // shell the /marketplace/new page renders. Kinds without an entry in
 // KIND_FIELDS stay hidden from the picker.
 
-import { useState, type ComponentType, type FormEvent, type ReactNode } from 'react';
+import { useState, type ComponentType, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CampusGate } from '@/components/campus/CampusGate';
@@ -28,16 +28,21 @@ import { Chip, IconTile, PageHeader, SectionHeader, swButton } from '@/component
 import { useCampusConfig } from '@/hooks/useCampusConfig';
 import { useCurrentCampus } from '@/hooks/useCurrentCampus';
 import { MARKET_CATEGORIES, MARKET_CATEGORY_LABELS, MARKET_KIND_POST_LABELS } from '@/lib/campus/market';
+import type { PriceSuffix } from '@/lib/format/price';
 import { wantedPlaceholder } from '@/lib/search/campusSearch';
 import { cn } from '@/lib/utils/cn';
 import type { CampusAudience } from '@/types/campus';
 import type { ItemCondition, MarketKind, PriceTerms } from '@/types/market';
 import { BundleItemsField } from './BundleItemsField';
+import { PassFields, PassPriceNote } from './PassFields';
+import { TicketFields, TicketPriceNote } from './TicketFields';
+import { CabFareNote, CabSplitFields, ChipGroup, FIELD_INPUT, FieldLabel, SeatFields } from './TripFields';
+import { VehicleFields } from './VehicleFields';
 import {
-  BUNDLE_DESCRIPTION_MAX,
-  DESCRIPTION_MAX,
   TITLE_MAX,
+  autoCategory,
   buildMarketPayload,
+  descriptionMaxFor,
   initialFormState,
   isFreeTerms,
   maxPhotosFor,
@@ -52,6 +57,10 @@ import {
 export type KindFieldsProps = {
   state: MarketFormState;
   update: (patch: Partial<MarketFormState>) => void;
+  /** Girls' space post: gender locked to For girls. */
+  girls: boolean;
+  /** When the form opened, in ms. For date minimums and the fair pass price. */
+  now: number;
 };
 
 export interface KindEntry {
@@ -64,8 +73,15 @@ export interface KindEntry {
   landmarkLabel: string;
   descriptionPlaceholder: string;
   submitLabel: string;
-  /** The kind's own fields, shown after the price. */
+  /** The kind's own fields, shown after the price (before it with fieldsFirst). */
   Fields?: ComponentType<KindFieldsProps>;
+  /** Show the kind's fields before the price, e.g. face value before the ticket price. */
+  fieldsFirst?: boolean;
+  /** A line under the price: fair price, face value cap, fare split. */
+  PriceNote?: ComponentType<KindFieldsProps>;
+  priceSuffix?: PriceSuffix;
+  /** The fields carry their own gender chips, so the shell's 'Who can reply' is hidden. */
+  ownGender?: boolean;
 }
 
 export interface KindPickerOption {
@@ -83,7 +99,7 @@ export const KIND_PICKER: readonly KindPickerOption[] = [
   { kind: 'seat', label: 'Seat', hint: 'Pass on a spare seat', icon: SeatIcon },
   { kind: 'cab_split', label: 'Cab split', hint: 'Share a ride, split fare', icon: CabIcon },
   { kind: 'ticket', label: 'Ticket', hint: 'At or below face value', icon: TicketIcon },
-  { kind: 'pass', label: 'Pass', hint: 'Bus, metro or gym pass', icon: PassIcon },
+  { kind: 'pass', label: 'Pass', hint: 'Mess or gym pass', icon: PassIcon },
   { kind: 'vehicle', label: 'Vehicle', hint: 'Sell or rent a ride', icon: ScooterIcon },
 ];
 
@@ -94,29 +110,6 @@ const CONDITIONS: ReadonlyArray<{ value: ItemCondition; label: string }> = [
   { value: 'used', label: 'Used' },
   { value: 'needs_repair', label: 'Needs repair' },
 ];
-
-const FIELD_INPUT = 'campus-input text-[13px] font-semibold text-ink';
-
-function FieldLabel({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <label className="block min-w-0">
-      <span className="block text-[11.5px] font-bold text-ink">{label}</span>
-      <span className="mt-1 block">{children}</span>
-      {hint ? <span className="mt-0.5 block text-[11px] text-slate">{hint}</span> : null}
-    </label>
-  );
-}
-
-function ChipGroup({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div role="group" aria-label={label} className="min-w-0">
-      <span className="block text-[11.5px] font-bold text-ink" aria-hidden="true">
-        {label}
-      </span>
-      <div className="mt-1 flex flex-wrap gap-1.5">{children}</div>
-    </div>
-  );
-}
 
 function ItemFields({ state, update }: KindFieldsProps) {
   return (
@@ -188,7 +181,7 @@ function BundleFields({ state, update }: KindFieldsProps) {
   );
 }
 
-/** Kind -> its fields and copy. MFORM2 adds seat, cab split, ticket, pass and vehicle. */
+/** Kind -> its fields and copy. Every market kind has an entry. */
 export const KIND_FIELDS: Partial<Record<MarketKind, KindEntry>> = {
   item: {
     titleLabel: 'What are you selling?',
@@ -222,6 +215,72 @@ export const KIND_FIELDS: Partial<Record<MarketKind, KindEntry>> = {
     descriptionPlaceholder: 'Why you are clearing out, any deal',
     submitLabel: 'Post the clear-out',
     Fields: BundleFields,
+  },
+  seat: {
+    titleLabel: 'Name your seat',
+    titlePlaceholder: 'Sleeper bus seat to Chennai, Friday',
+    priceLabel: 'Price for the seat',
+    priceOptions: priceTermsFor('seat'),
+    landmarkRequired: false,
+    landmarkLabel: 'Where to meet? Optional',
+    descriptionPlaceholder: 'Berth, boarding point, anything else',
+    submitLabel: 'Post the seat',
+    Fields: SeatFields,
+    fieldsFirst: true,
+    ownGender: true,
+  },
+  cab_split: {
+    titleLabel: 'Name your ride',
+    titlePlaceholder: 'Airport cab, Friday evening',
+    priceLabel: 'Fare per person',
+    priceOptions: priceTermsFor('cab_split'),
+    landmarkRequired: false,
+    landmarkLabel: 'Pickup or drop point, optional',
+    descriptionPlaceholder: 'Luggage, stops, anything else',
+    submitLabel: 'Post the cab split',
+    Fields: CabSplitFields,
+    fieldsFirst: true,
+    PriceNote: CabFareNote,
+    priceSuffix: 'pp',
+    ownGender: true,
+  },
+  ticket: {
+    titleLabel: 'Which event?',
+    titlePlaceholder: 'Comedy night, Saturday',
+    priceLabel: 'Your price, each',
+    priceOptions: priceTermsFor('ticket'),
+    landmarkRequired: false,
+    landmarkLabel: 'Where to hand over? Optional',
+    descriptionPlaceholder: 'Seat row, entry gate, anything else',
+    submitLabel: 'Post the ticket',
+    Fields: TicketFields,
+    fieldsFirst: true,
+    PriceNote: TicketPriceNote,
+  },
+  pass: {
+    titleLabel: 'Name your pass',
+    titlePlaceholder: 'Mess pass, rest of November',
+    priceLabel: 'Your price',
+    priceOptions: priceTermsFor('pass'),
+    landmarkRequired: false,
+    landmarkLabel: 'Where to hand over? Optional',
+    descriptionPlaceholder: 'Meals left, timings, anything else',
+    submitLabel: 'Post the pass',
+    Fields: PassFields,
+    fieldsFirst: true,
+    PriceNote: PassPriceNote,
+  },
+  vehicle: {
+    titleLabel: 'Name your ride',
+    titlePlaceholder: 'Hero Sprint cycle, 21 gear',
+    priceLabel: 'Price',
+    priceOptions: priceTermsFor('vehicle'),
+    landmarkRequired: true,
+    landmarkLabel: 'Where to see it?',
+    descriptionPlaceholder: 'Condition, service, extras',
+    submitLabel: 'Post the ride',
+    Fields: VehicleFields,
+    fieldsFirst: true,
   },
 };
 
@@ -258,10 +317,12 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
   const [error, setError] = useState('');
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
   const [reviving, setReviving] = useState(false);
+  const [openedAt] = useState(() => Date.now());
 
   const girls = audience === 'girls';
   const entry = KIND_FIELDS[form.kind] as KindEntry;
   const Fields = entry.Fields;
+  const PriceNote = entry.PriceNote;
   const free = isFreeTerms(form.priceTerms);
   const campusLabel = campus?.label ?? config?.campus.label ?? null;
   const kicker = girls ? (campusLabel ? `Girls’ space · ${campusLabel}` : 'Girls’ space') : campusLabel ?? undefined;
@@ -271,6 +332,7 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
     setForm((current) => ({ ...current, ...patch }));
     setError('');
   };
+  const fieldProps: KindFieldsProps = { state: form, update, girls, now: openedAt };
 
   const pickKind = (kind: MarketKind) => {
     if (!isFormKind(kind)) return;
@@ -288,7 +350,7 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (submitting) return;
-    const built = buildMarketPayload(form);
+    const built = buildMarketPayload(form, { now: Date.now(), campusLabel, placeLabel: place?.label ?? null });
     if (!built.ok) {
       setError(built.error);
       return;
@@ -382,31 +444,39 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
               />
             </FieldLabel>
 
-            <ChipGroup label="Category">
-              {MARKET_CATEGORIES.map((category) => (
-                <Chip key={category} selected={form.category === category} onClick={() => update({ category })}>
-                  {MARKET_CATEGORY_LABELS[category]}
-                </Chip>
-              ))}
-            </ChipGroup>
+            {autoCategory(form) ? null : (
+              <ChipGroup label="Category">
+                {MARKET_CATEGORIES.map((category) => (
+                  <Chip key={category} selected={form.category === category} onClick={() => update({ category })}>
+                    {MARKET_CATEGORY_LABELS[category]}
+                  </Chip>
+                ))}
+              </ChipGroup>
+            )}
+
+            {Fields && entry.fieldsFirst ? <Fields {...fieldProps} /> : null}
 
             <div className="space-y-2">
               <PriceInput
                 label={entry.priceLabel}
                 value={free ? null : form.price}
                 onChange={(price) => update({ price })}
+                suffix={entry.priceSuffix}
                 disabled={free}
               />
-              <PriceTermsChips
-                label="Price terms"
-                options={entry.priceOptions}
-                value={form.priceTerms}
-                onChange={(priceTerms) => update({ priceTerms, ...(isFreeTerms(priceTerms) ? { price: null } : {}) })}
-                onPriceChange={(price) => update({ price })}
-              />
+              {entry.priceOptions.length > 1 ? (
+                <PriceTermsChips
+                  label="Price terms"
+                  options={entry.priceOptions}
+                  value={form.priceTerms}
+                  onChange={(priceTerms) => update({ priceTerms, ...(isFreeTerms(priceTerms) ? { price: null } : {}) })}
+                  onPriceChange={(price) => update({ price })}
+                />
+              ) : null}
+              {PriceNote ? <PriceNote {...fieldProps} /> : null}
             </div>
 
-            {Fields ? <Fields state={form} update={update} /> : null}
+            {Fields && !entry.fieldsFirst ? <Fields {...fieldProps} /> : null}
 
             {config && config.campus.landmarks.length > 0 ? (
               <LandmarkPicker
@@ -440,22 +510,24 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
             <FieldLabel label="Description, optional">
               <textarea
                 value={form.description}
-                maxLength={form.kind === 'bundle' ? BUNDLE_DESCRIPTION_MAX : DESCRIPTION_MAX}
+                maxLength={descriptionMaxFor(form.kind)}
                 onChange={(event) => update({ description: event.target.value })}
                 placeholder={entry.descriptionPlaceholder}
                 className={cn(FIELD_INPUT, 'min-h-24 resize-none py-2.5')}
               />
             </FieldLabel>
 
-            <div className="min-w-0">
-              <p className="text-[11.5px] font-bold text-ink">Who can reply</p>
-              <GenderChips
-                className="mt-1"
-                value={girls ? 'girls' : form.genderPref}
-                onChange={(genderPref) => update({ genderPref })}
-                locked={girls}
-              />
-            </div>
+            {entry.ownGender ? null : (
+              <div className="min-w-0">
+                <p className="text-[11.5px] font-bold text-ink">Who can reply</p>
+                <GenderChips
+                  className="mt-1"
+                  value={girls ? 'girls' : form.genderPref}
+                  onChange={(genderPref) => update({ genderPref })}
+                  locked={girls}
+                />
+              </div>
+            )}
 
             <div className="min-w-0 space-y-1.5">
               {form.useSavedNumber ? null : (
