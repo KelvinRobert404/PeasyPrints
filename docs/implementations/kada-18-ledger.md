@@ -33,7 +33,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | SRCH | Campus search: aliases, places, price phrases, one-tap ask | 2 | M | pending |  |  |
 | MSCH | Market schema, constants and feed grouping | 2 | L | pending |  |  |
 | HMOD | Housing model, schema and WhatsApp paste parser | 2 | L | pending |  |  |
-| STORE | Pre-sign-in choice store, college picker and stay step | 2 | M | pending |  |  |
+| STORE | Pre-sign-in choice store, college picker and stay step | 2 | M | done | 4ff4c5a | Store sanitizes pick/stay on every write and rehydrate; a campus change keeps the stay type but clears its distance; Skip sets stay to null; no browser check (no env) |
 | SIGNIN | Custom sign-in: Continue with Google first, 6-digit email code second | 2 | M | pending |  |  |
 | CPARTS | Shared campus UI parts: price, places, gender, photos, detail parts | 2 | L | pending |  |  |
 | NTF | Notification queue, inbox API, rules and indexes | 3 | M | pending |  |  |
@@ -74,6 +74,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:29 IST · MacBook · wave 1 built (8/8, ~9.5 min, ~0.76M subagent tokens)
 - 7 Nov 21:31 IST · MacBook · wave 1 verified: typecheck 0 errors, lint clean, tests 101/101; npm run build compiled (fails only at prerender on missing env)
 - 7 Nov 21:32 IST · MacBook · wave 1 committed: d973b62 TYP, 2f91a40 CAT, 0697643 FMT, d484a84 RUL, 4b4f2f5 FIX, d7b41c8 ICO, acc3d93 ART, 7f616b3 COPY
+- 7 Nov 21:41 IST · MacBook · STORE done, 4ff4c5a
 
 
 ## Blocked
