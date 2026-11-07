@@ -18,8 +18,11 @@ import {
   type IconProps
 } from '@/components/swoop/icons';
 
+/** Full-screen campus surfaces that live under the Home tab. */
+const HOME_SURFACES = ['/campus/deals', '/campus/lost-found', '/campus/blood', '/campus/games'] as const;
+
 const tabs: { name: string; href: string; icon: ComponentType<IconProps>; match: (p: string) => boolean }[] = [
-  { name: 'Home', href: '/', icon: HomeIcon, match: (p) => p === '/' },
+  { name: 'Home', href: '/', icon: HomeIcon, match: (p) => p === '/' || HOME_SURFACES.some((base) => p === base || p.startsWith(`${base}/`)) },
   { name: 'Print', href: '/upload', icon: PrintIcon, match: (p) => p.startsWith('/upload') || p.startsWith('/shops') },
   { name: 'Market', href: '/marketplace', icon: MarketIcon, match: (p) => p.startsWith('/marketplace') || p.startsWith('/girls-space/marketplace') },
   { name: 'Housing', href: '/housing', icon: HousingIcon, match: (p) => p.startsWith('/housing') || p.startsWith('/girls-space/housing') },

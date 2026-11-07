@@ -6,18 +6,37 @@ import { Dock } from '@/components/layout/Dock';
 import { usePathname } from 'next/navigation';
 import { useDockStore } from '@/lib/stores/dockStore';
 
+/** Campus surfaces with their own header: no navbar, Home tab stays active. */
+const OWN_HEADER_PATHS = ['/campus/deals', '/campus/lost-found', '/campus/blood', '/campus/games'] as const;
+
+/** True for `base` itself and anything below it. */
+function isUnder(pathname: string | null, base: string): boolean {
+  return pathname === base || Boolean(pathname?.startsWith(`${base}/`));
+}
+
+/** Auth pages: no navbar, no dock. */
+function isAuthPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  // /otp stays until its route is removed.
+  return pathname.startsWith('/login') || pathname === '/register' || pathname === '/otp' || pathname === '/sso-callback';
+}
+
 export function RootShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const dockHidden = useDockStore((s) => s.hidden);
   const hasSlot = useDockStore((s) => Boolean(s.slot));
 
   const isShopfront = pathname?.startsWith('/shopfront');
-  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/otp' || pathname === '/sso-callback';
+  const isAuthPage = isAuthPath(pathname);
   const isPickup = pathname?.startsWith('/orders/') && pathname?.includes('/pickup');
 
   const isGodview = pathname?.startsWith('/godview');
-  // Market + print surfaces own their header (back + title + actions) — no stacked bars.
-  const hideNavbar = pathname?.startsWith('/marketplace') || pathname?.startsWith('/girls-space') || pathname?.startsWith('/upload');
+  // Market, print and full-screen campus surfaces own their header (back + title + actions) — no stacked bars.
+  const hideNavbar =
+    pathname?.startsWith('/marketplace') ||
+    pathname?.startsWith('/girls-space') ||
+    pathname?.startsWith('/upload') ||
+    OWN_HEADER_PATHS.some((base) => isUnder(pathname, base));
 
   if (isShopfront || isGodview) {
     return (
