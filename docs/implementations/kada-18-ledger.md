@@ -55,7 +55,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | DEAD | Remove dead auth, announcements and location code | 4 | S | done | cbc9306 | Typecheck fixed by regenerating .next types. RootShell.tsx:21 still checks /otp ; its owner package should drop it. |
 | HFEED | Housing feed v2 | 5 | L | pending |  |  |
 | HFORM | Housing post form v2 with landmark picker and WhatsApp paste | 5 | L | pending |  |  |
-| HDETAIL | Housing detail with owner lifecycle | 5 | M | pending |  |  |
+| HDETAIL | Housing detail with owner lifecycle | 5 | M | done | ef0f642 | Housing detail v2 with owner panel. Beds minus stops at 1 and booking asks twice. Seed has no reserved or price-drop data. Browser check skipped (no .env.local). |
 | MFORM2 | New listing form v2, part 2: seat, cab split, ticket, pass, vehicle | 5 | M | pending |  |  |
 | MDETAIL | Market detail screen | 5 | L | pending |  |  |
 | CONTACT | Contact requests and availability for v2 listings | 5 | M | done | 890201a | Route reads v2 collections; requests stay in campus_contact_requests. id route approve still reads old collections and fails until fixed; fixture GET misses seeds. |
@@ -102,6 +102,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:08 IST · MacBook · BLOOD done, 6b80bd5
 - 7 Nov 22:10 IST · MacBook · MFEED done, ee0f33d
 - 7 Nov 22:12 IST · MacBook · CONTACT done, 890201a
+- 7 Nov 22:12 IST · MacBook · HDETAIL done, ef0f642
 
 
 ## Blocked
