@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server';
+import { isFixtureMode } from '@/lib/firebase/fixtureMode';
 import { isAllowedOrigin } from '@/lib/utils/origin';
 import { safeRedirectPath } from '@/lib/utils/safeRedirect';
 
@@ -23,10 +24,10 @@ const isPublicRoute = createRouteMatcher([
   '/contact'
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  const { pathname, searchParams } = req.nextUrl;
-  const { userId } = await auth();
-
+// Unsafe /api methods must come from an allowed origin, except routes that
+// verify their own signature or token.
+function rejectCrossOriginApiWrite(req: NextRequest): NextResponse | null {
+  const { pathname } = req.nextUrl;
   const unsafeMethod = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method);
   const usesIndependentSignature = pathname.startsWith('/api/razorpay/webhook') || pathname.startsWith('/api/internal/');
   if (unsafeMethod && pathname.startsWith('/api/') && !usesIndependentSignature) {
@@ -34,6 +35,15 @@ export default clerkMiddleware(async (auth, req) => {
     const validOrigin = isAllowedOrigin(req.url, req.headers.get('origin'), req.headers.get('x-forwarded-host'), req.headers.get('x-forwarded-proto'));
     if (fetchSite === 'cross-site' || !validOrigin) return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
   }
+  return null;
+}
+
+const clerkProxy = clerkMiddleware(async (auth, req) => {
+  const { pathname, searchParams } = req.nextUrl;
+  const { userId } = await auth();
+
+  const rejected = rejectCrossOriginApiWrite(req);
+  if (rejected) return rejected;
 
   // Allow static assets through without auth checks
   const isStaticAssetRequest =
@@ -117,6 +127,12 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 });
+
+export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  // Offline fixture mode (dev only): no Clerk. Keep the origin check, let everything else through.
+  if (isFixtureMode()) return rejectCrossOriginApiWrite(req) ?? NextResponse.next();
+  return clerkProxy(req, event);
+}
 
 export const config = {
   matcher: [
