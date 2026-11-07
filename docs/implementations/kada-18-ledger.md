@@ -40,7 +40,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | HDR | Header campus chip, shell rules, CampusGate routing, shared session | 3 | L | done | 8795c64 | Shared session store with a Clerk userId refetch; refresh keeps old data; next is pathname only; /otp kept as auth page; browser checks skipped (no env) |
 | LOGIN | /login stepper, AuthShell trust line, dev preview | 3 | M | done | 578da0e | LOGIN: 3-screen stepper with step= pushState; in-app Back pushes previous step; client preview uses notFound in prod; clerkAppearance.ts now unused, not deleted |
 | VERIFY | /campus/verify onboarding: domain result, add college email, ID card, course step | 3 | L | done | 197ff3f | Fix pass: two copy lines shortened to 8 words (CourseStep subtitle, IdCardPending body). Typecheck and lint clean. Browser check still skipped (no env). |
-| MAPI | Market listing API v2: read, create, serializer | 3 | L | pending |  |  |
+| MAPI | Market listing API v2: read, create, serializer | 3 | L | done | c384daa | Uses market_listings via a cast on serial.ts type; viewer-relative roughDistanceM; hard expiry derived from details; dup guard per audience; PATCH collection switched only |
 | MKIT | Market UI kit | 3 | L | pending |  |  |
 | HCARD | Housing card v2 | 3 | M | done | 55e7e53 | Card prop type adds optional v2 fields HousingListing lacks; booked shows Reserved; kit fills those fields from fixture text; browser check not run |
 | DEAL | Student deals v1 (verified only) | 3 | M | pending |  |  |
@@ -89,6 +89,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:56 IST · MacBook · HCARD done, 55e7e53
 - 7 Nov 21:57 IST · MacBook · NTF done, 6a4ea76
 - 7 Nov 21:58 IST · MacBook · VERIFY done, 197ff3f
+- 7 Nov 21:59 IST · MacBook · MAPI done, c384daa
 
 
 ## Blocked
