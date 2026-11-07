@@ -53,7 +53,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | BLOOD | Blood donor alerts v1 (opt-in) | 4 | L | done | 6b80bd5 | Fix pass: split the consent label into two lines under 10 words each, keeping the delete-on-stop promise. Typecheck, lint and tests are clean. |
 | GAMES | Pickup games with slots v1 | 4 | L | done | aae8479 | Uses CAMPUS_COLLECTIONS.games ( campus_games ), not pickup_games ; lead should rename it in constants.ts so it matches the index. Browser check not done. |
 | DEAD | Remove dead auth, announcements and location code | 4 | S | done | cbc9306 | Typecheck fixed by regenerating .next types. RootShell.tsx:21 still checks /otp ; its owner package should drop it. |
-| HFEED | Housing feed v2 | 5 | L | pending |  |  |
+| HFEED | Housing feed v2 | 5 | L | done | 8363756 | A place search ignores the ring. Posts with no distance stay in the near list. Agent means postedAs agent or brokerage charged. Browser check skipped (no .env.local). |
 | HFORM | Housing post form v2 with landmark picker and WhatsApp paste | 5 | L | pending |  |  |
 | HDETAIL | Housing detail with owner lifecycle | 5 | M | done | ef0f642 | Housing detail v2 with owner panel. Beds minus stops at 1 and booking asks twice. Seed has no reserved or price-drop data. Browser check skipped (no .env.local). |
 | MFORM2 | New listing form v2, part 2: seat, cab split, ticket, pass, vehicle | 5 | M | pending |  |  |
@@ -104,6 +104,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:12 IST · MacBook · CONTACT done, 890201a
 - 7 Nov 22:12 IST · MacBook · HDETAIL done, ef0f642
 - 7 Nov 22:14 IST · MacBook · MYPOSTS done, 91b7de4
+- 7 Nov 22:15 IST · MacBook · HFEED done, 8363756
 
 
 ## Blocked
