@@ -65,7 +65,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | CLEAN | Legacy cleanup and final copy audit | 6 | L | done | 0b55e1b | v1 types/serializers removed, godview on v2 collections; CampusSession left optional (useCampusSession.ts EMPTY_SESSION) and college_email kept; smoke skipped |
 | SEAMROUTES | Remaining routes on the v2 collections | 7 | M | pending |  |  |
 | SEAMIDX | Firestore indexes and rules for the v2 collections | 7 | M | pending |  |  |
-| SEAMSESSION | Session shape required, last v1 names out | 7 | M | pending |  |  |
+| SEAMSESSION | Session shape required, last v1 names out | 7 | M | done | 21fe7dc | Session campus/onboarding required; PILOT_COLLEGE out (catalog-backed); college_email out; one leftover label in godview/campus/page.tsx (not ours) |
 
 ## Session log
 
@@ -117,6 +117,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:26 IST · MacBook · waves 2-6 finished: 36/36 done, 7 after one fix pass (NTF, VERIFY, DEAL, HOME, BLOOD, DEAD, HFORM), none blocked; 122 agents, ~10.3M subagent tokens, 5-hour window at 51%
 - 7 Nov 22:30 IST · MacBook · after wave 6: typecheck 0 errors (after clearing stale .next/types), lint clean, tests 318/318; npm run build compiles, fails only at prerender on missing env
 - 7 Nov 22:32 IST · MacBook · wave 7 added (3 integration seams found after wave 6)
+- 7 Nov 22:36 IST · MacBook · SEAMSESSION done, 21fe7dc
 
 
 ## Blocked
