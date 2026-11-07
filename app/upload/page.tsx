@@ -18,60 +18,10 @@ import { useShopsStore } from '@/lib/stores/shopsStore';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { useHideDock } from '@/lib/stores/dockStore';
 import { useCurrentCampus } from '@/hooks/useCurrentCampus';
+import { FIXTURE_SHOPS } from '@/lib/campus/fixtures/shops';
 import { isFixtureMode } from '@/lib/firebase/fixtureMode';
 import haptics from '@/lib/utils/haptics';
 import { cn } from '@/lib/utils/cn';
-import type { Shop, ShopPricing } from '@/types/models';
-
-/**
- * Print shops for fixture mode. Same data as FIXTURE_SHOPS in
- * src/lib/campus/fixtures/core.ts, which is server only: it imports
- * firebase-admin, which a client page cannot bundle. Keep the two in sync
- * (app/page.tsx carries the same copy).
- */
-const FIXTURE_PRICING: ShopPricing = {
-  a4: { singleBW: 2, doubleBW: 3, singleColor: 10, doubleColor: 18 },
-  a3: { singleBW: 5, doubleBW: 8, singleColor: 25, doubleColor: 45 },
-  services: { softBinding: 30, spiralBinding: 40, hardBinding: 120, emergency: 20, afterDark: 15 }
-};
-const FIXTURE_SHOPS: readonly Shop[] = [
-  {
-    id: 'shop-main-block',
-    name: 'Main Block Prints',
-    address: 'Ground floor, Main Block',
-    timing: '8:30 am to 6 pm',
-    openingTime: '08:30',
-    closingTime: '18:00',
-    isOpen: true,
-    collegeId: 'kju-main',
-    pricing: FIXTURE_PRICING
-  },
-  {
-    id: 'shop-gulabi-road',
-    name: 'Gulabi Road Xerox',
-    address: 'Gulabi Road, near Royal Mart',
-    timing: '9 am to 9 pm',
-    openingTime: '09:00',
-    closingTime: '21:00',
-    isOpen: true,
-    collegeId: 'kju-main',
-    pricing: {
-      ...FIXTURE_PRICING,
-      a4: { singleBW: 1.5, doubleBW: 2.5, singleColor: 8, doubleColor: 15 }
-    }
-  },
-  {
-    id: 'shop-airport-a1',
-    name: 'A1 Print Desk',
-    address: 'Next to A1 auditorium',
-    timing: '9 am to 5 pm',
-    openingTime: '09:00',
-    closingTime: '17:00',
-    isOpen: false,
-    collegeId: 'kju-airport-road',
-    pricing: FIXTURE_PRICING
-  }
-];
 
 function Section({ title, dimmed, children }: { title: ReactNode; dimmed?: boolean; children: ReactNode }) {
   return (

@@ -13,6 +13,7 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { useOrdersStore } from '@/lib/stores/ordersStore';
 import { useShopsStore } from '@/lib/stores/shopsStore';
 import { useDockSlot } from '@/lib/stores/dockStore';
+import { FIXTURE_SHOPS } from '@/lib/campus/fixtures/shops';
 import { isFixtureMode } from '@/lib/firebase/fixtureMode';
 import { homeSeasonalSlot } from '@/lib/campus/season';
 import { Chip, IconTile, ListRow, SectionHeader, ServiceTile, SmallTile, swButton } from '@/components/swoop/primitives';
@@ -31,60 +32,10 @@ import { MarketArt, PrinterArt } from '@/components/swoop/illustrations';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { orderStatusMeta, toDate } from '@/components/orders/orderStatus';
 import { ShopCard } from '@/components/shops/ShopCard';
-import type { Shop, ShopPricing } from '@/types/models';
 
 /** A ready order older than this is treated as stale and doesn't take over the dock. */
 const PICKUP_SLOT_MAX_AGE_MS = 48 * 60 * 60 * 1000;
 const HOME_SHOP_LIMIT = 4;
-
-/**
- * Print shops for fixture mode. Same data as FIXTURE_SHOPS in
- * src/lib/campus/fixtures/core.ts, which is server only: it imports
- * firebase-admin, which a client page cannot bundle. Keep the two in sync.
- */
-const FIXTURE_PRICING: ShopPricing = {
-  a4: { singleBW: 2, doubleBW: 3, singleColor: 10, doubleColor: 18 },
-  a3: { singleBW: 5, doubleBW: 8, singleColor: 25, doubleColor: 45 },
-  services: { softBinding: 30, spiralBinding: 40, hardBinding: 120, emergency: 20, afterDark: 15 }
-};
-const FIXTURE_SHOPS: readonly Shop[] = [
-  {
-    id: 'shop-main-block',
-    name: 'Main Block Prints',
-    address: 'Ground floor, Main Block',
-    timing: '8:30 am to 6 pm',
-    openingTime: '08:30',
-    closingTime: '18:00',
-    isOpen: true,
-    collegeId: 'kju-main',
-    pricing: FIXTURE_PRICING
-  },
-  {
-    id: 'shop-gulabi-road',
-    name: 'Gulabi Road Xerox',
-    address: 'Gulabi Road, near Royal Mart',
-    timing: '9 am to 9 pm',
-    openingTime: '09:00',
-    closingTime: '21:00',
-    isOpen: true,
-    collegeId: 'kju-main',
-    pricing: {
-      ...FIXTURE_PRICING,
-      a4: { singleBW: 1.5, doubleBW: 2.5, singleColor: 8, doubleColor: 15 }
-    }
-  },
-  {
-    id: 'shop-airport-a1',
-    name: 'A1 Print Desk',
-    address: 'Next to A1 auditorium',
-    timing: '9 am to 5 pm',
-    openingTime: '09:00',
-    closingTime: '17:00',
-    isOpen: false,
-    collegeId: 'kju-airport-road',
-    pricing: FIXTURE_PRICING
-  }
-];
 
 type Tile = { label: string; href: string; icon: ComponentType<IconProps>; tone: 'ink' | 'royal' | 'market' | 'girls' };
 
