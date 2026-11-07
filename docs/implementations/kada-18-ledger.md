@@ -63,7 +63,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | MYPOSTS | My posts and updates on /campus/activity | 5 | M | done | 91b7de4 | Updates sits above the tabs and marks items read on load; shared post pieces live in MarketMyPosts; the offer wording needs intent from the contact-requests API |
 | CRON | Maintenance planner for new lifecycles and account purge | 5 | L | done | a996ff6 | Collections from CAMPUS_COLLECTIONS, not the brief s old names. Purge also cancels hosted games and deletes prefs. Fixture HTTP GET not run (no .env.local). |
 | CLEAN | Legacy cleanup and final copy audit | 6 | L | done | 0b55e1b | v1 types/serializers removed, godview on v2 collections; CampusSession left optional (useCampusSession.ts EMPTY_SESSION) and college_email kept; smoke skipped |
-| SEAMROUTES | Remaining routes on the v2 collections | 7 | M | pending |  |  |
+| SEAMROUTES | Remaining routes on the v2 collections | 7 | M | done | 8312bf0 | Helpers live in serial.ts with Firebase lazily imported so tests can load it; kept isAvailable for active/reserved; GET intent falls back to listingKind |
 | SEAMIDX | Firestore indexes and rules for the v2 collections | 7 | M | pending |  |  |
 | SEAMSESSION | Session shape required, last v1 names out | 7 | M | done | 21fe7dc | Session campus/onboarding required; PILOT_COLLEGE out (catalog-backed); college_email out; one leftover label in godview/campus/page.tsx (not ours) |
 
@@ -118,6 +118,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:30 IST · MacBook · after wave 6: typecheck 0 errors (after clearing stale .next/types), lint clean, tests 318/318; npm run build compiles, fails only at prerender on missing env
 - 7 Nov 22:32 IST · MacBook · wave 7 added (3 integration seams found after wave 6)
 - 7 Nov 22:36 IST · MacBook · SEAMSESSION done, 21fe7dc
+- 7 Nov 22:37 IST · MacBook · SEAMROUTES done, 8312bf0
 
 
 ## Blocked
