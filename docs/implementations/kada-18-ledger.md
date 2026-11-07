@@ -61,7 +61,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | CONTACT | Contact requests and availability for v2 listings | 5 | M | done | 890201a | Route reads v2 collections; requests stay in campus_contact_requests. id route approve still reads old collections and fails until fixed; fixture GET misses seeds. |
 | PRINTCAMPUS | Print shops follow the signed-in campus | 5 | M | done | bb1d796 | Fixture shops copied into /upload (core.ts is server only); selectedCollegeId in other packages files still hits the grep; stale .next/types needs typegen |
 | MYPOSTS | My posts and updates on /campus/activity | 5 | M | done | 91b7de4 | Updates sits above the tabs and marks items read on load; shared post pieces live in MarketMyPosts; the offer wording needs intent from the contact-requests API |
-| CRON | Maintenance planner for new lifecycles and account purge | 5 | L | pending |  |  |
+| CRON | Maintenance planner for new lifecycles and account purge | 5 | L | done | a996ff6 | Collections from CAMPUS_COLLECTIONS, not the brief s old names. Purge also cancels hosted games and deletes prefs. Fixture HTTP GET not run (no .env.local). |
 | CLEAN | Legacy cleanup and final copy audit | 6 | L | pending |  |  |
 
 ## Session log
@@ -106,6 +106,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:14 IST · MacBook · MYPOSTS done, 91b7de4
 - 7 Nov 22:15 IST · MacBook · HFEED done, 8363756
 - 7 Nov 22:15 IST · MacBook · MDETAIL done, da59674
+- 7 Nov 22:18 IST · MacBook · CRON done, a996ff6
 
 
 ## Blocked
