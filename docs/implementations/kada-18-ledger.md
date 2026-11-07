@@ -48,7 +48,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | HAPI | Housing API v2: serializer, create, lifecycle actions | 4 | L | done | a48a639 | housing_listings collection; previousRentPp naming; empty houseRules = no restrictions; other routes and indexes still on housing_posts; no browser check (no env) |
 | MACT | Market listing actions API | 4 | M | done | 1096348 | Uses the schema s partIndex/seatsLeft; seats_left also on seats; no reserve or price drop on wanted posts; old confirm callers now get 400; fixture check not run |
 | MFEED | Market v2 feed and the four See all screens | 4 | L | pending |  |  |
-| MFORM1 | New listing form v2, part 1: shell, item, wanted, bundle | 4 | L | pending |  |  |
+| MFORM1 | New listing form v2, part 1: shell, item, wanted, bundle | 4 | L | done | 5066c50 | Bundle date and hand-over added to the description (not in schema); still_available PATCH not on server yet; AskCard sends title not q; browser checks skipped |
 | HOME | Home v2: greeting, seasonal slot, utility row, illustrations | 4 | L | done | 08c25b1 | Fixture Home shows a local copy of FIXTURE_SHOPS: core.ts imports firebase-admin, so a client page can t import it. Follow-up: client-safe shops fixture |
 | BLOOD | Blood donor alerts v1 (opt-in) | 4 | L | pending |  |  |
 | GAMES | Pickup games with slots v1 | 4 | L | done | aae8479 | Uses CAMPUS_COLLECTIONS.games ( campus_games ), not pickup_games ; lead should rename it in constants.ts so it matches the index. Browser check not done. |
@@ -98,6 +98,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:06 IST · MacBook · MACT done, 1096348
 - 7 Nov 22:07 IST · MacBook · PRINTCAMPUS done, bb1d796
 - 7 Nov 22:07 IST · MacBook · GAMES done, aae8479
+- 7 Nov 22:08 IST · MacBook · MFORM1 done, 5066c50
 
 
 ## Blocked
