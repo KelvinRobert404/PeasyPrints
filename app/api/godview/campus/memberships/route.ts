@@ -2,26 +2,52 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAdminBucket, getAdminDb } from '@/lib/firebase/admin';
 import { CampusHttpError, campusErrorResponse, requireAdminPrincipal } from '@/lib/campus/auth';
+import { getCampus } from '@/lib/campus/catalog';
 import { VERIFICATION_DAYS, addDays } from '@/lib/campus/constants';
+import { courseLabel, getProgramme } from '@/lib/campus/courses';
 import { toIso } from '@/lib/campus/serialize';
 
-export async function GET() {
+/** 'BBA Finance, sem 3' from a stored { programmeId, specialisation, semester }. */
+function courseText(course: unknown): string | null {
+  if (!course || typeof course !== 'object') return null;
+  const value = course as { programmeId?: unknown; specialisation?: unknown; semester?: unknown };
+  const programme = getProgramme(typeof value.programmeId === 'string' ? value.programmeId : null);
+  if (!programme || typeof value.semester !== 'number' || !Number.isInteger(value.semester)) return null;
+  const specialisation = typeof value.specialisation === 'string' && value.specialisation ? value.specialisation : null;
+  return courseLabel({ programmeName: programme.name, semester: value.semester, specialisation });
+}
+
+function campusLabelOf(data: { campusId?: unknown; campusLabel?: unknown }): string | null {
+  if (typeof data.campusLabel === 'string' && data.campusLabel) return data.campusLabel;
+  return typeof data.campusId === 'string' ? getCampus(data.campusId)?.label ?? null : null;
+}
+
+export async function GET(request: NextRequest) {
   try {
     await requireAdminPrincipal();
+    // Filtered in memory so no new composite index is needed.
+    const collegeId = request.nextUrl.searchParams.get('collegeId') || null;
     const snapshot = await getAdminDb().collection('campus_memberships').limit(300).get();
-    const items = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        displayName: data.displayName || 'Student',
-        collegeCode: data.collegeCode || 'KJU',
-        studentStatus: data.studentVerification?.status || 'unverified',
-        studentExpiresAt: toIso(data.studentVerification?.expiresAt),
-        girlsStatus: data.girlsSpaceVerification?.status || 'unverified',
-        girlsExpiresAt: toIso(data.girlsSpaceVerification?.expiresAt),
-      };
-    });
-    return NextResponse.json({ items });
+    const items = snapshot.docs
+      .filter((doc) => !collegeId || doc.data().collegeId === collegeId)
+      .map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          displayName: data.displayName || 'Student',
+          collegeId: data.collegeId || null,
+          collegeCode: data.collegeCode || null,
+          campusId: typeof data.campusId === 'string' ? data.campusId : null,
+          campusLabel: campusLabelOf(data),
+          method: data.studentVerification?.method || null,
+          course: courseText(data.course),
+          studentStatus: data.studentVerification?.status || 'unverified',
+          studentExpiresAt: data.studentVerification?.expiresAt ? toIso(data.studentVerification.expiresAt) : null,
+          girlsStatus: data.girlsSpaceVerification?.status || 'unverified',
+          girlsExpiresAt: data.girlsSpaceVerification?.expiresAt ? toIso(data.girlsSpaceVerification.expiresAt) : null,
+        };
+      });
+    return NextResponse.json({ items }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error) {
     return campusErrorResponse(error);
   }

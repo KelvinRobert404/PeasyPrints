@@ -2,7 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Timestamp, type Transaction } from 'firebase-admin/firestore';
 import { getAdminBucket, getAdminDb } from '@/lib/firebase/admin';
 import { CampusHttpError, campusErrorResponse, requireAdminPrincipal } from '@/lib/campus/auth';
+import { campusesOf } from '@/lib/campus/catalog';
 import { VERIFICATION_DAYS, addDays } from '@/lib/campus/constants';
+
+/** The request's campus when it belongs to the request's college, else null. */
+function requestCampus(data: { collegeId?: unknown; campusId?: unknown; campusLabel?: unknown }) {
+  if (typeof data.campusId !== 'string' || typeof data.collegeId !== 'string') return null;
+  const campus = campusesOf(data.collegeId).find((item) => item.id === data.campusId);
+  if (!campus) return null;
+  const label = typeof data.campusLabel === 'string' && data.campusLabel.trim() ? data.campusLabel.trim() : campus.label;
+  return { campusId: campus.id, campusLabel: label };
+}
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
@@ -28,6 +38,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     };
     if (action === 'approve') {
       const field = data.kind === 'student' ? 'studentVerification' : 'girlsSpaceVerification';
+      // The campus picked at sign-up moves to the membership, so it is never asked again.
+      const campus = requestCampus(data);
       await db.runTransaction(async (transaction) => {
         await assertStillPending(transaction);
         if (data.kind === 'girls_space') {
@@ -42,6 +54,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
           collegeCode: data.collegeCode,
           collegeName: data.collegeName,
           displayName: data.displayName,
+          ...(campus ?? {}),
           [field]: {
             status: 'approved',
             method: 'id_card',
