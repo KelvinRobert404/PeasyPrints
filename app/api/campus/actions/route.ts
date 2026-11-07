@@ -3,6 +3,7 @@ import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { CampusHttpError, campusErrorResponse, getCampusPrincipal } from '@/lib/campus/auth';
+import { collectionForContentType as collectionFor } from '@/lib/campus/serial';
 import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
 
 const schema = z.object({
@@ -11,10 +12,6 @@ const schema = z.object({
   contentId: z.string().min(1).max(100),
   reason: z.string().trim().min(3).max(400).optional(),
 });
-
-function collectionFor(type: 'marketplace' | 'housing') {
-  return type === 'marketplace' ? 'marketplace_listings' : 'housing_posts';
-}
 
 export async function POST(request: NextRequest) {
   try {

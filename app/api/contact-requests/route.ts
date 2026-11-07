@@ -4,8 +4,15 @@ import { z } from 'zod';
 import { getAdminDb } from '@/lib/firebase/admin';
 import type { CampusAudience } from '@/types/campus';
 import { CampusHttpError, campusErrorResponse, getCampusPrincipal } from '@/lib/campus/auth';
-import { CAMPUS_COLLECTIONS, CONTACT_REQUEST_HOURS, addHours } from '@/lib/campus/constants';
+import { CONTACT_REQUEST_HOURS, addHours } from '@/lib/campus/constants';
 import { enqueue } from '@/lib/campus/notify';
+import {
+  collectionForContentType as collectionFor,
+  contactRequestIntent,
+  intentFor,
+  type CampusContentType,
+  type ContactIntent,
+} from '@/lib/campus/serial';
 import { isAvailable, liveStatus, toIso } from '@/lib/campus/serialize';
 import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
 
@@ -14,20 +21,10 @@ const createSchema = z.object({
   contentId: z.string().min(1).max(100),
 });
 
-type ContentType = 'marketplace' | 'housing';
-/** 'offer' answers a wanted post; 'ask' is about a listing. */
-type ContactIntent = 'ask' | 'offer';
+type ContentType = CampusContentType;
 
 // Contact requests stay in the collection the [id] route and the session count read.
 const CONTACT_REQUESTS = 'campus_contact_requests';
-
-function collectionFor(type: ContentType) {
-  return type === 'marketplace' ? CAMPUS_COLLECTIONS.market : CAMPUS_COLLECTIONS.housing;
-}
-
-function intentFor(type: ContentType, data: Record<string, unknown>): ContactIntent {
-  return type === 'marketplace' && data.kind === 'wanted' ? 'offer' : 'ask';
-}
 
 function whatsappText(serial: string, intent: unknown) {
   return intent === 'offer' ? `Hey, I have what you asked for (${serial}) on Swoop` : `Hey, about ${serial} on Swoop`;
@@ -86,7 +83,8 @@ async function serializeRequest(doc: QueryDocumentSnapshot | DocumentSnapshot, v
     contentType: data.contentType,
     contentId: data.contentId,
     serial: data.serial,
-    intent: data.intent === 'offer' ? 'offer' : 'ask',
+    // Lets /campus/activity say 'has what you asked for' on an offer.
+    intent: contactRequestIntent(data),
     title: data.title ?? null,
     placeLabel: data.placeLabel ?? null,
     buyerId: data.buyerId,

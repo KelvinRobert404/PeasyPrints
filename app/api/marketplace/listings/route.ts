@@ -214,8 +214,7 @@ export async function POST(request: NextRequest) {
 
     const createdAt = Timestamp.fromDate(now);
     const result = await createCampusContentWithSerial({
-      // serial.ts still names the old collection in its type; the helper only passes it to db.collection().
-      collection: CAMPUS_COLLECTIONS.market as string as 'marketplace_listings',
+      collection: CAMPUS_COLLECTIONS.market,
       collegeCode: membership.collegeCode,
       product: 'M',
       payload: {

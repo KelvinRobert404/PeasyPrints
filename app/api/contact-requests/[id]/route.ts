@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { CampusHttpError, campusErrorResponse, getCampusPrincipal } from '@/lib/campus/auth';
+import { collectionForContentType } from '@/lib/campus/serial';
 import { isAvailable, toDate } from '@/lib/campus/serialize';
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -27,8 +28,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       await ref.update({ status: 'cancelled', updatedAt: Timestamp.now() });
     } else if (['approve', 'decline'].includes(action) && data.sellerId === principal.userId) {
       if (action === 'approve') {
-        const collection = data.contentType === 'marketplace' ? 'marketplace_listings' : 'housing_posts';
-        const content = await getAdminDb().collection(collection).doc(data.contentId).get();
+        const content = await getAdminDb().collection(collectionForContentType(data.contentType)).doc(data.contentId).get();
+        // isAvailable is true for the v2 statuses 'active' and 'reserved' (a lapsed reserve reads as active).
         if (!content.exists || !isAvailable(content.data())) throw new CampusHttpError(409, 'The post is no longer active');
       }
       await ref.update({ status: action === 'approve' ? 'approved' : 'declined', decidedAt: Timestamp.now(), updatedAt: Timestamp.now() });
