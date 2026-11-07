@@ -14,7 +14,6 @@ const isPublicRoute = createRouteMatcher([
   '/login(.*)',
   '/register(.*)',
   '/sso-callback(.*)',
-  '/otp',
   '/about(.*)',
   '/privacy',
   '/terms',
@@ -73,11 +72,6 @@ const clerkProxy = clerkMiddleware(async (auth, req) => {
 
   // Allow PostHog proxy endpoints to pass without auth
   if (pathname.startsWith('/ph')) {
-    return NextResponse.next();
-  }
-
-  // Allow announcements API for signed-out users
-  if (pathname.startsWith('/api/announcements')) {
     return NextResponse.next();
   }
 
