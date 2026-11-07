@@ -63,6 +63,9 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | MYPOSTS | My posts and updates on /campus/activity | 5 | M | done | 91b7de4 | Updates sits above the tabs and marks items read on load; shared post pieces live in MarketMyPosts; the offer wording needs intent from the contact-requests API |
 | CRON | Maintenance planner for new lifecycles and account purge | 5 | L | done | a996ff6 | Collections from CAMPUS_COLLECTIONS, not the brief s old names. Purge also cancels hosted games and deletes prefs. Fixture HTTP GET not run (no .env.local). |
 | CLEAN | Legacy cleanup and final copy audit | 6 | L | done | 0b55e1b | v1 types/serializers removed, godview on v2 collections; CampusSession left optional (useCampusSession.ts EMPTY_SESSION) and college_email kept; smoke skipped |
+| SEAMROUTES | Remaining routes on the v2 collections | 7 | M | pending |  |  |
+| SEAMIDX | Firestore indexes and rules for the v2 collections | 7 | M | pending |  |  |
+| SEAMSESSION | Session shape required, last v1 names out | 7 | M | pending |  |  |
 
 ## Session log
 
@@ -110,6 +113,10 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:19 IST · MacBook · HFORM done, 57ae053
 - 7 Nov 22:20 IST · MacBook · MFORM2 done, a5cbd9b
 - 7 Nov 22:26 IST · MacBook · CLEAN done, 0b55e1b
+- 7 Nov 21:36 IST · MacBook · waves 2-6 started as one dependency-driven run (36 packages, up to 14 agents)
+- 7 Nov 22:26 IST · MacBook · waves 2-6 finished: 36/36 done, 7 after one fix pass (NTF, VERIFY, DEAL, HOME, BLOOD, DEAD, HFORM), none blocked; 122 agents, ~10.3M subagent tokens, 5-hour window at 51%
+- 7 Nov 22:30 IST · MacBook · after wave 6: typecheck 0 errors (after clearing stale .next/types), lint clean, tests 318/318; npm run build compiles, fails only at prerender on missing env
+- 7 Nov 22:32 IST · MacBook · wave 7 added (3 integration seams found after wave 6)
 
 
 ## Blocked
@@ -125,6 +132,9 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - CAT · real college email domains and map-checked landmark coordinates · not in the facts file · confirm before distances or email verification go live
 - ART · pickup page PickupWaitArt against a real ready order · needs Firestore onSnapshot · check at 375/1280 px with a real order
 - COPY · deletion-request API case-insensitive confirm · needs Clerk + Firestore · test with a live session
+- Waves 2-7 · every browser check, fixture smoke test and before/after screenshot · no .env.local on this Mac · add .env.local and run the fixture smoke on /, /marketplace, /housing, /campus/activity, /campus/verify and one market and one housing detail at 375/1280 px
+- SIGNIN, LOGIN, HDR, MEM · Clerk round trips (Google, email code, redirects, Google-linked auto-approval) · need a Clerk dev instance
+- NTF, HAPI, GAMES, LOST, MACT, CRON · Firestore index deploy, rules emulator test, Timestamp writes, maintenance GET and purge DELETE · need Firestore (emulator with Java, or staging)
 
 
 ## Decided at night
@@ -132,3 +142,5 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 <!-- One entry per decision the run made without the owner: what · the options · the choice (always the safest reversible one) · where it lives in the code · how to undo it. -->
 - Verification per wave, not per package as each agent returns · options: per-package checks while other agents still edit the same worktree, or whole-wave checks once all are in · chose whole-wave typecheck/lint/test, then one commit per package with exact file staging · runbook section 2 · undo: none needed (commits are still per package)
 - From wave 2 on (owner in chat: use as many subagents as needed) · options: wave barriers, or start each package as soon as its dependencies are verified · chose dependency-driven start, max 14 agents (16 CPUs), FIX added as an implicit dependency of DEAD (both touch proxy.ts), one verify agent and at most one fix pass per package, then serial commits · lives in the run's workflow script only · undo: go back to wave-by-wave runs
+- Wave 7, integration seams · after wave 6 the agents' reports and a grep showed v2 listings unreachable from 3 places outside every package's file list (save/share/report in app/api/campus/actions, contact approve in app/api/contact-requests/[id], Firestore indexes still on v1 collections), plus CampusSession left optional and PILOT_COLLEGE/college_email still in fixtures · options: list them for the morning, or fix them tonight as 3 extra packages through the same build/verify/land steps · chose to fix (the plan says no backward compatibility; each is its own commit on the run branch) · wave 7 in kada-18-packages.json · undo: git revert the SEAM commits
+- 'Bring it back' (still_available) needed no fix: MFORM1 flagged it missing, but MACT added it to src/lib/campus/marketActions.ts afterwards

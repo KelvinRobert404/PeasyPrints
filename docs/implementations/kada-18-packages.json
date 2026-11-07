@@ -983,6 +983,59 @@
           "brief": "Remove what v2 replaced (no backward compatibility). types/campus.ts: delete MarketplacePostType, MarketplaceCategory, MarketplaceListing, HousingPostType, HousingPost, CampusContentStatus if unused, 'college_email'; make CampusSession campus/onboarding required. constants.ts: delete MARKETPLACE_CATEGORIES and labels, DEFAULT_PICKUP_POINTS if unused, PILOT_COLLEGE once unused. serialize.ts: delete serializeMarketplace and serializeHousing; point app/api/godview/campus/content at serializeMarketListing and serializeHousingListing. render-packs: formatPrice, kind and place.label instead of postType, pickupLabel, commuteLabel. Market and housing GET routes: drop the own/other alias. Delete ContentDetail.tsx if nothing imports it. Audit: rg 'uppercase|₹|PeasyPrints|No broker' in app/marketplace, app/housing, app/girls-space, app/campus, app/page.tsx, src/components/campus, src/components/auth; fix hits in your files, list the rest. Accept: rg 'MarketplaceListing|serializeMarketplace|postType|commuteLabel|availableFrom|PILOT_COLLEGE' app src empty or justified; fixture smoke of /, /marketplace, /housing, /campus/activity, one market and one housing detail."
         }
       ]
+    },
+    {
+      "wave": 7,
+      "packages": [
+        {
+          "id": "SEAMROUTES",
+          "title": "Remaining routes on the v2 collections",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "app/api/campus/actions/route.ts",
+            "app/api/contact-requests/[id]/route.ts",
+            "app/api/contact-requests/route.ts",
+            "src/lib/campus/serial.ts",
+            "app/api/marketplace/listings/route.ts",
+            "app/api/housing/posts/route.ts",
+            "tests/campus/seam-collections.test.ts"
+          ],
+          "depends_on": [],
+          "acceptance": "rg \"'marketplace_listings'|'housing_posts'\" app src finds nothing outside src/lib/campus/constants.ts; npm test covers the collection resolver; typecheck, lint",
+          "brief": "Found after wave 6: v2 listings live in CAMPUS_COLLECTIONS.market ('market_listings') and CAMPUS_COLLECTIONS.housing ('housing_listings'), but some routes still use the v1 names, so save, share and report (app/api/campus/actions/route.ts line ~16) and approving a contact request (app/api/contact-requests/[id]/route.ts line ~30) fail on every v2 listing. Fix: one small pure helper (in src/lib/campus/serial.ts or next to it in your files) that maps contentType 'marketplace' | 'housing' to CAMPUS_COLLECTIONS.market / .housing; use it in both routes. In contact-requests/[id], treat a listing as active when its status is 'active' or 'reserved' (v2 statuses). Widen the collection type in serial.ts so app/api/marketplace/listings/route.ts (~218) and app/api/housing/posts/route.ts (~182) drop their `as string as` casts. In app/api/contact-requests/route.ts, include each request's intent ('ask' | 'offer', from the existing intentFor) in the GET payload so /campus/activity can say 'has what you asked for'. Keep the contact-requests collection name as it is. Test the helper and the intent field mapping in tests/campus/seam-collections.test.ts (pure imports only)."
+        },
+        {
+          "id": "SEAMIDX",
+          "title": "Firestore indexes and rules for the v2 collections",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "firestore.indexes.json",
+            "firestore.rules"
+          ],
+          "depends_on": [],
+          "acceptance": "firestore.indexes.json is valid JSON and every composite index names a collection the code queries; no index left on marketplace_listings, housing_posts, pickup_games, lost_found_items or student_deals unless code still queries it; typecheck, lint, npm test",
+          "brief": "Found after wave 6: firestore.indexes.json still lists indexes for the v1 collections (marketplace_listings, housing_posts, pickup_games, lost_found_items, student_deals) while the code now queries the CAMPUS_COLLECTIONS names in src/lib/campus/constants.ts (market_listings, housing_listings, campus_games, lost_found, campus_deals, blood_requests, blood_donors, notifications, notification_prefs, contact_requests and others). Read constants.ts, then grep app/api and src/lib for each collection's where/orderBy combinations and write exactly the composite indexes those queries need (equality fields first, then the range/order field; single-field queries need none). Replace the v1 entries; keep indexes for collections outside the campus feature (orders, payouts, history and so on) untouched. In firestore.rules, if any rule names a v1 campus collection, rename it to the v2 name; v2 campus collections are server-only (Admin SDK), so client reads and writes stay denied. Never deploy anything. Report the list of indexes and why each exists."
+        },
+        {
+          "id": "SEAMSESSION",
+          "title": "Session shape required, last v1 names out",
+          "size": "M",
+          "model": "strongest",
+          "files": [
+            "src/types/campus.ts",
+            "src/hooks/useCampusSession.ts",
+            "src/components/layout/RootShell.tsx",
+            "src/lib/campus/fixtures/core.ts",
+            "src/lib/campus/membership.ts",
+            "src/lib/campus/constants.ts"
+          ],
+          "depends_on": [],
+          "acceptance": "rg 'PILOT_COLLEGE|college_email' app src empty or justified; rg \"'/otp'\" src empty; typecheck, lint, npm test",
+          "brief": "Found after wave 6 (CLEAN left these because the files were not its own): 1) make CampusSession.campus and CampusSession.onboarding required in src/types/campus.ts and give EMPTY_SESSION in src/hooks/useCampusSession.ts `campus: null, onboarding: { needs: null }` (match the real types). 2) RootShell.tsx: drop the '/otp' auth-path check (the /otp page was deleted). 3) Remove PILOT_COLLEGE from constants.ts: fixtures/core.ts takes KJU's id, code and name from the catalog (src/lib/campus/catalog.ts) instead, and any constant built from PILOT_COLLEGE uses the catalog or DEFAULT_CAMPUS. 4) Remove the v1 'college_email' verification method: fixtures use 'email_code', VERIFICATION_METHODS in membership.ts drops it, and the VerificationMethod type drops it. If removing something breaks a file outside your list, keep that one thing and report it instead. Run the full npm test: the membership and fixture tests must still pass."
+        }
+      ]
     }
   ]
 }
