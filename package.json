@@ -11,7 +11,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "typecheck": "tsc --noEmit --incremental false",
-    "test": "node --test --experimental-strip-types tests/**/*.test.ts",
+    "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\"",
     "test:rules": "node --test tests/security/firebase-rules.test.mjs",
     "test:campus": "node --test --experimental-strip-types tests/campus/policy.test.ts",
     "lint": "eslint . --max-warnings=0",
