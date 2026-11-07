@@ -28,7 +28,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | ART | Swoop illustration series, room art and pickup kitten swap | 1 | L | done | acc3d93 | app/page.tsx keeps its inline PrinterArt (HOME can swap); pickup 'Paid' stat still has the rupee sign (file now formats later) |
 | COPY | Copy pass: sentence-case tags, no ALL CAPS, no food leftovers | 1 | M | done | 7f616b3 | Removed --tint-canteen token; uppercase badges to sentence case; deletion copy shortened |
 | MEM | Membership server: multi-college principal, onboarding, session, config | 2 | L | pending |  |  |
-| GVC | Godview campus config for all colleges and trust-queue columns | 2 | L | pending |  |  |
+| GVC | Godview campus config for all colleges and trust-queue columns | 2 | L | done | 775aa4c | GVC built; also writes top-level pickupPoints for old readers; subdomains count needs suffix match in auth.ts; browser check skipped (Clerk gate) |
 | SEED | Fixture data for every section and utility | 2 | L | pending |  |  |
 | SRCH | Campus search: aliases, places, price phrases, one-tap ask | 2 | M | done | 5191b02 | SRCH built: item words set a category and stay search words; typo place matching; a lone 2k reads as a max; girls also finds anyone listings; clg with no viewer college sets nothing. |
 | MSCH | Market schema, constants and feed grouping | 2 | L | done | 599426f | Schema input names (departureAt, faceValue, plateState, landmarkId, whatsappNumber) not yet on src/types/market.ts; API package must map. needs_confirmation stays in feed. |
@@ -78,6 +78,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 21:41 IST · MacBook · SIGNIN done, 12181ed
 - 7 Nov 21:42 IST · MacBook · SRCH done, 5191b02
 - 7 Nov 21:42 IST · MacBook · MSCH done, 599426f
+- 7 Nov 21:44 IST · MacBook · GVC done, 775aa4c
 
 
 ## Blocked
