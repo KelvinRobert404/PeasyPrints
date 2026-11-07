@@ -58,7 +58,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 | HDETAIL | Housing detail with owner lifecycle | 5 | M | pending |  |  |
 | MFORM2 | New listing form v2, part 2: seat, cab split, ticket, pass, vehicle | 5 | M | pending |  |  |
 | MDETAIL | Market detail screen | 5 | L | pending |  |  |
-| CONTACT | Contact requests and availability for v2 listings | 5 | M | pending |  |  |
+| CONTACT | Contact requests and availability for v2 listings | 5 | M | done | 890201a | Route reads v2 collections; requests stay in campus_contact_requests. id route approve still reads old collections and fails until fixed; fixture GET misses seeds. |
 | PRINTCAMPUS | Print shops follow the signed-in campus | 5 | M | done | bb1d796 | Fixture shops copied into /upload (core.ts is server only); selectedCollegeId in other packages files still hits the grep; stale .next/types needs typegen |
 | MYPOSTS | My posts and updates on /campus/activity | 5 | M | pending |  |  |
 | CRON | Maintenance planner for new lifecycles and account purge | 5 | L | pending |  |  |
@@ -101,6 +101,7 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 - 7 Nov 22:08 IST · MacBook · MFORM1 done, 5066c50
 - 7 Nov 22:08 IST · MacBook · BLOOD done, 6b80bd5
 - 7 Nov 22:10 IST · MacBook · MFEED done, ee0f33d
+- 7 Nov 22:12 IST · MacBook · CONTACT done, 890201a
 
 
 ## Blocked
