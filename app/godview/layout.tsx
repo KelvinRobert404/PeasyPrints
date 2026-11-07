@@ -18,7 +18,7 @@ import {
     TicketIcon,
 } from '@/components/swoop/icons';
 import { cn } from '@/lib/utils/cn';
-import { BellIcon, CapIcon, ChevronLeftIcon, FilmIcon, FlagIcon, MegaphoneIcon, MenuIcon, WalletIcon } from './icons';
+import { BellIcon, ChevronLeftIcon, FilmIcon, FlagIcon, MegaphoneIcon, MenuIcon, WalletIcon } from './icons';
 import { Spinner } from './ui';
 
 const NAV_ITEMS = [
@@ -26,7 +26,6 @@ const NAV_ITEMS = [
     { href: '/godview/announcements', label: 'Announcements', icon: MegaphoneIcon },
     { href: '/godview/orders', label: 'Orders', icon: OrdersIcon },
     { href: '/godview/stores', label: 'Stores', icon: StoreIcon },
-    { href: '/godview/colleges', label: 'Colleges', icon: CapIcon },
     { href: '/godview/fees', label: 'Fees', icon: RupeeIcon },
     { href: '/godview/payouts', label: 'Payouts', icon: WalletIcon },
     { href: '/godview/coupons', label: 'Coupons', icon: TicketIcon },

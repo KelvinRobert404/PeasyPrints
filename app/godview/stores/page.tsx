@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import type { Shop, College } from '@/types/models';
+import type { Shop } from '@/types/models';
+import { campusesOf, getCampus, listColleges } from '@/lib/campus/catalog';
 import { cn } from '@/lib/utils/cn';
 import {
     Select,
@@ -20,9 +21,18 @@ import { PageHead, Spinner, TableState, gvCard, gvIconBtn, gvInput, gvMenu, gvRo
 /** Compact (28px) variant of the Godview surface input for inline row editing. */
 const EDIT_INPUT = cn(gvInput, 'h-7 min-w-0 rounded-[8px] bg-white px-2 text-[12px]');
 
+/** Every catalog campus a shop can serve, grouped by college in catalog order. */
+const CAMPUS_OPTIONS = listColleges().flatMap((college) =>
+    campusesOf(college.id).map((campus) => ({ id: campus.id, label: campus.label }))
+);
+
+/** Header label of the shop's campus (shop.collegeId holds a catalog campus id), else null. */
+function shopCampusLabel(campusId?: string): string | null {
+    return getCampus(campusId)?.label ?? null;
+}
+
 export default function StoresPage() {
     const [shops, setShops] = useState<Shop[]>([]);
-    const [colleges, setColleges] = useState<College[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<Partial<Shop & { collegeId: string }>>({});
@@ -40,23 +50,6 @@ export default function StoresPage() {
         return () => unsub();
     }, []);
 
-    // Fetch colleges
-    useEffect(() => {
-        const unsub = onSnapshot(collection(db, 'colleges'), (snap) => {
-            const list = snap.docs.map((d) => ({
-                id: d.id,
-                ...d.data(),
-            })) as College[];
-            setColleges(list);
-        });
-        return () => unsub();
-    }, []);
-
-    const getCollegeName = (collegeId?: string) => {
-        if (!collegeId) return null;
-        return colleges.find(c => c.id === collegeId)?.name || null;
-    };
-
     const startEdit = (shop: Shop) => {
         setEditingId(shop.id);
         setEditForm({
@@ -64,7 +57,8 @@ export default function StoresPage() {
             address: shop.address,
             openingTime: shop.openingTime || '',
             closingTime: shop.closingTime || '',
-            collegeId: shop.collegeId || '',
+            // A legacy id the catalog doesn't know shows as unassigned.
+            collegeId: getCampus(shop.collegeId)?.id ?? '',
         });
     };
 
@@ -120,7 +114,7 @@ export default function StoresPage() {
                 <div className={cn(gvTableHead, 'grid grid-cols-12 gap-4 px-4 py-2')}>
                     <div className="col-span-2 pl-10">Store name</div>
                     <div className="col-span-3">Address</div>
-                    <div className="col-span-2">College</div>
+                    <div className="col-span-2">Campus</div>
                     <div className="col-span-2">Timings</div>
                     <div className="col-span-1">Status</div>
                     <div className="col-span-1 text-right">Fee</div>
@@ -136,7 +130,7 @@ export default function StoresPage() {
                         <div>
                             {shops.map((shop) => {
                                 const isEditing = editingId === shop.id;
-                                const collegeName = getCollegeName(shop.collegeId);
+                                const campusName = shopCampusLabel(shop.collegeId);
                                 return (
                                     <div
                                         key={shop.id}
@@ -178,28 +172,31 @@ export default function StoresPage() {
                                             )}
                                         </div>
 
-                                        {/* College */}
+                                        {/* Campus (catalog campus id stored in shop.collegeId) */}
                                         <div className="col-span-2 flex min-w-0 items-center gap-2">
                                             {isEditing ? (
                                                 <Select
                                                     value={editForm.collegeId || ''}
                                                     onValueChange={(value) => setEditForm({ ...editForm, collegeId: value })}
                                                 >
-                                                    <SelectTrigger className="h-7 rounded-[8px] border-transparent bg-white px-2 text-[12px] font-semibold text-ink focus:border-royal focus:ring-[3px] focus:ring-royal/15 focus:ring-offset-0">
-                                                        <SelectValue placeholder="Select college" />
+                                                    <SelectTrigger
+                                                        aria-label="Store campus"
+                                                        className="h-7 rounded-[8px] border-transparent bg-white px-2 text-[12px] font-semibold text-ink focus:border-royal focus:ring-[3px] focus:ring-royal/15 focus:ring-offset-0"
+                                                    >
+                                                        <SelectValue placeholder="Select campus" />
                                                     </SelectTrigger>
                                                     <SelectContent className={gvMenu}>
-                                                        {colleges.map((college) => (
-                                                            <SelectItem key={college.id} value={college.id} className="rounded-[8px] text-[12px] font-semibold text-ink focus:bg-surface">
-                                                                {college.shortName || college.name}
+                                                        {CAMPUS_OPTIONS.map((campus) => (
+                                                            <SelectItem key={campus.id} value={campus.id} className="rounded-[8px] text-[12px] font-semibold text-ink focus:bg-surface">
+                                                                {campus.label}
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
-                                            ) : collegeName ? (
+                                            ) : campusName ? (
                                                 <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-surface px-2 py-0.5 text-[11px] font-semibold text-ink">
                                                     <CapIcon size={13} className="shrink-0 text-slate" />
-                                                    <span className="truncate">{collegeName}</span>
+                                                    <span className="truncate">{campusName}</span>
                                                 </span>
                                             ) : (
                                                 <span className="text-[11.5px] text-slate">Not assigned</span>

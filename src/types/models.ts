@@ -67,7 +67,10 @@ export interface Shop {
   pricing?: ShopPricing;
   // Whether the storefront is open for customers
   isOpen?: boolean;
-  // College this shop belongs to
+  /**
+   * Catalog campus id the shop serves, e.g. 'kju-main' (src/lib/campus/catalog.ts).
+   * Despite the name it is a campus id, not a college id.
+   */
   collegeId?: string;
   phone?: string;
   email?: string;
@@ -191,13 +194,4 @@ export interface MarketplaceUser {
   verifiedBy?: string; // Admin email
   createdAt: any; // Firestore Timestamp
   listingsCount?: number;
-}
-
-// College types
-
-export interface College {
-  id: string;
-  name: string;
-  shortName?: string;
-  createdAt: any; // Firestore Timestamp
 }

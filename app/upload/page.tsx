@@ -16,10 +16,62 @@ import { PageHeader, SectionHeader, StatusLine } from '@/components/swoop/primit
 import { ChevronRightIcon, ClockIcon, PinIcon } from '@/components/swoop/icons';
 import { useShopsStore } from '@/lib/stores/shopsStore';
 import { useUploadStore } from '@/lib/stores/uploadStore';
-import { useCollegeStore } from '@/lib/stores/collegeStore';
 import { useHideDock } from '@/lib/stores/dockStore';
+import { useCurrentCampus } from '@/hooks/useCurrentCampus';
+import { isFixtureMode } from '@/lib/firebase/fixtureMode';
 import haptics from '@/lib/utils/haptics';
 import { cn } from '@/lib/utils/cn';
+import type { Shop, ShopPricing } from '@/types/models';
+
+/**
+ * Print shops for fixture mode. Same data as FIXTURE_SHOPS in
+ * src/lib/campus/fixtures/core.ts, which is server only: it imports
+ * firebase-admin, which a client page cannot bundle. Keep the two in sync
+ * (app/page.tsx carries the same copy).
+ */
+const FIXTURE_PRICING: ShopPricing = {
+  a4: { singleBW: 2, doubleBW: 3, singleColor: 10, doubleColor: 18 },
+  a3: { singleBW: 5, doubleBW: 8, singleColor: 25, doubleColor: 45 },
+  services: { softBinding: 30, spiralBinding: 40, hardBinding: 120, emergency: 20, afterDark: 15 }
+};
+const FIXTURE_SHOPS: readonly Shop[] = [
+  {
+    id: 'shop-main-block',
+    name: 'Main Block Prints',
+    address: 'Ground floor, Main Block',
+    timing: '8:30 am to 6 pm',
+    openingTime: '08:30',
+    closingTime: '18:00',
+    isOpen: true,
+    collegeId: 'kju-main',
+    pricing: FIXTURE_PRICING
+  },
+  {
+    id: 'shop-gulabi-road',
+    name: 'Gulabi Road Xerox',
+    address: 'Gulabi Road, near Royal Mart',
+    timing: '9 am to 9 pm',
+    openingTime: '09:00',
+    closingTime: '21:00',
+    isOpen: true,
+    collegeId: 'kju-main',
+    pricing: {
+      ...FIXTURE_PRICING,
+      a4: { singleBW: 1.5, doubleBW: 2.5, singleColor: 8, doubleColor: 15 }
+    }
+  },
+  {
+    id: 'shop-airport-a1',
+    name: 'A1 Print Desk',
+    address: 'Next to A1 auditorium',
+    timing: '9 am to 5 pm',
+    openingTime: '09:00',
+    closingTime: '17:00',
+    isOpen: false,
+    collegeId: 'kju-airport-road',
+    pricing: FIXTURE_PRICING
+  }
+];
 
 function Section({ title, dimmed, children }: { title: ReactNode; dimmed?: boolean; children: ReactNode }) {
   return (
@@ -31,10 +83,14 @@ function Section({ title, dimmed, children }: { title: ReactNode; dimmed?: boole
 }
 
 export default function UploadEntryPage() {
-  const { shops, subscribe } = useShopsStore();
+  const { shops: liveShops, subscribe } = useShopsStore();
   const { setShopPricing, jobType, file, images } = useUploadStore();
-  const { selectedCollege, colleges, subscribe: subscribeColleges } = useCollegeStore();
+  const campus = useCurrentCampus();
   const [selectedShopId, setSelectedShopId] = useState<string>('');
+
+  // Fixture mode has no client Firestore: skip the live subscription.
+  const fixtures = isFixtureMode();
+  const shops = useMemo(() => (fixtures ? [...FIXTURE_SHOPS] : liveShops), [fixtures, liveShops]);
 
   // This screen owns a sticky checkout bar, so the global dock steps aside.
   useHideDock();
@@ -47,23 +103,18 @@ export default function UploadEntryPage() {
 
 
   useEffect(() => {
+    if (fixtures) return;
     const unsub = subscribe();
     return () => unsub();
-  }, [subscribe]);
+  }, [fixtures, subscribe]);
 
-  // Subscribe to colleges
-  useEffect(() => {
-    const unsub = subscribeColleges();
-    return () => unsub();
-  }, [subscribeColleges]);
-
-  // Filter shops by selected college
-  const filteredShops = useMemo(() => {
-    // Find the college ID for the selected college name
-    const selectedCollegeObj = colleges.find(c => c.name === selectedCollege);
-    if (!selectedCollegeObj) return shops; // Show all if no college selected
-    return shops.filter(s => s.collegeId === selectedCollegeObj.id);
-  }, [shops, colleges, selectedCollege]);
+  // Shops on the student's campus (all shops when the campus isn't known).
+  // shop.collegeId holds a catalog campus id.
+  const campusId = campus?.campusId ?? null;
+  const filteredShops = useMemo(
+    () => (campusId ? shops.filter((s) => s.collegeId === campusId) : shops),
+    [shops, campusId]
+  );
 
   const selectedShop = useMemo(() => shops.find((s) => s.id === selectedShopId), [shops, selectedShopId]);
 
@@ -89,7 +140,7 @@ export default function UploadEntryPage() {
   useEffect(() => {
     // Recompute on mount and when list changes
     updateScrollIndicators();
-  }, [shops.length]);
+  }, [filteredShops.length]);
 
   function formatHourLabel(raw?: string): string | null {
     if (!raw) return null;
@@ -139,7 +190,7 @@ export default function UploadEntryPage() {
     <div className="flex min-h-screen flex-col bg-white font-sans">
       <PageHeader
         backHref="/"
-        kicker={selectedShop?.name ?? 'PeasyPrints'}
+        kicker={selectedShop?.name ?? campus?.label}
         title="Print"
         className="sticky top-0 z-30 border-b border-line bg-white pb-1.5"
       />
