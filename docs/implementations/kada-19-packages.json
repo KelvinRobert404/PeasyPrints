@@ -1,0 +1,655 @@
+{
+  "issue": "KADA-19",
+  "branch": "kada-19/demo-site",
+  "base": "kada-18/implement-redesign",
+  "demo_command": "npm run demo",
+  "demo_url": "http://localhost:3019",
+  "sizes_in_hours": {
+    "S": 0.5,
+    "M": 1,
+    "L": 1.5
+  },
+  "common_rules": "Repo: the run folder (suggested C:/Developer/PeasyPrints-kada19), branch kada-19/demo-site, cut from kada-18/implement-redesign. Swoop: Next 16 app router, React, Tailwind, Clerk, Firebase client + Admin SDK, Razorpay. Edit only the files listed for your package. Never commit, push or edit a ledger (the lead does).\nGoal: a demo of Swoop on sample data, fully browsable including sign-in, run locally by `npm run demo` at http://localhost:3019 with NO env.\nContract (src/lib/demo/mode.ts and contract.ts, built by SWITCH; import them, never redefine):\n- isDemoMode() = NEXT_PUBLIC_SWOOP_DEMO==='1' && NODE_ENV!=='production'. Demo implies fixture mode. Production can never be in demo, and every /api/demo/* route returns 404 unless isDemoMode().\n- Cookies: swoop_demo_visitor (visitor id, minted by the proxy), swoop_demo_session (client-readable base64url JSON {uid, emails?:[{address, verified, google}]}; no cookie = signed out), swoop_demo_date ('nov'|'may'|'july'; none = nov).\n- Personas: sana = verified-kju-main (KJU Main, default), kabir = verified-kju-airport, ananya = girls-approved, meera = pending-id-card. New-student walk-through: uid new-user (Riya) with riya@kju.test (college, Google) or riya.t@gmail.test (personal). KJU's demo email domain is kju.test.\n- Demo API: /api/demo/session (POST {persona} | {google:'college'|'personal'} | {emailCode:{email}}; PATCH {addEmail}; DELETE), /api/demo/session/card, /api/demo/firestore, /api/demo/state, /api/demo/reset, /api/demo/date, /api/demo/razorpay/pay, /api/demo/orders/[id]/collect.\n- Stand-ins: in the demo dev build only, webpack aliases swap @clerk/nextjs, @clerk/nextjs/server, @clerk/nextjs/errors, firebase/app, firebase/auth, firebase/firestore, firebase/storage and razorpay for src/lib/demo/shims/clerk-client.tsx, clerk-server.ts, clerk-errors.ts, firebase-app.ts, firebase-auth.ts, firebase-firestore.ts, firebase-storage.ts, razorpay-server.ts. An alias is live once its shim file exists. Shims export every name the repo imports, never touch window at import, and throw 'Not in the demo: <name>' for anything outside the demo.\n- World: in demo, getAdminDb() and getAdminBucket() return the visitor's own seeded fake world. Seasonal pack doc ids start with 'season-'.\nRules: pick demo code at module level (const useX = isDemoMode() ? useDemoX : useRealX), never a conditional hook call; with demo off, behaviour is unchanged. No live services: never call Clerk, Firebase, Razorpay, PostHog or any host but localhost. Next 16 is not the Next you know: read node_modules/next/dist/docs/ before using routing, params, searchParams, cookies(), proxy or config APIs (params, searchParams and cookies() are async). Pure modules that node tests import: '@/...' only as `import type`, runtime imports relative with the .ts extension, no enums or parameter properties. Tests live at tests/<dir>/<name>.test.ts with node:test and node:assert/strict.\nDesign: Swoop design system v1 (src/components/swoop primitives, icons, illustrations). Dense. Sentence case, never the `uppercase` class. Plain English, each line under 10 words. Prices via formatPrice, never the rupee sign. The mocked Google step is a plain Swoop sheet with a Demo chip, never a copy of Google's page. Demo copy says plainly that it is sample data.\nNever build: events, gigs, jobs, food surfaces, pets.\nDone means: npm run typecheck, npm run lint and npm test pass. UI: check on http://localhost:3019 (npm run demo) at 375 and 1280 px, no horizontal scroll, no console errors, network only localhost. End with a self-review of at most 8 lines: what you built, files, checks and results, anything skipped.",
+  "waves": [
+    {
+      "wave": 1,
+      "packages": [
+        {
+          "id": "SWITCH",
+          "title": "Demo switch, shared contract, launcher and alias wiring",
+          "size": "M",
+          "files": [
+            "src/lib/demo/mode.ts",
+            "src/lib/demo/contract.ts",
+            "src/lib/demo/build-config.cjs",
+            "scripts/demo.mjs",
+            "next.config.js",
+            "package.json",
+            "src/lib/firebase/fixtureMode.ts",
+            "tsconfig.json",
+            ".gitignore",
+            "eslint.config.mjs",
+            "tests/demo/contract.test.ts",
+            "tests/demo/build-config.test.ts"
+          ],
+          "depends_on": [],
+          "acceptance": "With every .env* file moved aside, npm run demo reaches Ready on http://localhost:3019. With the demo flag set, next build refuses to start with a plain message. Plain npm run build compiles and nothing under .next mentions src/lib/demo/shims. Tests cover the session codec (empty, malformed, unknown uid, more than 3 emails), the persona table, the date ids and the alias wiring (off unless the flag is on outside production; matches the barrel '!=!' request form). typecheck, lint and test green.",
+          "brief": "mode.ts: isDemoMode(), literal process.env reads, no imports. fixtureMode.ts: isFixtureMode() also true when the demo flag is on. contract.ts (pure): cookie names; DemoSession with encode/decodeDemoSession (base64url JSON; uid in FIXTURE_USER_IDS; max 3 emails; bad input gives null); DEMO_PERSONAS {id, uid, name, campusLabel, line}; WALKTHROUGH_UID; walkthroughEmails(kind); DEMO_DATE_IDS; DEMO_PORT 3019. build-config.cjs, called by next.config.js, with the flag on in dev: distDir '.next-demo'; a NormalModuleReplacementPlugin per alias whose shim exists (log them; regex also matches Next's barrel '!=!' form); same-origin CSP (connect-src 'self'); no /ph rewrites; allowedDevOrigins :3019. Throw plainly if the flag meets a production build or server, or Turbopack (process.env.TURBOPACK). scripts/demo.mjs (Node, Windows-safe): both flags, placeholder Razorpay, webhook and cron values, blank PostHog keys (object keys, never NAME=value text); next dev --webpack -p 3019; then GET main routes with warm-up visitor and Sana cookies. --check GETs every static page, exit 1 on any 500. package.json: demo, demo:check. tsconfig includes .next-demo/dev/types; gitignore and eslint skip .next-demo."
+        },
+        {
+          "id": "SEED",
+          "title": "Sample world: every surface full on both campuses, print orders and users",
+          "size": "L",
+          "files": [
+            "src/lib/campus/fixtures/market.ts",
+            "src/lib/campus/fixtures/housing.ts",
+            "src/lib/campus/fixtures/utilities.ts",
+            "src/lib/campus/fixtures/shops.ts",
+            "src/lib/campus/fixtures/print.ts",
+            "src/lib/campus/fixtures/index.ts",
+            "src/lib/firebase/fakeSeed.ts",
+            "tests/campus/fixtures.test.ts"
+          ],
+          "depends_on": [],
+          "acceptance": "tests/campus/fixtures.test.ts passes: every persona owns at least one market and one housing post; KJU Airport Rd has 8+ market, 4+ housing, 2 deals, 1 game, 1 lost-found and one open shop; a reserved, a price-dropped (last 7 days), an agent and a 4-day-old Sana post exist; Sana has a ready order today, a printing order and two collected; each persona has a users doc and 2+ notifications; no dropped-feature words; dates relative to now. All existing tests still pass.",
+          "brief": "Top up the KADA-18 fixtures so every demo screen is full for KJU Main and KJU Airport Rd. Read the builders in src/lib/campus/fixtures/* and the types they use; keep their style and fixtureTime(now, ...) relative dates. Add: a reserved and a price-dropped housing post (drop within 7 days); an agent post with brokerage; a 4-day-old and a 1-day-old post by Sana (the 4-day one gets the 'Still available?' nudge); Airport Road content for Kabir (8+ market across kinds, 4+ housing, 2 deals, 1 game, 1 lost-found); notifications for sana, kabir, ananya and meera. shops.ts: one open Airport Road shop, same shape as the others. New print.ts: order docs (shape from src/types and src/lib/stores/ordersStore.ts): Sana one printed today (ready for pickup), one printing, two collected earlier; Kabir one collected. Also users/{uid} docs for the four personas and new-user. Wire print.ts into index.ts and fakeSeed.ts (collections orders and users). Keep images [] so cards show the design's no-photo state. Never add events, gigs, jobs, food or pets."
+        }
+      ]
+    },
+    {
+      "wave": 2,
+      "packages": [
+        {
+          "id": "WORLD",
+          "title": "One fake world per visitor: Admin DB, bucket, change log and hooks",
+          "size": "L",
+          "files": [
+            "src/lib/firebase/fakeAdmin.ts",
+            "src/lib/firebase/admin.ts",
+            "src/lib/demo/server/world.ts",
+            "src/lib/demo/server/orderProgress.ts",
+            "src/lib/demo/server/life.ts",
+            "src/lib/demo/server/seasonPack.ts",
+            "tests/demo/world.test.ts",
+            "tests/firebase/fake-admin.test.ts"
+          ],
+          "depends_on": [
+            "SWITCH",
+            "SEED"
+          ],
+          "acceptance": "world.test.ts: writes in world A are invisible in world B; transactions run one at a time per world; with no request context the 'default' world is used with one warning; each world has bootId, rev and a change log of doc paths and bucket files that skips _rate_limits, payment_idempotency and 'season-' docs; tickOrders and tickLife run at most every 2 s per world; applySeason runs when a world is created; past 50 worlds the oldest is evicted. Plain fixture mode keeps one shared store. All existing tests pass.",
+          "brief": "Today src/lib/firebase/admin.ts keeps one seeded FakeFirestore and FakeBucket on globalThis for everyone. In demo, give each visitor their own. world.ts: getWorld(id) makes {id, bootId, db, bucket, rev, changes}, seeded with seedFakeDb(db, now) on first use; dropWorld(id); changesSince(rev); currentWorldId() reads swoop_demo_visitor via `await cookies()` (missing, or outside a request: 'default', warn once). FakeFirestore and FakeBucket take an optional async store resolver, so every async operation (doc get/set/update/delete, add, query get, transaction, batch commit, file save/download/delete) runs on the visitor's world; tests and plain fixture mode keep the single store. Serialize transactions per world. Each write bumps rev and logs the path, except _rate_limits, payment_idempotency and ids starting 'season-'. On world access call tickOrders(world, nowMs) and tickLife(world, nowMs) (throttle 2 s); on creation call applySeason(world, dateId from swoop_demo_date). Create orderProgress.ts, life.ts and seasonPack.ts as typed no-op stubs; later packages fill them. Keep at most 50 worlds (LRU)."
+        },
+        {
+          "id": "CLERKSRV",
+          "title": "Clerk server stand-in, demo identity and the session API",
+          "size": "L",
+          "files": [
+            "src/lib/demo/shims/clerk-server.ts",
+            "src/lib/demo/server/identity.ts",
+            "app/api/demo/session/route.ts",
+            "app/api/demo/session/card/route.ts",
+            "src/lib/campus/auth.ts",
+            "src/lib/server/requestAuth.ts",
+            "app/api/auth/firebase-custom-token/route.ts",
+            "app/api/dev/fixture-user/route.ts",
+            "tests/demo/identity.test.ts"
+          ],
+          "depends_on": [
+            "SWITCH"
+          ],
+          "acceptance": "On :3019 with no env: no cookie, GET /api/campus/session is signed out. POST /api/demo/session {persona:'sana'}: Sana at KJU Main, verified. {google:'college'} then POST /api/campus/onboarding {collegeId:'kju', campusId:'kju-main'}: domainMismatch false, needs course. {google:'personal'}: domainMismatch true. PATCH {addEmail:'riya@kju.test'} then onboarding {}: approved. /api/demo/session/card approves Meera's pending card. DELETE signs out. /api/storage/upload, /api/razorpay/order and /api/users/upsert give 401 signed out and work signed in, never a Clerk error or 500. /api/dev/fixture-user is 404 in demo.",
+          "brief": "Write src/lib/demo/shims/clerk-server.ts; the alias for @clerk/nextjs/server goes live once it exists. Export every name the repo imports (grep): auth() gives {userId, sessionId, getToken: 'demo:<uid>', protect, redirectToSignIn} from swoop_demo_session (await cookies()); currentUser() gives a Clerk-shaped user from identity.ts; clerkClient() with the users methods the repo calls (reads from identity, updates are no-ops); clerkMiddleware(handler) runs handler with an auth that reads req.cookies; createRouteMatcher builds regexes from the route strings. identity.ts: personas from fixtureIdentity (src/lib/campus/membership.ts); new-user takes emails from the cookie; Google emails are verified and carry a google account, so the existing domain auto-approve runs. Session route per the contract; google and emailCode first delete Riya's membership in the world. card route approves the caller's pending ID card. auth.ts: in demo use the Clerk branch (now the shim) plus ensureFixtureMembership for persona uids. requestAuth.ts: accept 'demo:<uid>' bearer tokens in demo. firebase-custom-token returns {token:'demo:<uid>'} in demo. fixture-user is 404 in demo."
+        },
+        {
+          "id": "CLERKUI",
+          "title": "Clerk client stand-in, avatar menu and the demo account chooser",
+          "size": "L",
+          "files": [
+            "src/lib/demo/shims/clerk-client.tsx",
+            "src/lib/demo/shims/clerk-errors.ts",
+            "src/lib/demo/client/session.ts",
+            "src/components/demo/DemoUserMenu.tsx",
+            "src/components/demo/auth/DemoAccountChooser.tsx"
+          ],
+          "depends_on": [
+            "SWITCH"
+          ],
+          "acceptance": "At the end of wave 2 (needs CLERKSRV and FIREBASE too), on :3019 with no env: / renders with no ClerkProvider error; signed out, the navbar shows a Sign in link; after signInAs('sana') the avatar menu shows Sana, her email, Profile, Switch student and Sign out; Sign out lands on / signed out; openDemoAccountChooser() shows the Demo-marked sheet (college account, personal account, four sample students, Cancel) at 375 and 1280 px; no request to any clerk host. typecheck and lint clean.",
+          "brief": "Write src/lib/demo/shims/clerk-client.tsx ('use client') and clerk-errors.ts, exporting every name the repo imports from @clerk/nextjs and @clerk/nextjs/errors (grep). ClerkProvider: state from swoop_demo_session via useSyncExternalStore (server snapshot: not loaded); renders <DemoAccountChooserHost/>. useAuth. useUser: Clerk-shaped user from fixtureIdentity plus cookie emails; user.createEmailAddress().prepareVerification() and attemptVerification({code}) accept any 6 digits and PATCH /api/demo/session {addEmail}; user.reload. useClerk: signOut, openSignIn to /login. UserButton renders DemoUserMenu. SignedIn and SignedOut. useSignIn, useSignUp: methods throw. AuthenticateWithRedirectCallback: replace to ?demo_next or /campus/verify after 600 ms. isClerkAPIResponseError checks a DemoClerkError. session.ts: readDemoSession, subscribe, signInAs(personaId, next), signInWithGoogle(kind, next) via /sso-callback?demo_next=, signOut(next); full page loads. DemoUserMenu: initial, name, email, Profile, Switch student, Sign out; signed out, a Sign in link. DemoAccountChooser: sheet 'Pick a sample account' with a Demo chip; openDemoAccountChooser({mode}) resolves the pick or null."
+        },
+        {
+          "id": "FIREBASE",
+          "title": "Firebase client stand-ins backed by the visitor's world",
+          "size": "L",
+          "files": [
+            "src/lib/demo/shims/firebase-app.ts",
+            "src/lib/demo/shims/firebase-auth.ts",
+            "src/lib/demo/shims/firebase-firestore.ts",
+            "src/lib/demo/shims/firebase-storage.ts",
+            "app/api/demo/firestore/route.ts",
+            "src/lib/demo/server/clientQuery.ts",
+            "src/lib/demo/codec.ts",
+            "tests/demo/codec.test.ts",
+            "tests/demo/client-query.test.ts"
+          ],
+          "depends_on": [
+            "SWITCH"
+          ],
+          "acceptance": "On :3019 with no env (end of wave 2): /, /orders, /shops and /upload render with no Firebase invalid-api-key error; AuthProvider's custom-token bridge and upsert succeed silently; /orders lists the persona's seeded orders; a status written on the server shows on /orders/[id]/pickup within 3 s; network shows only localhost. Tests: codec round-trips Timestamp, GeoPoint, refs, bytes and nested arrays; where, orderBy and limit through clientQuery match FakeFirestore. /api/demo/firestore is 404 outside demo and refuses '_' collections.",
+          "brief": "Write src/lib/demo/shims/firebase-app.ts, firebase-auth.ts, firebase-firestore.ts and firebase-storage.ts; their aliases go live once they exist. Grep every named import of those packages in app/ and src/ (godview and shopfront too) and export each; unsupported ones throw when called. initializeApp, getAuth and getFirestore never throw without env. Firestore: collection, doc, query, where, orderBy, limit, getDoc(s), setDoc, updateDoc, addDoc, deleteDoc, writeBatch, onSnapshot (polls every 2.5 s while the tab is visible, emits only on change), serverTimestamp, Timestamp and the field values the repo uses. Every call posts to /api/demo/firestore. Route (404 unless isDemoMode): runs the op on getAdminDb(), which is the caller's world, through clientQuery.ts; no rules; refuses collections starting with '_'. codec.ts (pure): JSON encode/decode for Timestamp, GeoPoint, refs, bytes and serverTimestamp. Auth: currentUser and onAuthStateChanged from swoop_demo_session; signInWithCustomToken accepts 'demo:<uid>'; getIdToken returns 'demo:<uid>'; signOut; email/password sign-in rejects. Storage: ref and getDownloadURL; uploads reject (no caller)."
+        },
+        {
+          "id": "SHELL",
+          "title": "Demo shell: no analytics or outside calls, and the DemoRoot mount",
+          "size": "S",
+          "files": [
+            "app/layout.tsx",
+            "src/components/demo/DemoRoot.tsx",
+            "src/lib/posthog/server.ts",
+            "instrumentation-client.ts",
+            "src/lib/server/rateLimit.ts",
+            "src/hooks/usePosthog.ts"
+          ],
+          "depends_on": [
+            "SWITCH"
+          ],
+          "acceptance": "In demo: AnalyticsConsent, AgentationDevTools and Vercel Speed Insights don't render; posthog-js never initialises; captureServerEvent is a no-op; checkRateLimit always allows; DemoRoot renders only in demo, as the first child of body. With demo off, the layout output is unchanged. No request to posthog, google-analytics, googletagmanager or vercel-insights on :3019. typecheck, lint and test green.",
+          "brief": "Make the demo quiet. app/layout.tsx: in demo, skip <AnalyticsConsent/> and <AgentationDevTools/>, and mount <DemoRoot/> as the first child of <body>, outside ClerkProvider (keep ClerkProvider as is: in demo the alias swaps it). DemoRoot.tsx: a 'use client' component that renders null unless isDemoMode() and until mounted; PERSIST and DEMOBAR fill it later, so keep it a small shell with one clear place for children. instrumentation-client.ts: never import or initialise posthog-js in demo. src/lib/posthog/server.ts: captureServerEvent and shutdownServerAnalytics do nothing in demo. src/hooks/usePosthog.ts: captures are no-ops in demo. src/lib/server/rateLimit.ts: checkRateLimit always allows in demo and writes nothing. Keep every change a module-level demo check; production paths unchanged."
+        },
+        {
+          "id": "HANDOFF",
+          "title": "Demo hand-off sheet instead of WhatsApp, phone and mail links",
+          "size": "S",
+          "files": [
+            "src/components/demo/DemoHandoffSheet.tsx",
+            "src/components/campus/detail/ContactButton.tsx",
+            "app/campus/lost-found/page.tsx",
+            "app/campus/blood/page.tsx",
+            "app/contact/page.tsx"
+          ],
+          "depends_on": [
+            "SWITCH"
+          ],
+          "acceptance": "In demo, 'Continue on WhatsApp' after an approved ask, a revealed lost-found contact, the blood WhatsApp link and the support links on /contact each open a sheet naming the sample person and the channel; no wa.me, tel:, mailto: or instagram navigation happens. With demo off the links are unchanged. typecheck and lint pass; browser check at the end of wave 2.",
+          "brief": "External hand-offs must never leave the demo. DemoHandoffSheet.tsx: a bottom sheet (design system v1, z-[70] like the other sheets) with title 'In the real app' and a line such as 'This opens WhatsApp with Farhan.', the channel icon, the number or handle shown greyed, and an OK button. Export useDemoHandoff() returning {open(channel, name, target), sheet}. In demo only (module-level isDemoMode check), wire it into: ContactButton.tsx (the wa.me link after approval, around lines 90-94), app/campus/lost-found/page.tsx (contactHref, around line 369), app/campus/blood/page.tsx (whatsappHref, around line 539) and app/contact/page.tsx (WhatsApp, phone, mail and Instagram links, around lines 39-41). Keep the real anchors for demo off: same markup, the href swapped for an onClick in demo. Channels: whatsapp, phone, email, instagram. Copy plain, lines under 10 words."
+        }
+      ]
+    },
+    {
+      "wave": 3,
+      "packages": [
+        {
+          "id": "GATE",
+          "title": "Demo proxy: visitor cookie, first visit, sign-in guard, areas kept out",
+          "size": "M",
+          "files": [
+            "proxy.ts"
+          ],
+          "depends_on": [
+            "SWITCH",
+            "CLERKSRV",
+            "WORLD"
+          ],
+          "acceptance": "curl on :3019: a page request with no visitor cookie sets swoop_demo_visitor (httpOnly, SameSite=Lax, 1 year) and redirects to /demo?next=<path>; /api requests get the cookie, no redirect. Signed out, /orders?x=1 redirects to /login?redirect_url=%2Forders%3Fx%3D1 and /marketplace to /login?redirect_url=%2Fmarketplace. Signed in, /login?redirect_url=%2Fhousing goes to /housing. /godview and /shopfront/dashboard go to /demo/not-included?area=godview|shopfront. /demo is public. Cross-site API writes still get 403. Plain fixture mode keeps today's let-through; demo off, the Clerk path is unchanged.",
+          "brief": "Edit proxy.ts only. Today fixture mode skips clerkMiddleware (around line 127). Change it so plain fixture mode keeps that, but demo mode runs: (1) mint swoop_demo_visitor (random id) when missing, on the forwarded request headers and on the response, so the first request already has its world; (2) for page requests (not /api, not static, not /demo) that arrived with no visitor cookie, redirect to /demo?next=<path+search>; (3) /godview* and /shopfront* redirect to /demo/not-included?area=godview or shopfront; (4) everything else goes through the existing clerkProxy. In demo, clerkMiddleware and auth come from the server stand-in (src/lib/demo/shims/clerk-server.ts), so the existing login bounce and redirect_url logic run on the demo session unchanged. Add '/demo(.*)' to the public routes only in demo. Keep rejectCrossOriginApiWrite first in every branch. Make sure the cookie set in step 1 also reaches responses from clerkProxy and redirects."
+        },
+        {
+          "id": "PERSIST",
+          "title": "Visitor changes kept in the browser, and Reset demo",
+          "size": "L",
+          "files": [
+            "src/lib/demo/server/overlay.ts",
+            "app/api/demo/state/route.ts",
+            "app/api/demo/reset/route.ts",
+            "src/lib/demo/client/persist.ts",
+            "src/lib/demo/client/DemoPersistence.tsx",
+            "src/lib/demo/client/reset.ts",
+            "src/components/demo/DemoRoot.tsx",
+            "tests/demo/overlay.test.ts"
+          ],
+          "depends_on": [
+            "WORLD",
+            "FIREBASE",
+            "CLERKSRV",
+            "SHELL"
+          ],
+          "acceptance": "As Sana, save a listing, send a contact request and join a game; stop and restart npm run demo, reload: all three are back, restored from IndexedDB, after one automatic reload. resetDemo(): seeded data again, signed out, IndexedDB and swoop-demo:* keys empty, college pick and blood number cleared, new visitor cookie, lands on /demo. A second browser profile never sees the first one's changes. overlay.test.ts round-trips docs, deletes and bucket files through export and import.",
+          "brief": "Keep each visitor's changes in their own browser. overlay.ts: exportChanges(world, sinceRev) returns {bootId, rev, docs: [{path, data|null}], files: [{name, base64, contentType}]} using src/lib/demo/codec.ts; importOverlay(world, overlay) writes them without logging them as new changes. GET /api/demo/state?since=&boot= returns changes, or {fresh:true} when boot differs. POST /api/demo/state imports a full overlay. POST /api/demo/reset drops the world, sets a new swoop_demo_visitor and clears the session and date cookies. persist.ts: IndexedDB store 'swoop-demo' merging change sets into one overlay. DemoPersistence.tsx: pull after every non-GET same-origin /api call (wrap fetch once) and every 15 s while visible; if the server says fresh and the browser has an overlay, post it and reload once. reset.ts: resetDemo() calls the route, deletes the IndexedDB store, removes localStorage keys swoop-demo:*, college-store, peasy_analytics_consent and the blood WhatsApp key (see app/campus/blood/page.tsx), clears sessionStorage, then location.assign('/demo'). DemoRoot.tsx: render <DemoPersistence/>. All routes 404 outside demo."
+        },
+        {
+          "id": "DATE",
+          "title": "Demo date and seasonal sample packs",
+          "size": "M",
+          "files": [
+            "src/lib/demo/season.ts",
+            "app/api/demo/date/route.ts",
+            "src/lib/campus/fixtures/seasonal.ts",
+            "src/lib/demo/server/seasonPack.ts",
+            "app/page.tsx",
+            "src/components/campus/HousingExperience.tsx",
+            "src/components/campus/MarketplaceExperience.tsx",
+            "src/components/campus/housing/HousingListingCard.tsx",
+            "app/api/housing/posts/route.ts",
+            "tests/demo/season.test.ts"
+          ],
+          "depends_on": [
+            "SWITCH",
+            "WORLD",
+            "SEED"
+          ],
+          "acceptance": "May: Home slot 'Moving out? Sell it as a bundle', the Market moving_out prompt, move-out bundles and summer sublets in the feeds, peak housing on. July: 'Set up your room for less', the set_up_room prompt, housing 'From students' on, room-wanted posts and new-student deals. Nov: 'Exams soon? Print your notes', no market prompt. Switching keeps the visitor's own posts and saves. season.test.ts maps each id to its instant and leaves real time alone with demo off.",
+          "brief": "The demo date moves only the season helpers (src/lib/campus/season.ts) and seasonal sample packs; other dates stay on the real clock. season.ts: demoInstant(id, now): nov = today if between 15 Oct and 30 Nov, else the next 10 Nov; may = the next 20 May; july = the next 10 Jul. useSeasonNow(): hydration-safe hook (server snapshot real now) returning the demo instant from swoop_demo_date in demo, else real now; setDemoDate(id) posts to the route then reloads. Route POST {date}: sets the cookie and calls applySeason(world, id). seasonal.ts: May pack (move-out bundles, summer sublets, cheap furniture) and July pack (room-wanted posts, new-student deals, set-up-room items), both campuses, ids starting 'season-', createdAt relative to real now, move-in and travel dates relative to the instant. seasonPack.ts: applySeason removes other packs' docs and seeds this one, idempotent. Use the hook at app/page.tsx:103, HousingExperience.tsx:36, MarketplaceExperience.tsx:230 and HousingListingCard.tsx:89; app/api/housing/posts/route.ts:139 reads the cookie. Real clock when demo is off."
+        },
+        {
+          "id": "PRINTPAY",
+          "title": "Simulated payment and order progress",
+          "size": "L",
+          "files": [
+            "src/lib/demo/shims/razorpay-server.ts",
+            "app/api/demo/razorpay/pay/route.ts",
+            "app/api/demo/orders/[id]/collect/route.ts",
+            "src/lib/demo/client/checkout.ts",
+            "src/components/demo/DemoPaySheet.tsx",
+            "src/lib/razorpay/loadRazorpay.ts",
+            "src/lib/demo/server/orderProgress.ts",
+            "tests/demo/razorpay-shim.test.ts"
+          ],
+          "depends_on": [
+            "WORLD",
+            "CLERKSRV",
+            "FIREBASE",
+            "SEED"
+          ],
+          "acceptance": "As Sana: upload a 3-page PDF at /upload, pick Main Block Prints, press Pay in the demo sheet: the visitor lands on /orders with the new order processing, then printing, then ready for pickup within about 60 s, and the pickup page updates live. payments/{id} ends fulfilled and razorpay_webhook_events has a processed entry. 'Payment fails' shows the failure toast and makes no order. The closed shop says it is closed. checkout.razorpay.com is never requested. The shim test checks order create, signature and payment fetch.",
+          "brief": "CheckoutButton and the real /api/razorpay/* and /api/orders/create routes stay unchanged; the demo stands in for Razorpay around them. razorpay-server.ts (the alias for the razorpay package): new Razorpay({key_id, key_secret}) with orders.create (stored in the world, id order_demo_*) and payments.fetch (captured, upi) plus whatever else the routes call. loadRazorpay.ts: in demo, install window.Razorpay from src/lib/demo/client/checkout.ts and resolve true without loading the script. checkout.ts: the stand-in class (open, on('payment.failed'), handler, modal.ondismiss) that shows DemoPaySheet. DemoPaySheet.tsx: 'Demo payment. No money moves.', amount via formatPrice, Pay, Payment fails, Cancel. POST /api/demo/razorpay/pay {order_id, fail?} acts as Razorpay's servers: marks the payment, signs order|payment with RAZORPAY_KEY_SECRET (the launcher's placeholder), sends a signed webhook to its own /api/razorpay/webhook with the visitor cookie, returns the handler fields. orderProgress.ts: tickOrders moves the visitor's orders processing to printing after 15 s and to printed after 45 s, with the timestamps the UI reads. Collect route sets collected."
+        },
+        {
+          "id": "LIFE",
+          "title": "Demo life: sample students answer",
+          "size": "M",
+          "files": [
+            "src/lib/demo/server/life.ts",
+            "tests/demo/life.test.ts"
+          ],
+          "depends_on": [
+            "WORLD",
+            "CLERKSRV",
+            "SEED"
+          ],
+          "acceptance": "As Sana, ask for Farhan's study lamp: within about 15 s it shows approved with the WhatsApp reveal and an inbox item. Post a listing: within about 60 s a sample student's ask arrives with an Update. Join a game: a sample player takes a seat within about 30 s. life.test.ts drives tickLife on a FakeFirestore with fake times. Everything goes through the existing contact-request and notify code, never fake UI.",
+          "brief": "Fill tickLife(world, nowMs) in src/lib/demo/server/life.ts (stub from WORLD; called on each world access, at most every 2 s). Make the other side of the sample world answer, using the existing server code paths (read src/lib/campus/notify.ts enqueue and the contact-request approve logic in app/api/contact-requests/[id]/route.ts; call the same helpers or write the same docs and notifications). Rules: a pending contact request whose seller is a sample user (not the visitor's signed-in uid) is approved 10 s after it was made; a new listing posted by the visitor's user gets one ask from a sample student of the same campus after 45 s; a game the visitor joined gets one sample player 20 s later while seats remain. Each action happens once (mark docs with demoLife fields). Never act on docs older than the world's creation. No timers: all work happens inside tickLife."
+        }
+      ]
+    },
+    {
+      "wave": 4,
+      "packages": [
+        {
+          "id": "ENTRY",
+          "title": "Demo start page and the not-in-demo page",
+          "size": "M",
+          "files": [
+            "app/demo/page.tsx",
+            "app/demo/not-included/page.tsx",
+            "src/components/layout/RootShell.tsx"
+          ],
+          "depends_on": [
+            "CLERKUI",
+            "DATE",
+            "PERSIST",
+            "GATE"
+          ],
+          "acceptance": "/demo at 375 and 1280 px: 'Sign in like a new student' opens /login at step 1 with no stored pick; each of the 4 persona cards lands on next (or /) with the right campus chip and 'Hey <name>'; 'Look around signed out' lands on / with 'Pick college'; the date chips switch and reload. /godview and /shopfront/dashboard show the not-included page with 'Back to Swoop' and no console errors. With demo off both pages 404. No navbar or dock on /demo pages.",
+          "brief": "Build the demo's front door. app/demo/page.tsx (client; notFound when demo is off): header 'Hey, this is the Swoop demo' and 'Sample students, shops and posts. Nothing is real.' Three choices: (1) 'Sign in like a new student': signOut, clear the college-store pick (src/lib/stores/collegeStore.ts), go to /login; (2) 'Jump in as a sample student': a card per DEMO_PERSONAS entry (name, campus label, one-line state) calling signInAs(id, next ?? '/') from src/lib/demo/client/session.ts; (3) 'Look around signed out': signOut then /. Date chips (Nov, May, July) via setDemoDate from src/lib/demo/season.ts, showing the current one. Footer: 'Your changes stay in this browser. Reset any time.' app/demo/not-included/page.tsx: reads ?area=godview|shopfront, says plainly that the admin console or shop dashboard isn't part of the demo, with a 'Back to Swoop' link. RootShell.tsx: treat /demo paths like auth paths (no navbar, no dock). Design system v1, sentence case, lines under 10 words."
+        },
+        {
+          "id": "DEMOBAR",
+          "title": "Demo bar: student, demo date and Reset demo",
+          "size": "M",
+          "files": [
+            "src/components/demo/DemoBar.tsx",
+            "src/components/demo/PersonaPicker.tsx",
+            "src/components/demo/DemoDatePicker.tsx",
+            "src/components/demo/DemoRoot.tsx",
+            "app/globals.css",
+            "src/components/campus/MarketplaceExperience.tsx",
+            "src/components/campus/market/MarketSeeAll.tsx"
+          ],
+          "depends_on": [
+            "PERSIST",
+            "CLERKUI",
+            "DATE"
+          ],
+          "acceptance": "375 px: a 36 px strip on every route, including /login, /demo and the pickup page, showing Demo, the student chip, the date chip and Reset; while scrolling it never covers the navbar, the Market, See all or Upload sticky headers, or the Dock. 1280 px: a fixed left panel outside the 428 px column, no overlap. Switching to Kabir reloads with 'KJU Airport Rd'. May shows the moving-out card on Home. Reset asks once and lands on /demo. Demo off: nothing renders. No horizontal scroll.",
+          "brief": "Build the always-visible demo bar and render it from DemoRoot.tsx (keep the existing DemoPersistence). Under 1024 px: a 36 px fixed strip at the very top (ink background) with a 'Demo' tag, the student chip ('Sana · KJU Main' or 'Signed out'; opens PersonaPicker), the date chip ('8 Nov', 'May', 'July'; opens DemoDatePicker) and 'Reset demo'. Set --demo-bar-h: 36px on :root in demo (0 otherwise; app/globals.css) and pad the body by it, so nothing sits under the bar. Change the sticky top-0 headers in MarketplaceExperience.tsx (line 244) and MarketSeeAll.tsx (line 262) to top: var(--demo-bar-h, 0px). From 1024 px: a fixed left panel outside the centred column with 'Swoop demo', 'Sample data. Nothing is real.', student rows, date chips, links to the main screens, and Reset demo; no top strip. PersonaPicker: DEMO_PERSONAS, 'Signed out', 'Try sign-in as a new student'; uses session.ts helpers (full reloads). DemoDatePicker uses setDemoDate. Reset asks 'Clear your changes and start over?' then resetDemo()."
+        },
+        {
+          "id": "SIGNIN",
+          "title": "Simulated sign-in on /login: mocked Google, skip in, email code",
+          "size": "M",
+          "files": [
+            "src/components/auth/useCollegeSignIn.ts",
+            "src/components/demo/auth/useDemoCollegeSignIn.ts",
+            "app/(auth)/login/page.tsx",
+            "src/components/auth/SignInStep.tsx",
+            "src/components/auth/EmailCodeForm.tsx"
+          ],
+          "depends_on": [
+            "CLERKUI",
+            "CLERKSRV",
+            "GATE"
+          ],
+          "acceptance": "At 375 and 1280 px in demo: /login, pick KJU, KJU Main, skip stay, Continue with Google opens the Demo chooser; Cancel returns the button to idle with no error; college account goes through 'Signing you in', /campus/verify, the course step, then Home greets Riya; personal account lands on 'That's not a KJU email'. 'Skip in as a sample student' signs in as Sana and goes to redirect_url. Email code shows 'Any 6 digits work' and any 6 digits sign in. Back walks ?step=. /login/preview still works. Demo off: the Clerk hook is unchanged.",
+          "brief": "Use the real /login screens with a demo sign-in. useCollegeSignIn.ts: rename the Clerk implementation in place and export useCollegeSignIn = isDemoMode() ? useDemoCollegeSignIn : useClerkCollegeSignIn (module level; same return type). useDemoCollegeSignIn.ts: google() opens openDemoAccountChooser({mode:'google'}) from src/components/demo/auth/DemoAccountChooser.tsx; null means cancelled (idle, no error); 'college' or 'personal' calls signInWithGoogle(kind, campusVerifyPath) from src/lib/demo/client/session.ts; a sample student calls signInAs. sendCode(email) succeeds; verifyCode(code) needs 6 digits, then POSTs /api/demo/session {emailCode:{email}} and goes to the verify path. Keep the hook's existing result shape (never throws). login/page.tsx and SignInStep.tsx: in demo, step 1 gets 'Just looking? Skip in as a sample student', which opens the chooser in students mode and signs in to redirect_url or /. EmailCodeForm.tsx: in demo show 'Demo: any 6 digits work' under the code field. Sentence case, plain copy."
+        },
+        {
+          "id": "VERIFYD",
+          "title": "/campus/verify in demo: add college email and approve ID card",
+          "size": "S",
+          "files": [
+            "app/campus/verify/page.tsx",
+            "src/components/campus/AddCollegeEmail.tsx"
+          ],
+          "depends_on": [
+            "CLERKUI",
+            "CLERKSRV"
+          ],
+          "acceptance": "As personal-account Riya: adding riya@kju.test with any 6-digit code gives approved, then the course step, then Home. The ID card route gives pending, then 'Approve my card (demo)' gives approved. As Meera: pending plus the approve button. 'Sign in with another account' signs out to /login. With demo off, the screens are unchanged. typecheck and lint pass.",
+          "brief": "The verify screen already works through the Clerk client stand-in (user.createEmailAddress accepts any 6 digits and PATCHes /api/demo/session). Add the demo touches. AddCollegeEmail.tsx: in demo, show 'Demo: any 6 digits work' under the code field, and after a successful attempt call the existing onboarding refresh so the step moves on. app/campus/verify/page.tsx: under the ID card pending state, in demo only, an 'Approve my card (demo)' button that POSTs /api/demo/session/card and refreshes the session; keep sign out through useClerk().signOut (shimmed). Check the paths: personal Riya (mismatch, add email, approved, course), ID card (upload, pending, approve), Meera (pending), and a signed-out visit (sent to /login). Copy plain, lines under 10 words."
+        },
+        {
+          "id": "PRINTUI",
+          "title": "Print screens on sample data: Home order, sample PDF, hand-over",
+          "size": "M",
+          "files": [
+            "app/page.tsx",
+            "app/upload/page.tsx",
+            "src/components/upload/FileDropzone.tsx",
+            "src/lib/demo/samplePdf.ts",
+            "app/orders/[id]/pickup/page.tsx"
+          ],
+          "depends_on": [
+            "PRINTPAY",
+            "FIREBASE",
+            "DATE"
+          ],
+          "acceptance": "As Sana in demo: Home shows the recent order and the 'Print ready for pickup' slot; View opens the pickup page in its ready state with art. /upload has 'Try a sample PDF', which loads a 4-page PDF into the previewer; the sticky header sits below the demo bar. The pickup page has 'Shop hands it over (demo)', which marks the order collected. Refresh keeps it; Reset removes it. Demo off: unchanged. typecheck and lint pass.",
+          "brief": "Make print browsable on sample data. app/page.tsx: Home's fixture branch (around lines 58-76) shows no orders; in demo read orders through ordersStore like production (the Firebase stand-in serves them), so the recent order card and the 'Print ready for pickup' slot appear; keep FIXTURE_SHOPS for shops. samplePdf.ts: makeSamplePdf() builds a 4-page A4 PDF of plain notes with pdf-lib (offline) and returns a File named 'sample-notes.pdf'. FileDropzone.tsx: in demo, a 'Try a sample PDF' button under the drop area that hands that File to the same handler as a dropped file. app/upload/page.tsx: sticky header (line 145) uses top: var(--demo-bar-h, 0px); pass the sample file through if needed. app/orders/[id]/pickup/page.tsx: in demo, on a ready order, a secondary button 'Shop hands it over (demo)' that POSTs /api/demo/orders/[id]/collect. Sentence case, plain copy."
+        },
+        {
+          "id": "APICHK",
+          "title": "Demo smoke script, the KADA-18 data checks and the API fixes",
+          "size": "L",
+          "files": [
+            "scripts/demo-smoke.mjs",
+            "package.json",
+            "app/api/contact-requests/route.ts",
+            "app/api/contact-requests/[id]/route.ts",
+            "src/lib/campus/serial.ts",
+            "app/api/campus/actions/route.ts",
+            "app/api/campus/notifications/route.ts",
+            "app/api/campus/games/route.ts",
+            "app/api/campus/games/[id]/route.ts",
+            "app/api/campus/lost-found/route.ts",
+            "app/api/campus/lost-found/[id]/route.ts",
+            "app/api/campus/blood/route.ts",
+            "app/api/campus/student-deals/route.ts",
+            "app/api/campus/verifications/route.ts",
+            "app/api/marketplace/listings/route.ts",
+            "app/api/marketplace/listings/[id]/route.ts",
+            "app/api/housing/posts/route.ts",
+            "app/api/housing/posts/[id]/route.ts",
+            "app/api/users/me/deletion-request/route.ts",
+            "app/api/internal/campus-maintenance/route.ts"
+          ],
+          "depends_on": [
+            "GATE",
+            "CLERKSRV",
+            "FIREBASE",
+            "PRINTPAY",
+            "DATE",
+            "LIFE"
+          ],
+          "acceptance": "node scripts/demo-smoke.mjs (npm run demo:smoke) exits 0 against a fresh npm run demo: every smoke route answers 200, the expected redirect or 404, with no Next error markers, signed out and as each persona; and the API checks pass: session and onboarding, market and housing create, edit and serial, save, share and report on v2 collections, contact create, list (seeded requests show) and approve, reserved post 409, wanted offer intent, notifications GET and PATCH, games join and Full, lost-found claim and redacted ID card, blood opt-in, deals by distance with 403 for Meera, ID-card upload, case-insensitive deletion confirm, campus-maintenance GET with the launcher's cron value.",
+          "brief": "Write scripts/demo-smoke.mjs (Node 22, fetch, no deps) and add demo:smoke to package.json. It takes a base URL (default http://localhost:3019), keeps its own cookie jar per persona (sign in with POST /api/demo/session), and runs: the page list (/, /demo, /login, /marketplace, the four /marketplace/all/<id> pages and /marketplace/all/x as 404, /marketplace/new, /housing, /housing/new, one detail of each, /girls-space, /campus/activity, /campus/deals, /campus/lost-found, /campus/blood, /campus/games, /campus/verify, /upload, /orders, /shops, /profile, /settings/privacy, /about, /contact, /privacy, /terms; /godview to not-included); then the API checks named in the acceptance (KADA-18 ids SEAMROUTES, CONTACT, NTF, GAMES, LOST, MACT, CRON, COPY). Print one PASS or FAIL line each and exit 1 on any FAIL. Then run it and fix every failing API in the listed route files (known: contact approve in contact-requests/[id] read old collections; fixture GET missed seeded requests). Never weaken a check to pass; note anything outside your files."
+        }
+      ]
+    },
+    {
+      "wave": 5,
+      "packages": [
+        {
+          "id": "HOMECHK",
+          "title": "KADA-18 checks in demo: Home, header, gate, dock and profile",
+          "size": "M",
+          "files": [
+            "app/page.tsx",
+            "src/components/AnnouncementCarousel.tsx",
+            "src/components/home/UtilityRow.tsx",
+            "src/components/layout/SwoopNavbar.tsx",
+            "src/components/layout/Dock.tsx",
+            "src/components/layout/RootShell.tsx",
+            "src/components/campus/CampusGate.tsx",
+            "app/profile/page.tsx",
+            "src/hooks/useCampusSession.ts"
+          ],
+          "depends_on": [
+            "ENTRY",
+            "DEMOBAR",
+            "SIGNIN",
+            "VERIFYD",
+            "PRINTUI",
+            "APICHK"
+          ],
+          "acceptance": "In demo at 375 and 1280 px: HOME (exams card first in Nov, moving-out in May, set-up-room in July; 4 utility tiles link; 'Hey <name>'; no images; no caps), DEAD (/ and /login load), HDR (chip reads KJU Main for Sana and KJU Airport Rd for Kabir; one session call per load; gate links carry next; Home tab active on the 4 utilities) and the gate (signed out to sign-in, Meera to pending, Ananya into Girls' space) all pass; profile shows name and kju.test email and signs out. Before and after screenshots taken.",
+          "brief": "Run the skipped KADA-18 browser checks for Home and the app chrome in demo (npm run demo, :3019) at 375 and 1280 px, then fix what fails, editing only your files. Switch students and dates with the demo bar. Checks: HOME on / for Sana, Kabir, Ananya, Meera and signed out, on Nov, May and July (seasonal slot, greeting, 4 utility tiles and their links, recent order, campus shops, no images, no all-caps); DEAD (/ and /login load clean); HDR (header chip label per campus, exactly one /api/campus/session call per load, gate links carry ?next=, Home tab active on the utility pages); CampusGate per persona; the navbar avatar menu, /profile and sign out. Check that no sticky or fixed element hides under the demo bar or the Dock. If a fix belongs to a file you don't own, don't edit it: describe it in your self-review with the file and line. List each check id with pass or fail and the fixing change."
+        },
+        {
+          "id": "AUTHCHK",
+          "title": "KADA-18 checks in demo: sign-in, verify and session",
+          "size": "M",
+          "files": [
+            "app/(auth)/login/page.tsx",
+            "app/(auth)/sso-callback/page.tsx",
+            "src/components/auth/useCollegeSignIn.ts",
+            "src/components/demo/auth/useDemoCollegeSignIn.ts",
+            "src/components/auth/CollegePicker.tsx",
+            "src/components/auth/StayStep.tsx",
+            "src/components/auth/SignInStep.tsx",
+            "src/components/auth/EmailCodeForm.tsx",
+            "src/components/auth/AuthShell.tsx",
+            "app/campus/verify/page.tsx",
+            "src/components/campus/CourseStep.tsx",
+            "src/components/campus/AddCollegeEmail.tsx",
+            "src/components/campus/IdCardUpload.tsx",
+            "src/lib/demo/shims/clerk-client.tsx",
+            "src/lib/demo/shims/clerk-server.ts",
+            "src/lib/demo/server/identity.ts",
+            "src/lib/demo/client/session.ts",
+            "src/components/demo/auth/DemoAccountChooser.tsx",
+            "src/components/demo/DemoUserMenu.tsx"
+          ],
+          "depends_on": [
+            "ENTRY",
+            "DEMOBAR",
+            "SIGNIN",
+            "VERIFYD",
+            "PRINTUI",
+            "APICHK"
+          ],
+          "acceptance": "In demo at 375 and 1280 px: LOGIN ('KJC' finds KJU, KJU shows 2 campuses, stay is skippable, every step and Back), VERIFY (new user, unverified and pending each show the right step; semester list follows programme), the simulated SIGNIN and MEM round trips (college Google auto-approves, personal Google mismatches, email code, add college email, ID card approve), the guarded redirect and return for /orders, /upload, /campus/activity and /marketplace/new, the /login bounce when signed in, and sign out from navbar, profile and verify all pass. Zero requests to clerk hosts.",
+          "brief": "Run the skipped KADA-18 sign-in checks in demo (npm run demo, :3019) at 375 and 1280 px, then fix what fails in your files. Checks: LOGIN on /login and /login/preview (college search with 'KJC', 2 KJU campuses, stay skippable, ?step= and browser Back); the mocked Google chooser (Demo chip, Cancel, college account to verify, course step, Home greets Riya; personal account to 'That's not a KJU email'); email code with the demo hint; VERIFY for new-user, the personal account (add riya@kju.test), the ID card path with 'Approve my card (demo)', and Meera pending; semester options follow the programme; signed out, /orders, /upload, /campus/activity and /marketplace/new go to /login and come back after sign-in; /login while signed in bounces to redirect_url; sign out from the navbar menu, /profile and /campus/verify. Real Clerk round trips stay skipped (live service). Don't edit files you don't own: describe the fix with file and line. List each check id with pass or fail and the fixing change."
+        },
+        {
+          "id": "MARKETCHK",
+          "title": "KADA-18 checks in demo: Market feed, See all, details, forms and kits",
+          "size": "L",
+          "files": [
+            "src/components/campus/MarketplaceExperience.tsx",
+            "src/components/campus/market/ListingCard.tsx",
+            "src/components/campus/market/BundleCard.tsx",
+            "src/components/campus/market/PassRow.tsx",
+            "src/components/campus/market/WantedCard.tsx",
+            "src/components/campus/market/AskCard.tsx",
+            "src/components/campus/market/SeasonPrompt.tsx",
+            "src/components/campus/market/MarketSeeAll.tsx",
+            "src/components/campus/market/PriceBits.tsx",
+            "src/components/campus/market/AlsoChips.tsx",
+            "src/components/campus/market/FurnishTiles.tsx",
+            "src/components/campus/MarketDetail.tsx",
+            "src/components/campus/market-form/registry.tsx",
+            "src/components/campus/market-form/payload.ts",
+            "src/components/campus/market-form/TripFields.tsx",
+            "src/components/campus/market-form/TicketFields.tsx",
+            "src/components/campus/market-form/PassFields.tsx",
+            "src/components/campus/market-form/VehicleFields.tsx",
+            "src/components/campus/market-form/BundleItemsField.tsx",
+            "src/components/campus/detail/ContactButton.tsx",
+            "src/components/campus/detail/SaveShare.tsx",
+            "src/components/campus/detail/ReportSheet.tsx",
+            "src/components/campus/detail/Gallery.tsx",
+            "src/components/campus/fields/PhotoField.tsx",
+            "src/components/campus/fields/PriceInput.tsx",
+            "src/components/campus/fields/PriceTermsChips.tsx",
+            "src/components/campus/fields/GenderChips.tsx",
+            "src/hooks/useMarketFeed.ts"
+          ],
+          "depends_on": [
+            "ENTRY",
+            "DEMOBAR",
+            "SIGNIN",
+            "VERIFYD",
+            "PRINTUI",
+            "APICHK"
+          ],
+          "acceptance": "In demo at 375 and 1280 px: MFEED (sections in order with See all; the four See-all pages; /marketplace/all/x 404; 'cycle under 12k', 'mattress near clg', ask on empty search; /girls-space/marketplace mirror as Ananya), MFORM1 and MFORM2 (every kind; 1.5k preview, distance, bundle rows, ?kind=wanted&q=cycle prefill, fair price, ticket above face value blocked, cycle hides plate/RC/insurance, posts land in the right section), MDETAIL (one per kind, own and others'; reserved disables the buyer action; pay-on-pickup line), market SEAMROUTES and CONTACT, the May and July season prompts, and MKIT and CPARTS on /dev/market-kit and /dev/parts pass.",
+          "brief": "Run the skipped KADA-18 Market checks in demo (npm run demo, :3019) at 375 and 1280 px, mostly as Sana, then fix what fails in your files. Checks: MFEED on /marketplace and /marketplace/all/{clearing-out, seats, near-you, wanted} (x is a 404), the searches 'cycle under 12k' and 'mattress near clg', ask on an empty search, /girls-space/marketplace as Ananya; MFORM1 and MFORM2 on /marketplace/new for all 8 kinds, including ?kind=wanted&q=cycle; MDETAIL on one detail per kind (seat, cab split, ticket, pass, vehicle, bundle, wanted, item) as owner and as another student; save, share, report and ask (the sample seller approves in about 10 s; the WhatsApp step opens the demo hand-off sheet); a reserved post refuses a new ask; a wanted post records an offer; the May and July season prompts; MKIT on /dev/market-kit and CPARTS on /dev/parts. Housing also uses detail/* and fields/*: keep its use working. Don't edit files you don't own: describe the fix with file and line. List each check id with pass or fail and the fixing change."
+        },
+        {
+          "id": "HOUSINGCHK",
+          "title": "KADA-18 checks in demo: Housing, Girls' space, activity and My posts",
+          "size": "L",
+          "files": [
+            "src/components/campus/HousingExperience.tsx",
+            "src/components/campus/housing/HousingListingCard.tsx",
+            "src/components/campus/housing/HousingFilters.tsx",
+            "src/components/campus/housing/HousingDetail.tsx",
+            "src/components/campus/housing/HousingPostForm.tsx",
+            "src/components/campus/housing/FormFields.tsx",
+            "src/components/campus/housing/HousingMyPosts.tsx",
+            "src/components/campus/market/MarketMyPosts.tsx",
+            "src/hooks/useHousingFeed.ts",
+            "app/girls-space/page.tsx",
+            "app/campus/activity/page.tsx"
+          ],
+          "depends_on": [
+            "ENTRY",
+            "DEMOBAR",
+            "SIGNIN",
+            "VERIFYD",
+            "PRINTUI",
+            "APICHK"
+          ],
+          "acceptance": "In demo at 375 and 1280 px: HFEED (1.8 km post hidden at 1 km and shown at 2 km; 'under 9k', 'kjc', 'Kristu', 'Kothnur'; ask on empty; /girls-space/housing girls only), HFORM (blocked without move-in, who can stay or rules; agent needs brokerage; WhatsApp paste fills fields; ?type=roommate&area=Kothanur prefills; post shows in feed), HDETAIL (reserved, price-dropped, agent and owner nudge render; reserve, lower rent and beds persist after reload), HCARD on /dev/housing-kit, MYPOSTS ('Still available?' on the 4-day-old post only; Updates list), housing SEAMROUTES, Girls' space for Ananya with Sana gated, and 'From students' off in Nov, on in May and July all pass.",
+          "brief": "Run the skipped KADA-18 Housing and activity checks in demo (npm run demo, :3019) at 375 and 1280 px, then fix what fails in your files. Checks: HFEED on /housing (distance ring: the 1.8 km post hidden at 1 km, shown at 2 km; searches 'under 9k', 'kjc', 'Kristu', 'Kothnur'; ask on an empty search) and /girls-space/housing (girls only, as Ananya); HFORM on /housing/new (required move-in, who can stay and rules; agent needs brokerage; WhatsApp paste; ?type=roommate&area=Kothanur prefill; the post lands in the feed); HDETAIL on the reserved, price-dropped, agent and owner-nudge posts (reserve, lower rent and beds persist after reload); HCARD on /dev/housing-kit; MYPOSTS on /campus/activity?tab=posts ('Still available?' on the 4-day-old post, not the 1-day-old; Updates); seller asks with Approve and Decline on /campus/activity; save, share and report on housing; Girls' space (Ananya in, Sana gated); the 'From students' default by date. Don't edit src/components/campus/detail/* or fields/* (MARKETCHK owns them) or other files you don't own: describe the fix with file and line. List each check id with pass or fail."
+        },
+        {
+          "id": "UTILCHK",
+          "title": "KADA-18 checks in demo: deals, lost and found, blood, games, privacy",
+          "size": "M",
+          "files": [
+            "app/campus/deals/page.tsx",
+            "app/campus/lost-found/page.tsx",
+            "app/campus/blood/page.tsx",
+            "app/campus/games/page.tsx",
+            "app/settings/privacy/page.tsx",
+            "app/contact/page.tsx"
+          ],
+          "depends_on": [
+            "ENTRY",
+            "DEMOBAR",
+            "SIGNIN",
+            "VERIFYD",
+            "PRINTUI",
+            "APICHK"
+          ],
+          "acceptance": "In demo at 375 and 1280 px: DEAL (5 deals by distance, the counter sheet; Meera gets the gate and the API 403), LOST (4 posts, ID card details redacted, claim sent and approved, report), BLOOD (opt in, the B+ and O- requests, post a request and it shows; a matching donor gets an Update; Meera gated), GAMES (4 games; join drops the count, Full shows, leave frees a seat, host sheet) and COPY (/settings/privacy confirm is case-insensitive, demo deletes nothing real) all pass, and every hand-off opens the demo sheet.",
+          "brief": "Run the skipped KADA-18 utility checks in demo (npm run demo, :3019) at 375 and 1280 px, then fix what fails in your files. Checks: DEAL on /campus/deals as Sana (5 deals sorted by distance, the counter sheet) and as Meera (the gate, and the API's 403 handled without a crash); LOST on /campus/lost-found (4 posts, an ID card post shows no ID details to others, claim sent, then approved by the poster as another student, report); BLOOD on /campus/blood (opt in, the B+ and O- requests, post a request and see it, a matching donor persona gets an Update, Meera gated); GAMES on /campus/games (4 games: join drops the count, a full game shows Full, leave frees a seat, the host sheet); COPY on /settings/privacy (the confirm phrase in any case works; in demo it only records the request); /contact support links open the demo hand-off sheet. Don't edit files you don't own: describe the fix with file and line. List each check id with pass or fail and the fixing change."
+        },
+        {
+          "id": "PRINTCHK",
+          "title": "KADA-18 checks in demo: print flow, orders, pickup art and campus shops",
+          "size": "M",
+          "files": [
+            "app/upload/page.tsx",
+            "app/orders/page.tsx",
+            "app/orders/[id]/pickup/page.tsx",
+            "app/shops/page.tsx",
+            "app/shops/[shopId]/page.tsx",
+            "src/components/upload/CheckoutButton.tsx",
+            "src/components/upload/FileDropzone.tsx",
+            "src/components/swoop/illustrations.tsx",
+            "src/components/demo/DemoPaySheet.tsx",
+            "src/lib/demo/client/checkout.ts",
+            "src/lib/demo/shims/razorpay-server.ts",
+            "src/lib/demo/server/orderProgress.ts",
+            "src/lib/demo/shims/firebase-firestore.ts",
+            "src/lib/demo/server/clientQuery.ts",
+            "src/lib/stores/ordersStore.ts",
+            "src/lib/stores/shopsStore.ts"
+          ],
+          "depends_on": [
+            "ENTRY",
+            "DEMOBAR",
+            "SIGNIN",
+            "VERIFYD",
+            "PRINTUI",
+            "APICHK"
+          ],
+          "acceptance": "In demo at 375 and 1280 px: PRINTCAMPUS (/upload lists KJU Main shops for Sana and Airport Road shops for Kabir), the full print flow (sample PDF and an images job, settings change the price, demo pay, order goes processing, printing, ready, then collected; payment failure; closed shop), /orders groups Today and Earlier, /shops and /shops/shop-main-block show pricing and Upload, and ART (PickupWaitArt on a ready order) pass. No request to checkout.razorpay.com, /firebasestorage or any firebase host.",
+          "brief": "Run the skipped KADA-18 print checks and the demo print flow (npm run demo, :3019) at 375 and 1280 px, then fix what fails in your files. Checks: PRINTCAMPUS on /upload (Sana sees KJU Main shops, Kabir sees Airport Road shops, the closed shop is marked); the flow: 'Try a sample PDF', change copies and colour (price updates), pick a shop, Pay in the demo sheet, land on /orders, watch processing, printing and ready (about 60 s), then 'Shop hands it over (demo)'; 'Payment fails' path; an images job; /orders Today and Earlier groups; /shops and /shops/shop-main-block pricing and Upload; ART: PickupWaitArt on the ready pickup page; live updates on the pickup page without reload. Watch the network: only localhost. Home's order card is HOMECHK's file: report Home issues, don't edit app/page.tsx. Don't edit files you don't own: describe the fix with file and line. List each check id with pass or fail and the fixing change."
+        },
+        {
+          "id": "DEMOCHK",
+          "title": "Demo checks end to end: persistence, reset, isolation, dates and the bar",
+          "size": "M",
+          "files": [
+            "src/components/demo/DemoBar.tsx",
+            "src/components/demo/PersonaPicker.tsx",
+            "src/components/demo/DemoDatePicker.tsx",
+            "src/components/demo/DemoRoot.tsx",
+            "src/components/demo/DemoHandoffSheet.tsx",
+            "src/lib/demo/client/persist.ts",
+            "src/lib/demo/client/DemoPersistence.tsx",
+            "src/lib/demo/client/reset.ts",
+            "src/lib/demo/server/overlay.ts",
+            "src/lib/demo/server/world.ts",
+            "src/lib/demo/server/seasonPack.ts",
+            "src/lib/demo/server/life.ts",
+            "src/lib/demo/season.ts",
+            "src/lib/campus/fixtures/seasonal.ts",
+            "app/api/demo/state/route.ts",
+            "app/api/demo/reset/route.ts",
+            "app/api/demo/date/route.ts",
+            "app/demo/page.tsx",
+            "app/demo/not-included/page.tsx",
+            "app/globals.css",
+            "scripts/demo.mjs",
+            "scripts/demo-smoke.mjs"
+          ],
+          "depends_on": [
+            "ENTRY",
+            "DEMOBAR",
+            "SIGNIN",
+            "VERIFYD",
+            "PRINTUI",
+            "APICHK"
+          ],
+          "acceptance": "With every .env* moved aside: npm run demo starts on :3019 and the first visit lands on /demo. Two browser profiles never see each other's posts. Changes (a post with a photo, a save, an ask, a print order, a blood opt-in, a game join) survive a server restart and a reload; Reset clears them all, signs out and lands on /demo. Date switching shows the seasonal screens and keeps own posts. The demo bar sits on every smoke route at 375 and 1280 px without hiding app UI. Demo life answers. npm run demo:smoke passes. Zero requests to any non-localhost host.",
+          "brief": "Check the demo itself, end to end, in a real browser at 375 and 1280 px, and fix what fails in your files. 1) With .env* files moved aside, npm run demo starts and a first visit lands on /demo. 2) Isolation: two browser profiles post and save; neither sees the other's changes. 3) Persistence: as Sana, post a listing with a photo, save one, ask on one, place a print order, opt in to blood, join a game; restart npm run demo and reload: everything is back after one automatic reload. 4) Reset demo: all of it gone, signed out, college pick cleared, on /demo. 5) Dates: Nov, May and July show their seasonal screens; own posts stay. 6) The demo bar on every route of the smoke list: never covers app UI, the 1280 px panel sits outside the column. 7) Demo life: an ask is approved, a sample ask arrives, a seat fills. 8) npm run demo:smoke passes. 9) Network: only localhost. Don't edit files you don't own: describe the fix with file and line. List each step with pass or fail and the fixing change."
+        }
+      ]
+    }
+  ]
+}
