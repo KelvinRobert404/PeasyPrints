@@ -71,8 +71,26 @@ function CampusVerify() {
 
   useHideDock(firstLoad || needs !== null || Boolean(redirectTo));
 
+  // The shared session store (navbar, Home) refetches after each save, so the
+  // page we go to next never shows the old "Verify" state.
+  const syncing = useRef<Promise<void> | null>(null);
+  const onSaved = useCallback(
+    (next: CampusSession) => {
+      setSaved(next);
+      syncing.current = refresh();
+    },
+    [refresh]
+  );
+
   useEffect(() => {
-    if (redirectTo) router.replace(redirectTo);
+    if (!redirectTo) return;
+    let live = true;
+    void (syncing.current ?? Promise.resolve()).then(() => {
+      if (live) router.replace(redirectTo);
+    });
+    return () => {
+      live = false;
+    };
   }, [redirectTo, router]);
 
   const reload = useCallback(async () => {
@@ -115,11 +133,11 @@ function CampusVerify() {
       <PageHeader title={campusLabel ?? 'Swoop'} kicker={needs ? 'Verify your account' : 'Your account'} />
       <main className="flex flex-col gap-3 px-3 pt-2">
         {needs === 'college' ? (
-          <CollegeStep onSaved={setSaved} />
+          <CollegeStep onSaved={onSaved} />
         ) : needs === 'verify' ? (
-          <VerifyStep session={session} collegeCode={collegeCode} onSaved={setSaved} reload={reload} checking={loading} />
+          <VerifyStep session={session} collegeCode={collegeCode} onSaved={onSaved} reload={reload} checking={loading} />
         ) : needs === 'course' ? (
-          <CourseStep initial={membership?.course} onSubmit={(course) => saveCourse(course, setSaved)} />
+          <CourseStep initial={membership?.course} onSubmit={(course) => saveCourse(course, onSaved)} />
         ) : !session.verifiedStudent || !membership ? (
           // The session route falls back to this when the lookup fails.
           <EmptyState

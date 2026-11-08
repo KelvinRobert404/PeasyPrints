@@ -13,8 +13,9 @@ import {
   LogOutIcon,
   type IconProps,
 } from '@/components/swoop/icons';
-import { IconTile, swButton } from '@/components/swoop/primitives';
+import { IconTile, Tag, swButton } from '@/components/swoop/primitives';
 import { useCampusSession } from '@/hooks/useCampusSession';
+import { DEMO_EMAIL_DOMAIN } from '@/lib/demo/contract';
 import { isDemoMode } from '@/lib/demo/mode';
 import type { CampusSession, VerificationStatus } from '@/types/campus';
 import { cn } from '@/lib/utils/cn';
@@ -287,7 +288,7 @@ export function AddCollegeEmailForm({
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
-            placeholder="you@college.edu"
+            placeholder={DEMO ? `you@${DEMO_EMAIL_DOMAIN}` : 'you@college.edu'}
             value={email}
             disabled={busy}
             aria-invalid={error ? true : undefined}
@@ -338,7 +339,12 @@ export function AddCollegeEmailForm({
             autoFocus
             label="6-digit code from your college email"
           />
-          {codeHint ? <p className="text-[11px] font-semibold text-slate">{codeHint}</p> : null}
+          {codeHint ? (
+            <p className="flex items-center gap-1.5 text-[11.5px] text-slate">
+              {DEMO ? <Tag tone="royal">Demo</Tag> : null}
+              {codeHint}
+            </p>
+          ) : null}
           {error ? (
             <p role="alert" className="text-[11.5px] font-semibold text-market">
               {error}
@@ -464,7 +470,7 @@ export function AddCollegeEmail({
       collegeCode={collegeCode}
       onSendCode={sendCode}
       onVerifyCode={verifyCode}
-      codeHint={DEMO ? 'Demo: any 6 digits work' : undefined}
+      codeHint={DEMO ? 'Any 6 digits work. No email is sent.' : undefined}
     />
   );
 }

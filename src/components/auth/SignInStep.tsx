@@ -7,6 +7,11 @@ import { listColleges } from '@/lib/campus/catalog';
 import { GoogleMark } from '@/components/auth/GoogleMark';
 import { EmailCodeForm } from '@/components/auth/EmailCodeForm';
 import type { AuthResult, EmailCodeHandlers } from '@/components/auth/useCollegeSignIn';
+import { DEMO_EMAIL_DOMAIN } from '@/lib/demo/contract';
+import { isDemoMode } from '@/lib/demo/mode';
+
+/** The demo's sample college email domain, shown in the email placeholder. */
+const DEMO_DOMAIN = isDemoMode() ? DEMO_EMAIL_DOMAIN : undefined;
 
 type View = 'choose' | 'email';
 
@@ -42,7 +47,7 @@ export function SignInStep({
 
   const college = useMemo(() => listColleges().find((c) => c.code === collegeCode) ?? null, [collegeCode]);
   const label = college?.code ?? collegeCode;
-  const domain = college?.emailDomains[0];
+  const domain = college?.emailDomains[0] ?? (college?.id === 'kju' ? DEMO_DOMAIN : undefined);
   const placeholder = domain ? `you@${domain}` : 'Your college email';
 
   const continueWithGoogle = async () => {
