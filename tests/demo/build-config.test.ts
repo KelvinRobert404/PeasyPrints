@@ -96,7 +96,7 @@ test('flag on in dev: build folder, origins, CSP and rewrites', async () => {
   assert.ok(config.allowedDevOrigins.includes('localhost:3019'));
   const headers = await config.headers();
   const csp = headers[0].headers.find((h: { key: string }) => h.key === 'Content-Security-Policy').value as string;
-  assert.match(csp, /connect-src 'self'(;|$)/);
+  assert.match(csp, /connect-src 'self' blob:(;|$)/);
   assert.doesNotMatch(csp, /https?:/);
   assert.deepEqual(await config.rewrites(), [{ source: '/keep', destination: '/kept' }]);
 });

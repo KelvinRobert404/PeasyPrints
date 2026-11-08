@@ -111,7 +111,7 @@ function demoSecurityHeaders() {
     "style-src 'self' 'unsafe-inline'",
     // Dev only: React and webpack need eval() for debugging.
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-    "connect-src 'self'",
+    "connect-src 'self' blob:", // pdf.js reads the picked file through a blob: URL
     "frame-src 'self'",
     "worker-src 'self' blob:",
     "manifest-src 'self'",
