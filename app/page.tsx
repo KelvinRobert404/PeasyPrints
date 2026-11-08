@@ -16,6 +16,7 @@ import { useDockSlot } from '@/lib/stores/dockStore';
 import { FIXTURE_SHOPS } from '@/lib/campus/fixtures/shops';
 import { isFixtureMode } from '@/lib/firebase/fixtureMode';
 import { homeSeasonalSlot } from '@/lib/campus/season';
+import { useSeasonNow } from '@/lib/demo/season';
 import { Chip, IconTile, ListRow, SectionHeader, ServiceTile, SmallTile, swButton } from '@/components/swoop/primitives';
 import {
   GirlsSpaceIcon,
@@ -100,7 +101,9 @@ export default function HomePage() {
   );
 
   // The season's card leads the carousel (exams, moving out, room set-up, next sem).
-  const seasonal = useMemo(() => homeSeasonalSlot(Date.now()), []);
+  // Real now, or the demo date in demo mode.
+  const seasonNow = useSeasonNow();
+  const seasonal = useMemo(() => homeSeasonalSlot(seasonNow), [seasonNow]);
 
   // Shops on the student's campus (all shops when the campus isn't known), open first.
   // shop.collegeId holds a catalog campus id.

@@ -24,6 +24,7 @@ import {
 } from '@/lib/campus/market';
 import { groupMarketFeed, isFeedVisible, type MarketFeed } from '@/lib/campus/marketFeed';
 import { seasonalPrompt } from '@/lib/campus/season';
+import { useSeasonNow } from '@/lib/demo/season';
 import { isEmptyQuery, matchItem, parseQuery, type ParsedQuery } from '@/lib/search/campusSearch';
 import { useDockSlot } from '@/lib/stores/dockStore';
 import { cn } from '@/lib/utils/cn';
@@ -171,6 +172,8 @@ function MarketHome({ audience }: { audience: CampusAudience }) {
   const searchParams = useSearchParams();
   const linkFilter = useMemo(() => readLinkFilter(searchParams ? new URLSearchParams(searchParams.toString()) : null), [searchParams]);
   const { items, campus: apiCampus, status, error, now, feed, savedDrops, reload, toggleSave, askWanted } = useMarketFeed(audience);
+  // The season prompt reads the demo date in demo mode; the feed stays on real time.
+  const seasonNow = useSeasonNow();
   const current = useCurrentCampus();
   const { label, code } = useMarketCampus(apiCampus);
   const paths = marketPaths(audience);
@@ -227,7 +230,7 @@ function MarketHome({ audience }: { audience: CampusAudience }) {
   };
 
   const askQ = searching ? deferredQuery.trim() : linkFilter.furnish && linkFilter.furnish !== 'all' ? linkFilterLabel(linkFilter)?.toLowerCase() ?? '' : '';
-  const prompt = status === 'ready' ? seasonalPrompt(now) : null;
+  const prompt = status === 'ready' ? seasonalPrompt(seasonNow) : null;
   const filterLabel = linkFilterLabel(linkFilter);
 
   return (

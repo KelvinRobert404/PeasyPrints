@@ -16,6 +16,7 @@ import {
   type HousingPaths,
 } from '@/hooks/useHousingFeed';
 import { isPeakHousingSeason } from '@/lib/campus/season';
+import { useSeasonNow } from '@/lib/demo/season';
 import { DEFAULT_RING, formatDistance } from '@/lib/format/distance';
 import { useDockSlot } from '@/lib/stores/dockStore';
 import { cn } from '@/lib/utils/cn';
@@ -26,14 +27,14 @@ import type { CampusAudience } from '@/types/campus';
 
 const GRID = 'grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3 lg:grid-cols-4';
 
-function initialFilters(): HousingFilterState {
+function initialFilters(peak: boolean): HousingFilterState {
   return {
     q: '',
     ring: DEFAULT_RING,
     kind: 'all',
     gender: 'anyone',
     // Apr to Aug is peak season: agents flood the feed, so students come first.
-    fromStudents: isPeakHousingSeason(new Date()),
+    fromStudents: peak,
     showFarther: false,
   };
 }
@@ -41,7 +42,14 @@ function initialFilters(): HousingFilterState {
 export function HousingExperience({ audience = 'campus' }: { audience?: CampusAudience }) {
   const { items, campus: apiCampus, status, error, reload, toggleSave } = useHousingFeed(audience);
   const current = useCurrentCampus();
-  const [filters, setFilters] = useState<HousingFilterState>(initialFilters);
+  // Real now, or the demo date in demo mode (known only after hydration).
+  const peak = isPeakHousingSeason(useSeasonNow());
+  const [filters, setFilters] = useState<HousingFilterState>(() => initialFilters(peak));
+  const [filtersPeak, setFiltersPeak] = useState(peak);
+  if (filtersPeak !== peak) {
+    setFiltersPeak(peak);
+    setFilters((state) => ({ ...state, fromStudents: peak }));
+  }
   const paths = housingPaths(audience);
   const girls = audience === 'girls';
 

@@ -19,6 +19,7 @@ import {
 } from '@/lib/campus/housing/model';
 import { priceDropActive } from '@/lib/campus/listingRules';
 import { istDateKey, nextSemStart } from '@/lib/campus/season';
+import { useSeasonNow } from '@/lib/demo/season';
 import { formatPrice, isPriceDrop } from '@/lib/format/price';
 import { cn } from '@/lib/utils/cn';
 import type { HousingListing, HousingStatus } from '@/types/housing';
@@ -201,11 +202,13 @@ export function HousingListingCard<T extends HousingCardItem>({ item, href, onSa
   const current = useCurrentCampus();
   const code = campusCode ?? current?.code ?? item.collegeCode;
   const now = new Date();
+  // Move-in labels read the demo date in demo mode; badges stay on real time.
+  const seasonNow = useSeasonNow();
   const closed = CLOSED_STATUSES.has(item.status);
   const price = housingPriceLabels({ rentPp: item.rentPp, deposit: item.deposit });
   const terms = rentTermsChip(item.rentTerms);
   const badges = statusBadges(item, now);
-  const chips = metaChips(item, now);
+  const chips = metaChips(item, seasonNow);
   const saveButton = onSave ? (
     <button
       type="button"

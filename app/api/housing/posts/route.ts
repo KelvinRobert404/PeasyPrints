@@ -12,6 +12,8 @@ import { NO_RESTRICTIONS, containsPhoneNumber } from '@/lib/campus/housing/model
 import { OTHER_PLACE, firstIssueMessage, housingCreateSchema, type HousingCreate } from '@/lib/campus/housing/schema';
 import { serializeHousingListing, type ViewerOrigin } from '@/lib/campus/housing/serialize';
 import { nextSemStart } from '@/lib/campus/season';
+import { DEMO_DATE_COOKIE } from '@/lib/demo/contract';
+import { seasonInstant } from '@/lib/demo/season';
 import { haversineMeters, roundForPrivacy } from '@/lib/format/distance';
 import { checkRateLimit, rateLimitResponse } from '@/lib/server/rateLimit';
 import type { CampusAudience, ListingPlace } from '@/types/campus';
@@ -133,10 +135,13 @@ function resolvePlace(home: Campus, place: HousingCreate['place']): ListingPlace
   };
 }
 
-/** 'now' -> null (right away); 'next_sem' and dates -> the start of that IST day. */
-function moveInTime(moveIn: string, now: Date): Timestamp | null {
+/**
+ * 'now' -> null (right away); 'next_sem' and dates -> the start of that IST day.
+ * `seasonNow` is real now, or the demo date in demo mode (swoop_demo_date).
+ */
+function moveInTime(moveIn: string, seasonNow: Date): Timestamp | null {
   if (moveIn === 'now') return null;
-  const key = moveIn === 'next_sem' ? nextSemStart(now) : moveIn;
+  const key = moveIn === 'next_sem' ? nextSemStart(seasonNow) : moveIn;
   const ms = Date.parse(`${key}T00:00:00.000+05:30`);
   return Number.isFinite(ms) ? Timestamp.fromMillis(ms) : null;
 }
@@ -197,7 +202,7 @@ export async function POST(request: NextRequest) {
         whoCanStay: audience === 'girls' ? 'girls' : input.whoCanStay,
         // Stored without 'no_restrictions': an empty list means no restrictions.
         houseRules: input.houseRules.filter((rule): rule is HouseRule => rule !== NO_RESTRICTIONS),
-        moveIn: moveInTime(input.moveIn, now),
+        moveIn: moveInTime(input.moveIn, seasonInstant(request.cookies.get(DEMO_DATE_COOKIE)?.value, now)),
         bedsLeft: input.bedsLeft,
         sharing: input.sharing,
         rentPp: input.rentPp,
