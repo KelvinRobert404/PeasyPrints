@@ -15,6 +15,30 @@ export const USERS_COLLECTION = 'users';
 const SERIAL_CAPACITY = 10_000;
 
 /** Firestore rejects undefined; optional fields are dropped instead. */
+/** Sample WhatsApp number per author (same formula as demo life), so an approved ask on a seeded post can reveal one. */
+function sampleWhatsappNumber(userId: string): string {
+  let hash = 5381;
+  for (let index = 0; index < userId.length; index += 1) hash = ((hash * 33) ^ userId.charCodeAt(index)) >>> 0;
+  return `90000${String(hash % 100_000).padStart(5, '0')}`;
+}
+
+/** campus_private_contacts/{type}_{id}, as the create routes write it for each post. */
+function seedPrivateContacts(
+  db: FakeFirestore,
+  now: Date,
+  type: 'marketplace' | 'housing',
+  docs: readonly FixtureDoc<{ authorId: string; audience: string }>[],
+): void {
+  for (const doc of docs) {
+    db.seedDoc(`campus_private_contacts/${type}_${doc.id}`, {
+      authorId: doc.data.authorId,
+      audience: doc.data.audience,
+      whatsappNumber: sampleWhatsappNumber(doc.data.authorId),
+      updatedAt: Timestamp.fromDate(now),
+    });
+  }
+}
+
 function withoutUndefined(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(withoutUndefined);
   if (!value || typeof value !== 'object' || value instanceof Timestamp) return value;
@@ -61,6 +85,8 @@ export function seedFakeDb(db: FakeFirestore, now: Date = new Date()): void {
   seedAll(db, SHOPS_COLLECTION, fixtures.shops);
   seedAll(db, c.market, fixtures.market);
   seedAll(db, c.housing, fixtures.housing);
+  seedPrivateContacts(db, now, 'marketplace', fixtures.market);
+  seedPrivateContacts(db, now, 'housing', fixtures.housing);
   seedSerials(db, now, 'M', fixtures.market);
   seedSerials(db, now, 'H', fixtures.housing);
   seedAll(db, c.deals, fixtures.deals);
