@@ -311,7 +311,7 @@ function MarketHome({ audience }: { audience: CampusAudience }) {
             <>
               <SeasonPrompt
                 prompt={prompt}
-                href={prompt === 'moving_out' ? paths.newPost('bundle') : prompt === 'set_up_room' ? `${paths.base}?furnish=all` : undefined}
+                href={prompt === 'moving_out' ? paths.newPost('bundle') : prompt === 'set_up_room' ? paths.seeAll('near-you') : undefined}
                 className="mt-3"
               />
               <FurnishTiles counts={feed.furnishCounts} hrefBase={`${paths.base}?furnish=`} className="pt-3.5" />

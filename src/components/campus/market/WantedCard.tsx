@@ -3,12 +3,12 @@
 
 import Link from 'next/link';
 import { HandIcon } from '@/components/swoop/icons';
-import { IconTile, Tag } from '@/components/swoop/primitives';
+import { Tag } from '@/components/swoop/primitives';
 import { DistanceLine } from '@/components/campus/places/DistanceLine';
 import { MARKET_STATUS_LABELS } from '@/lib/campus/constants';
 import { cn } from '@/lib/utils/cn';
 import type { MarketListing } from '@/types/market';
-import { formatDay } from './PassRow';
+import { formatDay, RowIconTile } from './PassRow';
 import { budgetText } from './PriceBits';
 
 // Same look as swButton({ size: 'sm' }); primitives is a client module, so its
@@ -61,7 +61,7 @@ export function WantedCard({
 
   return (
     <article className={cn('relative flex min-w-0 items-start gap-2.5 rounded-[14px] border border-line bg-white p-2.5', className)}>
-      <IconTile icon={HandIcon} tone={closed ? 'surface' : 'royal'} size={36} />
+      <RowIconTile icon={HandIcon} muted={closed} />
       <div className={cn('min-w-0 flex-1', closed && 'opacity-60')}>
         {/* The question link covers the whole card, so the card is one big target. */}
         <Link

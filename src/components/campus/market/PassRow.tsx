@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import type { ComponentType } from 'react';
 import { BusIcon, CabIcon, PassIcon, SeatIcon, TicketIcon, TrainIcon, type IconProps } from '@/components/swoop/icons';
-import { IconTile, Tag } from '@/components/swoop/primitives';
+import { Tag } from '@/components/swoop/primitives';
 import { GENDER_PREF_LABELS, MARKET_STATUS_LABELS } from '@/lib/campus/constants';
 import { cn } from '@/lib/utils/cn';
 import type { MarketListing } from '@/types/market';
@@ -81,6 +81,19 @@ function partsOf(listing: PassRowListing): RowParts {
   }
 }
 
+/**
+ * 36 px round icon holder, the same look as IconTile. IconTile lives in a client
+ * module, and an icon component cannot be passed to it from a server render
+ * (the market kit page), so the icon is drawn here.
+ */
+export function RowIconTile({ icon: Icon, muted = false, className }: { icon: ComponentType<IconProps>; muted?: boolean; className?: string }) {
+  return (
+    <span className={cn('grid size-9 shrink-0 place-items-center rounded-full', muted ? 'bg-surface text-ink' : 'bg-royal-tint text-royal', className)}>
+      <Icon size={18} aria-hidden="true" />
+    </span>
+  );
+}
+
 const META = 'whitespace-nowrap text-[10.5px] font-semibold';
 
 /**
@@ -114,7 +127,7 @@ export function PassRow({
       className={cn('campus-press flex items-stretch gap-2.5 text-left text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal/40', className)}
     >
       <span className="grid place-items-center py-2">
-        <IconTile icon={icon} tone={gone ? 'surface' : 'royal'} size={36} className={gone ? 'opacity-60' : undefined} />
+        <RowIconTile icon={icon} muted={gone} className={gone ? 'opacity-60' : undefined} />
       </span>
       <span className={cn('flex min-h-[60px] min-w-0 flex-1 items-center gap-2 py-2', divider && 'border-b border-line')}>
         <span className={cn('flex min-w-0 flex-1 flex-col gap-0.5', gone && 'opacity-60')}>

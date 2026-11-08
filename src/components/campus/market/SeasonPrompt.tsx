@@ -31,8 +31,8 @@ const COPY: Record<SeasonalPrompt, PromptCopy> = {
   set_up_room: {
     title: 'Set up your room for less.',
     body: 'Room things from students nearby.',
-    action: 'See room things',
-    href: '/marketplace?furnish=all',
+    action: 'See things near you',
+    href: '/marketplace/all/near-you',
     art: SetUpRoomArt,
   },
 };

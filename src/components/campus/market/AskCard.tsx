@@ -3,8 +3,8 @@
 
 import Link from 'next/link';
 import { HandIcon } from '@/components/swoop/icons';
-import { IconTile } from '@/components/swoop/primitives';
 import { cn } from '@/lib/utils/cn';
+import { RowIconTile } from './PassRow';
 
 // Same look as swButton({ size: 'sm' }); primitives is a client module, so its
 // cva helper cannot be called while this renders on the server.
@@ -14,7 +14,7 @@ const BUTTON =
 /** Default place 'Ask' goes: a new wanted post with the search as its title. */
 export function askHref(q: string): string {
   const title = q.trim();
-  return title ? `/marketplace/new?kind=wanted&title=${encodeURIComponent(title)}` : '/marketplace/new?kind=wanted';
+  return title ? `/marketplace/new?kind=wanted&q=${encodeURIComponent(title)}` : '/marketplace/new?kind=wanted';
 }
 
 /**
@@ -37,7 +37,7 @@ export function AskCard({
   const thing = q.trim().replace(/\s+/g, ' ').replace(/\?+$/, '');
   return (
     <article className={cn('flex min-w-0 items-center gap-2.5 rounded-[14px] bg-surface p-2.5', className)}>
-      <IconTile icon={HandIcon} tone="royal" size={36} />
+      <RowIconTile icon={HandIcon} />
       <div className="min-w-0 flex-1">
         <p className="font-heading line-clamp-2 text-[13px] leading-[1.15] text-ink">{thing ? `Any ${thing} available?` : 'Need something?'}</p>
         <p className="mt-0.5 text-[11px] font-semibold text-slate">Students near you will see it.</p>

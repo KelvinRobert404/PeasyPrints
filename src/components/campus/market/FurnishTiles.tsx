@@ -13,7 +13,7 @@ function countText(n: number): string {
 }
 
 /**
- * Eight furnish tiles, 4-up. `counts` comes from groupMarketFeed().furnishCounts.
+ * Eight furnish tiles, 4-up (8-up when the section is 36rem or wider). `counts` comes from groupMarketFeed().furnishCounts.
  * Each tile links to `${hrefBase}${id}`.
  */
 export function FurnishTiles({
@@ -29,9 +29,9 @@ export function FurnishTiles({
   className?: string;
 }) {
   return (
-    <section className={cn('min-w-0', className)} aria-label={title ?? 'Furnish your room'}>
+    <section className={cn('@container min-w-0', className)} aria-label={title ?? 'Furnish your room'}>
       {title ? <SectionHeader title={title} className="mb-2" /> : null}
-      <ul className="grid grid-cols-4 gap-1.5 sm:grid-cols-8">
+      <ul className="grid grid-cols-4 gap-1.5 @xl:grid-cols-8">
         {FURNISH_TILES.map((tile) => {
           const Art = ROOM_ART[tile.id];
           const count = counts?.[tile.id] ?? 0;

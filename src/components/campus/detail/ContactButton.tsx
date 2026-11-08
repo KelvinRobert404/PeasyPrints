@@ -1,11 +1,33 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { swButton } from '@/components/swoop/primitives';
 import { ChatIcon } from '@/components/marketplace/icons';
 import { HandoffAnchor, useHandoff, whatsappNumberFromUrl } from '@/components/demo/DemoHandoffSheet';
+import { isDemoMode } from '@/lib/demo/mode';
 import { cn } from '@/lib/utils/cn';
 import type { CampusAudience, ContactRequest } from '@/types/campus';
+
+/** Demo: how often a pending request re-checks, so the sample seller's answer shows up. */
+const DEMO_PENDING_POLL_MS = 3000;
+
+/**
+ * Demo only: while a request waits, re-read it every few seconds. Each read
+ * touches the visitor's sample world, which is where the sample seller says yes.
+ */
+function useDemoPendingRefresh(pending: boolean, refresh: () => void) {
+  const latest = useRef(refresh);
+  latest.current = refresh;
+  useEffect(() => {
+    if (!pending) return;
+    const timer = window.setInterval(() => latest.current(), DEMO_PENDING_POLL_MS);
+    return () => window.clearInterval(timer);
+  }, [pending]);
+}
+
+function useNoPendingRefresh(_pending: boolean, _refresh: () => void) {}
+
+const usePendingRefresh: (pending: boolean, refresh: () => void) => void = isDemoMode() ? useDemoPendingRefresh : useNoPendingRefresh;
 
 /** Demo only: the poster's name from the post itself, since the request does not carry it. */
 async function posterName(contentType: ContactRequest['contentType'], contentId: string, audience: CampusAudience): Promise<string> {
@@ -79,6 +101,8 @@ export function ContactButton({
     if (disabledLabel || initialContact !== undefined) return;
     void load();
   }, [contentType, contentId, audience, disabledLabel]);
+
+  usePendingRefresh(!disabledLabel && contact?.status === 'pending', () => void load());
 
   const request = async () => {
     setBusy(true);
@@ -165,6 +189,7 @@ export function ContactButton({
       <p className="mt-1.5 text-center text-[10.5px] font-semibold text-slate">
         {disabledLabel ? 'You can ask once it frees up.' : 'The poster decides to share their number.'}
       </p>
+      {handoff.sheet}
     </div>
   );
 }
