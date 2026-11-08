@@ -52,10 +52,10 @@ Statuses:
 | HOUSINGCHK | KADA-18 checks in demo: Housing, Girls' space, activity and My posts | 5 | L | done | f1c1b0e | HFEED, HFORM, HDETAIL, HCARD, MYPOSTS, seller asks, SEAMROUTES, Girls space, From students pass; 403 on girls housing for Sana gone; move-in follows the demo date; activity WhatsApp opens the demo sheet |
 | UTILCHK | KADA-18 checks in demo: deals, lost and found, blood, games, privacy | 5 | M | done | 2cd7c32 | DEAL, LOST, BLOOD, GAMES, COPY, /contact pass; demo privacy copy says nothing is deleted; seeded O- request is fulfilled so not listed (by design) |
 | PRINTCHK | KADA-18 checks in demo: print flow, orders, pickup art and campus shops | 5 | M | done | b65e277 | PRINTCAMPUS, sample PDF and images flow, pay fails, Today/Earlier, shops, ART, live pickup pass; /shops filtered by campus (real app too); paise kept on pickup |
-| DEMOCHK | Demo checks end to end: persistence, reset, isolation, dates and the bar | 5 | M | running | | runs alone (owns the server) |
-| FIXPRICE | Student print prices without the rupee sign, keeping paise | 6 | S | pending | | |
-| FIXCHROME | Small app fixes from the wave 5 checks: favicon, tab case, kit grid, soft 404, dev badge, PostHog guard | 6 | S | pending | | |
-| FIXSEED | Sample data copy that matches its times, and far distances without walk times | 6 | S | pending | | |
+| DEMOCHK | Demo checks end to end: persistence, reset, isolation, dates and the bar | 5 | M | done | 33f791e | all 9 checks pass; smoke 201/201 warm and cold; reset now clears the Firebase stand-in's uid; /campus dropped from the warm-up list |
+| FIXPRICE | Student print prices without the rupee sign, keeping paise | 6 | S | running | | |
+| FIXCHROME | Small app fixes from the wave 5 checks: favicon, tab case, kit grid, soft 404, dev badge, PostHog guard | 6 | S | running | | |
+| FIXSEED | Sample data copy that matches its times, and far distances without walk times | 6 | S | running | | |
 
 ## Session log
 
@@ -80,6 +80,7 @@ Statuses:
 8 Nov 15:40 IST · jtk/claude-2 · MARKETCHK and HOUSINGCHK verified (typecheck, lint, 442/442, browser spot check) and pushed. Owner added 4 GB swap and removed T3 Code; cap now 10 GB RAM + 1 GB swap with Chrome inside it.
 8 Nov 16:45 IST · jtk/claude-2 · demo server thrashed at 8 GB again (HOMECHK and UTILCHK blocked); restarted under a watchdog (restart above 6 GB). PRINTCHK and AUTHCHK verified and pushed.
 8 Nov 17:40 IST · jtk/claude-2 · HOMECHK and UTILCHK re-run (the /tmp RAM disk filled with 236 leftover Chrome profiles mid-run; cleared, tools now delete their profiles); verified and pushed. DEMOCHK started alone. Wave 6 (FIXPRICE, FIXCHROME, FIXSEED) added for the outside fixes.
+8 Nov 19:05 IST · jtk/claude-2 · DEMOCHK verified and pushed (33f791e). Wave 6 started; the lead runs the demo server under the watchdog. FIXCHROME's dev badge fix moved from next.config.js to the demo-only src/lib/demo/build-config.cjs, as DEMOCHK suggested.
 
 ## Blocked
 
@@ -98,7 +99,7 @@ Statuses:
 - FIREBASE · pickup page status change within 3 s · needs PRINTPAY's order progress · checked in wave 4/5.
 
 - Wave 3 · plain `npm run build` · prerender stops on missing production env · run with real env later.
-- PERSIST · resetDemo() in the browser (IndexedDB, swoop-demo:* keys, college pick, blood number cleared) · the reset route is checked; the browser part is DEMOCHK's (wave 5).
+- PERSIST · resetDemo() in the browser (IndexedDB, swoop-demo:* keys, college pick, blood number cleared) · the reset route is checked; the browser part is DEMOCHK's (wave 5). Run 8 Nov: pass (33f791e).
 - PRINTPAY · the pickup page updating live and the closed-shop message · PRINTUI and PRINTCHK (waves 4-5).
 
 - Wave 4 · plain `npm run build` · prerender stops on missing production env · run with real env later.

@@ -684,7 +684,7 @@
             "src/components/swoop/primitives.tsx",
             "app/dev/housing-kit/page.tsx",
             "proxy.ts",
-            "next.config.js",
+            "src/lib/demo/build-config.cjs",
             "src/lib/posthog/client.ts"
           ],
           "depends_on": [
@@ -693,7 +693,7 @@
             "HOMECHK"
           ],
           "acceptance": "In demo: no /favicon.ico 404 on a first load (app/icon.svg, a simple Swoop mark, no copied brand art); Segmented tabs read 'Contact requests' and 'My posts'; /dev/housing-kit cards are 2 columns at 1280; /marketplace/all/x and /girls-space/marketplace/all/x answer a real 404 status while the four sections still load; the Next dev badge no longer covers the Dock's Home tab at 375; PostHog init returns early in demo. Production config otherwise unchanged (CSP untouched). typecheck, lint, tests and npm run demo:smoke pass.",
-          "brief": "Outside fixes reported in wave 5 and earlier (ledger 'Decided at night'). Segmented: drop the capitalize class at src/components/swoop/primitives.tsx:228. Housing kit: app/dev/housing-kit/page.tsx:89 'grid grid-cols-2 gap-x-2 gap-y-3', line 100 drop md:grid-cols-2. Soft 404: in proxy.ts return a 404 for /(girls-space/)?marketplace/all/<s> when s is not clearing-out, seats, near-you or wanted (read node_modules/next/dist/docs on proxy first). Dev badge: next.config.js devIndicators position bottom-right, or off. PostHog: `if (isDemoMode()) return;` first in ensurePosthogInit()."
+          "brief": "Outside fixes reported in wave 5 and earlier (ledger 'Decided at night'). Segmented: drop the capitalize class at src/components/swoop/primitives.tsx:228. Housing kit: app/dev/housing-kit/page.tsx:89 'grid grid-cols-2 gap-x-2 gap-y-3', line 100 drop md:grid-cols-2. Soft 404: in proxy.ts return a 404 for /(girls-space/)?marketplace/all/<s> when s is not clearing-out, seats, near-you or wanted (read node_modules/next/dist/docs on proxy first). Dev badge: in src/lib/demo/build-config.cjs applyDemoConfig, add `devIndicators: false,` next to `distDir: DEMO_DIST_DIR,` (demo only; Next still shows build and runtime errors, see node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/devIndicators.md). PostHog: `if (isDemoMode()) return;` first in ensurePosthogInit()."
         },
         {
           "id": "FIXSEED",
