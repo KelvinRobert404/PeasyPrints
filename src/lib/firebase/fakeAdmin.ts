@@ -149,7 +149,7 @@ function toStoredValue(value: unknown, field: string, now: Timestamp, inArray = 
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return value;
   if (typeof value === 'number') return value;
   if (value instanceof Date) return Timestamp.fromDate(value);
-  if (value instanceof Timestamp || value instanceof GeoPoint || value instanceof FakeDocumentReference) return value;
+  if (value instanceof Timestamp || value instanceof GeoPoint || isFakeDocumentReference(value)) return value;
   if (isBytes(value)) return Buffer.from(value);
   if (Array.isArray(value)) {
     return value.map((item, index) => {
@@ -201,7 +201,7 @@ function typeRank(value: unknown): number {
   if (value instanceof Timestamp) return 3;
   if (typeof value === 'string') return 4;
   if (isBytes(value)) return 5;
-  if (value instanceof FakeDocumentReference) return 6;
+  if (isFakeDocumentReference(value)) return 6;
   if (value instanceof GeoPoint) return 7;
   if (Array.isArray(value)) return 8;
   return 9;
@@ -463,7 +463,7 @@ function fieldValueOf(id: string, data: DocData, field: string): { has: boolean;
 function matchesFilter(id: string, data: DocData, filter: QueryFilter): boolean {
   const { has, value } = fieldValueOf(id, data, filter.field);
   if (!has) return false;
-  const expected = filter.field === '__name__' && filter.value instanceof FakeDocumentReference ? filter.value.id : filter.value;
+  const expected = filter.field === '__name__' && isFakeDocumentReference(filter.value) ? filter.value.id : filter.value;
   const list = Array.isArray(expected) ? expected : [];
   switch (filter.op) {
     case '==':
@@ -636,7 +636,17 @@ export class FakeCollectionReference extends FakeQuery {
   }
 }
 
+// Each Next route bundle gets its own copy of these classes while demo worlds are
+// shared, so a ref made in one bundle fails `instanceof` in another. The brand is
+// a global symbol, the same in every copy.
+const DOC_REF_BRAND = Symbol.for('swoop.fakeDocumentReference');
+
+export function isFakeDocumentReference(value: unknown): value is FakeDocumentReference {
+  return value instanceof FakeDocumentReference || (!!value && typeof value === 'object' && (value as Record<symbol, unknown>)[DOC_REF_BRAND] === true);
+}
+
 export class FakeDocumentReference {
+  readonly [DOC_REF_BRAND] = true;
   readonly firestore: FakeFirestore;
   readonly path: string;
 
@@ -659,7 +669,7 @@ export class FakeDocumentReference {
   }
 
   isEqual(other: FakeDocumentReference): boolean {
-    return other instanceof FakeDocumentReference && other.path === this.path;
+    return isFakeDocumentReference(other) && other.path === this.path;
   }
 
   async get(): Promise<FakeDocumentSnapshot> {
@@ -751,7 +761,7 @@ export class FakeTransaction {
   get(query: FakeQuery): Promise<FakeQuerySnapshot>;
   async get(target: FakeDocumentReference | FakeQuery): Promise<FakeDocumentSnapshot | FakeQuerySnapshot> {
     this.assertNoWritesYet();
-    if (target instanceof FakeDocumentReference) return this.store.snapshot(target);
+    if (isFakeDocumentReference(target)) return this.store.snapshot(target);
     return new FakeQuerySnapshot(target, target._run(this.store), Timestamp.now());
   }
 
@@ -822,7 +832,7 @@ export class FakeFirestoreStore {
 
   /** Snapshots in the same order as the refs; anything that is not a reference (read options) is ignored. */
   getAll(refs: unknown[]): FakeDocumentSnapshot[] {
-    const targets = refs.filter((ref): ref is FakeDocumentReference => ref instanceof FakeDocumentReference);
+    const targets = refs.filter((ref): ref is FakeDocumentReference => isFakeDocumentReference(ref));
     if (targets.length === 0) throw invalidArgument('getAll() requires at least one document reference.');
     return targets.map((ref) => this.snapshot(ref));
   }
