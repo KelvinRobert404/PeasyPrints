@@ -62,5 +62,8 @@ export function normalizeQuoteInput(input: CheckoutQuoteInput): CheckoutQuoteInp
     const colorPages = [...new Set(input.assignment.colorPages)].sort((a, b) => a - b);
     return { ...input, assignment: { colorPages }, printSettings: { ...input.printSettings, extraColorPages: colorPages.length } };
   }
-  return { ...input, assignment: undefined, printSettings: { ...input.printSettings, extraColorPages: 0 } };
+  // Omit the key: Firestore refuses undefined values when the quote is stored on the payment intent.
+  const { assignment: _assignment, ...rest } = input;
+  void _assignment;
+  return { ...rest, printSettings: { ...input.printSettings, extraColorPages: 0 } };
 }
