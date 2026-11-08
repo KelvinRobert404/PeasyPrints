@@ -9,14 +9,17 @@ import { AddCollegeEmail, DomainMismatchStep, postOnboarding } from '@/component
 import { CourseStep, CourseSummary, type CourseSubmitResult } from '@/components/campus/CourseStep';
 import { GirlsSpaceSection, IdCardInReviewNote, IdCardPending, IdCardUpload } from '@/components/campus/IdCardUpload';
 import { ClockIcon, LockIcon, ShieldCheckIcon } from '@/components/swoop/icons';
-import { EmptyState, IconTile, PageHeader, swButton } from '@/components/swoop/primitives';
+import { EmptyState, IconTile, PageHeader, swButton, Tag } from '@/components/swoop/primitives';
 import { useCampusSession } from '@/hooks/useCampusSession';
 import { getCampus } from '@/lib/campus/catalog';
+import { isDemoMode } from '@/lib/demo/mode';
 import { useHideDock } from '@/lib/stores/dockStore';
 import { useCollegeStore, type CollegePick } from '@/lib/stores/collegeStore';
 import { safeRedirectPath } from '@/lib/utils/safeRedirect';
 import type { CampusSession, MembershipCourse } from '@/types/campus';
 import { cn } from '@/lib/utils/cn';
+
+const DEMO = isDemoMode();
 
 export default function CampusVerifyPage() {
   return (
@@ -267,12 +270,22 @@ function VerifyStep({
     if (!membership?.course) {
       return (
         <CourseStep
-          note={<IdCardInReviewNote />}
+          note={
+            <>
+              <IdCardInReviewNote />
+              {DEMO ? <DemoApproveCard reload={reload} /> : null}
+            </>
+          }
           onSubmit={(course) => saveCourse(course, onSaved)}
         />
       );
     }
-    return <IdCardPending onCheckAgain={() => void reload()} checking={checking} />;
+    return (
+      <>
+        <IdCardPending onCheckAgain={() => void reload()} checking={checking} />
+        {DEMO ? <DemoApproveCard reload={reload} /> : null}
+      </>
+    );
   }
 
   if (status === 'revoked') {
@@ -299,5 +312,54 @@ function VerifyStep({
       emailPanel={<AddCollegeEmail collegeCode={collegeCode} onChecked={onSaved} />}
       idCardPanel={<IdCardUpload kind="student" onSubmitted={reload} />}
     />
+  );
+}
+
+/* Demo only: play the campus team ---------------------------- */
+
+/** Approves the visitor's own pending ID card in the sample data. */
+function DemoApproveCard({ reload }: { reload: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const approve = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/demo/session/card', { method: 'POST', cache: 'no-store' });
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as { error?: unknown } | null;
+        setError(typeof data?.error === 'string' ? data.error : 'Could not approve. Try again.');
+        return;
+      }
+      await reload();
+    } catch {
+      setError('The demo server is not answering.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="flex flex-col gap-2 rounded-[12px] border border-dashed border-line bg-white p-3">
+      <div className="flex items-center gap-1.5">
+        <Tag tone="royal">Demo</Tag>
+        <p className="min-w-0 text-[11.5px] font-semibold text-slate">Sample data. You play the campus team.</p>
+      </div>
+      {error ? (
+        <p role="alert" className="text-[11.5px] font-semibold text-market">
+          {error}
+        </p>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => void approve()}
+        disabled={busy}
+        className={swButton({ variant: 'surface', size: 'sm', className: 'w-full' })}
+      >
+        {busy ? 'Approving…' : 'Approve my card (demo)'}
+      </button>
+    </section>
   );
 }

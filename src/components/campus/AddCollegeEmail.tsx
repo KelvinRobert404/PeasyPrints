@@ -14,8 +14,12 @@ import {
   type IconProps,
 } from '@/components/swoop/icons';
 import { IconTile, swButton } from '@/components/swoop/primitives';
+import { useCampusSession } from '@/hooks/useCampusSession';
+import { isDemoMode } from '@/lib/demo/mode';
 import type { CampusSession, VerificationStatus } from '@/types/campus';
 import { cn } from '@/lib/utils/cn';
+
+const DEMO = isDemoMode();
 
 const CODE_LENGTH = 6;
 const RESEND_SECONDS = 30;
@@ -201,12 +205,15 @@ export function AddCollegeEmailForm({
   onVerifyCode,
   initialStage = 'email',
   initialEmail = '',
+  codeHint,
 }: {
   collegeCode: string;
   onSendCode: (email: string) => Promise<AuthResult>;
   onVerifyCode: (code: string) => Promise<AuthResult>;
   initialStage?: Stage;
   initialEmail?: string;
+  /** A short line under the code field. */
+  codeHint?: ReactNode;
 }) {
   const emailId = useId();
   const errorId = useId();
@@ -331,6 +338,7 @@ export function AddCollegeEmailForm({
             autoFocus
             label="6-digit code from your college email"
           />
+          {codeHint ? <p className="text-[11px] font-semibold text-slate">{codeHint}</p> : null}
           {error ? (
             <p role="alert" className="text-[11.5px] font-semibold text-market">
               {error}
@@ -364,6 +372,20 @@ function errorCodes(err: unknown): string[] {
   return isClerkAPIResponseError(err) ? err.errors.map((item) => item.code) : [];
 }
 
+/** Demo: refreshes the shared campus session so every screen sees the new step. */
+function useDemoAfterEmail(): () => void {
+  const { refresh } = useCampusSession();
+  return useCallback(() => void refresh(), [refresh]);
+}
+
+function noop(): void {}
+
+function useRealAfterEmail(): () => void {
+  return noop;
+}
+
+const useAfterEmail = DEMO ? useDemoAfterEmail : useRealAfterEmail;
+
 /** Clerk errors in plain English. Each line stays short. */
 function plainError(err: unknown): string {
   const codes = errorCodes(err);
@@ -374,6 +396,7 @@ function plainError(err: unknown): string {
   if (has('form_identifier_exists')) return 'That email is on another account.';
   if (has('form_param_format_invalid', 'form_identifier_invalid')) return 'That email doesn’t look right.';
   if (has('session_reverification_required')) return 'Sign in again, then add your email.';
+  if (has('demo_email_limit')) return 'This demo account has enough emails.';
   if (has('too_many_requests') || (isClerkAPIResponseError(err) && err.status === 429)) return 'Too many tries. Wait a minute.';
   if (typeof navigator !== 'undefined' && !navigator.onLine) return 'You’re offline. Check your connection.';
   return 'Something went wrong. Try again.';
@@ -392,6 +415,7 @@ export function AddCollegeEmail({
   onChecked: (session: CampusSession) => void;
 }) {
   const { isLoaded, user } = useUser();
+  const afterEmail = useAfterEmail();
   const pending = useRef<EmailResource | null>(null);
 
   const sendCode = useCallback(
@@ -429,12 +453,20 @@ export function AddCollegeEmail({
       if (!result.ok) return fail(result.error);
       if (result.domainMismatch) return fail(`${collegeCode} didn’t accept that email. Try your ID card.`);
       onChecked(result.session);
+      afterEmail();
       return { ok: true };
     },
-    [user, collegeCode, onChecked]
+    [user, collegeCode, onChecked, afterEmail]
   );
 
-  return <AddCollegeEmailForm collegeCode={collegeCode} onSendCode={sendCode} onVerifyCode={verifyCode} />;
+  return (
+    <AddCollegeEmailForm
+      collegeCode={collegeCode}
+      onSendCode={sendCode}
+      onVerifyCode={verifyCode}
+      codeHint={DEMO ? 'Demo: any 6 digits work' : undefined}
+    />
+  );
 }
 
 export default AddCollegeEmail;
