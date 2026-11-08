@@ -68,7 +68,8 @@ export function seedFakeDb(db: FakeFirestore, now: Date = new Date()): void {
   seedAll(db, c.bloodRequests, fixtures.bloodRequests);
   seedAll(db, c.bloodDonors, fixtures.bloodDonors);
   seedAll(db, c.games, fixtures.games);
-  seedAll(db, c.contactRequests, fixtures.contactRequests);
+  // The contact-request routes read campus_contact_requests, not CAMPUS_COLLECTIONS.contactRequests.
+  seedAll(db, 'campus_contact_requests', fixtures.contactRequests);
   seedAll(db, c.saves, fixtures.saves);
   seedAll(db, c.reports, fixtures.reports);
   seedAll(db, c.media, fixtures.media);

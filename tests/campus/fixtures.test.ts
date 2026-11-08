@@ -332,7 +332,9 @@ test('activity points at real listings', () => {
 test('seeding a fresh fake DB fills every collection', async () => {
   const db = new FakeFirestore();
   seedFakeDb(db, NOW);
-  for (const name of [...Object.values(CAMPUS_COLLECTIONS), SHOPS_COLLECTION]) {
+  // Contact requests are seeded where the routes read them (campus_contact_requests).
+  const seeded = Object.values(CAMPUS_COLLECTIONS).filter((name) => name !== CAMPUS_COLLECTIONS.contactRequests);
+  for (const name of [...seeded, 'campus_contact_requests', SHOPS_COLLECTION]) {
     const snap = await db.collection(name).get();
     assert.ok(snap.size > 0, `${name} is empty`);
   }
