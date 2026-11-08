@@ -35,11 +35,11 @@ Statuses:
 | FIREBASE | Firebase client stand-ins backed by the visitor's world | 2 | L | done | 7540a70 | /orders lists Sana's seeded orders; no Google host; 29 new tests |
 | SHELL | Demo shell: no analytics or outside calls, and the DemoRoot mount | 2 | S | done | 01ed4c0 | no analytics hosts on :3019; DemoRoot mounted |
 | HANDOFF | Demo hand-off sheet instead of WhatsApp, phone and mail links | 2 | S | done | 9257684 | /contact WhatsApp opens the sheet; /contact has only a WhatsApp link today |
-| GATE | Demo proxy: visitor cookie, first visit, sign-in guard, areas kept out | 3 | M | pending | | |
-| PERSIST | Visitor changes kept in the browser, and Reset demo | 3 | L | pending | | |
-| DATE | Demo date and seasonal sample packs | 3 | M | pending | | |
-| PRINTPAY | Simulated payment and order progress | 3 | L | pending | | |
-| LIFE | Demo life: sample students answer | 3 | M | pending | | |
+| GATE | Demo proxy: visitor cookie, first visit, sign-in guard, areas kept out | 3 | M | done | 529e7ea | curl on :3019: first visit 307 to /demo?next=, visitor cookie 1 year, login bounce, godview/shopfront kept out, cross-site 403; /orders stays public (decided) |
+| PERSIST | Visitor changes kept in the browser, and Reset demo | 3 | L | done | dc77aa3 | game join and a Farhan approval survived a server restart in the same browser; a fresh browser sees only seed; reset route mints a new visitor and signs out |
+| DATE | Demo date and seasonal sample packs | 3 | M | done | 904edd2 | May/July/Nov Home and Market copy checked at 375; date route swaps season packs (8 market + 3-4 housing) |
+| PRINTPAY | Simulated payment and order progress | 3 | L | done | a1a3953 | browser: 3-page PDF, Main Block Prints, demo sheet Pay, /orders processing -> printing -> ready in ~55 s; Payment fails alerts, no order; helpers moved to src/lib/demo/server/razorpay.ts (decided) |
+| LIFE | Demo life: sample students answer | 3 | M | done | 3341f05 | Farhan approved Sana's headphones ask within 30 s with an inbox item; sample player joined the football game |
 | ENTRY | Demo start page and the not-in-demo page | 4 | M | pending | | |
 | DEMOBAR | Demo bar: student, demo date and Reset demo | 4 | M | pending | | |
 | SIGNIN | Simulated sign-in on /login: mocked Google, skip in, email code | 4 | M | pending | | |
@@ -66,6 +66,9 @@ Statuses:
 8 Nov 11:12 IST · jtk/claude-2 · wave 2 started (6 packages).
 8 Nov 11:24 IST · jtk/claude-2 · wave 2 verified: typecheck, lint, 405/405 tests; build compiles; demo:check: 54 static pages, none 500; **wave-2 gate passed**: with no env / renders signed out, POST /api/demo/session sana, reload greets "Hey Sana", no console error, no outside host. Pushed d1f6430 WORLD, 3e35a70 CLERKSRV, 3ed7acd CLERKUI, 7540a70 FIREBASE, 01ed4c0 SHELL, 9257684 HANDOFF.
 
+8 Nov 11:26 IST · jtk/claude-2 · wave 3 started (5 packages).
+8 Nov 12:17 IST · jtk/claude-2 · wave 3 verified: typecheck, lint, 442/442 tests; build compiles, no shim in the production bundle; demo:check 54 pages, none 500; GATE curl, DATE, LIFE, PRINTPAY and PERSIST checked on :3019. Pushed lead fixes e4b99d9, bd96983, 913d0dd and 529e7ea GATE, a1a3953 PRINTPAY, dc77aa3 PERSIST, 904edd2 DATE, 3341f05 LIFE.
+
 ## Blocked
 
 <!-- One entry per blocked package: id · what failed (command and first error line) · what was tried · files restored · packages skipped because of it. -->
@@ -82,6 +85,10 @@ Statuses:
 - CLERKSRV · /api/razorpay/order signed in · answers 400 'A valid idempotency key is required' to an empty body (not 401 or 500) · PRINTPAY covers the real pay flow.
 - FIREBASE · pickup page status change within 3 s · needs PRINTPAY's order progress · checked in wave 4/5.
 
+- Wave 3 · plain `npm run build` · prerender stops on missing production env · run with real env later.
+- PERSIST · resetDemo() in the browser (IndexedDB, swoop-demo:* keys, college pick, blood number cleared) · the reset route is checked; the browser part is DEMOCHK's (wave 5).
+- PRINTPAY · the pickup page updating live and the closed-shop message · PRINTUI and PRINTCHK (waves 4-5).
+
 ## Decided at night
 
 <!-- One entry per decision the run made without the owner: what · the options · the choice (always the safest reversible one) · where it lives in the code · how to undo it. -->
@@ -94,3 +101,11 @@ Statuses:
 - CLERKSRV · persona emails · fixtureIdentity has example.com addresses; seeded users docs have kju.test · used the users docs (sana@kju.test ...), so the kju.test domain check, profile and upsert agree, and Meera (meera.k@gmail.test) stays pending · src/lib/demo/server/identity.ts.
 - HANDOFF · app/campus/activity/page.tsx line 130 still renders a real wa.me 'Open WhatsApp' link in demo; no wave-2 package owns that file · left for the wave-5 checks or the follow-up wave (HOUSINGCHK covers activity) · fix: wrap it in HandoffAnchor like the others.
 - SHELL · src/lib/posthog/client.ts can't initialise in demo (no key, no consent) but has no explicit demo guard · optional hardening for the follow-up wave: `if (DEMO) return;` first in ensurePosthogInit().
+
+- PRINTPAY · checkout returned 500 for every non-assignment job: normalizeQuoteInput wrote `assignment: undefined`, which Firestore refuses (the fake and the real Admin SDK alike, since ignoreUndefinedProperties is never set) · lead fix e4b99d9 omits the key · src/lib/checkout/schema.ts · **check in the real app: the same write may fail in production today** · undo: revert e4b99d9.
+- LIFE · the seed wrote contact requests to `contact_requests` (CAMPUS_COLLECTIONS.contactRequests) but the routes read `campus_contact_requests`, so seeded requests never showed · lead fix bd96983 seeds them where the routes read; the constant stays because firestore.rules lists it; two tests updated (fixtures, life) · undo: revert bd96983 and the life test line.
+- PRINTPAY · the PDF preview could not load: pdf.js fetches the picked file through a blob: URL, and the demo CSP had connect-src 'self' · lead fix 913d0dd adds blob: to the demo CSP only · **the production CSP in next.config.js has no blob: in connect-src either; check the preview in the real app** · undo: revert 913d0dd.
+- PRINTPAY · /api/demo/razorpay/pay imported helpers from the shim, so the shim reached the production build (seen in .next/trace) · moved the helpers to src/lib/demo/server/razorpay.ts; the shim re-exports them and keeps only the SDK class; the shim is now absent from the production build · in a1a3953.
+- GATE · acceptance said signed-out /orders?x=1 redirects to /login, but '/orders(.*)' is already a public route and the brief said keep the login logic · kept it public; /orders shows its own sign-in link; protected pages (e.g. /profile) redirect with redirect_url · proxy.ts.
+- DATE · HousingDetail.tsx:595 still passes real now to housingMoveInLabel · left for the follow-up wave · fix: use useSeasonNow() there.
+- LIFE · the plan's example 'Farhan's study lamp' is Sana's own listing (mkt-study-lamp) · checks use Farhan's headphones (mkt-headphones).
