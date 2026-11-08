@@ -14,6 +14,8 @@ const APP_KEYS = [
   'peasy_analytics_consent',
   // Blood donor WhatsApp number (app/campus/blood/page.tsx).
   'swoop.blood.whatsapp',
+  // Signed-in uid the Firebase stand-in bridged (src/lib/demo/shims/firebase-auth.ts).
+  'swoop_demo_firebase_uid',
 ];
 
 function clearLocalStorage(): void {

@@ -21,7 +21,7 @@ const SESSION_COOKIE = 'swoop_demo_session';
 const WARMUP_VISITOR = 'warmup';
 const SANA_UID = 'verified-kju-main';
 
-const MAIN_ROUTES = ['/', '/demo', '/login', '/campus', '/marketplace', '/housing', '/shops', '/upload', '/orders', '/profile'];
+const MAIN_ROUTES = ['/', '/demo', '/login', '/marketplace', '/housing', '/shops', '/upload', '/orders', '/profile'];
 const READY_TIMEOUT_MS = 180_000;
 const PAGE_TIMEOUT_MS = 240_000;
 

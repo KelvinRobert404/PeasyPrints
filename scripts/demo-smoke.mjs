@@ -567,6 +567,18 @@ async function main() {
 
   // ---- CONTACT --------------------------------------------------------------
 
+  // Demo life approves an ask to another student 10 s after it was made
+  // (src/lib/demo/server/life.ts). Compile the ask routes first, so the
+  // approve and decline below always come before it.
+  await check('CONTACT', 'ask routes answer', async () => {
+    const seller = await get(jars.sana, '/api/contact-requests?role=seller');
+    expectStatus(seller, 200, 'GET seller asks');
+    const buyer = await get(jars.kabir, '/api/contact-requests?role=buyer');
+    expectStatus(buyer, 200, 'GET buyer asks');
+    const missing = await patch(jars.sana, '/api/contact-requests/no-such-ask', { action: 'approve' });
+    expect(missing.status === 404, `approve a missing ask: wanted 404, got ${missing.status}`);
+  });
+
   let askId = null;
   await check('CONTACT', 'create an ask on a listing', async () => {
     const response = await post(jars.kabir, '/api/contact-requests', { contentType: 'marketplace', contentId: 'mkt-study-lamp' });
@@ -579,21 +591,6 @@ async function main() {
     const own = await post(jars.sana, '/api/contact-requests', { contentType: 'marketplace', contentId: 'mkt-study-lamp' });
     expectStatus(own, 409, 'ask on your own post');
     return askId;
-  });
-
-  await check('CONTACT', 'seller list shows seeded and new asks', async () => {
-    const response = await get(jars.sana, '/api/contact-requests?role=seller');
-    expectStatus(response, 200, 'GET seller asks');
-    const ids = (response.data?.items ?? []).map((item) => item.id);
-    expect(ids.includes('cr-calculator-kabir'), `seeded ask missing (got ${ids.join(', ') || 'none'})`);
-    expect(askId && ids.includes(askId), 'new ask missing');
-    const buyer = await get(jars.kabir, '/api/contact-requests?role=buyer');
-    expectStatus(buyer, 200, 'GET buyer asks');
-    const buyerIds = (buyer.data?.items ?? []).map((item) => item.id);
-    expect(buyerIds.includes('cr-mattress-kabir'), `seeded sent ask missing (got ${buyerIds.join(', ') || 'none'})`);
-    const sent = await get(jars.sana, '/api/contact-requests?role=buyer');
-    expect((sent.data?.items ?? []).some((item) => item.id === 'cr-roommate-sana'), "Sana's seeded housing ask missing");
-    return `${ids.length} received`;
   });
 
   await check('CONTACT', 'seller approves; buyer gets the WhatsApp link', async () => {
@@ -613,6 +610,21 @@ async function main() {
     }
     const twice = await patch(jars.sana, `/api/contact-requests/${askId}`, { action: 'decline' });
     expectStatus(twice, 409, 'decide twice');
+  });
+
+  await check('CONTACT', 'seller list shows seeded and new asks', async () => {
+    const response = await get(jars.sana, '/api/contact-requests?role=seller');
+    expectStatus(response, 200, 'GET seller asks');
+    const ids = (response.data?.items ?? []).map((item) => item.id);
+    expect(ids.includes('cr-calculator-kabir'), `seeded ask missing (got ${ids.join(', ') || 'none'})`);
+    expect(askId && ids.includes(askId), 'new ask missing');
+    const buyer = await get(jars.kabir, '/api/contact-requests?role=buyer');
+    expectStatus(buyer, 200, 'GET buyer asks');
+    const buyerIds = (buyer.data?.items ?? []).map((item) => item.id);
+    expect(buyerIds.includes('cr-mattress-kabir'), `seeded sent ask missing (got ${buyerIds.join(', ') || 'none'})`);
+    const sent = await get(jars.sana, '/api/contact-requests?role=buyer');
+    expect((sent.data?.items ?? []).some((item) => item.id === 'cr-roommate-sana'), "Sana's seeded housing ask missing");
+    return `${ids.length} received`;
   });
 
   await check('CONTACT', 'housing ask: create and decline', async () => {
