@@ -27,8 +27,8 @@ Statuses:
 
 | ID | Title | Wave | Size | Status | Commit | Notes |
 |---|---|---|---|---|---|---|
-| SWITCH | Demo switch, shared contract, launcher and alias wiring | 1 | M | pending | | |
-| SEED | Sample world: every surface full on both campuses, print orders and users | 1 | L | pending | | |
+| SWITCH | Demo switch, shared contract, launcher and alias wiring | 1 | M | done | 49169df | demo reaches Ready on :3019 with no env; build and Turbopack refuse the flag; lead renamed the Razorpay placeholder (secrets grep) |
+| SEED | Sample world: every surface full on both campuses, print orders and users | 1 | L | done | 00a3654 | 20 fixture tests; Meera owns no posts (pending ID card); lead updated the fake-admin seed test (users now seeded) |
 | WORLD | One fake world per visitor: Admin DB, bucket, change log and hooks | 2 | L | pending | | |
 | CLERKSRV | Clerk server stand-in, demo identity and the session API | 2 | L | pending | | |
 | CLERKUI | Clerk client stand-in, avatar menu and the demo account chooser | 2 | L | pending | | |
@@ -60,6 +60,9 @@ Statuses:
 
 8 Nov 10:35 IST · jtk/claude-2 · TON: worktree ~/workspace/developer/peasyprints-kada19, npm ci, baseline green (typecheck, lint, 326/326 tests), preflight GO, before shot taken (/ answers 500: Firebase auth/invalid-api-key with no env). ETA ~8 h, done about Sun 8 Nov 18:30 IST.
 
+8 Nov 10:40 IST · jtk/claude-2 · wave 1 started (SWITCH, SEED); at most 2 agents at once on this 4-CPU VM.
+8 Nov 11:05 IST · jtk/claude-2 · wave 1 verified: typecheck, lint, 352/352 tests, build compiles, no shim in .next, demo Ready on :3019. Pushed 00a3654 SEED, 49169df SWITCH.
+
 ## Blocked
 
 <!-- One entry per blocked package: id · what failed (command and first error line) · what was tried · files restored · packages skipped because of it. -->
@@ -68,6 +71,14 @@ Statuses:
 
 <!-- One entry per check not run: package id · the check · why it was skipped (needs Clerk, Firestore, Storage, the emulator, real env or a real college domain) · what to run later. After wave 5, the lead also marks each KADA-18 skipped check in docs/implementations/kada-18-ledger.md as "run in demo mode on <date>: pass / fail, fixing commit", and leaves the live-service ones skipped. -->
 
+- Wave 1 · plain `npm run build` · compiles, prerender stops on missing production env (CLERK_SECRET_KEY etc.) · run with real env later.
+- SWITCH · live alias swap in a running server · no shim files until wave 2 · covered by the end-of-wave-2 smoke.
+
 ## Decided at night
 
 <!-- One entry per decision the run made without the owner: what · the options · the choice (always the safest reversible one) · where it lives in the code · how to undo it. -->
+
+- SWITCH · secrets grep hit the fake Razorpay placeholder `rzp_test_swoopdemo` in scripts/demo.mjs · options: push as is, or rename · renamed to `demo_razorpay_key_id` (nothing checks the rzp_ prefix) · scripts/demo.mjs · undo: restore the old string.
+- SEED · tests/firebase/fake-admin.test.ts asserted `users` empty after seeding; SEED now seeds 5 users docs · lead changed the assertion to size 5 in the SEED commit (the file belongs to WORLD, which runs later) · undo: revert that line.
+- SEED · Meera (pending ID card) owns no market or housing post, against the acceptance wording · the existing rule bans pending-id-card authors · kept the rule; tests assert Sana, Kabir and Ananya own posts · src/lib/campus/fixtures/*.
+- SEED · housing has no reserved status or price-drop fields · used `booked` for reserved and a rent-cut post updated within 7 days for price-dropped · src/lib/campus/fixtures/housing.ts.
