@@ -259,7 +259,7 @@ export function MarketSeeAll({ section, audience = 'campus' }: { section: Market
           title={meta.title}
           kicker={marketKicker(audience, label)}
           backHref={paths.base}
-          className="sticky top-0 z-30 bg-white pb-1.5"
+          className="sticky top-[var(--demo-bar-h,0px)] z-30 bg-white pb-1.5"
           actions={
             <>
               <IconButton label="Post" icon={PlusIcon} href={paths.newPost(SECTION_POST_KIND[section])} />

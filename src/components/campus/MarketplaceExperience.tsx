@@ -244,7 +244,7 @@ function MarketHome({ audience }: { audience: CampusAudience }) {
           title="Marketplace"
           kicker={marketKicker(audience, label)}
           backHref={paths.back}
-          className="sticky top-0 z-30 bg-white pb-1.5"
+          className="sticky top-[var(--demo-bar-h,0px)] z-30 bg-white pb-1.5"
           actions={
             <>
               <Link href={paths.create} className={swButton({ size: 'pill' })}>

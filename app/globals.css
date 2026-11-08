@@ -43,6 +43,9 @@
   /* Cream: illustrations only */
   --cream: #FCF6B1;
 
+  /* Demo bar height (npm run demo only; 0 everywhere else). See the demo bar block below. */
+  --demo-bar-h: 0px;
+
   /* Semantic aliases (kept for existing components) */
   --background: #FFFFFF;
   --card: #FFFFFF;
@@ -145,6 +148,23 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Room for the demo's top strip; 0 outside the demo. */
+    padding-top: var(--demo-bar-h);
+  }
+
+  html {
+    scroll-padding-top: var(--demo-bar-h);
+  }
+}
+
+/* ── Demo bar ──────────────────────────────────────────────
+   DemoRoot renders a hidden [data-swoop-demo] marker only in the demo.
+   Under 1024 px the bar is a 36 px fixed strip at the top, so the body is
+   padded by it and sticky headers stick below it (top: var(--demo-bar-h)).
+   From 1024 px it is a panel beside the column and takes no height. */
+@media (width < 64rem) {
+  :root:has([data-swoop-demo]) {
+    --demo-bar-h: 36px;
   }
 }
 
