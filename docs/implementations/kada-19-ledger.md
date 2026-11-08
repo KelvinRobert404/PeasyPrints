@@ -46,13 +46,16 @@ Statuses:
 | VERIFYD | /campus/verify in demo: add college email and approve ID card | 4 | S | done | d4549c5 | personal Riya adds riya@kju.test with any code, approved; Meera approves her card |
 | PRINTUI | Print screens on sample data: Home order, sample PDF, hand-over | 4 | M | done | 46a540f | Home slot to pickup, hand-over marks collected and survives reload; sample PDF loads 4 pages |
 | APICHK | Demo smoke script, the KADA-18 data checks and the API fixes | 4 | L | done | 3fc0dce | npm run demo:smoke: 200 passed, 0 failed; NTF check accepts an item queued for the next slot (decided) |
-| HOMECHK | KADA-18 checks in demo: Home, header, gate, dock and profile | 5 | M | pending | | |
-| AUTHCHK | KADA-18 checks in demo: sign-in, verify and session | 5 | M | pending | | |
-| MARKETCHK | KADA-18 checks in demo: Market feed, See all, details, forms and kits | 5 | L | pending | | |
-| HOUSINGCHK | KADA-18 checks in demo: Housing, Girls' space, activity and My posts | 5 | L | pending | | |
-| UTILCHK | KADA-18 checks in demo: deals, lost and found, blood, games, privacy | 5 | M | pending | | |
-| PRINTCHK | KADA-18 checks in demo: print flow, orders, pickup art and campus shops | 5 | M | pending | | |
-| DEMOCHK | Demo checks end to end: persistence, reset, isolation, dates and the bar | 5 | M | pending | | |
+| HOMECHK | KADA-18 checks in demo: Home, header, gate, dock and profile | 5 | M | done | 6cc8a6f | HOME, DEAD, HDR, gate, profile, sign out (navbar, /profile, verify) pass; Riya no longer sees the stale Verify card; RootShell height subtracts the demo bar; gate copy sentence case |
+| AUTHCHK | KADA-18 checks in demo: sign-in, verify and session | 5 | M | done | 27a318c | LOGIN, Google college and personal, email code, add college email, ID card, Meera pending, semesters, guarded redirects, login bounce pass; verify waits for the shared session refresh; demo email placeholders |
+| MARKETCHK | KADA-18 checks in demo: Market feed, See all, details, forms and kits | 5 | L | done | c78384e | MFEED, MFORM1-2, MDETAIL, CONTACT, SEAMROUTES, seasons, MKIT, CPARTS pass; /dev/market-kit crash fixed; approval refresh and hand-off sheet in ContactButton |
+| HOUSINGCHK | KADA-18 checks in demo: Housing, Girls' space, activity and My posts | 5 | L | done | f1c1b0e | HFEED, HFORM, HDETAIL, HCARD, MYPOSTS, seller asks, SEAMROUTES, Girls space, From students pass; 403 on girls housing for Sana gone; move-in follows the demo date; activity WhatsApp opens the demo sheet |
+| UTILCHK | KADA-18 checks in demo: deals, lost and found, blood, games, privacy | 5 | M | done | 2cd7c32 | DEAL, LOST, BLOOD, GAMES, COPY, /contact pass; demo privacy copy says nothing is deleted; seeded O- request is fulfilled so not listed (by design) |
+| PRINTCHK | KADA-18 checks in demo: print flow, orders, pickup art and campus shops | 5 | M | done | b65e277 | PRINTCAMPUS, sample PDF and images flow, pay fails, Today/Earlier, shops, ART, live pickup pass; /shops filtered by campus (real app too); paise kept on pickup |
+| DEMOCHK | Demo checks end to end: persistence, reset, isolation, dates and the bar | 5 | M | running | | runs alone (owns the server) |
+| FIXPRICE | Student print prices without the rupee sign, keeping paise | 6 | S | pending | | |
+| FIXCHROME | Small app fixes from the wave 5 checks: favicon, tab case, kit grid, soft 404, dev badge, PostHog guard | 6 | S | pending | | |
+| FIXSEED | Sample data copy that matches its times, and far distances without walk times | 6 | S | pending | | |
 
 ## Session log
 
@@ -71,6 +74,12 @@ Statuses:
 
 8 Nov 12:20 IST · jtk/claude-2 · wave 4 started (6 packages).
 8 Nov 13:16 IST · jtk/claude-2 · wave 4 verified: typecheck, lint, 442/442 tests; build compiles, no shim in the production bundle; demo:check 56 pages, none 500; demo:smoke 200/200; route list at 375 and 1280 as Sana: 48 checks, no console error, no horizontal scroll, localhost only; sign-in, verify, demo bar and print flows checked in the browser. Pushed lead fixes fdc0eb4, 941a65c, 2254ee5, 870a791 and 3fc0dce APICHK, 324b789 ENTRY, eafda27 DEMOBAR, 6228f54 SIGNIN, d4549c5 VERIFYD, 46a540f PRINTUI.
+
+8 Nov 13:20 IST · jtk/claude-2 · wave 5 started (6 check packages; DEMOCHK held back to run alone).
+8 Nov 14:28 IST · jtk/claude-2 · VM froze (memory thrash: headless Chrome outside the 12 GB cap, dev server ~8 GB); owner reset it. Scratch tools recovered from the chat; wave resumed 15:00 with MARKETCHK and HOUSINGCHK cached.
+8 Nov 15:40 IST · jtk/claude-2 · MARKETCHK and HOUSINGCHK verified (typecheck, lint, 442/442, browser spot check) and pushed. Owner added 4 GB swap and removed T3 Code; cap now 10 GB RAM + 1 GB swap with Chrome inside it.
+8 Nov 16:45 IST · jtk/claude-2 · demo server thrashed at 8 GB again (HOMECHK and UTILCHK blocked); restarted under a watchdog (restart above 6 GB). PRINTCHK and AUTHCHK verified and pushed.
+8 Nov 17:40 IST · jtk/claude-2 · HOMECHK and UTILCHK re-run (the /tmp RAM disk filled with 236 leftover Chrome profiles mid-run; cleared, tools now delete their profiles); verified and pushed. DEMOCHK started alone. Wave 6 (FIXPRICE, FIXCHROME, FIXSEED) added for the outside fixes.
 
 ## Blocked
 
@@ -123,3 +132,8 @@ Statuses:
 - PRINTUI · the pdf.js previewer sends a HEAD to unpkg.com when NEXT_PUBLIC_PDF_WORKER_URL is unset (the demo CSP blocked it) · lead fix 870a791 sets it to the local worker in the launcher · scripts/demo.mjs.
 - APICHK · the smoke expected a new ask in the seller's inbox at once, but normal items wait for the next 12:30 or 19:30 IST slot and the inbox hides them until then · the check now passes when the item is in the inbox, or queued in the world for a later slot (not weakened: it still fails if nothing was queued) · scripts/demo-smoke.mjs.
 - SIGNIN · right after the course step, Home briefly showed 'Verify you're a KJU student' for an approved Riya; a reload clears it (stale client session) · left for HOMECHK or the follow-up wave.
+
+- Wave 5 · checks found fixes outside every package's files (rupee sign in 7 student price views, favicon 404, Segmented capitalize, housing-kit grid, soft 404 on unknown See-all sections, dev badge over the Dock, sample titles with wrong weekdays, a kurta update with no request, far walk times) · grouped by file into wave 6: FIXPRICE, FIXCHROME, FIXSEED · docs/implementations/kada-19-packages.json · undo: drop wave 6.
+- PRINTCHK · /shops listed every campus's shops · now filtered by the student's campus like /upload, in the real app too (same filter /upload already uses) · app/shops/page.tsx in b65e277 · undo: revert that file.
+- HOMECHK · Meera (ID card pending) is still invited to 'Verify' on Home and in CampusGate · a pending message would be clearer but changes real-app copy · left as is; for the owner to decide.
+- UTILCHK · the seeded O- blood request is fulfilled, so the open-requests list hides it · kept the seed; the B+ request covers the list check.

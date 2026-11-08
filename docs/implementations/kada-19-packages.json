@@ -650,6 +650,69 @@
           "brief": "Check the demo itself, end to end, in a real browser at 375 and 1280 px, and fix what fails in your files. 1) With .env* files moved aside, npm run demo starts and a first visit lands on /demo. 2) Isolation: two browser profiles post and save; neither sees the other's changes. 3) Persistence: as Sana, post a listing with a photo, save one, ask on one, place a print order, opt in to blood, join a game; restart npm run demo and reload: everything is back after one automatic reload. 4) Reset demo: all of it gone, signed out, college pick cleared, on /demo. 5) Dates: Nov, May and July show their seasonal screens; own posts stay. 6) The demo bar on every route of the smoke list: never covers app UI, the 1280 px panel sits outside the column. 7) Demo life: an ask is approved, a sample ask arrives, a seat fills. 8) npm run demo:smoke passes. 9) Network: only localhost. Don't edit files you don't own: describe the fix with file and line. List each step with pass or fail and the fixing change."
         }
       ]
+    },
+    {
+      "wave": 6,
+      "packages": [
+        {
+          "id": "FIXPRICE",
+          "title": "Student print prices without the rupee sign, keeping paise",
+          "size": "S",
+          "files": [
+            "src/lib/format/price.ts",
+            "tests/format/price.test.ts",
+            "src/components/orders/OrderCard.tsx",
+            "src/components/orders/OrdersList.tsx",
+            "src/components/orders/OrderRow.tsx",
+            "src/components/upload/PriceSummary.tsx",
+            "src/components/upload/PrintUpgrades.tsx",
+            "src/components/upload/CouponInput.tsx",
+            "src/components/shops/ShopPricingTable.tsx"
+          ],
+          "depends_on": [
+            "PRINTCHK"
+          ],
+          "acceptance": "No rupee sign on /orders, Home's recent order, /upload (summary, Rush and After dark, coupon) or /shops/[id] at 375 and 1280 px in demo. Print prices keep paise (Gulabi Road A4 B/W reads 1.5). Rush and After dark show no price before a shop is picked. Shopfront and godview are not in the demo and stay as they are. typecheck, lint and tests pass.",
+          "brief": "Found in wave 5 (PRINTCHK, HOMECHK): student print screens still print the rupee sign. Add a paise-keeping print price helper next to formatPrice in src/lib/format/price.ts (with tests), and use it in the listed files. Keep the real app's numbers unchanged apart from the format."
+        },
+        {
+          "id": "FIXCHROME",
+          "title": "Small app fixes from the wave 5 checks: favicon, tab case, kit grid, soft 404, dev badge, PostHog guard",
+          "size": "S",
+          "files": [
+            "app/icon.svg",
+            "src/components/swoop/primitives.tsx",
+            "app/dev/housing-kit/page.tsx",
+            "proxy.ts",
+            "next.config.js",
+            "src/lib/posthog/client.ts"
+          ],
+          "depends_on": [
+            "MARKETCHK",
+            "HOUSINGCHK",
+            "HOMECHK"
+          ],
+          "acceptance": "In demo: no /favicon.ico 404 on a first load (app/icon.svg, a simple Swoop mark, no copied brand art); Segmented tabs read 'Contact requests' and 'My posts'; /dev/housing-kit cards are 2 columns at 1280; /marketplace/all/x and /girls-space/marketplace/all/x answer a real 404 status while the four sections still load; the Next dev badge no longer covers the Dock's Home tab at 375; PostHog init returns early in demo. Production config otherwise unchanged (CSP untouched). typecheck, lint, tests and npm run demo:smoke pass.",
+          "brief": "Outside fixes reported in wave 5 and earlier (ledger 'Decided at night'). Segmented: drop the capitalize class at src/components/swoop/primitives.tsx:228. Housing kit: app/dev/housing-kit/page.tsx:89 'grid grid-cols-2 gap-x-2 gap-y-3', line 100 drop md:grid-cols-2. Soft 404: in proxy.ts return a 404 for /(girls-space/)?marketplace/all/<s> when s is not clearing-out, seats, near-you or wanted (read node_modules/next/dist/docs on proxy first). Dev badge: next.config.js devIndicators position bottom-right, or off. PostHog: `if (isDemoMode()) return;` first in ensurePosthogInit()."
+        },
+        {
+          "id": "FIXSEED",
+          "title": "Sample data copy that matches its times, and far distances without walk times",
+          "size": "S",
+          "files": [
+            "src/lib/campus/fixtures/market.ts",
+            "src/lib/campus/fixtures/index.ts",
+            "src/components/campus/places/DistanceLine.tsx",
+            "tests/campus/fixtures.test.ts"
+          ],
+          "depends_on": [
+            "MARKETCHK",
+            "HOUSINGCHK"
+          ],
+          "acceptance": "mkt-cab-airport and mkt-seat-chennai titles name no weekday that disagrees with their computed times; Ananya's Updates 'Someone asked about your kurta' has a matching contact request (or the update goes); DistanceLine drops the walk time above about 3 km and names the student's own campus. Fixture tests pass.",
+          "brief": "Found in wave 5: src/lib/campus/fixtures/market.ts ~421 'Cab to the airport, Tuesday 5 am' but leavesAt at(3.2); ~377 seat to Chennai says Friday but starts at(2.5): use day-free titles. buildActivity in src/lib/campus/fixtures/index.ts gives Ananya a kurta update with no request. src/components/campus/places/DistanceLine.tsx: far posts read '124 min walk' and Airport Road students see 'from KJU'."
+        }
+      ]
     }
   ]
 }
