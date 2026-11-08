@@ -3,6 +3,10 @@
 // They cover the API surface the app uses and accept the real FieldValue
 // sentinels and Timestamp class from firebase-admin/firestore, so route code
 // runs unchanged against them.
+//
+// Each fake keeps its data in a store. By default that is its own store. With a
+// `resolveStore` option, every async operation first resolves the store to use,
+// which is how the demo gives each visitor their own world (src/lib/demo/server/world.ts).
 import { FieldValue, GeoPoint, Timestamp } from 'firebase-admin/firestore';
 
 type DocData = Record<string, unknown>;
@@ -541,8 +545,13 @@ export class FakeQuery {
     return this.with({ offset: count });
   }
 
-  /** Runs the query against the current store contents. */
+  /** Runs the query against the database's own store. Throws on a database that resolves its store per call. */
   resolve(): FakeQueryDocumentSnapshot[] {
+    return this._run(this.firestore._ownStore('resolve'));
+  }
+
+  /** Runs the query against the given store's contents. */
+  _run(store: FakeFirestoreStore): FakeQueryDocumentSnapshot[] {
     const readTime = Timestamp.now();
     const { filters, limit, limitToLast, offset } = this.state;
     let orders = this.state.orders;
@@ -552,7 +561,7 @@ export class FakeQuery {
     }
     if (limitToLast !== null && orders.length === 0) throw invalidArgument('limitToLast() queries require specifying at least one orderBy() clause.');
 
-    const rows = this.firestore._listCollection(this.collectionPath)
+    const rows = store.listCollection(this.collectionPath)
       .map(([path, stored]) => ({ path, id: lastSegment(path), stored }))
       .filter((row) => filters.every((filter) => matchesFilter(row.id, row.stored.data, filter)))
       .filter((row) => orders.every((order) => fieldValueOf(row.id, row.stored.data, order.field).has));
@@ -575,13 +584,14 @@ export class FakeQuery {
   }
 
   async get(): Promise<FakeQuerySnapshot> {
-    return new FakeQuerySnapshot(this, this.resolve(), Timestamp.now());
+    const store = await this.firestore._store();
+    return new FakeQuerySnapshot(this, this._run(store), Timestamp.now());
   }
 
   count(): { get(): Promise<{ data(): { count: number } }> } {
     return {
       get: async () => {
-        const count = this.resolve().length;
+        const count = this._run(await this.firestore._store()).length;
         return { data: () => ({ count }) };
       },
     };
@@ -653,25 +663,27 @@ export class FakeDocumentReference {
   }
 
   async get(): Promise<FakeDocumentSnapshot> {
-    return this.firestore._snapshot(this);
+    return (await this.firestore._store()).snapshot(this);
   }
 
   async create(data: DocData): Promise<FakeWriteResult> {
     assertDocData(data, 'create');
-    return this.firestore._commit([{ kind: 'create', path: this.path, data }])[0];
+    return (await this.firestore._store()).commit([{ kind: 'create', path: this.path, data }])[0];
   }
 
   async set(data: DocData, options?: FakeSetOptions): Promise<FakeWriteResult> {
     assertDocData(data, 'set');
-    return this.firestore._commit([{ kind: 'set', path: this.path, data, merge: resolveSetOptions(options) }])[0];
+    const write: PendingWrite = { kind: 'set', path: this.path, data, merge: resolveSetOptions(options) };
+    return (await this.firestore._store()).commit([write])[0];
   }
 
   async update(dataOrField: DocData | string, ...rest: unknown[]): Promise<FakeWriteResult> {
-    return this.firestore._commit([{ kind: 'update', path: this.path, fields: normalizeUpdateArgs(dataOrField, rest) }])[0];
+    const write: PendingWrite = { kind: 'update', path: this.path, fields: normalizeUpdateArgs(dataOrField, rest) };
+    return (await this.firestore._store()).commit([write])[0];
   }
 
   async delete(): Promise<FakeWriteResult> {
-    return this.firestore._commit([{ kind: 'delete', path: this.path }])[0];
+    return (await this.firestore._store()).commit([{ kind: 'delete', path: this.path }])[0];
   }
 }
 
@@ -716,16 +728,19 @@ export class FakeWriteBatch {
     if (this.committed) throw new Error('Cannot commit a WriteBatch twice.');
     if (this.writes.length > MAX_BATCH_WRITES) throw invalidArgument(`A write batch can contain at most ${MAX_BATCH_WRITES} operations.`);
     this.committed = true;
-    return this.firestore._commit(this.writes);
+    return (await this.firestore._store()).commit(this.writes);
   }
 }
 
 export class FakeTransaction {
   private readonly firestore: FakeFirestore;
+  /** Bound when the transaction starts, so every read and the commit use the same store. */
+  private readonly store: FakeFirestoreStore;
   private readonly writes: PendingWrite[] = [];
 
-  constructor(firestore: FakeFirestore) {
+  constructor(firestore: FakeFirestore, store: FakeFirestoreStore) {
     this.firestore = firestore;
+    this.store = store;
   }
 
   private assertNoWritesYet(): void {
@@ -736,13 +751,13 @@ export class FakeTransaction {
   get(query: FakeQuery): Promise<FakeQuerySnapshot>;
   async get(target: FakeDocumentReference | FakeQuery): Promise<FakeDocumentSnapshot | FakeQuerySnapshot> {
     this.assertNoWritesYet();
-    if (target instanceof FakeDocumentReference) return this.firestore._snapshot(target);
-    return target.get();
+    if (target instanceof FakeDocumentReference) return this.store.snapshot(target);
+    return new FakeQuerySnapshot(target, target._run(this.store), Timestamp.now());
   }
 
   async getAll(...refs: unknown[]): Promise<FakeDocumentSnapshot[]> {
     this.assertNoWritesYet();
-    return this.firestore.getAll(...refs);
+    return this.store.getAll(refs);
   }
 
   create(ref: FakeDocumentReference, data: DocData): this {
@@ -769,70 +784,50 @@ export class FakeTransaction {
 
   /** Applies the buffered writes atomically. Called by runTransaction. */
   _commit(): void {
-    if (this.writes.length > 0) this.firestore._commit(this.writes);
+    if (this.writes.length > 0) this.store.commit(this.writes);
   }
 }
 
 // ---------------------------------------------------------------- database
 
-export class FakeFirestore {
-  private readonly docs = new Map<string, StoredDoc>();
-  private transactionQueue: Promise<unknown> = Promise.resolve();
+/** Called after each successful commit with the document paths it wrote, in order. */
+export type FakeWriteListener = (paths: string[]) => void;
 
-  collection(collectionPath: string): FakeCollectionReference {
-    return new FakeCollectionReference(this, collectionPath);
+/** The documents behind a FakeFirestore, plus the queue that runs its transactions one at a time. */
+export class FakeFirestoreStore {
+  readonly docs = new Map<string, StoredDoc>();
+  /** Set by the owner (the demo world) to log changes. */
+  onWrite: FakeWriteListener | null = null;
+  private queue: Promise<unknown> = Promise.resolve();
+  private pending = 0;
+
+  /** True while a serialized task (a transaction) is queued or running. */
+  get busy(): boolean {
+    return this.pending > 0;
   }
 
-  doc(documentPath: string): FakeDocumentReference {
-    return new FakeDocumentReference(this, documentPath);
-  }
-
-  /** Snapshots in the same order as the refs; a trailing read-options object is ignored. */
-  async getAll(...refs: unknown[]): Promise<FakeDocumentSnapshot[]> {
-    const targets = refs.filter((ref): ref is FakeDocumentReference => ref instanceof FakeDocumentReference);
-    if (targets.length === 0) throw invalidArgument('getAll() requires at least one document reference.');
-    return targets.map((ref) => this._snapshot(ref));
-  }
-
-  batch(): FakeWriteBatch {
-    return new FakeWriteBatch(this);
-  }
-
-  /**
-   * Transactions run one at a time, so reads inside one never go stale.
-   * Writes are buffered and applied atomically when the callback resolves;
-   * if it throws, nothing is written.
-   */
-  runTransaction<T>(updateFunction: (transaction: FakeTransaction) => Promise<T>, _options?: unknown): Promise<T> {
-    void _options;
-    const run = this.transactionQueue.then(async () => {
-      const transaction = new FakeTransaction(this);
-      const result = await updateFunction(transaction);
-      transaction._commit();
-      return result;
+  /** Runs `task` after every task queued before it has settled. */
+  serialize<T>(task: () => Promise<T>): Promise<T> {
+    this.pending += 1;
+    const run = this.queue.then(task).finally(() => {
+      this.pending -= 1;
     });
-    this.transactionQueue = run.catch(() => undefined);
+    this.queue = run.catch(() => undefined);
     return run;
   }
 
-  /** Synchronous write for seeding fixtures (set without merge). */
-  seedDoc(documentPath: string, data: DocData): void {
-    assertDocData(data, 'seedDoc');
-    this._commit([{ kind: 'set', path: documentPath, data, merge: false }]);
-  }
-
-  /** Removes every document. */
-  clear(): void {
-    this.docs.clear();
-  }
-
-  // Internal helpers shared with the reference, query and batch classes.
-
-  _snapshot(ref: FakeDocumentReference): FakeDocumentSnapshot {
+  snapshot(ref: FakeDocumentReference): FakeDocumentSnapshot {
     return new FakeDocumentSnapshot(ref, this.docs.get(ref.path), Timestamp.now());
   }
 
-  _listCollection(collectionPath: string): Array<[string, StoredDoc]> {
+  /** Snapshots in the same order as the refs; anything that is not a reference (read options) is ignored. */
+  getAll(refs: unknown[]): FakeDocumentSnapshot[] {
+    const targets = refs.filter((ref): ref is FakeDocumentReference => ref instanceof FakeDocumentReference);
+    if (targets.length === 0) throw invalidArgument('getAll() requires at least one document reference.');
+    return targets.map((ref) => this.snapshot(ref));
+  }
+
+  listCollection(collectionPath: string): Array<[string, StoredDoc]> {
     const depth = collectionPath.split('/').length + 1;
     const prefix = `${collectionPath}/`;
     const rows: Array<[string, StoredDoc]> = [];
@@ -843,7 +838,7 @@ export class FakeFirestore {
   }
 
   /** Applies writes in order, all or nothing. */
-  _commit(writes: PendingWrite[]): FakeWriteResult[] {
+  commit(writes: PendingWrite[]): FakeWriteResult[] {
     const now = Timestamp.now();
     const overlay = new Map<string, StoredDoc | null>();
     const read = (path: string): StoredDoc | null => (overlay.has(path) ? overlay.get(path) ?? null : this.docs.get(path) ?? null);
@@ -884,7 +879,87 @@ export class FakeFirestore {
       if (stored) this.docs.set(path, stored);
       else this.docs.delete(path);
     }
+    this.onWrite?.([...overlay.keys()]);
     return writes.map(() => ({ writeTime: now }));
+  }
+}
+
+/** Picks the store for one operation, for example the current visitor's world. */
+export type FakeFirestoreStoreResolver = () => Promise<FakeFirestoreStore>;
+
+export interface FakeFirestoreOptions {
+  /** When set, every async operation runs on the store this returns instead of the database's own. */
+  resolveStore?: FakeFirestoreStoreResolver;
+}
+
+function storeResolverError(method: string): Error {
+  return new Error(`${method}() is synchronous, but this fake Firestore picks its store per call. Use the async API.`);
+}
+
+export class FakeFirestore {
+  /** The database's own store. Unused when a resolver is set. */
+  readonly store = new FakeFirestoreStore();
+  private readonly resolveStore: FakeFirestoreStoreResolver | null;
+
+  constructor(options: FakeFirestoreOptions = {}) {
+    this.resolveStore = options.resolveStore ?? null;
+  }
+
+  collection(collectionPath: string): FakeCollectionReference {
+    return new FakeCollectionReference(this, collectionPath);
+  }
+
+  doc(documentPath: string): FakeDocumentReference {
+    return new FakeDocumentReference(this, documentPath);
+  }
+
+  /** Snapshots in the same order as the refs; a trailing read-options object is ignored. */
+  async getAll(...refs: unknown[]): Promise<FakeDocumentSnapshot[]> {
+    return (await this._store()).getAll(refs);
+  }
+
+  batch(): FakeWriteBatch {
+    return new FakeWriteBatch(this);
+  }
+
+  /**
+   * Transactions run one at a time per store, so reads inside one never go stale.
+   * Writes are buffered and applied atomically when the callback resolves;
+   * if it throws, nothing is written.
+   */
+  async runTransaction<T>(updateFunction: (transaction: FakeTransaction) => Promise<T>, _options?: unknown): Promise<T> {
+    void _options;
+    const store = await this._store();
+    return store.serialize(async () => {
+      const transaction = new FakeTransaction(this, store);
+      const result = await updateFunction(transaction);
+      transaction._commit();
+      return result;
+    });
+  }
+
+  /** Synchronous write for seeding fixtures (set without merge). */
+  seedDoc(documentPath: string, data: DocData): void {
+    assertDocData(data, 'seedDoc');
+    this._ownStore('seedDoc').commit([{ kind: 'set', path: documentPath, data, merge: false }]);
+  }
+
+  /** Removes every document. */
+  clear(): void {
+    this._ownStore('clear').docs.clear();
+  }
+
+  // Internal helpers shared with the reference, query and batch classes.
+
+  /** The store for one async operation. */
+  _store(): Promise<FakeFirestoreStore> {
+    return this.resolveStore ? this.resolveStore() : Promise.resolve(this.store);
+  }
+
+  /** The store for a synchronous call. Throws when the store is picked per call. */
+  _ownStore(method: string): FakeFirestoreStore {
+    if (this.resolveStore) throw storeResolverError(method);
+    return this.store;
   }
 }
 
@@ -934,6 +1009,26 @@ function storageNotFound(bucket: string, path: string): Error {
 /** Where signed URLs point when there is no stored content to inline. Never resolves. */
 export const FIXTURE_STORAGE_ORIGIN = 'https://fixture-storage.invalid';
 
+/** The files behind a FakeBucket. */
+export class FakeBucketStore {
+  readonly files = new Map<string, StoredFile>();
+  /** Set by the owner (the demo world) to log changes. Called with the file names saved or deleted. */
+  onChange: ((names: string[]) => void) | null = null;
+}
+
+/** Picks the store for one operation, for example the current visitor's world. */
+export type FakeBucketStoreResolver = () => Promise<FakeBucketStore>;
+
+export interface FakeBucketOptions {
+  /** When set, every async operation runs on the store this returns instead of the bucket's own. */
+  resolveStore?: FakeBucketStoreResolver;
+}
+
+/** The fixture bucket's name: the configured Firebase bucket without gs://, or 'swoop-fixtures'. */
+export function fixtureBucketName(): string {
+  return process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.replace(/^gs:\/\//, '') || 'swoop-fixtures';
+}
+
 export class FakeFile {
   readonly bucket: FakeBucket;
   readonly name: string;
@@ -944,9 +1039,10 @@ export class FakeFile {
   }
 
   async save(data: Buffer | Uint8Array | string, options: FakeSaveOptions = {}): Promise<void> {
+    const store = await this.bucket._store();
     const now = new Date();
-    const previous = this.bucket._files.get(this.name);
-    this.bucket._files.set(this.name, {
+    const previous = store.files.get(this.name);
+    store.files.set(this.name, {
       content: typeof data === 'string' ? Buffer.from(data) : Buffer.from(data),
       contentType: options.metadata?.contentType ?? options.contentType ?? 'application/octet-stream',
       cacheControl: options.metadata?.cacheControl,
@@ -954,20 +1050,21 @@ export class FakeFile {
       created: previous?.created ?? now,
       updated: now,
     });
+    store.onChange?.([this.name]);
   }
 
   async exists(): Promise<[boolean]> {
-    return [this.bucket._files.has(this.name)];
+    return [(await this.bucket._store()).files.has(this.name)];
   }
 
   async download(): Promise<[Buffer]> {
-    const file = this.bucket._files.get(this.name);
+    const file = (await this.bucket._store()).files.get(this.name);
     if (!file) throw storageNotFound(this.bucket.name, this.name);
     return [Buffer.from(file.content)];
   }
 
   async getMetadata(): Promise<[FakeFileMetadata]> {
-    const file = this.bucket._files.get(this.name);
+    const file = (await this.bucket._store()).files.get(this.name);
     if (!file) throw storageNotFound(this.bucket.name, this.name);
     return [{
       name: this.name,
@@ -982,8 +1079,10 @@ export class FakeFile {
   }
 
   async delete(options: { ignoreNotFound?: boolean } = {}): Promise<[unknown]> {
-    const existed = this.bucket._files.delete(this.name);
+    const store = await this.bucket._store();
+    const existed = store.files.delete(this.name);
     if (!existed && !options.ignoreNotFound) throw storageNotFound(this.bucket.name, this.name);
+    if (existed) store.onChange?.([this.name]);
     return [{}];
   }
 
@@ -992,7 +1091,7 @@ export class FakeFile {
    * offline. Anything else points at an unresolvable .invalid host.
    */
   async getSignedUrl(config: FakeSignedUrlConfig): Promise<[string]> {
-    const file = this.bucket._files.get(this.name);
+    const file = (await this.bucket._store()).files.get(this.name);
     if (config.action === 'read' && file) return [`data:${file.contentType};base64,${file.content.toString('base64')}`];
     const expires = new Date(config.expires).getTime();
     const path = this.name.split('/').map(encodeURIComponent).join('/');
@@ -1002,10 +1101,18 @@ export class FakeFile {
 
 export class FakeBucket {
   readonly name: string;
-  readonly _files = new Map<string, StoredFile>();
+  /** The bucket's own store. Unused when a resolver is set. */
+  readonly store = new FakeBucketStore();
+  private readonly resolveStore: FakeBucketStoreResolver | null;
 
-  constructor(name = 'swoop-fixtures') {
+  constructor(name = 'swoop-fixtures', options: FakeBucketOptions = {}) {
     this.name = name;
+    this.resolveStore = options.resolveStore ?? null;
+  }
+
+  /** The store for one async operation. */
+  _store(): Promise<FakeBucketStore> {
+    return this.resolveStore ? this.resolveStore() : Promise.resolve(this.store);
   }
 
   file(name: string): FakeFile {
@@ -1015,11 +1122,15 @@ export class FakeBucket {
 
   async getFiles(query: { prefix?: string } = {}): Promise<[FakeFile[]]> {
     const prefix = query.prefix ?? '';
-    return [[...this._files.keys()].filter((name) => name.startsWith(prefix)).sort().map((name) => new FakeFile(this, name))];
+    const store = await this._store();
+    return [[...store.files.keys()].filter((name) => name.startsWith(prefix)).sort().map((name) => new FakeFile(this, name))];
   }
 
   async deleteFiles(query: { prefix?: string } = {}): Promise<void> {
     const prefix = query.prefix ?? '';
-    for (const name of [...this._files.keys()]) if (name.startsWith(prefix)) this._files.delete(name);
+    const store = await this._store();
+    const deleted = [...store.files.keys()].filter((name) => name.startsWith(prefix));
+    for (const name of deleted) store.files.delete(name);
+    if (deleted.length > 0) store.onChange?.(deleted);
   }
 }

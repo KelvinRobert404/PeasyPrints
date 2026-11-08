@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { FakeBucket, FakeFirestore } from '../../src/lib/firebase/fakeAdmin.ts';
+import { FakeBucket, FakeBucketStore, FakeFirestore, FakeFirestoreStore } from '../../src/lib/firebase/fakeAdmin.ts';
 import { seedFakeDb } from '../../src/lib/firebase/fakeSeed.ts';
 import { DEFAULT_FIXTURE_USER_ID, FIXTURE_USER_COOKIE, fixtureUserId, isFixtureMode, parseFixtureUserId } from '../../src/lib/firebase/fixtureMode.ts';
 
@@ -275,4 +275,79 @@ test('bucket stub saves, reads, signs and deletes files', async () => {
   await assert.rejects(file.download(), (error: Error & { code?: number }) => error.code === 404);
   await assert.rejects(file.delete(), (error: Error & { code?: number }) => error.code === 404);
   await file.delete({ ignoreNotFound: true });
+});
+
+test('a store resolver routes every async operation to the picked store', async () => {
+  const stores = { a: new FakeFirestoreStore(), b: new FakeFirestoreStore() };
+  let current: keyof typeof stores = 'a';
+  const db = new FakeFirestore({ resolveStore: async () => stores[current] });
+
+  await db.doc('r/1').set({ v: 1 });
+  await db.collection('r').add({ v: 2 });
+  await db.doc('r/1').update({ v: FieldValue.increment(1) });
+  const batch = db.batch();
+  batch.set(db.doc('r/3'), { v: 3 });
+  await batch.commit();
+  await db.runTransaction(async (transaction) => {
+    const snap = await transaction.get(db.doc('r/1'));
+    transaction.set(db.doc('r/4'), { v: Number(snap.get('v')) + 2 });
+  });
+  assert.equal(stores.a.docs.size, 4);
+  assert.equal(stores.b.docs.size, 0);
+  assert.equal(db.store.docs.size, 0);
+
+  current = 'b';
+  assert.equal((await db.doc('r/1').get()).exists, false);
+  assert.equal((await db.collection('r').get()).size, 0);
+  assert.equal((await db.collection('r').count().get()).data().count, 0);
+  await db.doc('r/1').set({ v: 9 });
+  current = 'a';
+  assert.equal((await db.doc('r/1').get()).get('v'), 2);
+  await db.doc('r/4').delete();
+  assert.deepEqual((await db.getAll(db.doc('r/4'), db.doc('r/3'))).map((snap) => snap.exists), [false, true]);
+
+  // The synchronous helpers only work on a database with its own store.
+  assert.throws(() => db.seedDoc('r/5', { v: 5 }), /synchronous/);
+  assert.throws(() => db.collection('r').resolve(), /synchronous/);
+});
+
+test('the store reports written paths and whether a transaction is running', async () => {
+  const db = new FakeFirestore();
+  const written: string[][] = [];
+  db.store.onWrite = (paths) => written.push(paths);
+  await db.doc('r/1').set({ v: 1 });
+  const batch = db.batch();
+  batch.set(db.doc('r/2'), { v: 2 }).delete(db.doc('r/1'));
+  await batch.commit();
+  await assert.rejects(db.doc('r/missing').update({ v: 1 }));
+  assert.deepEqual(written, [['r/1'], ['r/2', 'r/1']]);
+
+  assert.equal(db.store.busy, false);
+  let busyInside = false;
+  await db.runTransaction(async () => {
+    busyInside = db.store.busy;
+  });
+  assert.equal(busyInside, true);
+  assert.equal(db.store.busy, false);
+});
+
+test('a bucket store resolver routes file operations and reports changes', async () => {
+  const stores = { a: new FakeBucketStore(), b: new FakeBucketStore() };
+  let current: keyof typeof stores = 'a';
+  const bucket = new FakeBucket('test-bucket', { resolveStore: async () => stores[current] });
+  const changed: string[][] = [];
+  stores.a.onChange = (names) => changed.push(names);
+
+  await bucket.file('x/a.txt').save('a');
+  await bucket.file('x/b.txt').save('b');
+  current = 'b';
+  assert.deepEqual(await bucket.file('x/a.txt').exists(), [false]);
+  assert.deepEqual((await bucket.getFiles({ prefix: 'x/' }))[0].length, 0);
+  current = 'a';
+  assert.equal((await bucket.file('x/a.txt').download())[0].toString(), 'a');
+  await bucket.file('x/a.txt').delete();
+  await bucket.file('x/a.txt').delete({ ignoreNotFound: true });
+  await bucket.deleteFiles({ prefix: 'x/' });
+  assert.deepEqual(changed, [['x/a.txt'], ['x/b.txt'], ['x/a.txt'], ['x/b.txt']]);
+  assert.equal(bucket.store.files.size, 0);
 });
