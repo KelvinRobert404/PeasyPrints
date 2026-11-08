@@ -3,6 +3,7 @@ PostHog client wrapper. Initializes lazily on first use.
 */
 import type { AnalyticsEventName, BaseEventProperties } from '@/types/analytics';
 import posthog from 'posthog-js';
+import { isDemoMode } from '@/lib/demo/mode';
 
 let posthogInitialized = false;
 
@@ -23,6 +24,8 @@ function getPosthog(): any {
 }
 
 function ensurePosthogInit(): void {
+  // The demo never talks to PostHog.
+  if (isDemoMode()) return;
   if (posthogInitialized) return;
   if (typeof window === 'undefined') return;
   if (!hasAnalyticsConsent()) return;

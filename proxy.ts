@@ -54,6 +54,18 @@ function isStaticAssetPath(pathname: string): boolean {
   );
 }
 
+// Market "see all" pages: an unknown section is a real 404, not a 200 page that
+// renders not-found inside the streamed loading shell. Keep in step with MARKET_SECTIONS.
+const MARKET_SEE_ALL = /^\/(?:girls-space\/)?marketplace\/all\/([^/]+)\/?$/;
+const MARKET_SECTION_IDS: ReadonlySet<string> = new Set(['clearing-out', 'seats', 'near-you', 'wanted']);
+
+function unknownMarketSection(req: NextRequest): NextResponse | null {
+  const match = MARKET_SEE_ALL.exec(req.nextUrl.pathname);
+  if (!match || MARKET_SECTION_IDS.has(match[1])) return null;
+  // Rewrite to a path with no route, so Next renders its not-found page with a 404 status.
+  return NextResponse.rewrite(new URL('/_swoop/not-found', req.url));
+}
+
 const clerkProxy = clerkMiddleware(async (auth, req) => {
   const { pathname, searchParams } = req.nextUrl;
   const { userId } = await auth();
@@ -128,6 +140,9 @@ const clerkProxy = clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(signInUrl);
     }
   }
+
+  // After the sign-in bounce, so signed-out visitors still go to /login first.
+  return unknownMarketSection(req) ?? undefined;
 });
 
 // ---------------------------------------------------------------------------
@@ -223,7 +238,7 @@ export default function proxy(req: NextRequest, event: NextFetchEvent) {
   // Demo mode (dev only): visitor cookie, first-visit start page, areas kept out, demo sign-in.
   if (isDemoMode()) return demoProxy(req, event);
   // Offline fixture mode (dev only): no Clerk. Keep the origin check, let everything else through.
-  if (isFixtureMode()) return rejectCrossOriginApiWrite(req) ?? NextResponse.next();
+  if (isFixtureMode()) return rejectCrossOriginApiWrite(req) ?? unknownMarketSection(req) ?? NextResponse.next();
   return clerkProxy(req, event);
 }
 

@@ -225,7 +225,7 @@ export function Segmented<T extends string>({
             aria-pressed={active}
             onClick={() => onChange(o.value)}
             className={cn(
-              'h-7 rounded-lg text-[12px] capitalize transition-colors',
+              'h-7 rounded-lg text-[12px] transition-colors',
               active ? 'bg-white font-bold text-ink shadow-[0_1px_3px_rgba(16,24,40,0.12)]' : 'font-semibold text-text-secondary'
             )}
           >

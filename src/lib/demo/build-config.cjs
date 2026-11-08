@@ -167,6 +167,7 @@ function applyDemoConfig(nextConfig, options) {
   return {
     ...nextConfig,
     distDir: DEMO_DIST_DIR,
+    devIndicators: false,
     allowedDevOrigins: devOrigins,
     async headers() {
       return [{ source: '/(.*)', headers: demoSecurityHeaders() }];

@@ -86,7 +86,7 @@ export default function HousingKitPage() {
       <h1 className="font-heading text-[16px] leading-[1.1] text-ink">Housing cards</h1>
 
       <Section title="Grid" note={`${items.length} fixtures. Feed tiles.`}>
-        <div className="grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-3">
           {items.map((item) => (
             <div key={item.id} className="min-w-0">
               <FixtureLabel id={item.id} />
@@ -97,7 +97,7 @@ export default function HousingKitPage() {
       </Section>
 
       <Section title="Row" note="Agents digest lines.">
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2">
           {items.map((item) => (
             <div key={item.id} className="min-w-0">
               <FixtureLabel id={item.id} />
