@@ -37,6 +37,18 @@ export function formatPrice(n: number, suffix?: PriceSuffix): string {
   return suffix ? `${price} ${suffix}` : price;
 }
 
+/**
+ * Print prices keep paise and never shorten to k or L.
+ * formatPrintPrice(1.5) -> 'Rs 1.5', formatPrintPrice(12.25) -> 'Rs 12.25',
+ * formatPrintPrice(40) -> 'Rs 40', formatPrintPrice(1250) -> 'Rs 1250',
+ * formatPrintPrice(-5) -> '-Rs 5' (a discount). Non-numeric input reads as 0.
+ */
+export function formatPrintPrice(n: number): string {
+  const value = Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
+  const body = String(Math.abs(value));
+  return value < 0 ? `-Rs ${body}` : `Rs ${body}`;
+}
+
 const UNIT_MULTIPLIER: Record<string, number> = {
   k: THOUSAND,
   thousand: THOUSAND,

@@ -6,8 +6,8 @@ import { useMemo, type ReactNode } from 'react';
 import { calculateTotalCost, resolvePageRates } from '@/lib/utils/pricing';
 import { Card, ListRow } from '@/components/swoop/primitives';
 import { cn } from '@/lib/utils/cn';
+import { formatPrintPrice } from '@/lib/format/price';
 
-const money = (value: number) => (Math.round(value * 100) / 100).toFixed(2).replace(/\.00$/, '');
 
 function Amount({ children, className }: { children: ReactNode; className?: string }) {
   return <span className={cn('shrink-0 text-[12.5px] font-bold text-ink tabular-nums', className)}>{children}</span>;
@@ -84,49 +84,49 @@ export function PriceSummary() {
             className="px-3"
             title="Black & white"
             subtitle={`${breakdown.assignment.bwPages} pages${copiesNote}`}
-            trailing={<Amount>₹{money(breakdown.assignment.bwSubtotal)}</Amount>}
+            trailing={<Amount>{formatPrintPrice(breakdown.assignment.bwSubtotal)}</Amount>}
           />
           <ListRow
             className="px-3"
             title="Colour"
             subtitle={`${breakdown.assignment.colorPages} pages${copiesNote}`}
-            trailing={<Amount>₹{money(breakdown.assignment.colorSubtotal)}</Amount>}
+            trailing={<Amount>{formatPrintPrice(breakdown.assignment.colorSubtotal)}</Amount>}
           />
         </>
       ) : (
         <ListRow
           className="px-3"
           title="Printing"
-          subtitle={breakdown.perPage > 0 ? `${pageCount} pages × ₹${money(breakdown.perPage)}${copiesNote}` : 'Pages × rate'}
-          trailing={<Amount>₹{money(breakdown.basePagesCost)}</Amount>}
+          subtitle={breakdown.perPage > 0 ? `${pageCount} pages × ${formatPrintPrice(breakdown.perPage)}${copiesNote}` : 'Pages × rate'}
+          trailing={<Amount>{formatPrintPrice(breakdown.basePagesCost)}</Amount>}
         />
       )}
       {breakdown.bindingCostTotal > 0 && (
-        <ListRow className="px-3" title="Binding" trailing={<Amount>₹{money(breakdown.bindingCostTotal)}</Amount>} />
+        <ListRow className="px-3" title="Binding" trailing={<Amount>{formatPrintPrice(breakdown.bindingCostTotal)}</Amount>} />
       )}
       {breakdown.extraColorSurcharge > 0 && (
-        <ListRow className="px-3" title="Extra colour pages" trailing={<Amount>₹{money(breakdown.extraColorSurcharge)}</Amount>} />
+        <ListRow className="px-3" title="Extra colour pages" trailing={<Amount>{formatPrintPrice(breakdown.extraColorSurcharge)}</Amount>} />
       )}
       {breakdown.rushCost > 0 && (
-        <ListRow className="px-3" title="Rush" trailing={<Amount>₹{money(breakdown.rushCost)}</Amount>} />
+        <ListRow className="px-3" title="Rush" trailing={<Amount>{formatPrintPrice(breakdown.rushCost)}</Amount>} />
       )}
       {breakdown.afterDarkCost > 0 && (
-        <ListRow className="px-3" title="After dark" trailing={<Amount>₹{money(breakdown.afterDarkCost)}</Amount>} />
+        <ListRow className="px-3" title="After dark" trailing={<Amount>{formatPrintPrice(breakdown.afterDarkCost)}</Amount>} />
       )}
       {breakdown.convenienceFee > 0 && (
-        <ListRow className="px-3" title="Service fee" trailing={<Amount>₹{money(breakdown.convenienceFee)}</Amount>} />
+        <ListRow className="px-3" title="Service fee" trailing={<Amount>{formatPrintPrice(breakdown.convenienceFee)}</Amount>} />
       )}
       {appliedCoupon && couponDiscount > 0 && (
         <ListRow
           className="px-3"
           title={`Coupon (${appliedCoupon.code})`}
-          trailing={<Amount className="text-go-text">-₹{money(couponDiscount)}</Amount>}
+          trailing={<Amount className="text-go-text">{formatPrintPrice(-couponDiscount)}</Amount>}
         />
       )}
       <div className="flex items-center justify-between gap-3 px-3 py-3">
         <span className="font-heading text-[14.5px] leading-none text-ink">Total</span>
         <span className={cn('font-heading text-[14.5px] leading-none tabular-nums', appliedCoupon ? 'text-go-text' : 'text-ink')}>
-          ₹{money(appliedCoupon ? finalTotal : subtotal)}
+          {formatPrintPrice(appliedCoupon ? finalTotal : subtotal)}
         </span>
       </div>
     </Card>

@@ -5,6 +5,7 @@ import { useUploadStore } from '@/lib/stores/uploadStore';
 import { swButton } from '@/components/swoop/primitives';
 import { AlertIcon, CheckIcon, CloseIcon, TicketIcon } from '@/components/swoop/icons';
 import { SpinnerIcon } from '@/components/upload/icons';
+import { formatPrintPrice } from '@/lib/format/price';
 
 interface CouponInputProps {
     shopId?: string;
@@ -42,10 +43,10 @@ export function CouponInput({ shopId }: CouponInputProps) {
                 </span>
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-[12.5px] font-bold text-ink">
-                        <span className="uppercase tracking-[0.04em]">{appliedCoupon.code}</span> applied
+                        <span className="tracking-[0.04em]">{appliedCoupon.code.toUpperCase()}</span> applied
                     </p>
                     <p className="text-[11px] font-semibold text-go-text tabular-nums">
-                        You save ₹{discount}
+                        You save {formatPrintPrice(Number(discount))}
                         {appliedCoupon.discountType === 'percentage' && ` (${appliedCoupon.discountValue}% off)`}
                     </p>
                 </div>

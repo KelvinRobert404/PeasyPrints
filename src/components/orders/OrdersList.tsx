@@ -5,6 +5,7 @@ import type { OrderDoc } from '@/types/models';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatPrintPrice } from '@/lib/format/price';
 
 export interface OrdersListProps {
   orders: OrderDoc[];
@@ -110,7 +111,7 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
                   </Badge>
                 </TableCell>
                 <TableCell className="px-3 hidden md:table-cell text-text-secondary" onClick={() => onOrderClick?.(order)}>{formatDate(order.timestamp)}</TableCell>
-                <TableCell className="px-3 hidden sm:table-cell text-right text-ink" onClick={() => onOrderClick?.(order)}>₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
+                <TableCell className="px-3 hidden sm:table-cell text-right text-ink" onClick={() => onOrderClick?.(order)}>{formatPrintPrice(Number(order.totalCost ?? 0))}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -148,7 +149,7 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
                   </Badge>
                 </TableCell>
                 <TableCell className="px-3 hidden md:table-cell text-text-secondary" onClick={() => onOrderClick?.(order)}>{formatDate(order.timestamp)}</TableCell>
-                <TableCell className="px-3 hidden sm:table-cell text-right text-ink" onClick={() => onOrderClick?.(order)}>₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
+                <TableCell className="px-3 hidden sm:table-cell text-right text-ink" onClick={() => onOrderClick?.(order)}>{formatPrintPrice(Number(order.totalCost ?? 0))}</TableCell>
               </TableRow>
             ))}
           </TableBody>

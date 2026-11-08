@@ -5,6 +5,7 @@ import { useUploadStore } from '@/lib/stores/uploadStore';
 import type { IconProps } from '@/components/swoop/icons';
 import { BoltIcon, MoonIcon } from '@/components/upload/icons';
 import { cn } from '@/lib/utils/cn';
+import { formatPrintPrice } from '@/lib/format/price';
 
 function UpgradeTile({
   title,
@@ -101,7 +102,7 @@ export function PrintUpgrades({ shopTiming }: { shopTiming?: string }) {
         title="Rush"
         icon={BoltIcon}
         description="Jump the queue. Ready in 5 minutes flat, or the extra is refunded."
-        price={<>₹{rushPrice}</>}
+        price={shopPricing ? formatPrintPrice(Number(rushPrice)) : null}
         selected={Boolean(settings.emergency)}
         unavailable={Boolean(shopPricing && rushUnavailable)}
         dimmed={rushUnavailable}
@@ -112,7 +113,7 @@ export function PrintUpgrades({ shopTiming }: { shopTiming?: string }) {
         title="After dark"
         icon={MoonIcon}
         description="Order while the shop sleeps. Pick it up first thing, 8:30 to 10 am."
-        price={<>₹{afterDarkPrice}</>}
+        price={shopPricing ? formatPrintPrice(Number(afterDarkPrice)) : null}
         selected={Boolean(settings.afterDark)}
         unavailable={Boolean(shopPricing && afterDarkUnavailable)}
         dimmed={(!isShopClosed && !settings.afterDark) || afterDarkUnavailable}

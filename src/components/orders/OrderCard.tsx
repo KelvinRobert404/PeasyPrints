@@ -5,6 +5,7 @@ import type { OrderDoc } from '@/types/models';
 import { IconTile, ListRow, StatusLine, Tag } from '@/components/swoop/primitives';
 import { ChevronRightIcon, DocIcon, QrIcon } from '@/components/swoop/icons';
 import { formatOrderDate, orderStatusMeta } from '@/components/orders/orderStatus';
+import { formatPrintPrice } from '@/lib/format/price';
 
 /** Dense order row: file · ● status • shop · price/date. Taps through to the pickup screen. */
 export function OrderCard({ order, divider = true }: { order: OrderDoc; divider?: boolean }) {
@@ -29,7 +30,7 @@ export function OrderCard({ order, divider = true }: { order: OrderDoc; divider?
         <span className="flex shrink-0 items-center gap-1.5">
           <span className="flex flex-col items-end gap-px">
             <span className={`text-[12.5px] font-bold tabular-nums ${cancelled ? 'text-slate line-through' : 'text-ink'}`}>
-              ₹{Number(order.totalCost ?? 0)}
+              {formatPrintPrice(Number(order.totalCost ?? 0))}
             </span>
             <span className="text-[11px] text-slate">{formatOrderDate(order.timestamp)}</span>
           </span>

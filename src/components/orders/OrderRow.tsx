@@ -4,6 +4,7 @@ import * as React from 'react';
 import type { OrderDoc } from '@/types/models';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { formatPrintPrice } from '@/lib/format/price';
 
 type StatusLike = OrderDoc['status'] | 'printed_ready';
 
@@ -55,7 +56,7 @@ export const OrderRow = React.memo(function OrderRow({ order, density = 'regular
         </Badge>
       </TableCell>
       <TableCell className="px-3 hidden md:table-cell text-text-secondary" onClick={() => onClick?.(order)}>{formatDate(order.timestamp)}</TableCell>
-      <TableCell className="px-3 hidden sm:table-cell text-right text-ink" onClick={() => onClick?.(order)}>₹{Number(order.totalCost ?? 0).toFixed(0)}</TableCell>
+      <TableCell className="px-3 hidden sm:table-cell text-right text-ink" onClick={() => onClick?.(order)}>{formatPrintPrice(Number(order.totalCost ?? 0))}</TableCell>
     </TableRow>
   );
 });

@@ -1,11 +1,12 @@
 import type { ShopPricing } from '@/types/models';
 import { Card, EmptyState } from '@/components/swoop/primitives';
 import { RupeeIcon } from '@/components/swoop/icons';
+import { formatPrintPrice } from '@/lib/format/price';
 
 function Price({ value }: { value?: number }) {
   const v = Number(value ?? 0);
   if (v <= 0) return <span className="text-[11.5px] font-semibold text-slate">Unavailable</span>;
-  return <span className="text-[12.5px] font-bold tabular-nums text-ink">₹{v}</span>;
+  return <span className="text-[12.5px] font-bold tabular-nums text-ink">{formatPrintPrice(v)}</span>;
 }
 
 function Group({ title, rows }: { title: string; rows: { label: string; value?: number }[] }) {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { fairPassPrice, formatPrice, isPriceDrop, parsePriceInput, parsePriceQuery } from '../../src/lib/format/price.ts';
+import { fairPassPrice, formatPrice, formatPrintPrice, isPriceDrop, parsePriceInput, parsePriceQuery } from '../../src/lib/format/price.ts';
 
 test('formatPrice shows rupees under 1,000', () => {
   assert.equal(formatPrice(650), 'Rs 650');
@@ -140,4 +140,29 @@ test('isPriceDrop is true only for a strictly lower price', () => {
   assert.equal(isPriceDrop(undefined, 1200), false);
   assert.equal(isPriceDrop(null, 1200), false);
   assert.equal(isPriceDrop(1500, Number.NaN), false);
+});
+
+test('formatPrintPrice keeps paise and drops trailing zeros', () => {
+  assert.equal(formatPrintPrice(1.5), 'Rs 1.5');
+  assert.equal(formatPrintPrice(1.50), 'Rs 1.5');
+  assert.equal(formatPrintPrice(12.25), 'Rs 12.25');
+  assert.equal(formatPrintPrice(40), 'Rs 40');
+  assert.equal(formatPrintPrice(0.1 + 0.2), 'Rs 0.3');
+});
+
+test('formatPrintPrice never shortens to k or L', () => {
+  assert.equal(formatPrintPrice(1250), 'Rs 1250');
+  assert.equal(formatPrintPrice(1_20_000.5), 'Rs 120000.5');
+});
+
+test('formatPrintPrice shows zero, discounts and bad input', () => {
+  assert.equal(formatPrintPrice(0), 'Rs 0');
+  assert.equal(formatPrintPrice(-0.001), 'Rs 0');
+  assert.equal(formatPrintPrice(-5.5), '-Rs 5.5');
+  assert.equal(formatPrintPrice(Number.NaN), 'Rs 0');
+  assert.equal(formatPrintPrice(Number.POSITIVE_INFINITY), 'Rs 0');
+});
+
+test('formatPrintPrice never uses the rupee sign', () => {
+  for (const n of [1.5, 40, 1250, -3]) assert.ok(!formatPrintPrice(n).includes('₹'));
 });
