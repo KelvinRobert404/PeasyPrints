@@ -14,10 +14,10 @@ function isUnder(pathname: string | null, base: string): boolean {
   return pathname === base || Boolean(pathname?.startsWith(`${base}/`));
 }
 
-/** Auth pages: no navbar, no dock. */
+/** Auth pages and the demo's own pages (start, not-included): no navbar, no dock. */
 function isAuthPath(pathname: string | null): boolean {
   if (!pathname) return false;
-  return pathname.startsWith('/login') || pathname === '/register' || pathname === '/sso-callback';
+  return pathname.startsWith('/login') || pathname === '/register' || pathname === '/sso-callback' || isUnder(pathname, '/demo');
 }
 
 export function RootShell({ children }: { children: ReactNode }) {
