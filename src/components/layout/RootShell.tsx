@@ -47,9 +47,10 @@ export function RootShell({ children }: { children: ReactNode }) {
 
   const showDock = !isAuthPage && !isPickup && !dockHidden;
 
+  // The demo bar pads the body; subtract it so short pages never scroll.
   return (
-    <div className="min-h-screen bg-surface flex justify-center">
-      <div className="w-full max-w-[428px] bg-white min-h-screen flex flex-col shadow-[0_0_0_1px_var(--line)]">
+    <div className="min-h-[calc(100vh-var(--demo-bar-h,0px))] bg-surface flex justify-center">
+      <div className="w-full max-w-[428px] bg-white min-h-[calc(100vh-var(--demo-bar-h,0px))] flex flex-col shadow-[0_0_0_1px_var(--line)]">
         {!isAuthPage && !isPickup && !hideNavbar && <SwoopNavbar />}
         {children}
         {/* Keeps the last content clear of the fixed dock (tab bar 52px, live slot +46px). */}

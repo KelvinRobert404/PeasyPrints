@@ -62,7 +62,7 @@ export function CampusGate({ children, girlsOnly = false }: { children: ReactNod
     action = 'Sign in to continue';
     href = `/login?redirect_url=${next}`;
   } else if (block.kind === 'girls') {
-    title = 'Girls’ Space is private by design';
+    title = 'Girls’ space is private by design';
     description = 'Upload your college iCard for a private, one-time review. Your card is never shown publicly.';
     action = 'Request private access';
     href = `/campus/verify?next=${next}`;
