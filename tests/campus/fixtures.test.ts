@@ -489,3 +489,43 @@ test('demo: dates move with now', () => {
   ];
   for (const [before, after] of pairs) assert.equal(ms(after) - ms(before), 30 * DAY_MS);
 });
+
+test('sample titles name no weekday that can drift from their computed times', () => {
+  const weekday = /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tonight|tomorrow)\b/i;
+  for (const doc of fixtures.market) {
+    const timed = ['seat', 'cab_split', 'ticket'].includes((doc.data.details as { kind: string }).kind);
+    if (timed) assert.doesNotMatch(doc.data.title, weekday, doc.id);
+  }
+  for (const id of ['mkt-cab-airport', 'mkt-seat-chennai']) {
+    const doc = fixtures.market.find((item) => item.id === id);
+    assert.ok(doc, id);
+    assert.doesNotMatch(doc.data.title, weekday, id);
+  }
+});
+
+test('contact request updates have a matching request', () => {
+  const requests = new Map(fixtures.contactRequests.map((doc) => [doc.id, doc.data]));
+  const notes = fixtures.notifications.filter((doc) => doc.data.kind === 'contact_request' || /asked about/i.test(doc.data.title));
+  assert.ok(notes.some((doc) => doc.id === 'note-ananya-kurta'), 'Ananya has a kurta update');
+  for (const doc of notes) {
+    assert.equal(doc.data.ref?.type, 'contact_request', doc.id);
+    const request = requests.get(doc.data.ref!.id);
+    assert.ok(request, `${doc.id} request`);
+    assert.equal(request.sellerId, doc.data.userId, `${doc.id} seller`);
+    assert.ok(doc.data.href?.endsWith(`/${request.contentId}`), `${doc.id} href`);
+  }
+});
+
+test('update links open real pages', () => {
+  const listings = new Map([...fixtures.market, ...fixtures.housing].map((doc) => [doc.id, doc.data]));
+  const pages = new Set(['/girls-space', '/campus/deals', '/campus/blood', '/campus/games', '/campus/lost-found', '/campus/activity']);
+  for (const doc of fixtures.notifications) {
+    const href = doc.data.href;
+    if (!href || pages.has(href)) continue;
+    const match = /^(\/girls-space)?\/(marketplace|housing)\/([^/]+)$/.exec(href);
+    assert.ok(match, `${doc.id} href ${href}`);
+    const listing = listings.get(match[3]);
+    assert.ok(listing, `${doc.id} listing`);
+    assert.equal(Boolean(match[1]), listing.audience === 'girls', `${doc.id} girls prefix`);
+  }
+});
