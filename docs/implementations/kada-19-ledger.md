@@ -22,6 +22,7 @@ Statuses:
 <!-- Newest line wins. `**Working:** <person> · <device> · chat "<chat title>" · since <d Mon HH:MM IST>`, then `**Released:** ...` or `**Reclaimed:** ...` when the run stops or is taken back. -->
 
 **Working:** jtk · claude-2 (GCP VM) · chat "KADA-19 · 8 Nov/demo-site" · since 8 Nov 10:35 IST (claim kept here only: Linear connector not signed in on this device)
+**Released:** jtk · claude-2 (GCP VM) · 8 Nov 19:41 IST · run complete: 29/29 packages done and pushed, none blocked; morning report https://claude.ai/artifact/7VQTKGnwvvHNM1fq7Az9iW
 
 ## Packages
 
@@ -81,7 +82,7 @@ Statuses:
 8 Nov 16:45 IST · jtk/claude-2 · demo server thrashed at 8 GB again (HOMECHK and UTILCHK blocked); restarted under a watchdog (restart above 6 GB). PRINTCHK and AUTHCHK verified and pushed.
 8 Nov 17:40 IST · jtk/claude-2 · HOMECHK and UTILCHK re-run (the /tmp RAM disk filled with 236 leftover Chrome profiles mid-run; cleared, tools now delete their profiles); verified and pushed. DEMOCHK started alone. Wave 6 (FIXPRICE, FIXCHROME, FIXSEED) added for the outside fixes.
 8 Nov 19:05 IST · jtk/claude-2 · DEMOCHK verified and pushed (33f791e). Wave 6 started; the lead runs the demo server under the watchdog. FIXCHROME's dev badge fix moved from next.config.js to the demo-only src/lib/demo/build-config.cjs, as DEMOCHK suggested.
-8 Nov 19:50 IST · jtk/claude-2 · wave 6 verified and pushed (0b1421b, ecb79c8, aece632): typecheck, lint, 449/449 tests, demo:smoke 201/201, browser checks at 375 and 1280, dev badge gone after a restart. Production build compiles, no shims in .next. All 29 packages done, none blocked.
+8 Nov 19:20 IST · jtk/claude-2 · wave 6 verified and pushed (0b1421b, ecb79c8, aece632): typecheck, lint, 449/449 tests, demo:smoke 201/201, browser checks at 375 and 1280, dev badge gone after a restart. Production build compiles, no shims in .next. All 29 packages done, none blocked.
 
 ## Blocked
 
