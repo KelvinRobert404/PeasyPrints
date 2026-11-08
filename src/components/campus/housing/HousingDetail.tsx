@@ -41,6 +41,7 @@ import {
 import { MAX_BEDS, type HousingPatch } from '@/lib/campus/housing/schema';
 import type { SerializedHousingListing } from '@/lib/campus/housing/serialize';
 import { istDateKey } from '@/lib/campus/season';
+import { useSeasonNow } from '@/lib/demo/season';
 import { formatPrice } from '@/lib/format/price';
 import { cn } from '@/lib/utils/cn';
 import type { CampusAudience } from '@/types/campus';
@@ -506,7 +507,8 @@ type BodyProps = {
 };
 
 function HousingBody({ item, audience, campusCode, busy, actionError, onAction }: BodyProps) {
-  const now = new Date();
+  // Move-in labels follow the demo date in demo mode, like the cards.
+  const seasonNow = useSeasonNow();
   const price = housingPriceLabels({ rentPp: item.rentPp, deposit: item.deposit });
   const terms = termsChip(item.rentTerms);
   const termLines = termsDetail(item.rentTerms);
@@ -528,7 +530,7 @@ function HousingBody({ item, audience, campusCode, busy, actionError, onAction }
             homeState: item.roommate.homeState,
           },
         },
-        now,
+        seasonNow,
       )
     : [];
 
@@ -574,7 +576,7 @@ function HousingBody({ item, audience, campusCode, busy, actionError, onAction }
         {reserved && item.reservedUntil ? (
           <p className="mt-1 flex items-center gap-1 text-[11.5px] font-bold text-ink">
             <ClockIcon size={14} aria-hidden="true" />
-            {reservedUntilLabel(item.reservedUntil, now)}
+            {reservedUntilLabel(item.reservedUntil)}
           </p>
         ) : null}
 
@@ -592,7 +594,7 @@ function HousingBody({ item, audience, campusCode, busy, actionError, onAction }
       {item.isOwner ? <OwnerPanel item={item} busy={busy} error={actionError} onAction={onAction} /> : null}
 
       <section className="grid grid-cols-2 gap-1.5 pt-3">
-        <Fact icon={CalendarIcon} label="Move in" value={housingMoveInLabel(item.moveIn, now).replace(/^Move in: /, '')} />
+        <Fact icon={CalendarIcon} label="Move in" value={housingMoveInLabel(item.moveIn, seasonNow).replace(/^Move in: /, '')} />
         <Fact icon={BedIcon} label="Beds" value={bedsLabel(item.bedsLeft)} />
         <Fact icon={UsersIcon} label="Who can stay" value={WHO_CAN_STAY_LABELS[item.whoCanStay]} />
         <Fact

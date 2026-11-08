@@ -25,7 +25,8 @@ import { HousingFilters } from './housing/HousingFilters';
 import { HousingListingCard } from './housing/HousingListingCard';
 import type { CampusAudience } from '@/types/campus';
 
-const GRID = 'grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3 lg:grid-cols-4';
+// The app shell is at most 428 px wide at every viewport, so two columns always.
+const GRID = 'grid grid-cols-2 gap-x-2 gap-y-3';
 
 function initialFilters(peak: boolean): HousingFilterState {
   return {
@@ -40,6 +41,15 @@ function initialFilters(peak: boolean): HousingFilterState {
 }
 
 export function HousingExperience({ audience = 'campus' }: { audience?: CampusAudience }) {
+  // The feed loads inside the gate, so a gated visitor never fetches a feed they cannot see.
+  return (
+    <CampusGate girlsOnly={audience === 'girls'}>
+      <HousingFeedPage audience={audience} />
+    </CampusGate>
+  );
+}
+
+function HousingFeedPage({ audience }: { audience: CampusAudience }) {
   const { items, campus: apiCampus, status, error, reload, toggleSave } = useHousingFeed(audience);
   const current = useCurrentCampus();
   // Real now, or the demo date in demo mode (known only after hydration).
@@ -82,7 +92,7 @@ export function HousingExperience({ audience = 'campus' }: { audience?: CampusAu
   );
 
   return (
-    <CampusGate girlsOnly={girls}>
+    <>
       <PostSlot audience={audience} href={paths.create} />
       <div className="pb-3">
         {girls ? (
@@ -182,7 +192,7 @@ export function HousingExperience({ audience = 'campus' }: { audience?: CampusAu
           </section>
         </main>
       </div>
-    </CampusGate>
+    </>
   );
 }
 
@@ -229,12 +239,12 @@ function AgentDigest({
         <span className="min-w-0 truncate text-[12.5px] font-bold text-ink">{label}</span>
         <CaretDownIcon size={14} className={cn('shrink-0 text-ink transition-transform', open && 'rotate-180')} aria-hidden="true" />
       </button>
-      {open ? <div className="grid gap-2 px-2 pb-2 lg:grid-cols-2">{items.map((item) => render(item))}</div> : null}
+      {open ? <div className="grid gap-2 px-2 pb-2">{items.map((item) => render(item))}</div> : null}
     </div>
   );
 }
 
-/** Dock live slot for posting. Rendered inside the gate so it only shows to students who can post. */
+/** Dock live slot for posting. Rendered inside the gate (via HousingFeedPage) so it only shows to students who can post. */
 function PostSlot({ audience, href }: { audience: CampusAudience; href: string }) {
   useDockSlot({
     id: 'housing-post',

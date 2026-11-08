@@ -4,6 +4,7 @@ import { useEffect, useState, type ComponentType } from 'react';
 import { CampusGate } from '@/components/campus/CampusGate';
 import { HousingMyPosts } from '@/components/campus/housing/HousingMyPosts';
 import { MarketMyPosts } from '@/components/campus/market/MarketMyPosts';
+import { HandoffAnchor, useHandoff, whatsappNumberFromUrl } from '@/components/demo/DemoHandoffSheet';
 import {
   BallIcon,
   BellIcon,
@@ -111,8 +112,11 @@ function requestTitle(item: ActivityRequest): string {
 }
 
 function RequestSection({ title, items, seller = false, onDecision }: { title: string; items: ActivityRequest[]; seller?: boolean; onDecision?: (id: string, action: 'approve' | 'decline') => void }) {
+  // Demo: the WhatsApp hand-off opens a sample sheet instead of wa.me.
+  const handoff = useHandoff();
   return (
     <Section title={title} count={items.length}>
+      {handoff.sheet}
       {items.length ? (
         <ul>
           {items.map((item, index) => {
@@ -127,7 +131,18 @@ function RequestSection({ title, items, seller = false, onDecision }: { title: s
                 </span>
               );
             } else if (!seller && item.whatsappUrl) {
-              trailing = <a href={item.whatsappUrl} target="_blank" rel="noreferrer" className={swButton({ size: 'sm' })}>Open WhatsApp</a>;
+              const url = item.whatsappUrl;
+              trailing = (
+                <HandoffAnchor
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={swButton({ size: 'sm' })}
+                  onHandoff={() => handoff.open('whatsapp', item.contentType === 'housing' ? 'the poster' : 'the seller', whatsappNumberFromUrl(url))}
+                >
+                  Open WhatsApp
+                </HandoffAnchor>
+              );
             }
             return (
               <li key={item.id}>
