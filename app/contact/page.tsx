@@ -4,6 +4,7 @@ import { useMemo, type ComponentType, type ReactNode } from 'react';
 import { Card, IconTile, ListRow, PageHeader, SectionHeader } from '@/components/swoop/primitives';
 import { ChevronRightIcon, RupeeIcon, type IconProps } from '@/components/swoop/icons';
 import { BugIcon, BulbIcon, ChatIcon } from '@/components/auth/icons';
+import { HandoffAnchor, useHandoff } from '@/components/demo/DemoHandoffSheet';
 import { cn } from '@/lib/utils/cn';
 
 function TopicRow({
@@ -40,6 +41,7 @@ export default function ContactPage() {
     }
     return `https://wa.me/?text=${text}`;
   }, [phone, text]);
+  const handoff = useHandoff();
 
   return (
     <div className="flex flex-1 flex-col bg-white">
@@ -51,7 +53,14 @@ export default function ContactPage() {
         <section className="pt-3">
           <SectionHeader title="Talk to us" />
           <Card className="mt-2 px-3">
-            <a href={waLink} target="_blank" rel="noopener noreferrer" className="campus-press block">
+            <HandoffAnchor
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="campus-press block"
+              demoClassName="w-full"
+              onHandoff={() => handoff.open('whatsapp', 'Swoop support', phone)}
+            >
               <ListRow
                 leading={<IconTile icon={ChatIcon} tone="go" />}
                 title={
@@ -63,7 +72,7 @@ export default function ContactPage() {
                 trailing={<ChevronRightIcon size={12} className="shrink-0 text-text-muted" />}
                 divider={false}
               />
-            </a>
+            </HandoffAnchor>
           </Card>
         </section>
 
@@ -90,6 +99,7 @@ export default function ContactPage() {
           </Card>
         </section>
       </main>
+      {handoff.sheet}
     </div>
   );
 }

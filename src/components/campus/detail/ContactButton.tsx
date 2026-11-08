@@ -3,8 +3,28 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { swButton } from '@/components/swoop/primitives';
 import { ChatIcon } from '@/components/marketplace/icons';
+import { HandoffAnchor, useHandoff, whatsappNumberFromUrl } from '@/components/demo/DemoHandoffSheet';
 import { cn } from '@/lib/utils/cn';
 import type { CampusAudience, ContactRequest } from '@/types/campus';
+
+/** Demo only: the poster's name from the post itself, since the request does not carry it. */
+async function posterName(contentType: ContactRequest['contentType'], contentId: string, audience: CampusAudience): Promise<string> {
+  const id = encodeURIComponent(contentId);
+  const girls = audience === 'girls';
+  const endpoint =
+    contentType === 'housing'
+      ? girls ? `/api/girls-space/housing/${id}` : `/api/housing/posts/${id}`
+      : girls ? `/api/girls-space/marketplace/${id}` : `/api/marketplace/listings/${id}`;
+  try {
+    const response = await fetch(endpoint, { cache: 'no-store' });
+    const data = (await response.json().catch(() => ({}))) as {
+      item?: { seller?: { displayName?: string }; poster?: { displayName?: string } };
+    };
+    return data.item?.seller?.displayName || data.item?.poster?.displayName || 'the poster';
+  } catch {
+    return 'the poster';
+  }
+}
 
 type Props = {
   contentType: ContactRequest['contentType'];
@@ -35,6 +55,7 @@ export function ContactButton({
   const [loading, setLoading] = useState(initialContact === undefined && !disabledLabel);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const handoff = useHandoff();
 
   const update = (next: ContactRequest | null) => {
     setContact(next);
@@ -89,10 +110,19 @@ export function ContactButton({
     );
   } else if (contact?.status === 'approved' && contact.whatsappUrl) {
     body = (
-      <a href={contact.whatsappUrl} target="_blank" rel="noreferrer" className={full}>
+      <HandoffAnchor
+        href={contact.whatsappUrl}
+        target="_blank"
+        rel="noreferrer"
+        className={full}
+        onHandoff={() => {
+          const number = whatsappNumberFromUrl(contact.whatsappUrl ?? '');
+          void posterName(contentType, contentId, audience).then((name) => handoff.open('whatsapp', name, number));
+        }}
+      >
         <ChatIcon size={18} aria-hidden="true" />
         Continue on WhatsApp
-      </a>
+      </HandoffAnchor>
     );
   } else {
     const pending = contact?.status === 'pending';

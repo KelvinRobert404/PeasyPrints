@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { CampusGate } from '@/components/campus/CampusGate';
+import { HandoffAnchor, useHandoff } from '@/components/demo/DemoHandoffSheet';
 import { BloodDropIcon, CheckIcon, LockIcon, MinusIcon, PlusIcon } from '@/components/swoop/icons';
 import { BloodArt } from '@/components/swoop/illustrations';
 import { Card, EmptyState, PageHeader, Tag, swButton } from '@/components/swoop/primitives';
@@ -432,6 +433,7 @@ function RequestCard({ item, onChange, onNotice }: { item: BloodRequestView; onC
   const [error, setError] = useState('');
   const [sharing, setSharing] = useState<string | null>(null);
   const [number, setNumber] = useState('');
+  const handoff = useHandoff();
 
   const act = async (body: Record<string, unknown>, key: string, message?: string) => {
     if (busy) return;
@@ -535,14 +537,17 @@ function RequestCard({ item, onChange, onNotice }: { item: BloodRequestView; onC
           </div>
         </div>
       ) : item.sharedWhatsapp ? (
-        <a
+        <HandoffAnchor
           href={whatsappHref(item.sharedWhatsapp, `Hey ${item.posterFirstName}, I can help with ${item.bloodGroup} blood.`)}
           target="_blank"
           rel="noreferrer"
           className={cn(swButton({ size: 'sm' }), 'mt-2.5 w-full')}
+          onHandoff={() => {
+            if (item.sharedWhatsapp) handoff.open('whatsapp', item.posterFirstName, item.sharedWhatsapp);
+          }}
         >
           Message {item.posterFirstName} on WhatsApp
-        </a>
+        </HandoffAnchor>
       ) : item.iCanHelp ? (
         <p role="status" className="mt-2.5 rounded-[12px] bg-go-tint px-3 py-2 text-[11.5px] font-bold text-go-text">
           Thanks. {item.posterFirstName} may share their WhatsApp.
@@ -553,6 +558,7 @@ function RequestCard({ item, onChange, onNotice }: { item: BloodRequestView; onC
         </button>
       )}
       <ErrorLine message={error} />
+      {handoff.sheet}
     </Card>
   );
 }

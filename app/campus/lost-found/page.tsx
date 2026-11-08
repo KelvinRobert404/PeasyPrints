@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useState, type ReactNode } from 'react';
 import { CampusGate } from '@/components/campus/CampusGate';
+import { HandoffAnchor, useHandoff } from '@/components/demo/DemoHandoffSheet';
 import { PhotoField } from '@/components/campus/fields/PhotoField';
 import { DistanceLine } from '@/components/campus/places/DistanceLine';
 import { LandmarkPicker, type LandmarkPick } from '@/components/campus/places/LandmarkPicker';
@@ -302,6 +303,7 @@ function ItemSheet({
   const [answer, setAnswer] = useState('');
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
+  const handoff = useHandoff();
 
   const patch = async (body: Record<string, unknown>, key: string) => {
     if (busy) return;
@@ -365,14 +367,17 @@ function ItemSheet({
             The poster approved you
           </p>
           {item.contact ? (
-            <a
+            <HandoffAnchor
               href={contactHref(item.contact)}
               target={item.contact.kind === 'phone' || item.contact.kind === 'email' ? undefined : '_blank'}
               rel="noreferrer"
               className={cn(swButton({ size: 'sm' }), 'mt-2 w-full')}
+              onHandoff={() => {
+                if (item.contact) handoff.open(item.contact.kind, item.poster.displayName, item.contact.value);
+              }}
             >
               {CONTACT_KIND_LABELS[item.contact.kind]}: {contactText(item.contact)}
-            </a>
+            </HandoffAnchor>
           ) : (
             <p className="mt-1 text-[11.5px] text-go-text">{item.keptAt ? `Collect it at ${item.keptAt}.` : 'Look out for their message.'}</p>
           )}
@@ -407,6 +412,7 @@ function ItemSheet({
       )}
 
       <ErrorLine message={error} />
+      {handoff.sheet}
     </Sheet>
   );
 }
