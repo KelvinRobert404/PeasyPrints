@@ -18,6 +18,8 @@ import { useShopsStore } from '@/lib/stores/shopsStore';
 import { useUploadStore } from '@/lib/stores/uploadStore';
 import { useHideDock } from '@/lib/stores/dockStore';
 import { useCurrentCampus } from '@/hooks/useCurrentCampus';
+import { useCampusSession } from '@/hooks/useCampusSession';
+import { shopHours } from '@/components/shops/shopMeta';
 import { FIXTURE_SHOPS } from '@/lib/campus/fixtures/shops';
 import { isFixtureMode } from '@/lib/firebase/fixtureMode';
 import haptics from '@/lib/utils/haptics';
@@ -36,6 +38,7 @@ export default function UploadEntryPage() {
   const { shops: liveShops, subscribe } = useShopsStore();
   const { setShopPricing, jobType, file, images } = useUploadStore();
   const campus = useCurrentCampus();
+  const { loading: sessionLoading } = useCampusSession();
   const [selectedShopId, setSelectedShopId] = useState<string>('');
 
   // Fixture mode has no client Firestore: skip the live subscription.
@@ -59,12 +62,13 @@ export default function UploadEntryPage() {
   }, [fixtures, subscribe]);
 
   // Shops on the student's campus (all shops when the campus isn't known).
-  // shop.collegeId holds a catalog campus id.
+  // shop.collegeId holds a catalog campus id. While the session loads, list
+  // nothing rather than flash every campus's shops.
   const campusId = campus?.campusId ?? null;
-  const filteredShops = useMemo(
-    () => (campusId ? shops.filter((s) => s.collegeId === campusId) : shops),
-    [shops, campusId]
-  );
+  const filteredShops = useMemo(() => {
+    if (campusId) return shops.filter((s) => s.collegeId === campusId);
+    return sessionLoading ? [] : shops;
+  }, [shops, campusId, sessionLoading]);
 
   const selectedShop = useMemo(() => shops.find((s) => s.id === selectedShopId), [shops, selectedShopId]);
 
@@ -92,37 +96,6 @@ export default function UploadEntryPage() {
     updateScrollIndicators();
   }, [filteredShops.length]);
 
-  function formatHourLabel(raw?: string): string | null {
-    if (!raw) return null;
-    const s = String(raw).trim();
-    // e.g., 10, 10:30, 18, 18:00
-    let m = s.match(/^(\d{1,2})(?::(\d{2}))?$/);
-    if (m) {
-      let h = Number(m[1]);
-      const suffix = h >= 12 ? 'PM' : 'AM';
-      if (h === 0) h = 12;
-      if (h > 12) h = h - 12;
-      return `${h}${suffix}`;
-    }
-    // e.g., 10AM, 10:30am, 12 pm
-    m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*([AaPp][Mm])$/);
-    if (m) {
-      let h = Number(m[1]);
-      const suffix = m[3].toUpperCase();
-      if (h === 0) h = 12;
-      if (h > 12) h = h % 12;
-      return `${h}${suffix}`;
-    }
-    return null;
-  }
-
-  function formatShopTiming(s: { openingTime?: string; closingTime?: string; timing?: string }): string | undefined {
-    const open = formatHourLabel(s.openingTime);
-    const close = formatHourLabel(s.closingTime);
-    if (open && close) return `${open} – ${close}`;
-    return s.timing ?? undefined;
-  }
-
   function nudgeSelectShop() {
     // Show toast and auto-scroll to the shops scroller
     try { haptics.warn(); } catch { }
@@ -134,7 +107,8 @@ export default function UploadEntryPage() {
     window.setTimeout(() => setToast(''), 2500);
   }
 
-  const shopTiming = selectedShop ? formatShopTiming(selectedShop) : undefined;
+  // Same hours text as /shops (keeps minutes, e.g. 8:30 AM).
+  const shopTiming = selectedShop ? shopHours(selectedShop) : undefined;
 
   return (
     <div className="flex min-h-screen flex-col bg-white font-sans">
@@ -155,6 +129,10 @@ export default function UploadEntryPage() {
               onScroll={updateScrollIndicators}
               className="no-scrollbar grid snap-x auto-cols-[30%] grid-flow-col gap-1.5 overflow-x-auto py-0.5"
             >
+              {filteredShops.length === 0 && sessionLoading &&
+                [0, 1, 2].map((i) => (
+                  <span key={i} aria-hidden className="h-[72px] animate-pulse rounded-[12px] bg-surface" />
+                ))}
               {[...filteredShops]
                 .sort((a, b) => Number(Boolean(b.isOpen)) - Number(Boolean(a.isOpen)))
                 .map((s) => {

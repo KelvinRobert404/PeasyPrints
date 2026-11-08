@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -22,6 +22,19 @@ function TopBar() {
       <span className="h-8 w-8" aria-hidden />
     </div>
   );
+}
+
+/** 'Rs 80' via formatPrice; print totals can carry paise ('Rs 7.5'), so keep them. */
+function paidLabel(total: unknown): string {
+  const rupees = Math.round(Math.max(0, Number(total) || 0) * 100) / 100;
+  return Number.isInteger(rupees) ? formatPrice(rupees) : `Rs ${rupees.toFixed(2).replace(/0$/, '')}`;
+}
+
+/** The line beside the pickup art, by order state. */
+function artCaption(meta: { ready: boolean; active: boolean }): string {
+  if (meta.ready) return 'The shop matches your name.';
+  if (meta.active) return 'This page updates by itself.';
+  return 'All done here.';
 }
 
 function Stat({ label, value }: { label: string; value: ReactNode }) {
@@ -102,16 +115,21 @@ export default function PickupPage() {
     return () => unsub();
   }, [params?.id]);
 
-  // Fire a success haptic when the order is ready. Must be before any early returns
+  // Fire a success haptic when the order turns ready while this page is open
+  // (not on first load: browsers block vibrate before a tap). Must be before any early returns.
+  const lastStatus = useRef<string | null>(null);
   useEffect(() => {
-    if (order && (order.status === 'printed' || (order as any).status === 'printed_ready')) {
+    const status = order ? String(order.status) : null;
+    const isReady = (value: string | null) => value === 'printed' || value === 'printed_ready';
+    if (lastStatus.current !== null && !isReady(lastStatus.current) && isReady(status)) {
       haptics.success();
     }
+    lastStatus.current = status;
   }, [order]);
 
   if (loading) {
     return (
-      <div className="flex min-h-[100dvh] flex-col bg-white">
+      <div className="flex min-h-[calc(100dvh-var(--demo-bar-h,0px))] flex-col bg-white">
         <TopBar />
         <div className="flex flex-1 items-center justify-center" aria-busy="true">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-royal border-t-transparent" aria-label="Loading order" />
@@ -122,7 +140,7 @@ export default function PickupPage() {
 
   if (!order) {
     return (
-      <div className="flex min-h-[100dvh] flex-col bg-white">
+      <div className="flex min-h-[calc(100dvh-var(--demo-bar-h,0px))] flex-col bg-white">
         <TopBar />
         <div className="px-3 pt-6">
           <EmptyState icon={OrdersIcon} title="Order not found" body="This order doesn't exist or isn't on your account." />
@@ -135,7 +153,7 @@ export default function PickupPage() {
   const placed = [formatOrderDate(order.timestamp), formatOrderTime(order.timestamp)].filter(Boolean).join(', ');
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-white">
+    <div className="flex min-h-[calc(100dvh-var(--demo-bar-h,0px))] flex-col bg-white">
       <TopBar />
 
       <main className="flex flex-1 flex-col gap-3 px-3 pt-2 pb-4">
@@ -153,7 +171,7 @@ export default function PickupPage() {
           <Stat label="Paper" value={order.printSettings?.paperSize || 'A4'} />
           <Stat label="Copies" value={order.printSettings?.copies ?? 1} />
           <Stat label="Pages" value={order.totalPages} />
-          <Stat label="Paid" value={formatPrice(order.totalCost)} />
+          <Stat label="Paid" value={paidLabel(order.totalCost)} />
         </div>
 
         <div className="flex flex-col">
@@ -180,7 +198,7 @@ export default function PickupPage() {
 
         <div className="mt-auto flex items-end gap-2 pt-2">
           <PickupWaitArt width={88} height={81} className="pointer-events-none shrink-0 select-none" />
-          <p className="pb-2 text-[11.5px] text-slate">Show this at the counter.</p>
+          <p className="pb-2 text-[11.5px] text-slate">{artCaption(meta)}</p>
         </div>
       </main>
     </div>

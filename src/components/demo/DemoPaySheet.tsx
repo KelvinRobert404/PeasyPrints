@@ -26,6 +26,12 @@ export interface DemoPaySheetProps {
 
 type Busy = 'pay' | 'fail' | null;
 
+/** 'Rs 80' via formatPrice; keeps paise ('Rs 7.5') so it matches the checkout bar. */
+function sheetPrice(amountPaise: number): string {
+  const rupees = Math.round(Math.max(0, Number(amountPaise) || 0)) / 100;
+  return Number.isInteger(rupees) ? formatPrice(rupees) : `Rs ${rupees.toFixed(2).replace(/0$/, '')}`;
+}
+
 function messageOf(error: unknown): string {
   return error instanceof Error && error.message ? error.message : 'Could not reach the demo. Try again.';
 }
@@ -37,7 +43,7 @@ export function DemoPaySheet({ amountPaise, description, onPay, onFail, onCancel
   const mounted = useRef(true);
   const [busy, setBusy] = useState<Busy>(null);
   const [error, setError] = useState<string | null>(null);
-  const price = formatPrice(Math.max(0, Number(amountPaise) || 0) / 100);
+  const price = sheetPrice(amountPaise);
 
   const busyRef = useRef<Busy>(null);
   useEffect(() => {

@@ -18,8 +18,18 @@ import { ImagesLayoutPreview } from '@/components/upload/ImagesLayoutPreview';
 import { SpinnerIcon } from '@/components/upload/icons';
 import { swButton } from '@/components/swoop/primitives';
 import { cn } from '@/lib/utils/cn';
+import { formatPrice } from '@/lib/format/price';
+import { isDemoMode } from '@/lib/demo/mode';
 
 const money = (value: number) => (Math.round(value * 100) / 100).toFixed(2).replace(/\.00$/, '');
+
+/** 'Rs 80' via formatPrice; print totals can carry paise, so 'Rs 7.5' keeps them. */
+const priceLabel = (value: number) => (Number.isInteger(Number(money(value))) ? formatPrice(value) : `Rs ${money(value)}`);
+
+/** A failed payment is an expected outcome in the demo's pay sheet, not a console error. */
+const logPaymentFailure: (error: unknown) => void = isDemoMode()
+  ? () => {}
+  : (error) => console.error('Razorpay payment failed', error);
 
 export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?: string }) {
   const { file, pageCount, totalCost, settings, jobType, images, imagesPages, imagesGapCm, imagesScale, assignmentMode, assignmentColorPages, assignmentConfirmed } = useUploadStore();
@@ -181,7 +191,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         amount: order.amount,
         currency: order.currency,
         name: 'PeasyPrints',
-        description: hasPdf ? file!.name : `${images.length} images`,
+        description: hasPdf ? file!.name : `${images.length} ${images.length === 1 ? 'image' : 'images'}`,
         order_id: order.id,
         prefill: {
           name: clerkUser.fullName || 'User',
@@ -242,7 +252,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         }
       });
       rzp.on('payment.failed', function (resp: any) {
-        console.error('Razorpay payment failed', resp?.error);
+        logPaymentFailure(resp?.error);
         alert('Payment failed. Please try again.');
         capture('razorpay_payment_failed', { status: 'failed' });
       });
@@ -308,7 +318,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         ) : (
           <>
             <span>Checkout</span>
-            {totalCost > 0 && <span className="font-heading text-[14.5px] leading-none tabular-nums">₹{money(totalCost)}</span>}
+            {totalCost > 0 && <span className="font-heading text-[14.5px] leading-none tabular-nums">{priceLabel(totalCost)}</span>}
           </>
         )}
       </button>

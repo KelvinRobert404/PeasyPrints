@@ -7,9 +7,23 @@ import { useShopsStore } from '@/lib/stores/shopsStore';
 import { ShopCard } from '@/components/shops/ShopCard';
 import { EmptyState, PageHeader } from '@/components/swoop/primitives';
 import { StoreIcon } from '@/components/swoop/icons';
+import { useCurrentCampus } from '@/hooks/useCurrentCampus';
+import { useCampusSession } from '@/hooks/useCampusSession';
 
 export default function ShopsPage() {
-  const { shops, subscribe, loading, error } = useShopsStore();
+  const { shops: allShops, subscribe, loading: shopsLoading, error } = useShopsStore();
+  const campus = useCurrentCampus();
+  const { loading: sessionLoading } = useCampusSession();
+
+  // Same rule as /upload: shops on the student's campus (shop.collegeId holds a
+  // catalog campus id), all shops when the campus isn't known.
+  const campusId = campus?.campusId ?? null;
+  const waitingForCampus = !campusId && sessionLoading;
+  const shops = useMemo(() => {
+    if (campusId) return allShops.filter((s) => s.collegeId === campusId);
+    return waitingForCampus ? [] : allShops;
+  }, [allShops, campusId, waitingForCampus]);
+  const loading = shopsLoading || waitingForCampus;
 
   useEffect(() => {
     const unsub = subscribe();
