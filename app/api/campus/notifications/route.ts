@@ -85,7 +85,9 @@ export async function PATCH(request: NextRequest) {
     const db = getAdminDb();
     const collection = db.collection(CAMPUS_COLLECTIONS.notifications);
     const ids = [...new Set(body.ids)];
-    const snapshots = await db.getAll(...ids.map((id) => collection.doc(id)));
+    // One read per id (at most INBOX_LIMIT). Plain gets rather than db.getAll, which the
+    // demo's per-visitor fake store rejects when the refs come from another route bundle.
+    const snapshots = await Promise.all(ids.map((id) => collection.doc(id).get()));
     const now = Timestamp.now();
     const batch = db.batch();
     let updated = 0;
