@@ -1,11 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { DEFAULT_FIXTURE_USER_ID, FIXTURE_USER_COOKIE, FIXTURE_USER_IDS, isFixtureMode, isFixtureUserId } from '@/lib/firebase/fixtureMode';
 import { safeRedirectPath } from '@/lib/utils/safeRedirect';
+import { isDemoMode } from '@/lib/demo/mode';
 
 // Dev only: picks the signed-in fixture user, e.g.
 // /api/dev/fixture-user?id=verified-kju-main&next=/marketplace
+// Not in the demo: there the session API (/api/demo/session) picks the student.
 export function GET(req: NextRequest) {
-  if (!isFixtureMode()) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (!isFixtureMode() || isDemoMode()) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const { searchParams } = req.nextUrl;
   const id = searchParams.get('id') || DEFAULT_FIXTURE_USER_ID;

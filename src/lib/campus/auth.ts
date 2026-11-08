@@ -3,7 +3,9 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAdminBucket, getAdminDb } from '@/lib/firebase/admin';
-import { fixtureUserId, isFixtureMode, type FixtureUserId } from '@/lib/firebase/fixtureMode';
+import { fixtureUserId, isFixtureMode, isFixtureUserId, type FixtureUserId } from '@/lib/firebase/fixtureMode';
+import { demoPersonaByUid } from '@/lib/demo/contract';
+import { isDemoMode } from '@/lib/demo/mode';
 import { isAdminUser, verifiedPrimaryEmail } from '@/lib/admin/config';
 import { CAMPUS_COLLECTIONS, VERIFICATION_DAYS, addDays } from './constants';
 import { loadCollegeConfig } from './collegeConfig';
@@ -45,7 +47,10 @@ export interface CampusPrincipal {
   blocked: boolean;
 }
 
-/** Who is signed in. Fixture mode reads the fixture cookie and never touches Clerk. */
+/**
+ * Who is signed in. Plain fixture mode reads the fixture cookie and never touches Clerk.
+ * The demo takes the Clerk path: there @clerk/nextjs/server is the demo stand-in.
+ */
 interface Identity {
   userId: string;
   displayName: string | null;
@@ -70,6 +75,11 @@ function clerkEmails(emails: readonly ClerkEmail[]): IdentityEmail[] {
   }));
 }
 
+/** Plain fixture mode only: the demo signs in through the Clerk stand-in instead. */
+function usesFixtureCookie(): boolean {
+  return isFixtureMode() && !isDemoMode();
+}
+
 async function fixtureId(): Promise<FixtureUserId> {
   return fixtureUserId(await cookies());
 }
@@ -83,7 +93,7 @@ async function ensureFixtureMembership(userId: FixtureUserId) {
 }
 
 async function currentIdentity(): Promise<Identity | null> {
-  if (isFixtureMode()) {
+  if (usesFixtureCookie()) {
     const userId = await fixtureId();
     const fixture = fixtureIdentity(userId);
     await ensureFixtureMembership(userId);
@@ -92,6 +102,8 @@ async function currentIdentity(): Promise<Identity | null> {
   }
   const { userId } = await auth();
   if (!userId) return null;
+  // Demo personas start from their sample membership in the visitor's world.
+  if (isDemoMode() && isFixtureUserId(userId) && demoPersonaByUid(userId)) await ensureFixtureMembership(userId);
   const user = await currentUser();
   return {
     userId,
@@ -102,9 +114,9 @@ async function currentIdentity(): Promise<Identity | null> {
   };
 }
 
-/** The signed-in user id without loading the membership. Fixture mode: the fixture cookie. */
+/** The signed-in user id without loading the membership. Plain fixture mode: the fixture cookie. */
 export async function getSignedInUserId(): Promise<string | null> {
-  if (isFixtureMode()) return fixtureId();
+  if (usesFixtureCookie()) return fixtureId();
   const { userId } = await auth();
   return userId ?? null;
 }
