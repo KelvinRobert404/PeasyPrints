@@ -29,12 +29,12 @@ Statuses:
 |---|---|---|---|---|---|---|
 | SWITCH | Demo switch, shared contract, launcher and alias wiring | 1 | M | done | 49169df | demo reaches Ready on :3019 with no env; build and Turbopack refuse the flag; lead renamed the Razorpay placeholder (secrets grep) |
 | SEED | Sample world: every surface full on both campuses, print orders and users | 1 | L | done | 00a3654 | 20 fixture tests; Meera owns no posts (pending ID card); lead updated the fake-admin seed test (users now seeded) |
-| WORLD | One fake world per visitor: Admin DB, bucket, change log and hooks | 2 | L | pending | | |
-| CLERKSRV | Clerk server stand-in, demo identity and the session API | 2 | L | pending | | |
-| CLERKUI | Clerk client stand-in, avatar menu and the demo account chooser | 2 | L | pending | | |
-| FIREBASE | Firebase client stand-ins backed by the visitor's world | 2 | L | pending | | |
-| SHELL | Demo shell: no analytics or outside calls, and the DemoRoot mount | 2 | S | pending | | |
-| HANDOFF | Demo hand-off sheet instead of WhatsApp, phone and mail links | 2 | S | pending | | |
+| WORLD | One fake world per visitor: Admin DB, bucket, change log and hooks | 2 | L | done | d1f6430 | one world per visitor, LRU 50, change log; 376 tests at hand-back |
+| CLERKSRV | Clerk server stand-in, demo identity and the session API | 2 | L | done | 3e35a70 | session API curl sequence passes on :3019; persona emails come from the seeded users docs (decided) |
+| CLERKUI | Clerk client stand-in, avatar menu and the demo account chooser | 2 | L | done | 3ed7acd | avatar menu and chooser checked at 375 and 1280; chooser from Switch student shows the four students |
+| FIREBASE | Firebase client stand-ins backed by the visitor's world | 2 | L | done | 7540a70 | /orders lists Sana's seeded orders; no Google host; 29 new tests |
+| SHELL | Demo shell: no analytics or outside calls, and the DemoRoot mount | 2 | S | done | 01ed4c0 | no analytics hosts on :3019; DemoRoot mounted |
+| HANDOFF | Demo hand-off sheet instead of WhatsApp, phone and mail links | 2 | S | done | 9257684 | /contact WhatsApp opens the sheet; /contact has only a WhatsApp link today |
 | GATE | Demo proxy: visitor cookie, first visit, sign-in guard, areas kept out | 3 | M | pending | | |
 | PERSIST | Visitor changes kept in the browser, and Reset demo | 3 | L | pending | | |
 | DATE | Demo date and seasonal sample packs | 3 | M | pending | | |
@@ -63,6 +63,9 @@ Statuses:
 8 Nov 10:40 IST · jtk/claude-2 · wave 1 started (SWITCH, SEED); at most 2 agents at once on this 4-CPU VM.
 8 Nov 11:05 IST · jtk/claude-2 · wave 1 verified: typecheck, lint, 352/352 tests, build compiles, no shim in .next, demo Ready on :3019. Pushed 00a3654 SEED, 49169df SWITCH.
 
+8 Nov 11:12 IST · jtk/claude-2 · wave 2 started (6 packages).
+8 Nov 11:24 IST · jtk/claude-2 · wave 2 verified: typecheck, lint, 405/405 tests; build compiles; demo:check: 54 static pages, none 500; **wave-2 gate passed**: with no env / renders signed out, POST /api/demo/session sana, reload greets "Hey Sana", no console error, no outside host. Pushed d1f6430 WORLD, 3e35a70 CLERKSRV, 3ed7acd CLERKUI, 7540a70 FIREBASE, 01ed4c0 SHELL, 9257684 HANDOFF.
+
 ## Blocked
 
 <!-- One entry per blocked package: id · what failed (command and first error line) · what was tried · files restored · packages skipped because of it. -->
@@ -74,6 +77,11 @@ Statuses:
 - Wave 1 · plain `npm run build` · compiles, prerender stops on missing production env (CLERK_SECRET_KEY etc.) · run with real env later.
 - SWITCH · live alias swap in a running server · no shim files until wave 2 · covered by the end-of-wave-2 smoke.
 
+- Wave 2 · plain `npm run build` · compiles, prerender stops on missing production env · run with real env later.
+- Wave 2 · runbook grep `grep -rl src/lib/demo/shims .next` · only hits `.next/cache/.tsbuildinfo` (TypeScript's file list, not shipped code); the bundle grep excluding cache is empty · the runbook grep should exclude .next/cache.
+- CLERKSRV · /api/razorpay/order signed in · answers 400 'A valid idempotency key is required' to an empty body (not 401 or 500) · PRINTPAY covers the real pay flow.
+- FIREBASE · pickup page status change within 3 s · needs PRINTPAY's order progress · checked in wave 4/5.
+
 ## Decided at night
 
 <!-- One entry per decision the run made without the owner: what · the options · the choice (always the safest reversible one) · where it lives in the code · how to undo it. -->
@@ -82,3 +90,7 @@ Statuses:
 - SEED · tests/firebase/fake-admin.test.ts asserted `users` empty after seeding; SEED now seeds 5 users docs · lead changed the assertion to size 5 in the SEED commit (the file belongs to WORLD, which runs later) · undo: revert that line.
 - SEED · Meera (pending ID card) owns no market or housing post, against the acceptance wording · the existing rule bans pending-id-card authors · kept the rule; tests assert Sana, Kabir and Ananya own posts · src/lib/campus/fixtures/*.
 - SEED · housing has no reserved status or price-drop fields · used `booked` for reserved and a rent-cut post updated within 7 days for price-dropped · src/lib/campus/fixtures/housing.ts.
+
+- CLERKSRV · persona emails · fixtureIdentity has example.com addresses; seeded users docs have kju.test · used the users docs (sana@kju.test ...), so the kju.test domain check, profile and upsert agree, and Meera (meera.k@gmail.test) stays pending · src/lib/demo/server/identity.ts.
+- HANDOFF · app/campus/activity/page.tsx line 130 still renders a real wa.me 'Open WhatsApp' link in demo; no wave-2 package owns that file · left for the wave-5 checks or the follow-up wave (HOUSINGCHK covers activity) · fix: wrap it in HandoffAnchor like the others.
+- SHELL · src/lib/posthog/client.ts can't initialise in demo (no key, no consent) but has no explicit demo guard · optional hardening for the follow-up wave: `if (DEMO) return;` first in ensurePosthogInit().
