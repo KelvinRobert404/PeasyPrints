@@ -142,7 +142,7 @@ export default function UploadEntryPage() {
         backHref="/"
         kicker={selectedShop?.name ?? campus?.label}
         title="Print"
-        className="sticky top-0 z-30 border-b border-line bg-white pb-1.5"
+        className="sticky top-[var(--demo-bar-h,0px)] z-30 border-b border-line bg-white pb-1.5"
       />
 
       <main className="flex-1 px-3 pb-3">

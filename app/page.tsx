@@ -15,6 +15,7 @@ import { useShopsStore } from '@/lib/stores/shopsStore';
 import { useDockSlot } from '@/lib/stores/dockStore';
 import { FIXTURE_SHOPS } from '@/lib/campus/fixtures/shops';
 import { isFixtureMode } from '@/lib/firebase/fixtureMode';
+import { isDemoMode } from '@/lib/demo/mode';
 import { homeSeasonalSlot } from '@/lib/campus/season';
 import { useSeasonNow } from '@/lib/demo/season';
 import { Chip, IconTile, ListRow, SectionHeader, ServiceTile, SmallTile, swButton } from '@/components/swoop/primitives';
@@ -56,7 +57,10 @@ export default function HomePage() {
   const [openOnly, setOpenOnly] = useState(false);
 
   // Fixture mode has no client Firestore: skip the live subscriptions.
+  // The demo's Firestore stand-in serves the visitor's sample orders, so the
+  // demo reads orders like production (shops stay on FIXTURE_SHOPS).
   const fixtures = isFixtureMode();
+  const readOrders = !fixtures || isDemoMode();
   const shops = useMemo(() => (fixtures ? [...FIXTURE_SHOPS] : liveShops), [fixtures, liveShops]);
   const shopsLoading = fixtures ? false : liveShopsLoading;
 
@@ -69,12 +73,12 @@ export default function HomePage() {
   }, [fixtures, subscribeShops]);
 
   useEffect(() => {
-    if (fixtures || !userId) return;
+    if (!readOrders || !userId) return;
     const unsub = subscribeByUser(userId);
     return () => unsub();
-  }, [fixtures, userId, subscribeByUser]);
+  }, [readOrders, userId, subscribeByUser]);
 
-  const myOrders = useMemo(() => (userId && !fixtures ? orders : []), [userId, fixtures, orders]);
+  const myOrders = useMemo(() => (userId && readOrders ? orders : []), [userId, readOrders, orders]);
   const lastOrder = myOrders[0];
 
   // Newest order that's ready to collect (orders are sorted newest first).

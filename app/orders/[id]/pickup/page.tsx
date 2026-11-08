@@ -6,11 +6,13 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { OrderDoc } from '@/types/models';
 import { haptics } from '@/lib/utils/haptics';
-import { EmptyState, IconButton, ListRow, IconTile, Tag } from '@/components/swoop/primitives';
+import { EmptyState, IconButton, ListRow, IconTile, Tag, swButton } from '@/components/swoop/primitives';
 import { SwoopLogo } from '@/components/swoop/Logo';
 import { PickupWaitArt } from '@/components/swoop/illustrations';
 import { BackIcon, DocIcon, HelpIcon, OrdersIcon } from '@/components/swoop/icons';
 import { formatOrderDate, formatOrderTime, orderStatusMeta } from '@/components/orders/orderStatus';
+import { formatPrice } from '@/lib/format/price';
+import { isDemoMode } from '@/lib/demo/mode';
 
 function TopBar() {
   return (
@@ -30,6 +32,54 @@ function Stat({ label, value }: { label: string; value: ReactNode }) {
     </div>
   );
 }
+
+/**
+ * Demo only: stands in for the shop at the counter. Marks the visitor's own
+ * ready order collected on the sample data.
+ */
+function DemoHandOverButton({ orderId, onCollected }: { orderId: string; onCollected: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handOver() {
+    setBusy(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/demo/orders/${encodeURIComponent(orderId)}/collect`, {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+      const body = (await res.json().catch(() => null)) as { status?: string; error?: string } | null;
+      if (!res.ok || body?.status !== 'collected') throw new Error(body?.error || 'Could not hand it over');
+      onCollected();
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : 'Could not hand it over');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        onClick={handOver}
+        disabled={busy}
+        className={`${swButton({ variant: 'surface', size: 'md' })} w-full`}
+      >
+        {busy ? 'Handing it over…' : 'Shop hands it over (demo)'}
+      </button>
+      {error ? (
+        <p role="alert" className="text-center text-[11px] text-market">{error}</p>
+      ) : (
+        <p className="text-center text-[11px] text-slate">Sample data. No real shop is involved.</p>
+      )}
+    </div>
+  );
+}
+
+/** The demo's stand-in for the shop's hand-over; absent outside the demo. */
+const DemoHandOver = isDemoMode() ? DemoHandOverButton : null;
 
 export default function PickupPage() {
   const params = useParams<{ id: string }>();
@@ -103,7 +153,7 @@ export default function PickupPage() {
           <Stat label="Paper" value={order.printSettings?.paperSize || 'A4'} />
           <Stat label="Copies" value={order.printSettings?.copies ?? 1} />
           <Stat label="Pages" value={order.totalPages} />
-          <Stat label="Paid" value={`₹${order.totalCost}`} />
+          <Stat label="Paid" value={formatPrice(order.totalCost)} />
         </div>
 
         <div className="flex flex-col">
@@ -120,6 +170,13 @@ export default function PickupPage() {
             subtitle="Contact us"
           />
         </div>
+
+        {DemoHandOver && meta.ready && (
+          <DemoHandOver
+            orderId={order.id ?? params?.id ?? ''}
+            onCollected={() => setOrder((current) => (current ? { ...current, status: 'collected' } : current))}
+          />
+        )}
 
         <div className="mt-auto flex items-end gap-2 pt-2">
           <PickupWaitArt width={88} height={81} className="pointer-events-none shrink-0 select-none" />
