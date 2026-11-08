@@ -43,7 +43,8 @@ test('fixture user comes from the cookie, unknown ids fall back to the default',
 test('seed hook runs on an empty database', async () => {
   const db = new FakeFirestore();
   seedFakeDb(db);
-  assert.equal((await db.collection('users').get()).empty, true);
+  // KADA-19 SEED seeds the demo users (four personas and new-user).
+  assert.equal((await db.collection('users').get()).size, 5);
 });
 
 test('create fails with ALREADY_EXISTS when the document exists', async () => {

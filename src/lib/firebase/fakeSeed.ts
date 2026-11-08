@@ -7,6 +7,10 @@ import { buildCampusFixtures, type FixtureDoc } from '../campus/fixtures/index.t
 /** Print shops live outside the campus collections. */
 export const SHOPS_COLLECTION = 'shops';
 
+/** Print orders and user profiles also live outside the campus collections. */
+export const ORDERS_COLLECTION = 'orders';
+export const USERS_COLLECTION = 'users';
+
 /** Serial numbers have four digits per college and product. */
 const SERIAL_CAPACITY = 10_000;
 
@@ -47,7 +51,7 @@ function seedSerials(db: FakeFirestore, now: Date, product: 'M' | 'H', docs: rea
 /**
  * Fills the fixture database once, when fixture mode first creates it.
  * Every campus collection gets documents, with dates relative to `now`,
- * plus the print shops. Writes are synchronous (`db.seedDoc`).
+ * plus the print shops, print orders and user profiles. Writes are synchronous (`db.seedDoc`).
  */
 export function seedFakeDb(db: FakeFirestore, now: Date = new Date()): void {
   const fixtures = buildCampusFixtures(now);
@@ -70,4 +74,6 @@ export function seedFakeDb(db: FakeFirestore, now: Date = new Date()): void {
   seedAll(db, c.media, fixtures.media);
   seedAll(db, c.notifications, fixtures.notifications);
   seedAll(db, c.notificationPrefs, fixtures.notificationPrefs);
+  seedAll(db, ORDERS_COLLECTION, fixtures.orders);
+  seedAll(db, USERS_COLLECTION, fixtures.users);
 }

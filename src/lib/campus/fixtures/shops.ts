@@ -48,4 +48,15 @@ export const FIXTURE_SHOPS: readonly Shop[] = [
     collegeId: 'kju-airport-road',
     pricing: STANDARD_PRICING,
   },
+  {
+    id: 'shop-airport-gate',
+    name: 'Gate Two Prints',
+    address: 'Opposite gate 2, Airport Road campus',
+    timing: '8 am to 8 pm',
+    openingTime: '08:00',
+    closingTime: '20:00',
+    isOpen: true,
+    collegeId: 'kju-airport-road',
+    pricing: STANDARD_PRICING,
+  },
 ];

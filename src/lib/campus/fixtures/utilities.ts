@@ -109,6 +109,25 @@ export function buildDeals(now: Date): FixtureDoc<DealDoc>[] {
         updatedAt: at(-2),
       },
     },
+    {
+      id: 'deal-airport-prints',
+      data: {
+        campusId: KJU_AIRPORT,
+        category: 'printing',
+        status: 'active',
+        merchantName: 'Gate Two Prints',
+        title: 'Colour prints at student rates',
+        offer: '20% off colour prints',
+        code: null,
+        howToClaim: 'Show your Swoop card at the counter.',
+        place: airport('a1-auditorium'),
+        images: [],
+        validUntil: at(12),
+        createdBy: 'admin',
+        createdAt: at(-3),
+        updatedAt: at(-3),
+      },
+    },
   ];
 }
 

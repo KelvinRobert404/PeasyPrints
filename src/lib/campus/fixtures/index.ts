@@ -21,12 +21,14 @@ import {
 } from './core.ts';
 import { buildHousingListings } from './housing.ts';
 import { buildMarketListings } from './market.ts';
+import { buildOrders, buildUsers, type OrderFixtureDoc, type UserFixtureDoc } from './print.ts';
 import { buildBloodDonors, buildBloodRequests, buildDeals, buildGames, buildLostFound } from './utilities.ts';
 
 export * from './core.ts';
 export { buildMarketListings } from './market.ts';
 export { buildHousingListings } from './housing.ts';
 export * from './utilities.ts';
+export * from './print.ts';
 
 /* Activity docs. No shared type exists for these yet, so the stored shapes live here. */
 
@@ -93,6 +95,10 @@ export interface CampusFixtures {
   media: FixtureDoc<MediaFixtureDoc>[];
   notifications: FixtureDoc<NotificationDoc>[];
   notificationPrefs: FixtureDoc<NotificationPrefsDoc>[];
+  /** Print orders (orders/{id}). */
+  orders: FixtureDoc<OrderFixtureDoc>[];
+  /** User profiles (users/{uid}). */
+  users: FixtureDoc<UserFixtureDoc>[];
 }
 
 type Listing = FixtureDoc<MarketListingDoc> | FixtureDoc<HousingListingDoc>;
@@ -294,6 +300,40 @@ function buildActivity(now: Date, market: FixtureDoc<MarketListingDoc>[], housin
       read: false,
       hoursAgo: 8,
     }),
+    notification(now, 'note-kabir-deal', {
+      userId: 'verified-kju-airport',
+      campusId: 'kju-airport-road',
+      kind: 'new_deal',
+      title: 'Colour prints at student rates',
+      body: '20% off at Gate Two Prints.',
+      href: '/deals/deal-airport-prints',
+      ref: { type: 'deal', id: 'deal-airport-prints' },
+      read: false,
+      hoursAgo: 26,
+    }),
+    notification(now, 'note-kabir-reserve', {
+      userId: 'verified-kju-airport',
+      campusId: 'kju-airport-road',
+      kind: 'reserve_request',
+      title: 'Isha reserved your mini fridge',
+      body: 'Held for her until tomorrow.',
+      href: '/market/mkt-airport-fridge',
+      ref: { type: 'market_listing', id: 'mkt-airport-fridge' },
+      actor: 'student-isha',
+      read: true,
+      hoursAgo: 4,
+    }),
+    notification(now, 'note-kabir-game', {
+      userId: 'verified-kju-airport',
+      campusId: 'kju-airport-road',
+      kind: 'game_update',
+      title: 'No one has joined your chess yet',
+      body: 'Share it with your class.',
+      href: '/games/game-chess-airport',
+      ref: { type: 'game', id: 'game-chess-airport' },
+      read: false,
+      hoursAgo: 6,
+    }),
     notification(now, 'note-ananya-verified', {
       userId: 'girls-approved',
       kind: 'verification_approved',
@@ -323,6 +363,26 @@ function buildActivity(now: Date, market: FixtureDoc<MarketListingDoc>[], housin
       ref: { type: 'market_listing', id: kurta.id },
       read: false,
       hoursAgo: 4,
+    }),
+    notification(now, 'note-meera-deal', {
+      userId: 'pending-id-card',
+      kind: 'new_deal',
+      title: 'Cheaper prints near campus',
+      body: '10% off with student ID.',
+      href: '/deals/deal-prints',
+      ref: { type: 'deal', id: 'deal-prints' },
+      read: false,
+      hoursAgo: 5,
+    }),
+    notification(now, 'note-meera-blood', {
+      userId: 'pending-id-card',
+      kind: 'blood_request',
+      title: 'B+ blood needed today',
+      body: 'Falcon Hospital, Gulabi Road.',
+      href: '/blood/blood-open',
+      ref: { type: 'blood_request', id: 'blood-open' },
+      read: true,
+      hoursAgo: 2,
     }),
   ];
 
@@ -356,5 +416,7 @@ export function buildCampusFixtures(now: Date = new Date()): CampusFixtures {
     bloodDonors: buildBloodDonors(now),
     games: buildGames(now),
     ...buildActivity(now, market, housing),
+    orders: buildOrders(now),
+    users: buildUsers(now),
   };
 }

@@ -4,7 +4,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { getCampus, getCollege } from '../../src/lib/campus/catalog.ts';
 import { CAMPUS_COLLECTIONS } from '../../src/lib/campus/constants.ts';
 import { validateCourse } from '../../src/lib/campus/courses.ts';
-import { stillAvailableDue } from '../../src/lib/campus/listingRules.ts';
+import { priceDropActive, stillAvailableDue } from '../../src/lib/campus/listingRules.ts';
 import {
   FIXTURE_EMAIL_DOMAIN,
   FIXTURE_PEOPLE,
@@ -13,7 +13,7 @@ import {
   buildCampusFixtures,
 } from '../../src/lib/campus/fixtures/index.ts';
 import { FakeFirestore } from '../../src/lib/firebase/fakeAdmin.ts';
-import { SHOPS_COLLECTION, seedFakeDb } from '../../src/lib/firebase/fakeSeed.ts';
+import { ORDERS_COLLECTION, SHOPS_COLLECTION, USERS_COLLECTION, seedFakeDb } from '../../src/lib/firebase/fakeSeed.ts';
 import { FIXTURE_USER_IDS } from '../../src/lib/firebase/fixtureMode.ts';
 
 const NOW = new Date('2026-11-07T06:30:00.000Z');
@@ -51,7 +51,7 @@ function hasUndefined(value: unknown): boolean {
 }
 
 // Machine values, not copy: ids, codes and enums.
-const NON_COPY_KEYS = new Set(['serial', 'collegeCode', 'code', 'bloodGroup', 'path', 'contentType', 'href']);
+const NON_COPY_KEYS = new Set(['serial', 'collegeCode', 'code', 'bloodGroup', 'path', 'contentType', 'href', 'currency', 'jobType', 'fileUrl']);
 // Short forms students actually write.
 const ACRONYMS = new Set(['KJU', 'PG', 'BHK', 'ID', 'USB', 'HDMI', 'LG', 'CCTV', 'CMR', 'BDS']);
 
@@ -103,7 +103,7 @@ test('catalog ids exist: colleges, campuses, landmarks, courses, shops', () => {
     if (data.course) assert.equal(validateCourse(data.course).ok, true, `${data.userId} course`);
   }
 
-  assert.equal(FIXTURE_SHOPS.length, 3);
+  assert.equal(FIXTURE_SHOPS.length, 4);
   for (const shop of FIXTURE_SHOPS) assert.ok(getCampus(shop.collegeId), `shop ${shop.id} campus`);
 });
 
@@ -352,5 +352,138 @@ test('seeding a fresh fake DB fills every collection', async () => {
   const kju = await db.collection(CAMPUS_COLLECTIONS.colleges).doc('kju').get();
   assert.deepEqual(kju.data()?.emailDomains, ['kju.test']);
   assert.equal((await db.collection(CAMPUS_COLLECTIONS.memberships).doc('new-user').get()).exists, false);
-  assert.equal((await db.collection('users').get()).empty, true);
+  assert.equal((await db.collection(ORDERS_COLLECTION).get()).size, fixtures.orders.length);
+  assert.equal((await db.collection(USERS_COLLECTION).get()).size, fixtures.users.length);
+  const ready = await db.collection(ORDERS_COLLECTION).doc('order-sana-ready').get();
+  assert.ok(ready.data()?.timestamp instanceof Timestamp);
+});
+
+/* Demo sample world (KADA-19): every screen full on both campuses. */
+
+const SANA = 'verified-kju-main';
+const KABIR = 'verified-kju-airport';
+const PERSONAS = { sana: SANA, kabir: KABIR, ananya: 'girls-approved', meera: 'pending-id-card' } as const;
+/** Meera's ID card is still under review, so she cannot post yet. */
+const POSTING_PERSONAS = [SANA, KABIR, 'girls-approved'];
+const AIRPORT = 'kju-airport-road';
+const live = (status: string) => !['expired', 'removed', 'closed', 'sold', 'filled'].includes(status);
+const istDayKey = (time: number) => new Date(time + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+test('demo: every posting persona owns a market and a housing post', () => {
+  for (const uid of POSTING_PERSONAS) {
+    assert.ok(fixtures.market.some((doc) => doc.data.authorId === uid), `${uid} market post`);
+    assert.ok(fixtures.housing.some((doc) => doc.data.authorId === uid), `${uid} housing post`);
+  }
+  const meera = PERSONAS.meera;
+  assert.ok(![...fixtures.market, ...fixtures.housing].some((doc) => doc.data.authorId === meera), 'pending Meera has no posts');
+});
+
+test('demo: KJU Airport Rd is full', () => {
+  const market = fixtures.market.filter((doc) => doc.data.campusId === AIRPORT && live(doc.data.status));
+  assert.ok(market.length >= 8, `airport market ${market.length}`);
+  assert.ok(new Set(market.map((doc) => doc.data.kind)).size >= 4, 'airport market spans kinds');
+  assert.ok(fixtures.housing.filter((doc) => doc.data.campusId === AIRPORT && live(doc.data.status)).length >= 4);
+  assert.ok(fixtures.deals.filter((doc) => doc.data.campusId === AIRPORT && doc.data.status === 'active').length >= 2);
+  assert.ok(fixtures.games.filter((doc) => doc.data.campusId === AIRPORT).length >= 1);
+  assert.ok(fixtures.lostFound.filter((doc) => doc.data.campusId === AIRPORT).length >= 1);
+  assert.ok(FIXTURE_SHOPS.some((shop) => shop.collegeId === AIRPORT && shop.isOpen === true), 'open airport shop');
+  const shopKeys = (shop: object) => Object.keys(shop).sort().join();
+  const airportShop = FIXTURE_SHOPS.find((shop) => shop.id === 'shop-airport-gate')!;
+  assert.equal(shopKeys(airportShop), shopKeys(FIXTURE_SHOPS[0]), 'same shape as the other shops');
+});
+
+test('demo: reserved, price dropped, agent and Sana post states', () => {
+  const iso = (value: unknown) => new Date(ms(value)).toISOString();
+  assert.ok(fixtures.market.some((doc) => doc.data.status === 'reserved' && ms(doc.data.reservedUntil) > NOW.getTime()), 'reserved market');
+  assert.ok(fixtures.housing.some((doc) => doc.data.status === 'booked'), 'reserved housing');
+  assert.ok(
+    fixtures.market.some((doc) =>
+      priceDropActive({ price: doc.data.price, previousPrice: doc.data.previousPrice, priceDroppedAt: doc.data.priceDroppedAt ? iso(doc.data.priceDroppedAt) : null }, NOW),
+    ),
+    'market price drop in the last 7 days',
+  );
+  assert.ok(
+    fixtures.housing.some((doc) => /lowered|cut/i.test(`${doc.data.title} ${doc.data.description}`) && daysAgo(doc.data.updatedAt) < 7),
+    'housing rent cut in the last 7 days',
+  );
+  assert.ok(fixtures.housing.some((doc) => doc.data.brokerage.charged && (doc.data.brokerage.amount ?? 0) > 0 && /agent/i.test(doc.data.title)));
+
+  const sana = fixtures.market.filter((doc) => doc.data.authorId === SANA);
+  const fourDay = sana.find((doc) => Math.round(daysAgo(doc.data.createdAt)) === 4);
+  const oneDay = sana.find((doc) => Math.round(daysAgo(doc.data.createdAt)) === 1);
+  assert.ok(fourDay && oneDay, 'Sana has a 4-day-old and a 1-day-old post');
+  const due = (doc: NonNullable<typeof fourDay>) =>
+    stillAvailableDue(
+      {
+        status: 'active',
+        availabilityExpiresAt: iso(doc.data.availabilityExpiresAt),
+        createdAt: iso(doc.data.createdAt),
+        lastConfirmedAt: doc.data.confirmedAt ? iso(doc.data.confirmedAt) : null,
+      },
+      NOW,
+    );
+  assert.equal(due(fourDay), true, 'the 4-day post gets the nudge');
+  assert.equal(due(oneDay), false, 'the 1-day post does not');
+});
+
+test('demo: print orders for Sana and Kabir', () => {
+  const shopIds = new Set(FIXTURE_SHOPS.map((shop) => shop.id));
+  for (const doc of fixtures.orders) {
+    assert.ok(shopIds.has(doc.data.shopId), `${doc.id} shop`);
+    assert.equal(doc.data.shopName, FIXTURE_SHOPS.find((shop) => shop.id === doc.data.shopId)!.name);
+    assert.equal(doc.data.userName, FIXTURE_PEOPLE[doc.data.userId].displayName);
+    assert.ok(doc.data.totalCost > 0 && doc.data.totalPages > 0);
+    assert.ok(ms(doc.data.timestamp) <= NOW.getTime() && ms(doc.data.updatedAt) >= ms(doc.data.timestamp));
+    assert.equal(doc.data.fileUrl, `/api/orders/${doc.id}/file?variant=original`);
+  }
+  const sana = fixtures.orders.filter((doc) => doc.data.userId === SANA);
+  const ready = sana.filter((doc) => doc.data.status === 'printed');
+  assert.equal(ready.length, 1);
+  assert.equal(istDayKey(ms(ready[0].data.timestamp)), istDayKey(NOW.getTime()), 'ready order placed today');
+  assert.equal(sana.filter((doc) => doc.data.status === 'printing').length, 1);
+  assert.equal(sana.filter((doc) => doc.data.status === 'collected').length, 2);
+  assert.ok(fixtures.orders.some((doc) => doc.data.userId === KABIR && doc.data.status === 'collected'));
+
+  // Just after midnight IST the ready order still lands today.
+  const lateNight = new Date('2026-11-06T18:40:00.000Z');
+  const night = buildCampusFixtures(lateNight).orders.find((doc) => doc.id === 'order-sana-ready')!;
+  assert.equal(istDayKey(ms(night.data.timestamp)), istDayKey(lateNight.getTime()));
+});
+
+test('demo: users docs and notifications for each persona', () => {
+  const users = new Map(fixtures.users.map((doc) => [doc.id, doc.data]));
+  for (const uid of [...Object.values(PERSONAS), 'new-user']) {
+    const user = users.get(uid);
+    assert.ok(user, `${uid} users doc`);
+    assert.equal(user.username, FIXTURE_PEOPLE[uid].displayName);
+    assert.ok(user.email === null || /@(kju|gmail)\.test$/.test(user.email), `${uid} email is a test domain`);
+  }
+  assert.equal(users.get(SANA)!.email, `sana@${FIXTURE_EMAIL_DOMAIN}`);
+  for (const uid of Object.values(PERSONAS)) {
+    assert.ok(fixtures.notifications.filter((doc) => doc.data.userId === uid).length >= 2, `${uid} notifications`);
+  }
+  for (const doc of fixtures.notifications.filter((item) => item.data.userId === KABIR)) assert.equal(doc.data.campusId, AIRPORT);
+});
+
+test('demo: no dropped features anywhere in the sample world', () => {
+  for (const [name, docs] of allDocs) {
+    for (const doc of docs) {
+      for (const [key, text] of strings(doc.data)) {
+        assert.doesNotMatch(text, /\b(events?|gigs?|jobs?|food|pets?)\b/i, `${name}/${doc.id}.${key}`);
+      }
+    }
+  }
+});
+
+test('demo: dates move with now', () => {
+  const later = new Date(NOW.getTime() + 30 * DAY_MS);
+  const shifted = buildCampusFixtures(later);
+  const pairs: [unknown, unknown][] = [
+    [fixtures.orders[0].data.timestamp, shifted.orders[0].data.timestamp],
+    [fixtures.users[0].data.createdAt, shifted.users[0].data.createdAt],
+    [fixtures.market.at(-1)!.data.createdAt, shifted.market.at(-1)!.data.createdAt],
+    [fixtures.housing.at(-1)!.data.createdAt, shifted.housing.at(-1)!.data.createdAt],
+    [fixtures.deals.at(-1)!.data.validUntil, shifted.deals.at(-1)!.data.validUntil],
+  ];
+  for (const [before, after] of pairs) assert.equal(ms(after) - ms(before), 30 * DAY_MS);
 });
