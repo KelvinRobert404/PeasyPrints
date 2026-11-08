@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "next dev",
+    "demo": "node scripts/demo.mjs",
+    "demo:check": "node scripts/demo.mjs --check",
     "build": "next build --webpack",
     "start": "next start",
     "typecheck": "tsc --noEmit --incremental false",

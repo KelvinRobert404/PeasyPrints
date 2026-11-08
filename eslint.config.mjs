@@ -25,5 +25,10 @@ export default defineConfig([
       '@next/next/no-page-custom-font': 'off',
     },
   },
-  globalIgnores(['.next/**', 'node_modules/**', 'public/sw.js', 'public/pdf.worker.min.mjs', 'service-worker.js', 'windows-helper/**', '*.config.js']),
+  {
+    // CommonJS config helpers (src/lib/demo/build-config.cjs) load with require().
+    files: ['**/*.cjs'],
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
+  globalIgnores(['.next/**', '.next-demo/**', 'node_modules/**', 'public/sw.js', 'public/pdf.worker.min.mjs', 'service-worker.js', 'windows-helper/**', '*.config.js']),
 ]);

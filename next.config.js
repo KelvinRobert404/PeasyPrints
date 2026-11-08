@@ -1,3 +1,5 @@
+const { applyDemoConfig } = require('./src/lib/demo/build-config.cjs');
+
 const isProd = process.env.NODE_ENV === 'production';
 
 let withSerwist = (cfg) => cfg;
@@ -71,4 +73,6 @@ const nextConfig = {
   skipTrailingSlashRedirect: true
 };
 
-module.exports = withSerwist(nextConfig);
+// Demo mode (npm run demo) changes the config only in `next dev --webpack` with
+// NEXT_PUBLIC_SWOOP_DEMO=1, and refuses to start a production build or server.
+module.exports = (phase) => applyDemoConfig(withSerwist(nextConfig), { phase, rootDir: __dirname });

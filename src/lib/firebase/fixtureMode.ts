@@ -25,7 +25,11 @@ export interface FixtureCookieReader {
 
 export function isFixtureMode(): boolean {
   // Literal process.env reads so Next can inline them into client bundles.
-  return process.env.NEXT_PUBLIC_SWOOP_FIXTURES === '1' && process.env.NODE_ENV !== 'production';
+  // Demo mode (NEXT_PUBLIC_SWOOP_DEMO, see src/lib/demo/mode.ts) implies fixture mode.
+  return (
+    (process.env.NEXT_PUBLIC_SWOOP_FIXTURES === '1' || process.env.NEXT_PUBLIC_SWOOP_DEMO === '1') &&
+    process.env.NODE_ENV !== 'production'
+  );
 }
 
 export function isFixtureUserId(value: unknown): value is FixtureUserId {
