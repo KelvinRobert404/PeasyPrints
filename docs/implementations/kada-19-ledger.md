@@ -40,12 +40,12 @@ Statuses:
 | DATE | Demo date and seasonal sample packs | 3 | M | done | 904edd2 | May/July/Nov Home and Market copy checked at 375; date route swaps season packs (8 market + 3-4 housing) |
 | PRINTPAY | Simulated payment and order progress | 3 | L | done | a1a3953 | browser: 3-page PDF, Main Block Prints, demo sheet Pay, /orders processing -> printing -> ready in ~55 s; Payment fails alerts, no order; helpers moved to src/lib/demo/server/razorpay.ts (decided) |
 | LIFE | Demo life: sample students answer | 3 | M | done | 3341f05 | Farhan approved Sana's headphones ask within 30 s with an inbox item; sample player joined the football game |
-| ENTRY | Demo start page and the not-in-demo page | 4 | M | pending | | |
-| DEMOBAR | Demo bar: student, demo date and Reset demo | 4 | M | pending | | |
-| SIGNIN | Simulated sign-in on /login: mocked Google, skip in, email code | 4 | M | pending | | |
-| VERIFYD | /campus/verify in demo: add college email and approve ID card | 4 | S | pending | | |
-| PRINTUI | Print screens on sample data: Home order, sample PDF, hand-over | 4 | M | pending | | |
-| APICHK | Demo smoke script, the KADA-18 data checks and the API fixes | 4 | L | pending | | |
+| ENTRY | Demo start page and the not-in-demo page | 4 | M | done | 324b789 | /demo and persona cards honour next; not-included page for godview and shopfront; checked at 375 and 1280 |
+| DEMOBAR | Demo bar: student, demo date and Reset demo | 4 | M | done | eafda27 | 36 px strip at 375 (body padded, Market header below it); left panel at 1280; Kabir switch; Reset asks once and lands on /demo |
+| SIGNIN | Simulated sign-in on /login: mocked Google, skip in, email code | 4 | M | done | 6228f54 | college Google to verify, course, Home greets Riya; personal to "That's not a KJU email"; Cancel idle; skip-in to redirect_url; email code any 6 digits |
+| VERIFYD | /campus/verify in demo: add college email and approve ID card | 4 | S | done | d4549c5 | personal Riya adds riya@kju.test with any code, approved; Meera approves her card |
+| PRINTUI | Print screens on sample data: Home order, sample PDF, hand-over | 4 | M | done | 46a540f | Home slot to pickup, hand-over marks collected and survives reload; sample PDF loads 4 pages |
+| APICHK | Demo smoke script, the KADA-18 data checks and the API fixes | 4 | L | done | 3fc0dce | npm run demo:smoke: 200 passed, 0 failed; NTF check accepts an item queued for the next slot (decided) |
 | HOMECHK | KADA-18 checks in demo: Home, header, gate, dock and profile | 5 | M | pending | | |
 | AUTHCHK | KADA-18 checks in demo: sign-in, verify and session | 5 | M | pending | | |
 | MARKETCHK | KADA-18 checks in demo: Market feed, See all, details, forms and kits | 5 | L | pending | | |
@@ -69,6 +69,9 @@ Statuses:
 8 Nov 11:26 IST · jtk/claude-2 · wave 3 started (5 packages).
 8 Nov 12:17 IST · jtk/claude-2 · wave 3 verified: typecheck, lint, 442/442 tests; build compiles, no shim in the production bundle; demo:check 54 pages, none 500; GATE curl, DATE, LIFE, PRINTPAY and PERSIST checked on :3019. Pushed lead fixes e4b99d9, bd96983, 913d0dd and 529e7ea GATE, a1a3953 PRINTPAY, dc77aa3 PERSIST, 904edd2 DATE, 3341f05 LIFE.
 
+8 Nov 12:20 IST · jtk/claude-2 · wave 4 started (6 packages).
+8 Nov 13:16 IST · jtk/claude-2 · wave 4 verified: typecheck, lint, 442/442 tests; build compiles, no shim in the production bundle; demo:check 56 pages, none 500; demo:smoke 200/200; route list at 375 and 1280 as Sana: 48 checks, no console error, no horizontal scroll, localhost only; sign-in, verify, demo bar and print flows checked in the browser. Pushed lead fixes fdc0eb4, 941a65c, 2254ee5, 870a791 and 3fc0dce APICHK, 324b789 ENTRY, eafda27 DEMOBAR, 6228f54 SIGNIN, d4549c5 VERIFYD, 46a540f PRINTUI.
+
 ## Blocked
 
 <!-- One entry per blocked package: id · what failed (command and first error line) · what was tried · files restored · packages skipped because of it. -->
@@ -88,6 +91,10 @@ Statuses:
 - Wave 3 · plain `npm run build` · prerender stops on missing production env · run with real env later.
 - PERSIST · resetDemo() in the browser (IndexedDB, swoop-demo:* keys, college pick, blood number cleared) · the reset route is checked; the browser part is DEMOCHK's (wave 5).
 - PRINTPAY · the pickup page updating live and the closed-shop message · PRINTUI and PRINTCHK (waves 4-5).
+
+- Wave 4 · plain `npm run build` · prerender stops on missing production env · run with real env later.
+- APICHK · /marketplace/all/x is a 200 with the not-found page streamed in, not a 404 status, because app/loading.tsx streams first · the smoke counts the streamed not-found as the 404 · a true 404 needs proxy.ts or dropping the root loading.tsx.
+- Wave 4 · one smoke run had `GET /api/demo/session` 500 with `SyntaxError: Unexpected end of JSON input` while the dev server recompiled (APICHK saw 'Manifest file is empty' once too); the rerun passed 200/200 · a webpack dev-server race, not app code.
 
 ## Decided at night
 
@@ -109,3 +116,10 @@ Statuses:
 - GATE · acceptance said signed-out /orders?x=1 redirects to /login, but '/orders(.*)' is already a public route and the brief said keep the login logic · kept it public; /orders shows its own sign-in link; protected pages (e.g. /profile) redirect with redirect_url · proxy.ts.
 - DATE · HousingDetail.tsx:595 still passes real now to housingMoveInLabel · left for the follow-up wave · fix: use useSeasonNow() there.
 - LIFE · the plan's example 'Farhan's study lamp' is Sana's own listing (mkt-study-lamp) · checks use Farhan's headphones (mkt-headphones).
+
+- APICHK · notify.ts getAll found no refs: each route bundle has its own copy of the fake Firestore classes while worlds are shared, so `instanceof FakeDocumentReference` failed and no inbox item was ever written in demo · lead fix fdc0eb4 brands refs with Symbol.for and checks the brand · src/lib/firebase/fakeAdmin.ts · undo: revert fdc0eb4.
+- APICHK · seeded posts had no campus_private_contacts, so approving an ask on a seeded post revealed no number · lead fix 941a65c seeds one per post with the same sample number formula as demo life · src/lib/firebase/fakeSeed.ts.
+- APICHK · /about passed icon functions from a server page to client components and Next streamed an error into the page (for every viewer, real app too) · lead fix 2254ee5 makes the page a client page (it has no metadata or data loading) · **affects production too**.
+- PRINTUI · the pdf.js previewer sends a HEAD to unpkg.com when NEXT_PUBLIC_PDF_WORKER_URL is unset (the demo CSP blocked it) · lead fix 870a791 sets it to the local worker in the launcher · scripts/demo.mjs.
+- APICHK · the smoke expected a new ask in the seller's inbox at once, but normal items wait for the next 12:30 or 19:30 IST slot and the inbox hides them until then · the check now passes when the item is in the inbox, or queued in the world for a later slot (not weakened: it still fails if nothing was queued) · scripts/demo-smoke.mjs.
+- SIGNIN · right after the course step, Home briefly showed 'Verify you're a KJU student' for an approved Riya; a reload clears it (stale client session) · left for HOMECHK or the follow-up wave.
