@@ -21,6 +21,8 @@ Statuses:
 
 <!-- Newest line wins. `**Working:** <person> · <device> · chat "<chat title>" · since <d Mon HH:MM IST>`, then `**Released:** ...` or `**Reclaimed:** ...` when the run stops or is taken back. -->
 
+**Working:** jtk · claude-2 (GCP VM) · chat "KADA-19 · 8 Nov/demo-site" · since 8 Nov 10:35 IST (claim kept here only: Linear connector not signed in on this device)
+
 ## Packages
 
 | ID | Title | Wave | Size | Status | Commit | Notes |
@@ -55,6 +57,8 @@ Statuses:
 ## Session log
 
 <!-- One line per event: <d Mon HH:MM IST> · <who/device> · <what happened> (wave started, package done with commit, wave verified, usage pause and resume time, run finished). -->
+
+8 Nov 10:35 IST · jtk/claude-2 · TON: worktree ~/workspace/developer/peasyprints-kada19, npm ci, baseline green (typecheck, lint, 326/326 tests), preflight GO, before shot taken (/ answers 500: Firebase auth/invalid-api-key with no env). ETA ~8 h, done about Sun 8 Nov 18:30 IST.
 
 ## Blocked
 
