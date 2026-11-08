@@ -137,15 +137,25 @@ Run setup on this Mac, settled with the owner in chat before the start (7 Nov 21
 <!-- One entry per check not run tonight: package id · the check · why it was skipped (needs Clerk / Firebase / Storage / emulator / Godview admin gate) · what to run in the morning. -->
 
 - ALL UI packages · browser checks at 375/1280 px, fixture smoke tests, before/after screenshots · no `.env.local` on this Mac (owner's choice), so ClerkProvider can't render · in the morning: add `.env.local` per the runbook and run the fixture smoke test on every changed route
+  - Run in demo mode on 8 Nov 2026 (KADA-19): pass. Every UI area checked in a browser at 375 and 1280 px on sample data (HOMECHK 6cc8a6f, AUTHCHK 27a318c, MARKETCHK c78384e, HOUSINGCHK f1c1b0e, UTILCHK 2cd7c32, PRINTCHK b65e277); before/after shots in the KADA-19 morning report.
 - Wave 1 · npm run build prerender · compiles fine (so relative .ts imports resolve under webpack) but prerender needs the production env vars · run npm run build with real env in the morning
+  - Still skipped: needs the production env. Plain `npm run build` compiles; prerender stops on missing env.
 - CAT · real college email domains and map-checked landmark coordinates · not in the facts file · confirm before distances or email verification go live
+  - Still skipped: real domains and coordinates are facts for the owner, not something the demo can check.
 - ART · pickup page PickupWaitArt against a real ready order · needs Firestore onSnapshot · check at 375/1280 px with a real order
+  - Run in demo mode on 8 Nov 2026 (KADA-19): pass. PickupWaitArt shows on a ready order and the caption follows the status (b65e277).
 - COPY · deletion-request API case-insensitive confirm · needs Clerk + Firestore · test with a live session
+  - Run in demo mode on 8 Nov 2026 (KADA-19): pass. The confirm phrase works in any case and with trailing spaces (2cd7c32). The live Clerk + Firestore request stays skipped.
 - Waves 2-7 · every browser check, fixture smoke test and before/after screenshot · no .env.local on this Mac · add .env.local and run the fixture smoke on /, /marketplace, /housing, /campus/activity, /campus/verify and one market and one housing detail at 375/1280 px
+  - Run in demo mode on 8 Nov 2026 (KADA-19): pass. `npm run demo:smoke` 200/200 (3fc0dce) plus the wave 5 browser checks on every listed route.
 - SIGNIN, LOGIN, HDR, MEM · Clerk round trips (Google, email code, redirects, Google-linked auto-approval) · need a Clerk dev instance
+  - Run in demo mode on 8 Nov 2026 (KADA-19): pass for the simulated round trips: mocked Google (college and personal), email code, add college email, ID card approve, guarded redirects and return (27a318c, 6cc8a6f). Real Clerk round trips stay skipped.
 - NTF, HAPI, GAMES, LOST, MACT, CRON · Firestore index deploy, rules emulator test, Timestamp writes, maintenance GET and purge DELETE · need Firestore (emulator with Java, or staging)
+  - Run in demo mode on 8 Nov 2026 (KADA-19): pass for app behaviour on the fake Admin DB: inbox items queue for the next slot (fdc0eb4, smoke), games join/leave/full, lost-and-found claim and approve (2cd7c32), market actions (c78384e). Index deploy, rules emulator and Timestamp writes on real Firestore stay skipped.
 - SEAMROUTES · save, share, report and contact-approve against market_listings / housing_listings, and the lazy firebase-admin import in serial.ts under a real server · needs Firestore + a running server · test in fixture mode once .env.local exists
+  - Run in demo mode on 8 Nov 2026 (KADA-19): pass on the fake Admin DB: save, share, report and contact approve for market and housing (c78384e, f1c1b0e). Real Firestore stays skipped.
 - SEAMIDX · firebase deploy --only firestore:indexes,firestore:rules and the emulator rules test · live deploy is the owner's call; emulator needs Java · tests/security/firebase-rules.test.mjs still lists the v1 names in SERVER_ONLY_CAMPUS_COLLECTIONS (logic still passes; trim it)
+  - Still skipped: live deploy is the owner's call; the emulator needs Java.
 
 
 ## Decided at night
