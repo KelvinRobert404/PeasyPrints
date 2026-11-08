@@ -9,14 +9,19 @@ import { safeRedirectPath } from '@/lib/utils/safeRedirect';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { CollegePicker } from '@/components/auth/CollegePicker';
 import { StayStep } from '@/components/auth/StayStep';
-import { SignInStep } from '@/components/auth/SignInStep';
+import { SampleStudentSkip, SignInStep } from '@/components/auth/SignInStep';
 import { useCollegeSignIn } from '@/components/auth/useCollegeSignIn';
+import { skipInAsSampleStudent } from '@/components/demo/auth/useDemoCollegeSignIn';
+import { isDemoMode } from '@/lib/demo/mode';
 import { IconTile, swButton } from '@/components/swoop/primitives';
 import { LandmarkIcon } from '@/components/swoop/icons';
 import { getCampus, getCollege } from '@/lib/campus/catalog';
 import { useCollegeStore, type CollegePick } from '@/lib/stores/collegeStore';
 
 type Step = 'college' | 'stay' | 'signin';
+
+/** Demo only: "Just looking? Skip in as a sample student" on step 1 and the sign-in step. */
+const SHOW_SKIP_IN = isDemoMode();
 
 const STEPS: readonly Step[] = ['college', 'stay', 'signin'];
 
@@ -94,6 +99,8 @@ function LoginFlow() {
     [requested]
   );
 
+  const skipIn = useCallback(() => skipInAsSampleStudent(redirect), [redirect]);
+
   const go = useCallback((next: Step) => {
     setStep(next);
     writeStep(next, 'push');
@@ -118,6 +125,7 @@ function LoginFlow() {
           >
             Continue
           </button>
+          {SHOW_SKIP_IN && <SampleStudentSkip onSkipIn={skipIn} className="mt-2.5" />}
         </div>
       </AuthShell>
     );
@@ -165,6 +173,7 @@ function LoginFlow() {
         collegeCode={college?.code ?? ''}
         onGoogle={() => auth.google(redirect)}
         onEmailCode={{ sendCode: auth.sendCode, verifyCode: (code) => auth.verifyCode(code, redirect) }}
+        onSkipIn={SHOW_SKIP_IN ? skipIn : undefined}
       />
     </AuthShell>
   );

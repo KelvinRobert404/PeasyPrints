@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { swButton } from '@/components/swoop/primitives';
+import { cn } from '@/lib/utils/cn';
 import { listColleges } from '@/lib/campus/catalog';
 import { GoogleMark } from '@/components/auth/GoogleMark';
 import { EmailCodeForm } from '@/components/auth/EmailCodeForm';
@@ -23,12 +24,15 @@ export function SignInStep({
   collegeCode,
   onGoogle,
   onEmailCode,
+  onSkipIn,
   initialView = 'choose'
 }: {
   /** College code from step 1, e.g. 'KJU'. */
   collegeCode: string;
   onGoogle: () => Promise<AuthResult | void> | void;
   onEmailCode: EmailCodeHandlers;
+  /** Demo only: shows "Skip in as a sample student" under the sign-in choices. */
+  onSkipIn?: () => Promise<AuthResult>;
   /** For previews: open on the email-code form. */
   initialView?: View;
 }) {
@@ -48,8 +52,9 @@ export function SignInStep({
     try {
       const res = await onGoogle();
       // On success the browser is leaving for Google, so stay busy.
+      // An empty error means the visitor cancelled: back to idle, nothing to show.
       if (res && !res.ok) {
-        setError(res.error);
+        setError(res.error || null);
         setBusy(false);
       }
     } catch {
@@ -93,6 +98,7 @@ export function SignInStep({
             >
               Get a 6-digit code instead
             </button>
+            {onSkipIn && <SampleStudentSkip onSkipIn={onSkipIn} disabled={busy} className="mt-1" />}
           </>
         ) : (
           <EmailCodeForm
@@ -106,5 +112,60 @@ export function SignInStep({
 
       <p className="mt-4 text-[11.5px] leading-[1.45] text-slate">No college email? Use your ID card after signing in.</p>
     </section>
+  );
+}
+
+/**
+ * Demo only: "Just looking? Skip in as a sample student". Pure UI: `onSkipIn` opens
+ * the sample-student sheet and signs in. An empty error means the visitor cancelled.
+ */
+export function SampleStudentSkip({
+  onSkipIn,
+  disabled = false,
+  className
+}: {
+  onSkipIn: () => Promise<AuthResult>;
+  disabled?: boolean;
+  className?: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const skip = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await onSkipIn();
+      // On success the page is loading as the sample student, so stay busy.
+      if (!res.ok) {
+        setError(res.error || null);
+        setBusy(false);
+      }
+    } catch {
+      setError('Something went wrong. Try again.');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className={cn('flex flex-col items-center gap-1 text-center', className)}>
+      <p className="text-[12px] text-slate">
+        Just looking?{' '}
+        <button
+          type="button"
+          onClick={() => void skip()}
+          disabled={disabled || busy}
+          className="font-bold text-royal underline-offset-2 hover:underline disabled:text-slate"
+        >
+          {busy ? 'Signing you in…' : 'Skip in as a sample student'}
+        </button>
+      </p>
+      {error && (
+        <p role="alert" className="text-[11.5px] font-semibold text-market">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

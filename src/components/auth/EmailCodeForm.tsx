@@ -1,12 +1,16 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import { swButton } from '@/components/swoop/primitives';
+import { Tag, swButton } from '@/components/swoop/primitives';
 import { cn } from '@/lib/utils/cn';
+import { isDemoMode } from '@/lib/demo/mode';
 import type { AuthResult } from '@/components/auth/useCollegeSignIn';
 
 const CODE_LENGTH = 6;
 const RESEND_SECONDS = 30;
+
+/** In the demo no email is sent, so the code step says any digits work. */
+const SHOW_DEMO_CODE_HINT = isDemoMode();
 
 /* CodeInput ------------------------------------------------ */
 
@@ -247,6 +251,12 @@ export function EmailCodeForm({
             invalid={Boolean(error)}
             autoFocus
           />
+          {SHOW_DEMO_CODE_HINT && (
+            <p className="flex items-center gap-1.5 text-[11.5px] text-slate">
+              <Tag tone="royal">Demo</Tag>
+              Any 6 digits work. No email is sent.
+            </p>
+          )}
           {error && (
             <p role="alert" className="text-[11.5px] font-semibold text-market">
               {error}

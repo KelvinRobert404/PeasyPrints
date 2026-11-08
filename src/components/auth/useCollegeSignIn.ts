@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useSignIn, useSignUp } from '@clerk/nextjs';
 import { isClerkAPIResponseError } from '@clerk/nextjs/errors';
 import { safeRedirectPath } from '@/lib/utils/safeRedirect';
+import { isDemoMode } from '@/lib/demo/mode';
+import { useDemoCollegeSignIn } from '@/components/demo/auth/useDemoCollegeSignIn';
 
 /** What every sign-in action resolves to. `error` is plain English, ready to show. */
 export type AuthResult = { ok: true } | { ok: false; error: string };
@@ -13,6 +15,14 @@ export type AuthResult = { ok: true } | { ok: false; error: string };
 export interface EmailCodeHandlers {
   sendCode: (email: string) => Promise<AuthResult>;
   verifyCode: (code: string) => Promise<AuthResult>;
+}
+
+/** What useCollegeSignIn returns, the same in the demo and with Clerk. */
+export interface CollegeSignIn {
+  isLoaded: boolean;
+  google: (next?: string | null) => Promise<AuthResult>;
+  sendCode: (email: string) => Promise<AuthResult>;
+  verifyCode: (code: string, next?: string | null) => Promise<AuthResult>;
 }
 
 type SignInResource = NonNullable<ReturnType<typeof useSignIn>['signIn']>;
@@ -55,7 +65,7 @@ function plainError(err: unknown): string {
  * - verifyCode(code, next): checks the code, starts the session, goes to /campus/verify.
  * Never throws: every action resolves to an AuthResult.
  */
-export function useCollegeSignIn() {
+function useClerkCollegeSignIn(): CollegeSignIn {
   const router = useRouter();
   const { isLoaded: signInLoaded, signIn, setActive } = useSignIn();
   const { isLoaded: signUpLoaded, signUp } = useSignUp();
@@ -151,3 +161,6 @@ export function useCollegeSignIn() {
 
   return { isLoaded, google, sendCode, verifyCode };
 }
+
+/** Step 2 sign-in: the simulated one in the demo, Clerk everywhere else. */
+export const useCollegeSignIn: () => CollegeSignIn = isDemoMode() ? useDemoCollegeSignIn : useClerkCollegeSignIn;
