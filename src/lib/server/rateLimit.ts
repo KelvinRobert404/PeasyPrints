@@ -1,10 +1,15 @@
 import crypto from 'crypto';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/firebase/admin';
+import { isDemoMode } from '@/lib/demo/mode';
+
+// The demo always allows and writes nothing to the visitor's world.
+const DEMO = isDemoMode();
 
 export async function checkRateLimit(scope: string, principal: string, limit: number, windowSeconds: number) {
   const now = Date.now();
   const windowId = Math.floor(now / (windowSeconds * 1000));
+  if (DEMO) return { allowed: true, retryAfter: Math.max(1, Math.ceil(((windowId + 1) * windowSeconds * 1000 - now) / 1000)) };
   const id = crypto.createHash('sha256').update(`${scope}:${principal}:${windowId}`).digest('hex');
   const ref = getAdminDb().collection('_rate_limits').doc(id);
   const allowed = await getAdminDb().runTransaction(async (transaction) => {

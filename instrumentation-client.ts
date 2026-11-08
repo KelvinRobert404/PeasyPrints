@@ -1,7 +1,12 @@
 // Lightweight client-side analytics bootstrap (optional)
 // Initializes PostHog early if a public key is configured.
+// Never in the demo: posthog-js is not imported or initialised there.
 
-if (typeof window !== 'undefined') {
+import { isDemoMode } from './src/lib/demo/mode';
+
+const DEMO = isDemoMode();
+
+if (typeof window !== 'undefined' && !DEMO) {
 	const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string | undefined;
 	if (key && window.localStorage.getItem('peasy_analytics_consent') === 'granted') {
 		let shouldBootstrap = true;

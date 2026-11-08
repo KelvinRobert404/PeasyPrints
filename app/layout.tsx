@@ -29,6 +29,11 @@ import { RootShell } from '@/components/layout/RootShell';
 import { ClerkProvider } from '@clerk/nextjs';
 import { AnalyticsConsent } from '@/components/privacy/AnalyticsConsent';
 import { AgentationDevTools } from '../components/dev/AgentationDevTools';
+import { DemoRoot } from '@/components/demo/DemoRoot';
+import { isDemoMode } from '@/lib/demo/mode';
+
+// Demo: sample data, no analytics, no dev overlays, and the demo root mounted.
+const DEMO = isDemoMode();
 
 export const metadata: Metadata = {
   title: 'Swoop',
@@ -53,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={`${bricolage.variable} ${figtree.variable} ${archivo.variable} font-sans antialiased text-ink`}>
+        {DEMO ? <DemoRoot /> : null}
         <ClerkProvider
           signInUrl="/login"
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
@@ -63,8 +69,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </AuthProvider>
           </RootShell>
         </ClerkProvider>
-        <AnalyticsConsent />
-        <AgentationDevTools />
+        {DEMO ? null : <AnalyticsConsent />}
+        {DEMO ? null : <AgentationDevTools />}
       </body>
     </html>
   );

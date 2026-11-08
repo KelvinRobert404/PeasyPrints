@@ -5,8 +5,9 @@ import { usePathname } from 'next/navigation';
 import { captureEvent, identifyUser, isFeatureEnabled, getFeatureFlag } from '@/lib/posthog/client';
 import type { AnalyticsEventName, BaseEventProperties } from '@/types/analytics';
 import { useUser } from '@clerk/nextjs';
+import { isDemoMode } from '@/lib/demo/mode';
 
-export function usePosthog() {
+function useLivePosthog() {
   const pathname = usePathname();
   const { user, isLoaded } = useUser();
 
@@ -34,6 +35,19 @@ export function usePosthog() {
     getFeatureFlag,
   } as const;
 }
+
+// The demo sends no analytics: captures do nothing and every flag is off.
+const demoPosthog = {
+  capture: async <T extends AnalyticsEventName>(_event: T, _properties?: BaseEventProperties & Record<string, any>): Promise<void> => {},
+  isFeatureEnabled: async (_flagKey: string): Promise<boolean> => false,
+  getFeatureFlag: async (_flagKey: string): Promise<any> => undefined,
+} as const;
+
+function useDemoPosthog(): ReturnType<typeof useLivePosthog> {
+  return demoPosthog;
+}
+
+export const usePosthog = isDemoMode() ? useDemoPosthog : useLivePosthog;
 
 function buildBaseProps({ pathname }: { pathname?: string | null }): BaseEventProperties {
   if (typeof window === 'undefined') return {};
