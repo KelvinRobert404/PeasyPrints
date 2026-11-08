@@ -5,6 +5,7 @@ import { Card, IconTile, ListRow, PageHeader, SectionHeader } from '@/components
 import { ChevronRightIcon, RupeeIcon, type IconProps } from '@/components/swoop/icons';
 import { BugIcon, BulbIcon, ChatIcon } from '@/components/auth/icons';
 import { HandoffAnchor, useHandoff } from '@/components/demo/DemoHandoffSheet';
+import { formatPrice } from '@/lib/format/price';
 import { cn } from '@/lib/utils/cn';
 
 function TopicRow({
@@ -84,7 +85,7 @@ export default function ContactPage() {
               <br />
               We refund the first payment.
               <br />
-              Under Rs 100 comes back on its own.
+              Under {formatPrice(100)} comes back on its own.
             </TopicRow>
             <TopicRow icon={BugIcon} title="App or technical glitches">
               Page broken or not loading?

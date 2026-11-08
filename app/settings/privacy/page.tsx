@@ -5,9 +5,12 @@ import { ANALYTICS_CONSENT_KEY } from '@/components/privacy/AnalyticsConsent';
 import { Card, IconTile, ListRow, PageHeader, SectionHeader, swButton } from '@/components/swoop/primitives';
 import { DocIcon, TrashIcon } from '@/components/swoop/icons';
 import { ChartIcon } from '@/components/auth/icons';
+import { isDemoMode } from '@/lib/demo/mode';
 import { cn } from '@/lib/utils/cn';
 
 const CONFIRMATION_PHRASE = 'delete my account';
+/** In the demo the request is only recorded in the visitor's sample world. */
+const DEMO = isDemoMode();
 
 export default function PrivacySettingsPage() {
   const [confirmation, setConfirmation] = useState('');
@@ -28,9 +31,9 @@ export default function PrivacySettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ confirmation }),
       });
-      const data = await response.json();
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(data.error || 'Could not request deletion');
-      setMessage('Request queued. We will remove or anonymize your data.');
+      setMessage(DEMO ? 'Recorded. Sample data, nothing deleted.' : 'Request queued. We will remove or anonymize your data.');
       setConfirmation('');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not request deletion');
@@ -73,6 +76,9 @@ export default function PrivacySettingsPage() {
                 Payment records required by law stay, anonymized.
               </p>
             </div>
+            {DEMO ? (
+              <p className="mt-2 rounded-[12px] bg-surface px-3 py-2 text-[11px] font-semibold text-slate">Demo: this only records a request.</p>
+            ) : null}
             <label htmlFor="delete-confirmation" className="mt-3 block text-[11.5px] font-bold text-ink">
               Confirmation
             </label>
