@@ -7,6 +7,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { isDemoMode } from '@/lib/demo/mode';
+import { DemoPersistence } from '@/lib/demo/client/DemoPersistence';
 
 const subscribeNever = () => () => {};
 const mountedOnClient = () => true;
@@ -18,7 +19,11 @@ function useMounted(): boolean {
 
 /** The one place demo pieces mount. Add each one here, in order. */
 function DemoParts() {
-  return null;
+  return (
+    <>
+      <DemoPersistence />
+    </>
+  );
 }
 
 function DemoRootOn() {
