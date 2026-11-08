@@ -1,3 +1,5 @@
+'use client';
+
 import { SwoopLogo } from '@/components/swoop/Logo';
 import { Card, IconTile, ListRow, ServiceTile } from '@/components/swoop/primitives';
 import { DocIcon, HelpIcon, HousingIcon, MarketIcon, PrintIcon, ShieldCheckIcon } from '@/components/swoop/icons';
