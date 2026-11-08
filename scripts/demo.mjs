@@ -48,6 +48,8 @@ const demoEnv = {
   // Razorpay placeholders: the demo stand-in signs and checks with these.
   RAZORPAY_KEY_ID: 'demo_razorpay_key_id',
   NEXT_PUBLIC_RAZORPAY_KEY_ID: 'demo_razorpay_key_id',
+  // pdf.js worker from public/, so the previewer never asks unpkg.com.
+  NEXT_PUBLIC_PDF_WORKER_URL: '/pdf.worker.min.mjs',
   RAZORPAY_KEY_SECRET: 'swoop-demo-razorpay-secret',
   RAZORPAY_WEBHOOK_SECRET: 'swoop-demo-webhook-secret',
   // Cron and internal tokens: placeholders, never real.
