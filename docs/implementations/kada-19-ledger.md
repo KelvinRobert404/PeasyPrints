@@ -53,9 +53,9 @@ Statuses:
 | UTILCHK | KADA-18 checks in demo: deals, lost and found, blood, games, privacy | 5 | M | done | 2cd7c32 | DEAL, LOST, BLOOD, GAMES, COPY, /contact pass; demo privacy copy says nothing is deleted; seeded O- request is fulfilled so not listed (by design) |
 | PRINTCHK | KADA-18 checks in demo: print flow, orders, pickup art and campus shops | 5 | M | done | b65e277 | PRINTCAMPUS, sample PDF and images flow, pay fails, Today/Earlier, shops, ART, live pickup pass; /shops filtered by campus (real app too); paise kept on pickup |
 | DEMOCHK | Demo checks end to end: persistence, reset, isolation, dates and the bar | 5 | M | done | 33f791e | all 9 checks pass; smoke 201/201 warm and cold; reset now clears the Firebase stand-in's uid; /campus dropped from the warm-up list |
-| FIXPRICE | Student print prices without the rupee sign, keeping paise | 6 | S | running | | |
-| FIXCHROME | Small app fixes from the wave 5 checks: favicon, tab case, kit grid, soft 404, dev badge, PostHog guard | 6 | S | running | | |
-| FIXSEED | Sample data copy that matches its times, and far distances without walk times | 6 | S | running | | |
+| FIXPRICE | Student print prices without the rupee sign, keeping paise | 6 | S | done | 0b1421b | formatPrintPrice keeps paise (Rs 1.5); no rupee sign on /orders, Home, /upload, /shops/[id]; order totals now keep paise |
+| FIXCHROME | Small app fixes from the wave 5 checks: favicon, tab case, kit grid, soft 404, dev badge, PostHog guard | 6 | S | done | ecb79c8 | icon.svg, sentence-case tabs, kit grid, real 404 for unknown See-all sections (after the sign-in bounce), dev badge off in demo only, PostHog demo guard |
+| FIXSEED | Sample data copy that matches its times, and far distances without walk times | 6 | S | done | aece632 | day-free titles, Tanvi kurta request, 14 fixture update links fixed, no walk time past 3 km, own campus named |
 
 ## Session log
 
@@ -81,6 +81,7 @@ Statuses:
 8 Nov 16:45 IST · jtk/claude-2 · demo server thrashed at 8 GB again (HOMECHK and UTILCHK blocked); restarted under a watchdog (restart above 6 GB). PRINTCHK and AUTHCHK verified and pushed.
 8 Nov 17:40 IST · jtk/claude-2 · HOMECHK and UTILCHK re-run (the /tmp RAM disk filled with 236 leftover Chrome profiles mid-run; cleared, tools now delete their profiles); verified and pushed. DEMOCHK started alone. Wave 6 (FIXPRICE, FIXCHROME, FIXSEED) added for the outside fixes.
 8 Nov 19:05 IST · jtk/claude-2 · DEMOCHK verified and pushed (33f791e). Wave 6 started; the lead runs the demo server under the watchdog. FIXCHROME's dev badge fix moved from next.config.js to the demo-only src/lib/demo/build-config.cjs, as DEMOCHK suggested.
+8 Nov 19:50 IST · jtk/claude-2 · wave 6 verified and pushed (0b1421b, ecb79c8, aece632): typecheck, lint, 449/449 tests, demo:smoke 201/201, browser checks at 375 and 1280, dev badge gone after a restart. Production build compiles, no shims in .next. All 29 packages done, none blocked.
 
 ## Blocked
 
@@ -105,6 +106,10 @@ Statuses:
 - Wave 4 · plain `npm run build` · prerender stops on missing production env · run with real env later.
 - APICHK · /marketplace/all/x is a 200 with the not-found page streamed in, not a 404 status, because app/loading.tsx streams first · the smoke counts the streamed not-found as the 404 · a true 404 needs proxy.ts or dropping the root loading.tsx.
 - Wave 4 · one smoke run had `GET /api/demo/session` 500 with `SyntaxError: Unexpected end of JSON input` while the dev server recompiled (APICHK saw 'Manifest file is empty' once too); the rerun passed 200/200 · a webpack dev-server race, not app code.
+
+- Wave 6 · plain `npm run build` · compiles in 68 s, prerender stops on missing production env; `grep -rl demo/shims .next --exclude-dir=cache` is empty · run with real env later.
+- APICHK's soft 404 · fixed by FIXCHROME (ecb79c8): /marketplace/all/x and /girls-space/marketplace/all/x answer 404 for signed-in visitors.
+- FIXPRICE · CouponInput is used on no page, so its 'You save' line was checked by tests only.
 
 ## Decided at night
 
@@ -138,3 +143,7 @@ Statuses:
 - PRINTCHK · /shops listed every campus's shops · now filtered by the student's campus like /upload, in the real app too (same filter /upload already uses) · app/shops/page.tsx in b65e277 · undo: revert that file.
 - HOMECHK · Meera (ID card pending) is still invited to 'Verify' on Home and in CampusGate · a pending message would be clearer but changes real-app copy · left as is; for the owner to decide.
 - UTILCHK · the seeded O- blood request is fulfilled, so the open-requests list hides it · kept the seed; the B+ request covers the list check.
+- FIXCHROME · the unknown See-all 404 sits in proxy.ts, so it applies in the real app too (after the sign-in bounce) · proxy.ts keeps its own copy of the four section ids; keep it in step with MARKET_SECTIONS · undo: revert the proxy.ts hunk of ecb79c8.
+- FIXPRICE · OrdersList and OrderRow rounded order totals to whole rupees; they now keep paise, like the brief asks, in the real app too · undo: revert those two files in 0b1421b.
+- FIXSEED · all 14 seeded update links pointed at routes that don't exist (/market/..., /deals/...) · fixed to real routes, with a test · src/lib/campus/fixtures/index.ts.
+- Close-out · the morning report's 'before' shot needs the real app with no env, so the lead ran plain `next dev` on :3020 once; Clerk's keyless mode loaded its scripts from an anonymous temporary Clerk dev instance (legible-foal-8612.clerk.accounts.dev, keys in the git-ignored .clerk/), not the owner's Clerk account · no data sent, server stopped right after · leave .clerk/ alone or delete it.
