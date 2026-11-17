@@ -12,6 +12,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 
 const DEMO_PORT = 3019;
 const DEMO_DIST_DIR = '.next-demo';
@@ -162,7 +163,11 @@ function applyDemoConfig(nextConfig, options) {
 
   const baseWebpack = nextConfig.webpack;
   const baseRewrites = nextConfig.rewrites;
-  const devOrigins = [`localhost:${DEMO_PORT}`, `127.0.0.1:${DEMO_PORT}`];
+  // This laptop's own Wi-Fi/LAN addresses, so a phone on the same network can open the demo.
+  const lanHosts = Object.values(os.networkInterfaces()).flat()
+    .filter((a) => a && a.family === 'IPv4' && !a.internal)
+    .map((a) => a.address);
+  const devOrigins = [`localhost:${DEMO_PORT}`, `127.0.0.1:${DEMO_PORT}`, ...lanHosts, ...lanHosts.map((h) => `${h}:${DEMO_PORT}`)];
 
   return {
     ...nextConfig,

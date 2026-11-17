@@ -10,12 +10,17 @@ import { spawn } from 'node:child_process';
 import { readdirSync, existsSync } from 'node:fs';
 import { createServer } from 'node:net';
 import path from 'node:path';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // Keep in step with DEMO_PORT and the cookie names in src/lib/demo/contract.ts.
 const PORT = 3019;
 const ORIGIN = `http://localhost:${PORT}`;
+// The laptop's Wi-Fi/LAN addresses: a phone on the same network opens the demo there.
+const LAN_ORIGINS = Object.values(os.networkInterfaces()).flat()
+  .filter((a) => a && a.family === 'IPv4' && !a.internal)
+  .map((a) => `http://${a.address}:${PORT}`);
 const VISITOR_COOKIE = 'swoop_demo_visitor';
 const SESSION_COOKIE = 'swoop_demo_session';
 const WARMUP_VISITOR = 'warmup';
@@ -32,7 +37,7 @@ const check = process.argv.includes('--check');
 const demoEnv = {
   NEXT_PUBLIC_SWOOP_DEMO: '1',
   NEXT_PUBLIC_SWOOP_FIXTURES: '1',
-  NEXT_PUBLIC_ALLOWED_ORIGINS: ORIGIN,
+  NEXT_PUBLIC_ALLOWED_ORIGINS: [ORIGIN, ...LAN_ORIGINS].join(','),
   // Clerk and Firebase are replaced by stand-ins; blank keys keep the SDKs inert.
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: '',
   CLERK_SECRET_KEY: '',
@@ -198,6 +203,7 @@ async function main() {
 
   if (!check) {
     console.log(`[demo] Open ${ORIGIN}. Everything here is sample data. Ctrl+C stops it.`);
+    for (const lan of LAN_ORIGINS) console.log(`[demo] On a phone on the same Wi-Fi: ${lan}`);
     return;
   }
 

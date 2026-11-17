@@ -26,6 +26,11 @@ export const dynamic = 'force-dynamic';
 const NO_STORE = { 'Cache-Control': 'private, no-store' };
 const VISITOR_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/** A phone on the same Wi-Fi reaches the demo on the laptop's private address (10.x, 172.16-31.x, 192.168.x). */
+function isPrivateLanHost(hostname: string): boolean {
+  return /^(10\.\d+|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d+\.\d+$/.test(hostname);
+}
 /** The webhook route may still be compiling on the first payment. */
 const WEBHOOK_TIMEOUT_MS = 90_000;
 
@@ -48,7 +53,7 @@ function isSameOrigin(request: NextRequest): boolean {
 /** Our own origin, only ever on this machine. */
 function localOrigin(request: NextRequest): string {
   const url = new URL(request.url);
-  return url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname) ? url.origin : DEMO_ORIGIN;
+  return url.protocol === 'http:' && (LOCAL_HOSTS.has(url.hostname) || isPrivateLanHost(url.hostname)) ? url.origin : DEMO_ORIGIN;
 }
 
 function parseBody(value: unknown): { orderId: string; fail: boolean } | null {
