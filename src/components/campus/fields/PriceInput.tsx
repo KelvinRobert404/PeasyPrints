@@ -9,7 +9,7 @@ type Props = {
   value?: number | null;
   defaultValue?: number | null;
   onChange?: (price: number | null) => void;
-  /** Shown after the preview: 'Rs 8.5k pp', 'Rs 1.2L dep'. */
+  /** Shown after the preview: '₹8.5k pp', '₹1.2L dep'. */
   suffix?: PriceSuffix;
   label?: string;
   placeholder?: string;
@@ -24,7 +24,7 @@ function toText(price: number | null | undefined): string {
 
 /**
  * Price box that reads '1.5k', '12,000' or '1L' and shows the live
- * 'Rs 1.5k' preview under it. Never shows the rupee sign.
+ * '₹1.5k' preview under it.
  */
 export function PriceInput({
   value,
@@ -67,7 +67,7 @@ export function PriceInput({
 
   return (
     <div className={cn('min-w-0', className)}>
-      <label htmlFor={id} className="block text-[11.5px] font-bold text-ink">
+      <label htmlFor={id} className="block text-[11.5px] font-semibold text-ink">
         {label}
       </label>
       <div
@@ -77,8 +77,8 @@ export function PriceInput({
           disabled && 'opacity-45',
         )}
       >
-        <span className="shrink-0 text-[13px] font-bold text-slate" aria-hidden="true">
-          Rs
+        <span className="shrink-0 text-[13px] font-medium text-slate" aria-hidden="true">
+          ₹
         </span>
         <input
           id={id}
@@ -96,7 +96,7 @@ export function PriceInput({
           className="min-w-0 flex-1 bg-transparent text-[14px] font-semibold text-ink outline-none placeholder:font-medium placeholder:text-slate"
         />
         {suffix && !disabled ? (
-          <span className="shrink-0 text-[12px] font-bold text-slate" aria-hidden="true">
+          <span className="shrink-0 text-[12px] font-medium text-slate" aria-hidden="true">
             {suffix}
           </span>
         ) : null}
@@ -105,7 +105,7 @@ export function PriceInput({
         id={`${id}-preview`}
         aria-live="polite"
         className={cn(
-          'mt-1 text-[11.5px] font-bold tabular-nums',
+          'mt-1 text-[11.5px] font-semibold tabular-nums',
           invalid ? 'text-market' : trimmed && !disabled ? 'text-ink' : 'text-slate',
         )}
       >

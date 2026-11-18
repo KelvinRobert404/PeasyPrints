@@ -81,7 +81,7 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
       )}
 
       {todayOrders.length > 0 && (
-        <div className="mb-2 font-heading text-[14.5px] text-ink">Today</div>
+        <div className="mb-2 font-heading text-[14px] text-ink">Today</div>
       )}
 
       {todayOrders.length > 0 && (
@@ -101,7 +101,7 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
                 className={`cursor-pointer hover:bg-surface ${rowPadding}`}
               >
                 <TableCell className="px-3" onClick={() => onOrderClick?.(order)}>
-                  <div className="font-bold text-[12.5px] text-ink truncate max-w-[220px]">{order.fileName}</div>
+                  <div className="font-semibold text-[12.5px] text-ink truncate max-w-[220px]">{order.fileName}</div>
                   <div className="text-[11px] text-slate sm:hidden truncate max-w-[220px]">{order.shopName}</div>
                 </TableCell>
                 <TableCell className="px-3 hidden sm:table-cell text-text-secondary" onClick={() => onOrderClick?.(order)}>{order.shopName}</TableCell>
@@ -119,7 +119,7 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
       )}
 
       {olderOrders.length > 0 && (
-        <div className="mt-4 mb-2 font-heading text-[14.5px] text-ink">Older</div>
+        <div className="mt-4 mb-2 font-heading text-[14px] text-ink">Older</div>
       )}
 
       {olderOrders.length > 0 && (
@@ -139,7 +139,7 @@ export function OrdersList({ orders, isLoading, error, onOrderClick, density = '
                 className={`cursor-pointer hover:bg-surface ${rowPadding}`}
               >
                 <TableCell className="px-3" onClick={() => onOrderClick?.(order)}>
-                  <div className="font-bold text-[12.5px] text-ink truncate max-w-[220px]">{order.fileName}</div>
+                  <div className="font-semibold text-[12.5px] text-ink truncate max-w-[220px]">{order.fileName}</div>
                   <div className="text-[11px] text-slate sm:hidden truncate max-w-[220px]">{order.shopName}</div>
                 </TableCell>
                 <TableCell className="px-3 hidden sm:table-cell text-text-secondary" onClick={() => onOrderClick?.(order)}>{order.shopName}</TableCell>

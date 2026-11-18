@@ -41,19 +41,19 @@ function UpgradeTile({
       )}
     >
       <span className="flex items-center justify-between gap-2">
-        <span className="text-[12.5px] font-bold text-ink">{title}</span>
+        <span className="text-[12.5px] font-semibold text-ink">{title}</span>
         <span className={cn('grid h-7 w-7 shrink-0 place-items-center rounded-full', selected ? 'bg-royal text-white' : 'bg-white text-royal')}>
           <Icon size={16} />
         </span>
       </span>
-      <span className="mt-1 text-[11px] leading-[1.35] text-slate">{description}</span>
+      <span className="mt-1 text-[11px] font-medium leading-[1.35] text-slate">{description}</span>
       <span className="mt-2 flex justify-end">
         {unavailable ? (
           <span className="rounded-full bg-market-tint px-1.5 py-0.5 text-[9.5px] font-bold text-market">
             Unavailable
           </span>
         ) : (
-          <span className="font-heading text-[14.5px] leading-none text-ink tabular-nums">{price}</span>
+          <span className="text-[13px] font-bold leading-none text-ink tabular-nums">{price}</span>
         )}
       </span>
     </button>

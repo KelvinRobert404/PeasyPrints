@@ -10,7 +10,7 @@ export default function GirlsSpacePage() {
         <main className="mx-auto max-w-2xl px-3 pt-1">
           <section className="flex flex-col gap-1 rounded-[14px] bg-girls-tint px-3 pb-3 pt-[11px]">
             <Tag tone="white" className="self-start text-girls">Only approved members</Tag>
-            <h2 className="font-heading max-w-[220px] text-[17px] leading-none text-ink">A smaller circle. A safer exchange.</h2>
+            <h2 className="font-heading max-w-[220px] text-[16px] leading-none text-ink">A smaller circle. A safer exchange.</h2>
             <p className="max-w-[260px] text-[11px] leading-[1.3] text-text-secondary">Marketplace and housing stay separate. Your private access connects them.</p>
           </section>
           <div className="grid grid-cols-2 gap-1.5 pt-3">

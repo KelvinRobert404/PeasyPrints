@@ -46,7 +46,7 @@ export const OrderRow = React.memo(function OrderRow({ order, density = 'regular
   return (
     <TableRow className={`cursor-pointer hover:bg-surface ${rowPadding}`}>
       <TableCell className="px-3" onClick={() => onClick?.(order)}>
-        <div className="font-bold text-[12.5px] text-ink truncate max-w-[220px]">{order.fileName}</div>
+        <div className="font-semibold text-[12.5px] text-ink truncate max-w-[220px]">{order.fileName}</div>
         <div className="text-[11px] text-slate sm:hidden truncate max-w-[220px]">{order.shopName}</div>
       </TableCell>
       <TableCell className="px-3 hidden sm:table-cell text-text-secondary" onClick={() => onClick?.(order)}>{order.shopName}</TableCell>

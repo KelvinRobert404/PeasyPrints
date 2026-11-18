@@ -29,7 +29,7 @@ export const FIELD_INPUT = 'campus-input text-[13px] font-semibold text-ink';
 export function FieldLabel({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
   return (
     <label className="block min-w-0">
-      <span className="block text-[11.5px] font-bold text-ink">{label}</span>
+      <span className="block text-[11.5px] font-semibold text-ink">{label}</span>
       <span className="mt-1 block">{children}</span>
       {hint ? <span className="mt-0.5 block text-[11px] text-slate">{hint}</span> : null}
     </label>
@@ -39,7 +39,7 @@ export function FieldLabel({ label, hint, children }: { label: string; hint?: Re
 export function ChipGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div role="group" aria-label={label} className="min-w-0">
-      <span className="block text-[11.5px] font-bold text-ink" aria-hidden="true">
+      <span className="block text-[11.5px] font-semibold text-ink" aria-hidden="true">
         {label}
       </span>
       <div className="mt-1 flex flex-wrap gap-1.5">{children}</div>
@@ -79,7 +79,7 @@ export function FieldNote({ tone = 'info', children }: { tone?: 'info' | 'warn';
     <p
       role={tone === 'warn' ? 'status' : undefined}
       className={cn(
-        'rounded-[10px] px-2.5 py-1.5 text-[11.5px] font-bold',
+        'rounded-[10px] px-2.5 py-1.5 text-[11.5px] font-semibold',
         tone === 'warn' ? 'bg-market-tint text-market' : 'bg-surface text-slate',
       )}
     >
@@ -147,7 +147,7 @@ export function SeatFields({ state, update, girls, now }: KindFieldsProps) {
       {train ? <FieldNote tone="warn">Name change rules apply</FieldNote> : null}
       <CountChips label="Seats" min={1} max={seatsLeftMax(state)} value={state.seatsLeft} onChange={(seatsLeft) => update({ seatsLeft })} />
       <div className="min-w-0">
-        <p className="text-[11.5px] font-bold text-ink">Seat is for</p>
+        <p className="text-[11.5px] font-semibold text-ink">Seat is for</p>
         <GenderChips
           className="mt-1"
           label="Seat is for"
@@ -189,7 +189,7 @@ export function CabSplitFields({ state, update, girls, now }: KindFieldsProps) {
       <CountChips label="People in the cab, with you" min={CAB_SIZE_MIN} max={CAB_SIZE_MAX} value={state.cabSize} onChange={setCabSize} />
       <CountChips label="Seats left" min={1} max={seatsLeftMax(state)} value={state.seatsLeft} onChange={(seatsLeft) => update({ seatsLeft })} />
       <div className="min-w-0">
-        <p className="text-[11.5px] font-bold text-ink">Ride with</p>
+        <p className="text-[11.5px] font-semibold text-ink">Ride with</p>
         <GenderChips
           className="mt-1"
           label="Ride with"

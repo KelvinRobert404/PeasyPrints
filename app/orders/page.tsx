@@ -15,7 +15,7 @@ import type { OrderDoc } from '@/types/models';
 function OrderGroup({ title, orders }: { title: string; orders: OrderDoc[] }) {
   return (
     <section className="pt-3">
-      <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">{title}</h2>
+      <h2 className="font-heading text-[14px] leading-[1.1] text-ink">{title}</h2>
       <div className="mt-1 flex flex-col">
         {orders.map((o, i) => (
           <OrderCard key={o.id ?? `${title}-${i}`} order={o} divider={i < orders.length - 1} />

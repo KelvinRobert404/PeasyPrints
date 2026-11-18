@@ -61,14 +61,14 @@ function DealsScreen() {
         <section className="relative flex min-h-[110px] items-center overflow-hidden rounded-[14px] bg-royal-tint px-3 py-3">
           <div className="min-w-0 flex-1 pr-[92px]">
             <Tag tone="white">Only verified students</Tag>
-            <h2 className="font-heading mt-1.5 text-[14.5px] leading-[1.1] text-ink">Hey, deals near {code}</h2>
+            <h2 className="font-heading mt-1.5 text-[14px] leading-[1.1] text-ink">Hey, deals near {code}</h2>
             <p className="mt-0.5 text-[11.5px] leading-[1.4] text-text-secondary">Free for students. Show it at the counter.</p>
           </div>
           <DealsArt width={96} height={88} className="pointer-events-none absolute bottom-1 right-1" />
         </section>
 
         {anySample ? (
-          <p role="note" className="mt-2 rounded-[12px] bg-surface px-3 py-2 text-[11px] font-semibold text-text-secondary">
+          <p role="note" className="mt-2 rounded-[12px] bg-surface px-3 py-2 text-[11px] font-medium text-text-secondary">
             Sample deals for testing. Not real offers.
           </p>
         ) : null}
@@ -127,7 +127,7 @@ function DealRow({ deal, code, onShow }: { deal: StudentDeal; code: string; onSh
       <IconTile icon={DealIcon} tone="royal" shape="square" size={40} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate text-[12.5px] font-bold text-ink">{deal.merchantName}</span>
+          <span className="truncate text-[12.5px] font-semibold text-ink">{deal.merchantName}</span>
           {deal.sample ? <Tag className="shrink-0 bg-surface text-text-secondary">Sample</Tag> : null}
         </span>
         <span className="line-clamp-2 text-[11.5px] font-semibold leading-[1.35] text-ink">{deal.offer}</span>
@@ -179,7 +179,7 @@ function CounterSheet({ deal, name, campusLabel, onClose }: { deal: StudentDeal;
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10.5px] font-semibold text-slate">Show at counter</p>
+            <p className="text-[10.5px] font-medium text-slate">Show at counter</p>
             <h2 id={titleId} className="font-heading truncate text-[16px] leading-[1.1] text-ink">
               {deal.merchantName}
             </h2>
@@ -193,17 +193,17 @@ function CounterSheet({ deal, name, campusLabel, onClose }: { deal: StudentDeal;
             <ShieldCheckIcon size={14} aria-hidden="true" />
             Verified student, {campusLabel}
           </span>
-          <p className="font-heading mt-1 text-[28px] leading-none text-ink tabular-nums" aria-live="off">
+          <p className="mt-1 text-[28px] font-bold leading-none text-ink tabular-nums" aria-live="off">
             {counterClock(now)}
           </p>
-          <p className="flex items-center gap-1 text-[11px] font-semibold text-text-secondary">
+          <p className="flex items-center gap-1 text-[11px] font-medium text-text-secondary">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-go" aria-hidden="true" />
             Live, {counterDate(now)}
           </p>
         </div>
 
         <div className="mt-3 space-y-1">
-          <p className="text-[12.5px] font-bold text-ink">{deal.offer}</p>
+          <p className="text-[12.5px] font-semibold text-ink">{deal.offer}</p>
           {deal.code ? (
             <p className="text-[11.5px] text-text-secondary">
               Code <span className="rounded-[6px] bg-surface px-1.5 py-0.5 font-bold text-ink">{deal.code}</span>
@@ -212,7 +212,7 @@ function CounterSheet({ deal, name, campusLabel, onClose }: { deal: StudentDeal;
           {deal.howToClaim ? <p className="text-[11.5px] text-text-secondary">{deal.howToClaim}</p> : null}
           <p className="text-[11px] text-slate">{validTillLabel(deal.validUntil)}</p>
           {deal.sample ? (
-            <p className="rounded-[12px] bg-surface px-3 py-2 text-[11px] font-bold text-text-secondary">Sample deal. Not a real offer.</p>
+            <p className="rounded-[12px] bg-surface px-3 py-2 text-[11px] font-medium text-text-secondary">Sample deal. Not a real offer.</p>
           ) : null}
         </div>
 

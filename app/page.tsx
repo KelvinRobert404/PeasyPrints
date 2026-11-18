@@ -142,7 +142,7 @@ export default function HomePage() {
     <div className="flex flex-1 flex-col bg-white pb-3">
       {/* Greeting */}
       <h1
-        className={`font-heading truncate px-3 pt-2 text-[20px] leading-[1.15] text-ink ${greetingPending ? 'invisible' : ''}`}
+        className={`font-heading truncate px-3 pt-2 text-[16px] leading-[1.15] text-ink ${greetingPending ? 'invisible' : ''}`}
         aria-hidden={greetingPending || undefined}
       >
         {name ? `Hey ${name}` : 'Hey there'}
@@ -153,7 +153,7 @@ export default function HomePage() {
         <div className="flex h-[42px] items-center gap-2 rounded-full bg-surface pl-[13px] pr-[5px]">
           <Link href="/marketplace" className="flex min-w-0 flex-1 items-center gap-2 self-stretch">
             <SearchIcon size={16} className="shrink-0 text-ink" />
-            <span className="font-heading truncate text-[15.5px] text-ink">What do you need?</span>
+            <span className="truncate text-[12.5px] font-medium text-slate">What do you need?</span>
             <span className="sr-only">Browse the marketplace</span>
           </Link>
           <Link href="/upload" className={swButton({ variant: 'white', size: 'pill', className: 'shrink-0' })}>
@@ -242,18 +242,18 @@ export default function HomePage() {
               />
             ))}
             {openOnly && visibleShops.length === 0 && campusShops.length > 0 && (
-              <p className="py-3 text-[11.5px] text-slate">No shops are open right now.</p>
+              <p className="py-3 text-[11px] font-medium text-slate">No shops are open right now.</p>
             )}
           </div>
         </section>
       )}
 
       {/* Trust line and quiet footer links */}
-      <p className="flex items-center justify-center gap-1 px-3 pt-5 text-[11.5px] font-semibold text-slate">
+      <p className="flex items-center justify-center gap-1 px-3 pt-5 text-[11px] font-medium text-slate">
         <ShieldCheckIcon size={13} className="shrink-0 text-royal" />
         {code ? `Only verified ${code} students` : 'Only verified students'}
       </p>
-      <nav aria-label="About Swoop" className="flex items-center justify-center gap-3 px-3 pt-1 text-[11.5px] font-semibold text-slate">
+      <nav aria-label="About Swoop" className="flex items-center justify-center gap-3 px-3 pt-1 text-[11px] font-medium text-slate">
         <Link href="/about" className="flex min-h-6 items-center hover:text-ink">
           About us
         </Link>

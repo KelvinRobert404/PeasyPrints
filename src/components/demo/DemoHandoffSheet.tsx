@@ -133,16 +133,16 @@ export function DemoHandoffSheet({ channel, name, target, onClose }: Handoff & {
         <div className="mt-2.5 flex items-center gap-2.5 rounded-[12px] bg-surface px-3 py-2">
           <IconTile icon={meta.icon} tone={channel === 'whatsapp' ? 'go' : 'royal'} size={32} />
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold text-slate">{meta.label}</p>
+            <p className="text-[11px] font-semibold text-slate">{meta.label}</p>
             {shown ? (
-              <p className="truncate text-[12.5px] font-semibold text-slate tabular-nums" aria-label={`${meta.label}: ${shown}, sample`}>
+              <p className="truncate text-[12.5px] font-medium text-slate tabular-nums" aria-label={`${meta.label}: ${shown}, sample`}>
                 {shown}
               </p>
             ) : null}
           </div>
         </div>
 
-        <p className="mt-2 text-[11px] font-semibold text-slate">Sample data. Nothing leaves the demo.</p>
+        <p className="mt-2 text-[11px] font-medium text-slate">Sample data. Nothing leaves the demo.</p>
 
         <button ref={okRef} type="button" onClick={onClose} className={cn(swButton(), 'mt-3 w-full')}>
           OK

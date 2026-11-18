@@ -105,7 +105,7 @@ function HousingFeedPage({ audience }: { audience: CampusAudience }) {
         ) : (
           <header className="flex items-end justify-between gap-3 px-3 pt-2">
             <div className="min-w-0">
-              <p className="flex items-center gap-1 truncate text-[10.5px] font-semibold text-slate">
+              <p className="flex items-center gap-1 truncate text-[10.5px] font-medium text-slate">
                 <ShieldCheckIcon size={12} className="shrink-0 text-go-text" aria-hidden="true" />
                 Only verified students
               </p>
@@ -122,7 +122,7 @@ function HousingFeedPage({ audience }: { audience: CampusAudience }) {
 
           <section className="pt-3" aria-label="Housing posts">
             {ready ? (
-              <p className="text-[11px] font-semibold text-slate" aria-live="polite">
+              <p className="text-[11px] font-medium text-slate" aria-live="polite">
                 {countLine(view.near.length + view.farther.length, view.placeSearch ? null : filters.ring)}
               </p>
             ) : null}
@@ -153,7 +153,7 @@ function HousingFeedPage({ audience }: { audience: CampusAudience }) {
             {ready && view.hiddenFarther > 0 ? (
               <div className="mt-3 flex flex-col items-center gap-1">
                 {!view.near.length && !view.agents.length ? (
-                  <p className="text-[12px] font-semibold text-slate">Nothing within {formatDistance(filters.ring)} yet</p>
+                  <p className="text-[12px] font-medium text-slate">Nothing within {formatDistance(filters.ring)} yet</p>
                 ) : null}
                 <button type="button" onClick={() => update({ showFarther: true })} className={swButton({ variant: 'surface', size: 'pill' })}>
                   Show {view.hiddenFarther} farther
@@ -163,7 +163,7 @@ function HousingFeedPage({ audience }: { audience: CampusAudience }) {
 
             {ready && view.farther.length ? (
               <div className="pt-3.5">
-                <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">Farther out</h2>
+                <h2 className="font-heading text-[14px] leading-[1.1] text-ink">Farther out</h2>
                 <div className={cn(GRID, 'mt-2')}>{view.farther.map((item) => card(item))}</div>
               </div>
             ) : null}
@@ -236,7 +236,7 @@ function AgentDigest({
         onClick={() => setOpen((value) => !value)}
         className="campus-press flex w-full min-w-0 items-center justify-between gap-2 px-3 py-2.5 text-left"
       >
-        <span className="min-w-0 truncate text-[12.5px] font-bold text-ink">{label}</span>
+        <span className="min-w-0 truncate text-[12.5px] font-semibold text-ink">{label}</span>
         <CaretDownIcon size={14} className={cn('shrink-0 text-ink transition-transform', open && 'rotate-180')} aria-hidden="true" />
       </button>
       {open ? <div className="grid gap-2 px-2 pb-2">{items.map((item) => render(item))}</div> : null}

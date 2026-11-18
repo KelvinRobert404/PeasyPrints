@@ -65,7 +65,7 @@ export function HousingFilters({ audience, value, onChange, searchedPlace, class
         </button>
       </div>
       {searchedPlace ? (
-        <p className="mt-1 text-[11px] font-semibold text-slate">Showing every post in {searchedPlace}</p>
+        <p className="mt-1 text-[11px] font-medium text-slate">Showing every post in {searchedPlace}</p>
       ) : null}
 
       <div role="group" aria-label="Filter by post type" className="-mx-3 mt-2 flex gap-1.5 overflow-x-auto px-3 no-scrollbar">

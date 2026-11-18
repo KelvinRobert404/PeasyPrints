@@ -44,26 +44,26 @@ export function AuthShell({
         <main className={cn('flex w-full flex-1 flex-col pt-9', className)}>
           {(title || subtitle) && (
             <div className="mb-5">
-              {title && <h1 className="font-heading text-[20px] leading-[1.1] text-ink">{title}</h1>}
+              {title && <h1 className="font-heading text-[16px] leading-[1.1] text-ink">{title}</h1>}
               {subtitle && <p className="mt-1 text-[12.5px] leading-[1.4] text-slate">{subtitle}</p>}
             </div>
           )}
           {children}
         </main>
 
-        <p className="flex items-center gap-1.5 pt-6 text-[11.5px] font-bold text-ink">
+        <p className="flex items-center gap-1.5 pt-6 text-[11.5px] font-semibold text-ink">
           <ShieldCheckIcon size={14} className="shrink-0 text-royal" />
           Only verified students. Never a fee.
         </p>
 
         {footer && (
-          <p className="pt-1.5 text-[11px] leading-[1.45] text-slate">
+          <p className="pt-1.5 text-[11px] font-medium leading-[1.45] text-slate">
             By continuing you agree to our{' '}
-            <Link href="/terms" className="font-bold text-ink underline-offset-2 hover:underline">
+            <Link href="/terms" className="font-semibold text-ink underline-offset-2 hover:underline">
               Terms
             </Link>{' '}
             and{' '}
-            <Link href="/privacy" className="font-bold text-ink underline-offset-2 hover:underline">
+            <Link href="/privacy" className="font-semibold text-ink underline-offset-2 hover:underline">
               Privacy policy
             </Link>
             .

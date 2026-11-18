@@ -119,7 +119,7 @@ function BloodScreen() {
         <section className="flex items-center gap-3 overflow-hidden rounded-[14px] bg-surface px-3 py-2.5">
           <div className="min-w-0 flex-1">
             <Tag tone="white">{TRUST_LINE}</Tag>
-            <h2 className="font-heading mt-1 text-[15px] leading-[1.1] text-ink">Hey, help a student nearby</h2>
+            <h2 className="font-heading mt-1 text-[14px] leading-[1.1] text-ink">Hey, help a student nearby</h2>
             <p className="mt-0.5 text-[11.5px] leading-[1.4] text-slate">Only {code} requests. Never after 10 pm.</p>
             <button type="button" onClick={() => setAsking((open) => !open)} className={cn(swButton({ size: 'sm' }), 'mt-2')}>
               <PlusIcon size={13} aria-hidden="true" />
@@ -130,7 +130,7 @@ function BloodScreen() {
         </section>
 
         {notice ? (
-          <p role="status" className="rounded-[12px] bg-go-tint px-3 py-2 text-[11.5px] font-bold text-go-text">
+          <p role="status" className="rounded-[12px] bg-go-tint px-3 py-2 text-[11.5px] font-semibold text-go-text">
             {notice}
           </p>
         ) : null}
@@ -177,7 +177,7 @@ function BloodScreen() {
             />
 
             <section aria-labelledby="blood-open">
-              <h2 id="blood-open" className="font-heading text-[14.5px] leading-[1.1] text-ink">
+              <h2 id="blood-open" className="font-heading text-[14px] leading-[1.1] text-ink">
                 Open requests
               </h2>
               {state.requests.length === 0 ? (
@@ -228,7 +228,7 @@ function GroupPicker({ value, onChange, label }: { value: BloodGroup | null; onC
 function ErrorLine({ message }: { message: string }) {
   if (!message) return null;
   return (
-    <p role="alert" className="mt-2 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-bold text-market">
+    <p role="alert" className="mt-2 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-semibold text-market">
       {message}
     </p>
   );
@@ -277,7 +277,7 @@ function DonorCard({
           <div className="flex items-center gap-2.5">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-market-tint text-[14px] font-bold text-market">{me.bloodGroup}</span>
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-bold text-ink">You get donor alerts</p>
+              <p className="text-[13px] font-semibold text-ink">You get donor alerts</p>
               <p className="text-[11px] text-slate">Only for requests you can give to.</p>
             </div>
             <CheckIcon size={16} className="shrink-0 text-go-text" aria-hidden="true" />
@@ -302,7 +302,7 @@ function DonorCard({
         </>
       ) : (
         <>
-          <p className="font-heading text-[14.5px] leading-[1.1] text-ink">Get alerts as a donor</p>
+          <p className="font-heading text-[14px] leading-[1.1] text-ink">Get alerts as a donor</p>
           <p className="mt-0.5 text-[11.5px] text-slate">Pick your group. Nobody sees your name.</p>
           <div className="mt-2">
             <GroupPicker value={group} onChange={setGroup} label="Your blood group" />
@@ -327,19 +327,19 @@ function DonorCard({
       <ErrorLine message={error} />
 
       <div className="mt-3 border-t border-line pt-2.5">
-        <p className="flex items-center justify-between gap-2 text-[11.5px] font-bold text-ink">
+        <p className="flex items-center justify-between gap-2 text-[11.5px] font-semibold text-ink">
           <span>Donors at {code}</span>
-          <span className="font-semibold text-slate">{total} in all</span>
+          <span className="font-medium text-slate">{total} in all</span>
         </p>
         <div className="mt-1.5 grid grid-cols-4 gap-1.5">
           {BLOOD_GROUPS.map((item) => (
             <div key={item} className="rounded-[10px] bg-surface px-2 py-1.5 text-center">
-              <p className="text-[12.5px] font-bold text-ink">{item}</p>
+              <p className="text-[12.5px] font-semibold text-ink">{item}</p>
               <p className="text-[10.5px] text-slate">{counts[item] ?? 0}</p>
             </div>
           ))}
         </div>
-        <p className="mt-1.5 flex items-center gap-1 text-[10.5px] font-semibold text-slate">
+        <p className="mt-1.5 flex items-center gap-1 text-[10.5px] font-medium text-slate">
           <LockIcon size={12} className="shrink-0" aria-hidden="true" />
           Counts only. Names and numbers stay private.
         </p>
@@ -384,14 +384,14 @@ function RequestForm({ onCancel, onCreated }: { onCancel: () => void; onCreated:
   return (
     <Card className="p-3">
       <form onSubmit={(event) => void submit(event)}>
-        <p className="font-heading text-[14.5px] leading-[1.1] text-ink">Need blood?</p>
+        <p className="font-heading text-[14px] leading-[1.1] text-ink">Need blood?</p>
         <p className="mt-0.5 text-[11.5px] text-slate">We alert matching donors at your college.</p>
         <div className="mt-2">
-          <p className="mb-1 text-[11.5px] font-bold text-ink">Blood group</p>
+          <p className="mb-1 text-[11.5px] font-semibold text-ink">Blood group</p>
           <GroupPicker value={group} onChange={setGroup} label="Blood group needed" />
         </div>
         <div className="mt-2 flex items-center justify-between gap-2">
-          <p className="text-[11.5px] font-bold text-ink">Units</p>
+          <p className="text-[11.5px] font-semibold text-ink">Units</p>
           <div className="flex items-center gap-1.5">
             <button type="button" aria-label="Fewer units" disabled={units <= UNITS_MIN} onClick={() => setUnits((value) => Math.max(UNITS_MIN, value - 1))} className={swButton({ variant: 'surface', size: 'icon' })}>
               <MinusIcon size={14} aria-hidden="true" />
@@ -404,11 +404,11 @@ function RequestForm({ onCancel, onCreated }: { onCancel: () => void; onCreated:
             </button>
           </div>
         </div>
-        <label className="mt-2 block text-[11.5px] font-bold text-ink">
+        <label className="mt-2 block text-[11.5px] font-semibold text-ink">
           Hospital
           <input type="text" value={hospital} maxLength={HOSPITAL_MAX} onChange={(event) => setHospital(event.target.value)} placeholder="Hospital name" className="campus-input mt-1" />
         </label>
-        <label className="mt-2 block text-[11.5px] font-bold text-ink">
+        <label className="mt-2 block text-[11.5px] font-semibold text-ink">
           Needed by
           <input type="datetime-local" value={neededBy} onChange={(event) => setNeededBy(event.target.value)} className="campus-input mt-1" />
         </label>
@@ -464,7 +464,7 @@ function RequestCard({ item, onChange, onNotice }: { item: BloodRequestView; onC
       <div className="flex items-start gap-2.5">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[10px] bg-market-tint text-[15px] font-bold text-market">{item.bloodGroup}</span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-bold text-ink">
+          <p className="truncate text-[13px] font-semibold text-ink">
             {units} at {item.hospital}
           </p>
           <p className="truncate text-[11px] text-slate">
@@ -477,7 +477,7 @@ function RequestCard({ item, onChange, onNotice }: { item: BloodRequestView; onC
 
       {item.isOwner ? (
         <div className="mt-2.5">
-          <p className="text-[11.5px] font-bold text-ink">{item.helperCount === 0 ? 'No offers yet' : item.helperCount === 1 ? '1 person can help' : `${item.helperCount} people can help`}</p>
+          <p className="text-[11.5px] font-semibold text-ink">{item.helperCount === 0 ? 'No offers yet' : item.helperCount === 1 ? '1 person can help' : `${item.helperCount} people can help`}</p>
           {item.helpers.length > 0 ? (
             <ul className="mt-1.5 divide-y divide-line rounded-[12px] bg-surface px-2.5">
               {item.helpers.map((helper) => (
@@ -485,7 +485,7 @@ function RequestCard({ item, onChange, onNotice }: { item: BloodRequestView; onC
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate text-[12px] font-semibold text-ink">{helper.firstName}</span>
                     {helper.shared ? (
-                      <span className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-go-text">
+                      <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold text-go-text">
                         <CheckIcon size={12} aria-hidden="true" />
                         WhatsApp shared
                       </span>
@@ -549,7 +549,7 @@ function RequestCard({ item, onChange, onNotice }: { item: BloodRequestView; onC
           Message {item.posterFirstName} on WhatsApp
         </HandoffAnchor>
       ) : item.iCanHelp ? (
-        <p role="status" className="mt-2.5 rounded-[12px] bg-go-tint px-3 py-2 text-[11.5px] font-bold text-go-text">
+        <p role="status" className="mt-2.5 rounded-[12px] bg-go-tint px-3 py-2 text-[11.5px] font-semibold text-go-text">
           Thanks. {item.posterFirstName} may share their WhatsApp.
         </p>
       ) : (

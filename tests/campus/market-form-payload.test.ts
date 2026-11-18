@@ -376,7 +376,7 @@ test('pass: mess pass passes marketSchema with the detail lines', () => {
   );
   assert.equal(payload.kind, 'pass');
   assert.equal(payload.category, 'other');
-  assert.equal(payload.description, 'Mess pass from Annapoorna\nPaid Rs 3k for 1 Nov to 30 Nov');
+  assert.equal(payload.description, 'Mess pass from Annapoorna\nPaid ₹3k for 1 Nov to 30 Nov');
   if (payload.kind === 'pass') {
     assert.equal(payload.passType, 'other');
     assert.equal(payload.validUntil, '2026-11-30');

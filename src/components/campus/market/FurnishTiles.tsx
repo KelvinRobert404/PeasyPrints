@@ -42,9 +42,9 @@ export function FurnishTiles({
                 className="campus-press flex min-h-[112px] flex-col items-center gap-0.5 rounded-[12px] bg-surface px-1 pb-1.5 pt-1 text-center text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal/40"
               >
                 <Art width={56} height={51} />
-                <span className="w-full truncate text-[11px] font-bold leading-[1.2]">{tile.label}</span>
-                <span className="w-full truncate text-[10px] font-semibold leading-[1.2] text-slate">About {formatPrice(tile.typicalPrice)}</span>
-                <span className={cn('w-full truncate text-[10px] font-bold leading-[1.2]', count > 0 ? 'text-go-text' : 'text-slate')}>
+                <span className="w-full truncate text-[11px] font-semibold leading-[1.2]">{tile.label}</span>
+                <span className="w-full truncate text-[10px] font-medium leading-[1.2] text-slate">About {formatPrice(tile.typicalPrice)}</span>
+                <span className={cn('w-full truncate text-[10px] font-medium leading-[1.2]', count > 0 ? 'text-go-text' : 'text-slate')}>
                   {countText(count)}
                 </span>
               </Link>

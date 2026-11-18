@@ -153,12 +153,11 @@ test('required fields are set', () => {
   for (const doc of fixtures.notifications) assert.ok(doc.data.title && FIXTURE_PEOPLE[doc.data.userId]);
 });
 
-test('copy: no ALL CAPS, titles under 10 words, no rupee sign', () => {
+test('copy: no ALL CAPS, titles under 10 words', () => {
   for (const [name, docs] of allDocs) {
     for (const doc of docs) {
       for (const [key, text] of strings(doc.data)) {
         if (NON_COPY_KEYS.has(key)) continue;
-        assert.ok(!text.includes('₹'), `${name}/${doc.id} uses the rupee sign`);
         for (const word of text.match(/[A-Za-z0-9]+/g) ?? []) {
           const letters = word.replace(/[0-9]/g, '');
           if (letters.length >= 2 && letters === letters.toUpperCase() && !ACRONYMS.has(word) && !ACRONYMS.has(letters)) {

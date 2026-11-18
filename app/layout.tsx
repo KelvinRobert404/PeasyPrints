@@ -57,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body className={`${bricolage.variable} ${figtree.variable} ${archivo.variable} font-sans antialiased text-ink`}>
+      <body className={`${bricolage.variable} ${figtree.variable} ${archivo.variable} font-sans font-medium antialiased text-ink`}>
         {DEMO ? <DemoRoot /> : null}
         <ClerkProvider
           signInUrl="/login"

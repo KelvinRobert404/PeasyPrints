@@ -64,7 +64,7 @@ export function PageHead({
 /* Section title (14.5px) ---------------------------------- */
 export function SectionTitle({ children, meta, className }: { children: ReactNode; meta?: ReactNode; className?: string }) {
   return (
-    <h2 className={cn('flex items-baseline gap-1.5 font-heading text-[14.5px] leading-[1.1] text-ink', className)}>
+    <h2 className={cn('flex items-baseline gap-1.5 font-heading text-[14px] leading-[1.1] text-ink', className)}>
       {children}
       {meta !== undefined && <span className="font-sans text-[12px] font-bold text-slate tabular-nums">{meta}</span>}
     </h2>
@@ -149,7 +149,7 @@ export function StatTile({
         {dot && <span className={cn('h-1.5 w-1.5 rounded-full', dots[dot])} />}
         {label}
       </p>
-      <p className="mt-1 font-heading text-[22px] leading-none text-ink tabular-nums">{value}</p>
+      <p className="mt-1 text-[22px] font-bold leading-none text-ink tabular-nums">{value}</p>
     </div>
   );
 }

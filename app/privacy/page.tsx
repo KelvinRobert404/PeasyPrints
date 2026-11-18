@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { PageHeader } from '@/components/swoop/primitives';
 
-const h2 = 'font-heading text-[14.5px] leading-[1.15] text-ink';
+const h2 = 'font-heading text-[14px] leading-[1.15] text-ink';
 const link = 'font-semibold text-royal underline underline-offset-2';
 
 export default function PrivacyPage() {

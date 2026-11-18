@@ -182,11 +182,11 @@ export function ContactButton({
     <div className={cn('min-w-0', className)}>
       {body}
       {error ? (
-        <p role="alert" className="mt-1.5 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-bold text-market">
+        <p role="alert" className="mt-1.5 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-semibold text-market">
           {error}
         </p>
       ) : null}
-      <p className="mt-1.5 text-center text-[10.5px] font-semibold text-slate">
+      <p className="mt-1.5 text-center text-[10.5px] font-medium text-slate">
         {disabledLabel ? 'You can ask once it frees up.' : 'The poster decides to share their number.'}
       </p>
       {handoff.sheet}

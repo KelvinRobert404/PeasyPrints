@@ -50,7 +50,7 @@ function CampusChip() {
     return (
       <span className={chipClass} title={campus.label}>
         <PinIcon size={13} className="shrink-0" />
-        <span className="block truncate text-[12px] font-bold leading-none">{campus.label}</span>
+        <span className="block truncate text-[12px] font-semibold leading-none">{campus.label}</span>
       </span>
     );
   }
@@ -62,7 +62,7 @@ function CampusChip() {
   return (
     <Link href="/login" className={cn('campus-press', chipClass)}>
       <PinIcon size={13} className="shrink-0" />
-      <span className="block truncate text-[12px] font-bold leading-none">Pick college</span>
+      <span className="block truncate text-[12px] font-semibold leading-none">Pick college</span>
     </Link>
   );
 }

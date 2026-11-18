@@ -240,7 +240,7 @@ export function MarketSeeAll({ section, audience = 'campus' }: { section: Market
         {pinned.length ? (
           <MarketTileGrid listings={pinned} campusCode={code} now={now} paths={paths} onToggleSave={(item) => void toggleSave(item)} className="mt-2" />
         ) : (
-          <p className="mt-2 rounded-[12px] bg-surface px-3 py-2.5 text-[11.5px] font-semibold text-slate">Nothing pinned {ringLabel(ring).toLowerCase()}.</p>
+          <p className="mt-2 rounded-[12px] bg-surface px-3 py-2.5 text-[11.5px] font-medium text-slate">Nothing pinned {ringLabel(ring).toLowerCase()}.</p>
         )}
         {noPin.length ? (
           <section className="pt-4" aria-label="No pin yet">
@@ -275,7 +275,7 @@ export function MarketSeeAll({ section, audience = 'campus' }: { section: Market
             </div>
           ) : null}
           {status === 'ready' && listings.length ? (
-            <p className="pt-2 text-[11px] font-semibold text-slate">
+            <p className="pt-2 text-[11px] font-medium text-slate">
               {nearYou
                 ? `${pinned.length} ${ringLabel(ring).toLowerCase()} of ${code}`
                 : listings.length === 1

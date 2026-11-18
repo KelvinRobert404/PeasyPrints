@@ -1,4 +1,4 @@
-// Room clear-out bundle card: '6 items · from Rs 200 · until 30 Apr'.
+// Room clear-out bundle card: '6 items · from ₹200 · until 30 Apr'.
 // Student photo, else room art. No hooks, so it renders on the server too.
 
 import Link from 'next/link';
@@ -41,7 +41,7 @@ export function bundleArtFor(listing: Pick<BundleCardListing, 'title' | 'categor
   return listing.category === 'books_notes' || listing.category === 'stationery' ? 'shelf' : 'study_table';
 }
 
-/** '6 items · from Rs 200 · until 30 Apr'. Parts without a price are skipped for 'from'. */
+/** '6 items · from ₹200 · until 30 Apr'. Parts without a price are skipped for 'from'. */
 export function bundleMeta(details: Pick<BundleDetails, 'parts'>, until: string | null): string {
   const count = details.parts.length;
   const prices = details.parts.map((part) => part.price).filter((price): price is number => typeof price === 'number' && price > 0);
@@ -114,17 +114,17 @@ export function BundleCard({
         ) : null}
       </span>
       <span className="flex min-w-0 flex-col gap-1 px-2.5 pb-2.5 pt-2">
-        <span className="truncate text-[12.5px] font-bold">
+        <span className="font-heading truncate text-[12.5px] leading-[1.15]">
           {sold ? <span className="sr-only">Sold: </span> : null}
           {listing.title}
         </span>
-        <span className="truncate text-[11px] font-semibold text-slate">{meta}</span>
+        <span className="truncate text-[11px] font-medium text-slate">{meta}</span>
         <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
           <Price listing={listing} muted={gone} className={gone ? 'line-through' : undefined} />
-          <span className="text-[10.5px] font-semibold text-slate">for all</span>
+          <span className="text-[10.5px] font-medium text-slate">for all</span>
           <TermsChip terms={listing.priceTerms} price={listing.price} />
         </span>
-        <span className="text-[10.5px] font-semibold text-text-secondary">{splitOk ? 'Buy one or all' : 'Sold together'}</span>
+        <span className="text-[10.5px] font-medium text-text-secondary">{splitOk ? 'Buy one or all' : 'Sold together'}</span>
         <DistanceLine meters={listing.place?.roughDistanceM} campusLabel={campusLabel} className="text-[11px]" />
       </span>
     </Link>

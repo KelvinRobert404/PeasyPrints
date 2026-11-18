@@ -42,7 +42,7 @@ export function CouponInput({ shopId }: CouponInputProps) {
                     <CheckIcon size={15} />
                 </span>
                 <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12.5px] font-bold text-ink">
+                    <p className="truncate text-[12.5px] font-semibold text-ink">
                         <span className="tracking-[0.04em]">{appliedCoupon.code.toUpperCase()}</span> applied
                     </p>
                     <p className="text-[11px] font-semibold text-go-text tabular-nums">
@@ -74,7 +74,7 @@ export function CouponInput({ shopId }: CouponInputProps) {
                         placeholder="Coupon code"
                         aria-label="Coupon code"
                         autoCapitalize="characters"
-                        className="min-w-0 flex-1 bg-transparent text-[12.5px] font-bold uppercase tracking-[0.04em] text-ink outline-none placeholder:font-medium placeholder:normal-case placeholder:tracking-normal placeholder:text-slate disabled:opacity-60"
+                        className="min-w-0 flex-1 bg-transparent text-[12.5px] font-semibold uppercase tracking-[0.04em] text-ink outline-none placeholder:font-medium placeholder:normal-case placeholder:tracking-normal placeholder:text-slate disabled:opacity-60"
                         disabled={loading}
                     />
                 </label>

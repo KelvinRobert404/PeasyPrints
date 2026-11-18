@@ -262,7 +262,7 @@ function buildActivity(now: Date, market: FixtureDoc<MarketListingDoc>[], housin
       userId: 'verified-kju-main',
       kind: 'price_drop',
       title: 'Headphones you saved got cheaper',
-      body: 'Now Rs 1.8k.',
+      body: 'Now ₹1.8k.',
       href: '/marketplace/mkt-headphones',
       ref: { type: 'market_listing', id: 'mkt-headphones' },
       read: true,

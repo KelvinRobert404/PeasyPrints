@@ -20,9 +20,11 @@ Reference canvas: https://claude.ai/artifact/5UR1mJqa6t4eoLnuJYRg8h (Home, Marke
 
 No gradients. No cream outside illustrations. No emoji. Replace old palette: `#F4F5F7`/`bg-[#F4F5F7]` → `bg-white` (screens) or `bg-surface` (tiles); `zinc-*`/`slate-*`/`gray-*` text → `text-slate` / `text-text-secondary`; `blue-*` → `royal`; `bg-cream` chips → `bg-surface`/`bg-royal-tint`; `rounded-[20px+]` → `rounded-[14px]`.
 
-## Type
-- `font-sans` (default): **Figtree** for body, labels and buttons. Sizes 10–13px. Row titles `text-[12.5px] font-bold`, meta `text-[11px]–[11.5px] text-slate`.
-- `font-heading`: **Bricolage Grotesque 700, 88% width**, headings only. Page title **16px**, section and tile title **14.5px**, item title (shop/listing name) **12.5px**. App headings never go above 16px (one exception: a single hero number like a pickup code).
+## Type (matches the canvas boards, KADA-20)
+- `font-sans` (default): **Figtree** for everything that is not a title: body, meta, labels, chips, buttons, prices, search. Weights: body and meta **500** (the body default; meta 10–11px `text-slate`), chips and labels **600** (11–12px, row titles 12.5px), and **700 only for real emphasis**: the selected chip, buttons, price tags, stepper values.
+- `font-heading`: **Bricolage Grotesque 700, 88% width**, titles only: screen title **16px** (never bigger anywhere in the app), section title **14px** (optional subtitle: Figtree 10px 500 slate, under it), card title **11.5–12.5px** (leading 1.15, max 2 lines: listing, shop and housing names), Dock live-slot title **12.5px**. Never for search boxes, prices, buttons, chips, or shop and list row details.
+- Prices read `₹8k pp`, `₹16k dep`, `₹1.8k` (`formatPrice`, `formatPrintPrice`), in Figtree 700.
+- Search pills: Figtree 500, 12.5px, slate placeholder.
 - Tags: sentence case, `text-[9.5px] font-bold` (use `<Tag>`). Never the `uppercase` class.
 - `font-logo`: Archivo Black Italic, **logo and SOLD tape only**.
 - Retired: `font-quinn`, `font-poster`, `font-coolvetica` (temporarily aliased). Migrate to `font-heading` / `font-sans`. Uppercase poster headlines become sentence case.
@@ -38,7 +40,7 @@ If something is missing, add it to your feature folder (e.g. `src/components/upl
 ## Components (`@/components/swoop/primitives`, `@/components/swoop/Logo`)
 `swButton({variant: primary|ink|surface|white|ghost|danger, size: sm|md|lg|pill|icon})` (cva class helper) ·
 `SectionHeader` (title + optional kicker + "See all") · `PageHeader` (back · kicker/title · actions; for sub-screens) · `IconButton` (round surface) ·
-`SearchPill` (`big` for the Home "What do you need?") · `Chip` (ink when selected) · `Segmented` · `Tag` · `StatusLine` (● Open • Ready by …) ·
+`SearchPill` (`big` kept for callers; same look) · `Chip` (ink when selected) · `Segmented` · `Tag` · `StatusLine` (● Open • Ready by …) ·
 `IconTile` · `ListRow` (inset divider) · `ServiceTile` (royal or surface, 74px) · `SmallTile` (icon tile + label below) · `EmptyState` · `Card` ·
 `SwoopLogo` (tape, never rotate) · `TapeStrip` (**only** for SOLD across a sold listing).
 

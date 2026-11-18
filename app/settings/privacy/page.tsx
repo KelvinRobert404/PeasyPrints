@@ -77,9 +77,9 @@ export default function PrivacySettingsPage() {
               </p>
             </div>
             {DEMO ? (
-              <p className="mt-2 rounded-[12px] bg-surface px-3 py-2 text-[11px] font-semibold text-slate">Demo: this only records a request.</p>
+              <p className="mt-2 rounded-[12px] bg-surface px-3 py-2 text-[11px] font-medium text-slate">Demo: this only records a request.</p>
             ) : null}
-            <label htmlFor="delete-confirmation" className="mt-3 block text-[11.5px] font-bold text-ink">
+            <label htmlFor="delete-confirmation" className="mt-3 block text-[11.5px] font-semibold text-ink">
               Confirmation
             </label>
             <input

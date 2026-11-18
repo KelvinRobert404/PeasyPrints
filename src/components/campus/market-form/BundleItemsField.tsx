@@ -66,10 +66,10 @@ export function BundleItemsField({
     <div className={cn('min-w-0 space-y-3', className)}>
       <div>
         <div className="flex items-baseline justify-between gap-2">
-          <p id={`${id}-things`} className="text-[11.5px] font-bold text-ink">
+          <p id={`${id}-things`} className="text-[11.5px] font-semibold text-ink">
             What is in it?
           </p>
-          <span className="text-[11px] font-semibold tabular-nums text-slate">
+          <span className="text-[11px] font-medium tabular-nums text-slate">
             {rows.length} of {MAX_BUNDLE_ITEMS}
           </span>
         </div>
@@ -91,8 +91,8 @@ export function BundleItemsField({
                   />
                   {free ? null : (
                     <label className="flex h-10 w-[92px] shrink-0 items-center gap-1 rounded-[10px] border border-transparent bg-surface pl-2.5 pr-2 focus-within:border-royal focus-within:bg-white">
-                      <span className="text-[12px] font-bold text-slate" aria-hidden="true">
-                        Rs
+                      <span className="text-[12px] font-medium text-slate" aria-hidden="true">
+                        ₹
                       </span>
                       <span className="sr-only">Price for thing {index + 1}</span>
                       <input
@@ -117,7 +117,7 @@ export function BundleItemsField({
                   </button>
                 </div>
                 {preview ? (
-                  <p className={cn('mt-0.5 pr-12 text-right text-[11px] font-bold tabular-nums', preview.invalid ? 'text-market' : 'text-slate')}>
+                  <p className={cn('mt-0.5 pr-12 text-right text-[11px] font-semibold tabular-nums', preview.invalid ? 'text-market' : 'text-slate')}>
                     {preview.label}
                   </p>
                 ) : null}
@@ -137,7 +137,7 @@ export function BundleItemsField({
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="block min-w-0 text-[11.5px] font-bold text-ink">
+        <label className="block min-w-0 text-[11.5px] font-semibold text-ink">
           Available till
           <input
             type="date"
@@ -147,7 +147,7 @@ export function BundleItemsField({
             className={cn(INPUT, 'mt-1 block w-full')}
           />
         </label>
-        <label className="block min-w-0 text-[11.5px] font-bold text-ink">
+        <label className="block min-w-0 text-[11.5px] font-semibold text-ink">
           Hand over
           <input
             type="text"
@@ -158,7 +158,7 @@ export function BundleItemsField({
             autoComplete="off"
             className={cn(INPUT, 'mt-1 block w-full')}
           />
-          <span className="mt-0.5 block text-right text-[11px] font-semibold tabular-nums text-slate">
+          <span className="mt-0.5 block text-right text-[11px] font-medium tabular-nums text-slate">
             {handOver.length}/{HAND_OVER_MAX}
           </span>
         </label>

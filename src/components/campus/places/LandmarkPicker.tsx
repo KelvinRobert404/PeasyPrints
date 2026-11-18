@@ -127,7 +127,7 @@ export function LandmarkPicker({ landmarks, origin, campusCode, value, defaultVa
 
   return (
     <div className={cn('min-w-0', className)}>
-      <p id={`${id}-label`} className="text-[11.5px] font-bold text-ink">
+      <p id={`${id}-label`} className="text-[11.5px] font-semibold text-ink">
         {label}
       </p>
 
@@ -135,7 +135,7 @@ export function LandmarkPicker({ landmarks, origin, campusCode, value, defaultVa
         <div className="mt-1 flex items-center gap-2.5 rounded-[12px] bg-surface p-2.5">
           <IconTile icon={LandmarkIcon} tone="royal" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[12.5px] font-bold text-ink">{picked.label}</p>
+            <p className="truncate text-[12.5px] font-semibold text-ink">{picked.label}</p>
             {picked.area && picked.area !== picked.label ? <p className="truncate text-[11px] text-slate">{picked.area}</p> : null}
             <DistanceLine meters={picked.roughDistanceM} campusLabel={campusCode} className="mt-0.5" />
           </div>
@@ -161,7 +161,7 @@ export function LandmarkPicker({ landmarks, origin, campusCode, value, defaultVa
               placeholder="Hospital, hostel, area…"
               autoComplete="off"
               enterKeyHint="search"
-              className="min-w-0 flex-1 bg-transparent text-[13px] font-semibold text-ink outline-none placeholder:font-medium placeholder:text-slate"
+              className="min-w-0 flex-1 bg-transparent text-[12.5px] font-medium text-ink outline-none placeholder:text-slate"
             />
           </label>
           <ul aria-labelledby={`${id}-label`} className="mt-1">
@@ -181,11 +181,11 @@ export function LandmarkPicker({ landmarks, origin, campusCode, value, defaultVa
                   >
                     <PinIcon size={16} className="shrink-0 text-ink" aria-hidden="true" />
                     <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-[12.5px] font-bold text-ink">{landmark.label}</span>
+                      <span className="truncate text-[12.5px] font-semibold text-ink">{landmark.label}</span>
                       {landmark.area !== landmark.label ? <span className="truncate text-[11px] text-slate">{landmark.area}</span> : null}
                     </span>
                     {typeof meters === 'number' ? (
-                      <span className="shrink-0 text-[11px] font-semibold tabular-nums text-slate">{formatDistance(meters)}</span>
+                      <span className="shrink-0 text-[11px] font-medium tabular-nums text-slate">{formatDistance(meters)}</span>
                     ) : null}
                   </button>
                 </li>
@@ -201,7 +201,7 @@ export function LandmarkPicker({ landmarks, origin, campusCode, value, defaultVa
                 className="campus-press flex min-h-11 w-full items-center gap-2.5 rounded-[10px] px-1.5 text-left hover:bg-surface"
               >
                 <PinIcon size={16} className="shrink-0 text-slate" aria-hidden="true" />
-                <span className="text-[12.5px] font-bold text-ink">Other place</span>
+                <span className="text-[12.5px] font-semibold text-ink">Other place</span>
               </button>
             </li>
           </ul>
@@ -219,7 +219,7 @@ export function LandmarkPicker({ landmarks, origin, campusCode, value, defaultVa
 
       {other ? (
         <div className="mt-1 space-y-2 rounded-[12px] bg-surface p-2.5">
-          <label className="block text-[11.5px] font-bold text-ink">
+          <label className="block text-[11.5px] font-semibold text-ink">
             Area name
             <input
               type="text"
@@ -232,7 +232,7 @@ export function LandmarkPicker({ landmarks, origin, campusCode, value, defaultVa
             />
           </label>
           <div>
-            <p className="text-[11.5px] font-bold text-ink">How far from {campusCode}?</p>
+            <p className="text-[11.5px] font-semibold text-ink">How far from {campusCode}?</p>
             <div role="group" aria-label={`Rough distance from ${campusCode}`} className="mt-1 flex flex-wrap gap-1.5">
               {ROUGH_DISTANCES.map((meters) => {
                 const selected = otherDistance === meters;

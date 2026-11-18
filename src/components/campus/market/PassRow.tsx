@@ -97,7 +97,7 @@ export function RowIconTile({ icon: Icon, muted = false, className }: { icon: Co
 const META = 'whitespace-nowrap text-[10.5px] font-semibold';
 
 /**
- * Seat, cab split, ticket or pass row. A pass can show 'Fair price Rs 1.2k'
+ * Seat, cab split, ticket or pass row. A pass can show 'Fair price ₹1.2k'
  * when the caller knows it (see fairPassPrice). The whole row opens the post.
  */
 export function PassRow({
@@ -131,8 +131,8 @@ export function PassRow({
       </span>
       <span className={cn('flex min-h-[60px] min-w-0 flex-1 items-center gap-2 py-2', divider && 'border-b border-line')}>
         <span className={cn('flex min-w-0 flex-1 flex-col gap-0.5', gone && 'opacity-60')}>
-          <span className="truncate text-[12.5px] font-bold">{route}</span>
-          {when ? <span className="truncate text-[11px] text-slate">{when}</span> : null}
+          <span className="font-heading truncate text-[12.5px] leading-[1.15]">{route}</span>
+          {when ? <span className="truncate text-[11px] font-medium text-slate">{when}</span> : null}
           <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
             {showGender ? (
               <span className={cn(META, listing.genderPref === 'girls' ? 'text-girls' : 'text-text-secondary')}>

@@ -40,7 +40,7 @@ export default function HelperPage() {
       <p className="mt-1.5 text-center text-[11px] text-slate">Windows 10/11 • Run and follow on-screen steps</p>
 
       <section className="pt-3.5">
-        <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">What&apos;s new in v{CURRENT_VERSION}</h2>
+        <h2 className="font-heading text-[14px] leading-[1.1] text-ink">What&apos;s new in v{CURRENT_VERSION}</h2>
         <Card className="mt-2 px-3 py-1">
           <ul>
             {CHANGES.map((c, i) => (

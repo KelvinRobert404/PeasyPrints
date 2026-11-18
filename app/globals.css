@@ -169,8 +169,8 @@
 }
 
 /* ── Swoop type ─────────────────────────────────────────────
-   font-sans    Figtree  — all body copy, labels, buttons
-   font-heading Bricolage 700 @ 88% width — headings only (max 16px in app)
+   font-sans    Figtree  — all body copy, labels, buttons, prices, search (500 body, 600 labels, 700 emphasis)
+   font-heading Bricolage 700 @ 88% width — titles only: 16 screen, 14 section, 11.5–12.5 card (max 16px in app)
    font-logo    Archivo Black Italic — the tape logo and status tape only  */
 .font-sans {
   font-family: var(--font-figtree), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;

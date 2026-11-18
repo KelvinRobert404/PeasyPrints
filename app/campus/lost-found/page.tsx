@@ -130,7 +130,7 @@ function LostFoundScreen() {
         <section className="flex items-center gap-3 overflow-hidden rounded-[14px] bg-surface px-3 py-2.5">
           <div className="min-w-0 flex-1">
             <Tag tone="white">{TRUST_LINE}</Tag>
-            <h2 className="font-heading mt-1 text-[15px] leading-[1.1] text-ink">Hey, lost something?</h2>
+            <h2 className="font-heading mt-1 text-[14px] leading-[1.1] text-ink">Hey, lost something?</h2>
             <p className="mt-0.5 text-[11.5px] leading-[1.4] text-slate">ID details stay hidden from everyone.</p>
             <button type="button" onClick={() => setReporting(true)} className={cn(swButton({ size: 'sm' }), 'mt-2')}>
               <PlusIcon size={13} aria-hidden="true" />
@@ -143,7 +143,7 @@ function LostFoundScreen() {
         <Segmented label="Lost or found" value={tab} onChange={setTab} options={KIND_OPTIONS} />
 
         {notice ? (
-          <p role="status" className="rounded-[12px] bg-go-tint px-3 py-2 text-[11.5px] font-bold text-go-text">
+          <p role="status" className="rounded-[12px] bg-go-tint px-3 py-2 text-[11.5px] font-semibold text-go-text">
             {notice}
           </p>
         ) : null}
@@ -226,7 +226,7 @@ function ItemRow({ item, campusCode, onOpen }: { item: LostFoundView; campusCode
     <button type="button" onClick={onOpen} className="campus-press flex w-full items-center gap-2.5 py-2 text-left">
       <IconTile icon={icon} tone={item.kind === 'found' ? 'royal' : 'surface'} shape="square" size={40} />
       <span className="flex min-w-0 flex-1 flex-col gap-px">
-        <span className="truncate text-[12.5px] font-bold text-ink">{item.title}</span>
+        <span className="truncate text-[12.5px] font-semibold text-ink">{item.title}</span>
         <span className="truncate text-[11px] text-slate">
           {LOST_FOUND_CATEGORY_LABELS[item.category]} · {ago(item.happenedAt ?? item.createdAt)}
           {item.redacted ? ' · Details hidden' : ''}
@@ -266,7 +266,7 @@ function Sheet({ title, kicker, onClose, children }: { title: string; kicker?: s
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            {kicker ? <p className="truncate text-[10.5px] font-semibold text-slate">{kicker}</p> : null}
+            {kicker ? <p className="truncate text-[10.5px] font-medium text-slate">{kicker}</p> : null}
             <h2 id={titleId} className="font-heading text-[16px] leading-[1.1] text-ink">
               {title}
             </h2>
@@ -282,7 +282,7 @@ function Sheet({ title, kicker, onClose, children }: { title: string; kicker?: s
 function ErrorLine({ message }: { message: string }) {
   if (!message) return null;
   return (
-    <p role="alert" className="mt-2 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-bold text-market">
+    <p role="alert" className="mt-2 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-semibold text-market">
       {message}
     </p>
   );
@@ -333,7 +333,7 @@ function ItemSheet({
       <div className="flex items-start gap-2.5">
         <IconTile icon={isSensitiveCategory(item.category) ? IdCardIcon : LostFoundIcon} tone="royal" shape="square" size={40} />
         <div className="min-w-0 flex-1">
-          <p className="break-words text-[13px] font-bold text-ink">{item.title}</p>
+          <p className="break-words text-[13px] font-semibold text-ink">{item.title}</p>
           <p className="text-[11px] text-slate">Posted by {item.poster.displayName}</p>
         </div>
       </div>
@@ -348,11 +348,11 @@ function ItemSheet({
           </p>
         ) : null}
         <DistanceLine meters={item.place?.roughDistanceM} campusLabel={campusCode} />
-        {item.keptAt ? <p className="text-[11.5px] font-semibold text-slate">Kept at: {item.keptAt}</p> : null}
+        {item.keptAt ? <p className="text-[11.5px] font-medium text-slate">Kept at: {item.keptAt}</p> : null}
       </div>
 
       {item.redacted ? (
-        <p className="mt-2 flex items-center gap-1.5 rounded-[12px] bg-surface px-3 py-2 text-[11px] font-semibold text-slate">
+        <p className="mt-2 flex items-center gap-1.5 rounded-[12px] bg-surface px-3 py-2 text-[11px] font-medium text-slate">
           <LockIcon size={13} className="shrink-0" aria-hidden="true" />
           {item.photoCount > 0 ? 'Photos and ID details stay with the poster.' : 'ID details stay with the poster.'}
         </p>
@@ -362,7 +362,7 @@ function ItemSheet({
         <OwnerPanel item={item} busy={busy} onPatch={patch} />
       ) : item.myClaim?.status === 'approved' ? (
         <div className="mt-3 rounded-[12px] bg-go-tint p-3">
-          <p className="flex items-center gap-1.5 text-[12px] font-bold text-go-text">
+          <p className="flex items-center gap-1.5 text-[12px] font-semibold text-go-text">
             <CheckIcon size={13} aria-hidden="true" />
             The poster approved you
           </p>
@@ -383,12 +383,12 @@ function ItemSheet({
           )}
         </div>
       ) : item.myClaim ? (
-        <p role="status" className="mt-3 rounded-[12px] bg-royal-tint px-3 py-2 text-[11.5px] font-bold text-royal">
+        <p role="status" className="mt-3 rounded-[12px] bg-royal-tint px-3 py-2 text-[11.5px] font-semibold text-royal">
           Sent. The poster will check your answer.
         </p>
       ) : (
         <div className="mt-3">
-          <label className="block text-[11.5px] font-bold text-ink">
+          <label className="block text-[11.5px] font-semibold text-ink">
             {item.claimQuestion}
             <input
               type="text"
@@ -399,7 +399,7 @@ function ItemSheet({
               className="campus-input mt-1"
             />
           </label>
-          <p className="mt-1 text-[10.5px] font-semibold text-slate">Only the poster sees your answer.</p>
+          <p className="mt-1 text-[10.5px] font-medium text-slate">Only the poster sees your answer.</p>
           <button
             type="button"
             disabled={!answer.trim() || Boolean(busy)}
@@ -431,7 +431,7 @@ function OwnerPanel({
     <div className="mt-3 space-y-3">
       {item.images.length ? (
         <div>
-          <p className="text-[11.5px] font-bold text-ink">Your photos, only you see them</p>
+          <p className="text-[11.5px] font-semibold text-ink">Your photos, only you see them</p>
           <div className="mt-1 grid grid-cols-4 gap-1.5">
             {item.images.map((url, index) => (
               <img key={url} src={url} alt={`Photo ${index + 1}`} className="aspect-square w-full rounded-[10px] bg-surface object-cover" />
@@ -441,7 +441,7 @@ function OwnerPanel({
       ) : null}
 
       <div className="rounded-[12px] bg-surface p-2.5 text-[11.5px]">
-        <p className="font-bold text-ink">{item.claimQuestion}</p>
+        <p className="font-semibold text-ink">{item.claimQuestion}</p>
         <p className="mt-0.5 text-slate">{item.claimAnswer ? `Your answer: ${item.claimAnswer}` : 'No private answer set.'}</p>
         {item.contact ? (
           <p className="mt-0.5 text-slate">
@@ -451,7 +451,7 @@ function OwnerPanel({
       </div>
 
       <div>
-        <p className="text-[11.5px] font-bold text-ink">Asks ({claims.length})</p>
+        <p className="text-[11.5px] font-semibold text-ink">Asks ({claims.length})</p>
         {claims.length === 0 ? (
           <p className="mt-1 text-[11.5px] text-slate">No asks yet.</p>
         ) : (
@@ -459,7 +459,7 @@ function OwnerPanel({
             {claims.map((claim) => (
               <li key={claim.id} className="flex items-center gap-2 py-2">
                 <div className="min-w-0 flex-1">
-                  <p className="flex flex-wrap items-center gap-1 text-[12px] font-bold text-ink">
+                  <p className="flex flex-wrap items-center gap-1 text-[12px] font-semibold text-ink">
                     <span className="truncate">{claim.claimantName}</span>
                     {claim.matches === true ? <Tag tone="go">Answer matches</Tag> : null}
                     {claim.matches === false ? <Tag className="bg-market-tint text-market">Answer differs</Tag> : null}
@@ -482,7 +482,7 @@ function OwnerPanel({
             ))}
           </ul>
         )}
-        <p className="mt-1 text-[10.5px] font-semibold text-slate">Approving shares your contact with them only.</p>
+        <p className="mt-1 text-[10.5px] font-medium text-slate">Approving shares your contact with them only.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-1.5">
@@ -592,7 +592,7 @@ function ReportItemSheet({
         <Segmented label="Lost or found" value={kind} onChange={setKind} options={KIND_OPTIONS} />
 
         <div>
-          <p className="text-[11.5px] font-bold text-ink">What is it?</p>
+          <p className="text-[11.5px] font-semibold text-ink">What is it?</p>
           <div role="group" aria-label="Item type" className="mt-1 flex flex-wrap gap-1.5">
             {LOST_FOUND_CATEGORIES.map((value) => {
               const selected = category === value;
@@ -610,11 +610,11 @@ function ReportItemSheet({
             })}
           </div>
           {category && isSensitiveCategory(category) ? (
-            <p className="mt-1 text-[10.5px] font-semibold text-slate">Others see only the type and place.</p>
+            <p className="mt-1 text-[10.5px] font-medium text-slate">Others see only the type and place.</p>
           ) : null}
         </div>
 
-        <label className="block text-[11.5px] font-bold text-ink">
+        <label className="block text-[11.5px] font-semibold text-ink">
           Short title
           <input
             type="text"
@@ -626,7 +626,7 @@ function ReportItemSheet({
           />
         </label>
 
-        <label className="block text-[11.5px] font-bold text-ink">
+        <label className="block text-[11.5px] font-semibold text-ink">
           Details
           <textarea
             value={description}
@@ -649,7 +649,7 @@ function ReportItemSheet({
         ) : null}
 
         {kind === 'found' ? (
-          <label className="block text-[11.5px] font-bold text-ink">
+          <label className="block text-[11.5px] font-semibold text-ink">
             Where is it now?
             <input
               type="text"
@@ -665,7 +665,7 @@ function ReportItemSheet({
         <PhotoField value={images} onChange={setImages} max={MAX_PHOTOS} hint="Only you see these photos." />
 
         <div className="rounded-[12px] bg-surface p-2.5">
-          <p className="text-[11.5px] font-bold text-ink">A question to check the owner</p>
+          <p className="text-[11.5px] font-semibold text-ink">A question to check the owner</p>
           <input
             type="text"
             value={question}
@@ -684,11 +684,11 @@ function ReportItemSheet({
             aria-label="Private answer"
             className="campus-input mt-1.5 bg-white"
           />
-          <p className="mt-1 text-[10.5px] font-semibold text-slate">We match answers, any letter case.</p>
+          <p className="mt-1 text-[10.5px] font-medium text-slate">We match answers, any letter case.</p>
         </div>
 
         <div>
-          <p className="text-[11.5px] font-bold text-ink">How should they reach you?</p>
+          <p className="text-[11.5px] font-semibold text-ink">How should they reach you?</p>
           <div role="group" aria-label="Contact type" className="mt-1 flex flex-wrap gap-1.5">
             {CONTACT_KINDS.map((value) => {
               const selected = contactKind === value;
@@ -714,7 +714,7 @@ function ReportItemSheet({
             aria-label={`Your ${CONTACT_KIND_LABELS[contactKind]}`}
             className="campus-input mt-1.5"
           />
-          <p className="mt-1 text-[10.5px] font-semibold text-slate">Shown only to the student you approve.</p>
+          <p className="mt-1 text-[10.5px] font-medium text-slate">Shown only to the student you approve.</p>
         </div>
 
         <ErrorLine message={error} />

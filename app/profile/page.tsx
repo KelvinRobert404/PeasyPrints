@@ -25,8 +25,8 @@ export default function ProfilePage() {
         <Card className="flex items-center gap-3 p-3">
           <IconTile icon={UserIcon} tone="royal" size={44} />
           <div className="min-w-0">
-            <p className="font-heading truncate text-[14.5px] leading-[1.15] text-ink">{displayName}</p>
-            {displayEmail && <p className="truncate text-[11.5px] text-slate">{displayEmail}</p>}
+            <p className="font-heading truncate text-[14px] leading-[1.15] text-ink">{displayName}</p>
+            {displayEmail && <p className="truncate text-[11px] font-medium text-slate">{displayEmail}</p>}
           </div>
         </Card>
 

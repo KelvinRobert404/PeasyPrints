@@ -37,7 +37,8 @@ export const swButton = cva(
 );
 export type SwButtonVariants = VariantProps<typeof swButton>;
 
-/* Section header: "Print anything ........ See all" -------- */
+/* Section header: "Print anything ........ See all" --------
+   Title: Bricolage 14px. Optional subtitle (kicker): Figtree 10px 500 slate, under the title. */
 export function SectionHeader({
   title,
   kicker,
@@ -52,16 +53,16 @@ export function SectionHeader({
   return (
     <div className={cn('flex items-end justify-between gap-3', className)}>
       <div className="min-w-0">
-        {kicker && <p className="text-[10.5px] font-semibold text-slate">{kicker}</p>}
-        <h2 className="font-heading truncate text-[14.5px] leading-[1.1] text-ink">{title}</h2>
+        <h2 className="font-heading truncate text-[14px] leading-[1.1] text-ink">{title}</h2>
+        {kicker && <p className="mt-px truncate text-[10px] font-medium text-slate">{kicker}</p>}
       </div>
       {action &&
         (action.href ? (
-          <Link href={action.href} className="flex min-h-6 shrink-0 items-center text-[12px] font-bold text-ink">
+          <Link href={action.href} className="flex min-h-6 shrink-0 items-center text-[12px] font-semibold text-ink">
             {action.label}
           </Link>
         ) : (
-          <button type="button" onClick={action.onClick} className="flex min-h-6 shrink-0 items-center text-[12px] font-bold text-ink">
+          <button type="button" onClick={action.onClick} className="flex min-h-6 shrink-0 items-center text-[12px] font-semibold text-ink">
             {action.label}
           </button>
         ))}
@@ -98,7 +99,7 @@ export function PageHeader({
         </Link>
       )}
       <div className="min-w-0 flex-1">
-        {kicker && <p className="truncate text-[10.5px] font-semibold text-slate">{kicker}</p>}
+        {kicker && <p className="truncate text-[10.5px] font-medium text-slate">{kicker}</p>}
         <h1 className="font-heading truncate text-[16px] leading-[1.05] text-ink">{title}</h1>
       </div>
       {actions && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}
@@ -144,11 +145,13 @@ export function IconButton({
   );
 }
 
-/* Search pill ---------------------------------------------- */
+/* Search pill ----------------------------------------------
+   Figtree 500, 12.5px, slate placeholder (never Bricolage). `big` is kept for
+   callers but now reads the same as the default. */
 export const SearchPill = forwardRef<
   HTMLInputElement,
   InputHTMLAttributes<HTMLInputElement> & { trailing?: ReactNode; big?: boolean; wrapperClassName?: string }
->(function SearchPill({ trailing, big = false, wrapperClassName, className, ...props }, ref) {
+>(function SearchPill({ trailing, big: _big = false, wrapperClassName, className, ...props }, ref) {
   return (
     <label className={cn('flex h-[42px] items-center gap-2 rounded-full bg-surface pl-[13px] pr-[5px]', wrapperClassName)}>
       <SearchIcon size={16} className="shrink-0 text-ink" />
@@ -156,8 +159,7 @@ export const SearchPill = forwardRef<
         ref={ref}
         type="search"
         className={cn(
-          'min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-ink',
-          big ? 'font-heading text-[15.5px] placeholder:opacity-100' : 'text-[13px] font-semibold placeholder:font-medium placeholder:text-slate',
+          'min-w-0 flex-1 bg-transparent text-[12.5px] font-medium text-ink outline-none placeholder:text-slate placeholder:opacity-100',
           className
         )}
         {...props}
@@ -260,13 +262,13 @@ export function Tag({ children, tone = 'ink', className }: { children: ReactNode
 /* Status dot line: ● Open • Ready by 4:30 PM ----------------- */
 export function StatusLine({ open, label, detail }: { open: boolean; label: string; detail?: ReactNode }) {
   return (
-    <span className="flex items-center gap-1 text-[11.5px] font-bold">
+    <span className="flex items-center gap-1 text-[11px] font-semibold">
       <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', open ? 'bg-go' : 'bg-text-muted')} />
       <span className={open ? 'text-go-text' : 'text-text-secondary'}>{label}</span>
       {detail && (
         <>
           <span className="text-text-muted">•</span>
-          <span className="truncate text-ink">{detail}</span>
+          <span className="truncate font-medium text-ink">{detail}</span>
         </>
       )}
     </span>
@@ -332,8 +334,8 @@ export function ListRow({
       {leading && <span className="grid place-items-center py-1.5">{leading}</span>}
       <span className={cn('flex min-h-12 min-w-0 flex-1 items-center gap-1.5', divider && 'border-b border-line')}>
         <span className="flex min-w-0 flex-1 flex-col gap-px">
-          <span className="truncate text-[12.5px] font-bold text-ink">{title}</span>
-          {subtitle && <span className="truncate text-[11px] text-slate">{subtitle}</span>}
+          <span className="truncate text-[12.5px] font-semibold text-ink">{title}</span>
+          {subtitle && <span className="truncate text-[11px] font-medium text-slate">{subtitle}</span>}
         </span>
         {trailing ?? (href || onClick ? <ChevronRightIcon size={12} className="shrink-0 text-text-muted" /> : null)}
       </span>
@@ -370,9 +372,9 @@ export function ServiceTile({
         className
       )}
     >
-      <span className="font-heading text-[14.5px] leading-[1.05]">{title}</span>
+      <span className="font-heading text-[14px] leading-[1.05]">{title}</span>
       {subtitle && (
-        <span className={cn('text-[10.5px] font-semibold', tone === 'royal' ? 'text-white/80' : 'text-slate')}>{subtitle}</span>
+        <span className={cn('text-[10.5px] font-medium', tone === 'royal' ? 'text-white/80' : 'text-slate')}>{subtitle}</span>
       )}
       {art && <span className="pointer-events-none absolute bottom-1.5 right-2">{art}</span>}
     </Link>
@@ -405,7 +407,7 @@ export function SmallTile({
           {badge}
         </span>
       )}
-      <span className="whitespace-nowrap text-[11px] font-bold">{label}</span>
+      <span className="whitespace-nowrap text-[11px] font-semibold">{label}</span>
     </Link>
   );
 }
@@ -428,7 +430,7 @@ export function EmptyState({
     <div className={cn('flex flex-col items-center gap-2 rounded-[14px] bg-surface px-5 py-7 text-center', className)}>
       <Icon size={28} className="text-text-muted" />
       <p className="font-heading text-[14px] text-ink">{title}</p>
-      {body && <p className="max-w-[260px] text-[11.5px] leading-[1.45] text-slate">{body}</p>}
+      {body && <p className="max-w-[260px] text-[11px] font-medium leading-[1.45] text-slate">{body}</p>}
       {action}
     </div>
   );

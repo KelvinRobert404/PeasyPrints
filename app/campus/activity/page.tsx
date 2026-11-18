@@ -98,7 +98,7 @@ function Section({ title, count, children }: { title: string; count: number; chi
     <section className="pt-3.5">
       <div className="flex items-end justify-between gap-3">
         <SectionHeader className="min-w-0" title={title} />
-        <span className="shrink-0 text-[11px] font-semibold text-slate">{count}</span>
+        <span className="shrink-0 text-[11px] font-medium text-slate">{count}</span>
       </div>
       <div className="mt-1">{children}</div>
     </section>

@@ -25,7 +25,7 @@ function TopicRow({
         <IconTile icon={icon} />
       </span>
       <div className={cn('min-w-0 flex-1 py-3', divider && 'border-b border-line')}>
-        <h3 className="text-[12.5px] font-bold text-ink">{title}</h3>
+        <h3 className="text-[12.5px] font-semibold text-ink">{title}</h3>
         <p className="mt-0.5 text-[11.5px] leading-[1.45] text-slate">{children}</p>
       </div>
     </div>

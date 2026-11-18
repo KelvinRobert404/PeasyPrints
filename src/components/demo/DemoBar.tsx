@@ -153,7 +153,7 @@ function DemoPanel({ onReset }: { onReset: () => void }) {
 }
 
 function PanelLabel({ children }: { children: ReactNode }) {
-  return <h3 className="mb-1 mt-3 text-[11px] font-bold text-slate">{children}</h3>;
+  return <h3 className="mb-1 mt-3 text-[11px] font-semibold text-slate">{children}</h3>;
 }
 
 // ---------------------------------------------------------------------------

@@ -66,11 +66,11 @@ export function WantedCard({
         {/* The question link covers the whole card, so the card is one big target. */}
         <Link
           href={target}
-          className="font-heading line-clamp-2 text-[13px] leading-[1.15] text-ink after:absolute after:inset-0 after:rounded-[14px] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-royal/40"
+          className="font-heading line-clamp-2 text-[12.5px] leading-[1.15] text-ink after:absolute after:inset-0 after:rounded-[14px] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-royal/40"
         >
           {askQuestion(listing.title)}
         </Link>
-        <p className="mt-0.5 truncate text-[11px] font-semibold text-slate">{meta}</p>
+        <p className="mt-0.5 truncate text-[11px] font-medium text-slate">{meta}</p>
         <DistanceLine meters={listing.place?.roughDistanceM} campusLabel={campusLabel} icon={false} className="mt-0.5 text-[10.5px]" />
       </div>
       {closed ? (

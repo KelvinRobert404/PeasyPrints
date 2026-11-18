@@ -90,7 +90,7 @@ export function CollegePicker({ value, onChange, className }: CollegePickerProps
                   <IconTile icon={LandmarkIcon} tone={selected ? 'royal' : 'surface'} size={32} />
                   <span className="flex min-h-12 min-w-0 flex-1 flex-col justify-center gap-px">
                     <span className="flex min-w-0 items-center gap-1.5">
-                      <span className="truncate text-[12.5px] font-bold text-ink">{college.shortName}</span>
+                      <span className="truncate text-[12.5px] font-semibold text-ink">{college.shortName}</span>
                       {college.launchState === 'waitlist' && <Tag tone="ink">Opening soon</Tag>}
                     </span>
                     <span className="truncate text-[11px] text-slate">{subtitle}</span>
@@ -114,7 +114,7 @@ export function CollegePicker({ value, onChange, className }: CollegePickerProps
                           >
                             <PinIcon size={16} className={cn('shrink-0', campusSelected ? 'text-royal' : 'text-slate')} />
                             <span className="flex min-w-0 flex-1 flex-col gap-px">
-                              <span className="truncate text-[12px] font-bold text-ink">{campus.label}</span>
+                              <span className="truncate text-[12px] font-semibold text-ink">{campus.label}</span>
                               <span className="truncate text-[11px] text-slate">{campus.name}</span>
                             </span>
                             {campusSelected && <CheckIcon size={16} className="shrink-0 text-royal" />}

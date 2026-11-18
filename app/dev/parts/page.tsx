@@ -42,7 +42,7 @@ const PENDING_CONTACT: ContactRequest = {
 function Part({ name, note, children }: { name: string; note?: string; children: ReactNode }) {
   return (
     <section className="min-w-0 rounded-[14px] border border-line bg-white p-3">
-      <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">{name}</h2>
+      <h2 className="font-heading text-[14px] leading-[1.1] text-ink">{name}</h2>
       {note ? <p className="mt-0.5 text-[11px] text-slate">{note}</p> : null}
       <div className="mt-2.5 space-y-3">{children}</div>
     </section>

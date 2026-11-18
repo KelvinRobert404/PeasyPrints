@@ -190,7 +190,7 @@ function Where({ item, campusCode }: { item: HousingCardItem; campusCode: string
   const label = item.place.label || item.place.area;
   if (!label) return null;
   return (
-    <p className="flex min-w-0 items-center gap-1 text-[11.5px] font-semibold text-slate">
+    <p className="flex min-w-0 items-center gap-1 text-[11.5px] font-medium text-slate">
       <PinIcon size={13} className="shrink-0 text-ink" aria-hidden="true" />
       <span className="truncate">{label}</span>
     </p>
@@ -286,7 +286,7 @@ export function HousingListingCard<T extends HousingCardItem>({ item, href, onSa
           <Photo item={item} closed={closed} className="h-[112px] w-full" artSize={104} />
           <span
             className={cn(
-              'font-heading absolute bottom-[5px] left-[5px] rounded-[6px] bg-white px-1.5 py-0.5 text-[12px] leading-[1.15] tabular-nums',
+              'absolute bottom-[5px] left-[5px] rounded-[6px] bg-white px-1.5 py-0.5 text-[12px] font-bold leading-[1.15] tabular-nums',
               closed ? 'text-slate line-through' : 'text-ink',
               CHIP_SHADOW,
             )}

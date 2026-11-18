@@ -26,10 +26,10 @@ export interface DemoPaySheetProps {
 
 type Busy = 'pay' | 'fail' | null;
 
-/** 'Rs 80' via formatPrice; keeps paise ('Rs 7.5') so it matches the checkout bar. */
+/** '₹80' via formatPrice; keeps paise ('₹7.5') so it matches the checkout bar. */
 function sheetPrice(amountPaise: number): string {
   const rupees = Math.round(Math.max(0, Number(amountPaise) || 0)) / 100;
-  return Number.isInteger(rupees) ? formatPrice(rupees) : `Rs ${rupees.toFixed(2).replace(/0$/, '')}`;
+  return Number.isInteger(rupees) ? formatPrice(rupees) : `₹${rupees.toFixed(2).replace(/0$/, '')}`;
 }
 
 function messageOf(error: unknown): string {
@@ -99,7 +99,7 @@ export function DemoPaySheet({ amountPaise, description, onPay, onFail, onCancel
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <Tag tone="royal">Demo</Tag>
-            <h2 id={titleId} className="mt-1 font-heading text-[22px] leading-none tabular-nums text-ink">
+            <h2 id={titleId} className="mt-1 font-heading text-[16px] leading-[1.1] tabular-nums text-ink">
               Pay {price}
             </h2>
           </div>
@@ -121,13 +121,13 @@ export function DemoPaySheet({ amountPaise, description, onPay, onFail, onCancel
             <IconTile icon={QrIcon} tone="go" shape="square" size={30} />
             <div className="min-w-0 flex-1">
               <p className="text-[12.5px] font-semibold text-ink">UPI</p>
-              <p className="text-[11px] font-semibold text-slate">Sample account. Nothing is charged.</p>
+              <p className="text-[11px] font-medium text-slate">Sample account. Nothing is charged.</p>
             </div>
           </div>
         </div>
 
         {error ? (
-          <p role="alert" className="mt-2 text-[11.5px] font-bold text-market">
+          <p role="alert" className="mt-2 text-[11.5px] font-semibold text-market">
             {error}
           </p>
         ) : null}

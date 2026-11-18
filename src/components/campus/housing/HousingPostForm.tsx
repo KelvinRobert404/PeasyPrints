@@ -384,8 +384,8 @@ export function HousingPostForm(props: HousingPostFormProps) {
           >
             <NotesIcon size={18} className="shrink-0 text-royal" aria-hidden="true" />
             <span className="min-w-0 flex-1">
-              <span className="block text-[12.5px] font-bold">Paste a WhatsApp post</span>
-              <span className="block text-[11px] font-semibold text-slate">We fill the form for you.</span>
+              <span className="block text-[12.5px] font-semibold">Paste a WhatsApp post</span>
+              <span className="block text-[11px] font-medium text-slate">We fill the form for you.</span>
             </span>
           </button>
 
@@ -495,7 +495,7 @@ export function HousingPostForm(props: HousingPostFormProps) {
                 </button>
               </div>
             )}
-            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate">
+            <p className="flex items-center gap-1.5 text-[11px] font-medium text-slate">
               <LockIcon size={14} className="shrink-0 text-ink" aria-hidden="true" />
               Only the landmark and distance show.
             </p>
@@ -523,7 +523,7 @@ export function HousingPostForm(props: HousingPostFormProps) {
                 value={state.images}
                 onChange={(images) => patch({ images }, ['images'])}
               />
-              {errors.images ? <p className="mt-1 text-[11.5px] font-bold text-market">{errors.images}</p> : null}
+              {errors.images ? <p className="mt-1 text-[11.5px] font-semibold text-market">{errors.images}</p> : null}
             </div>
             <TextField
               id="description"
@@ -562,7 +562,7 @@ export function HousingPostForm(props: HousingPostFormProps) {
             <button type="submit" disabled={submitting} className={cn(swButton({ size: 'lg' }), 'w-full')}>
               {submitting ? 'Posting…' : 'Post it'}
             </button>
-            <p className="text-center text-[11px] font-semibold text-slate">Only verified students</p>
+            <p className="text-center text-[11px] font-medium text-slate">Only verified students</p>
           </div>
         </form>
       </div>
@@ -600,14 +600,14 @@ function PasteSheet({ onClose, onFill }: { onClose: () => void; onFill: (text: s
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10.5px] font-semibold text-slate">Hey, save some typing</p>
+            <p className="text-[10.5px] font-medium text-slate">Hey, save some typing</p>
             <h2 id={titleId} className="font-heading text-[16px] leading-[1.1] text-ink">
               Paste a WhatsApp post
             </h2>
           </div>
           <IconButton label="Close" icon={CloseIcon} onClick={onClose} />
         </div>
-        <label className="mt-3 block text-[11.5px] font-bold text-ink">
+        <label className="mt-3 block text-[11.5px] font-semibold text-ink">
           The post
           <textarea
             autoFocus
@@ -618,7 +618,7 @@ function PasteSheet({ onClose, onFill }: { onClose: () => void; onFill: (text: s
             placeholder="Paste the full message here."
           />
         </label>
-        <p className="mt-1 text-[11px] font-semibold text-slate">We fill what we can. Check before posting.</p>
+        <p className="mt-1 text-[11px] font-medium text-slate">We fill what we can. Check before posting.</p>
         <button
           type="button"
           disabled={!text.trim()}

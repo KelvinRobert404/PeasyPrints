@@ -165,7 +165,7 @@ function BundleFields({ state, update }: KindFieldsProps) {
         onHandOverChange={(handOver) => update({ handOver })}
         free={isFreeTerms(state.priceTerms)}
       />
-      <label className="flex min-h-11 items-center justify-between gap-3 rounded-[12px] bg-surface px-3 text-[12.5px] font-bold text-ink">
+      <label className="flex min-h-11 items-center justify-between gap-3 rounded-[12px] bg-surface px-3 text-[12.5px] font-semibold text-ink">
         <span>
           Sell things one by one
           <span className="block text-[11px] font-medium text-slate">Off means all together only</span>
@@ -422,7 +422,7 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
                 >
                   <IconTile icon={option.icon} tone={girls ? 'girls' : 'royal'} size={34} />
                   <span className="min-w-0">
-                    <span className="block truncate text-[12.5px] font-bold text-ink">{option.label}</span>
+                    <span className="block truncate text-[12.5px] font-semibold text-ink">{option.label}</span>
                     <span className="block text-[11px] leading-[1.3] text-slate">{option.hint}</span>
                   </span>
                 </button>
@@ -489,11 +489,11 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
               />
             ) : (
               <div className="min-w-0">
-                <p className="text-[11.5px] font-bold text-ink">{entry.landmarkLabel}</p>
+                <p className="text-[11.5px] font-semibold text-ink">{entry.landmarkLabel}</p>
                 {configLoading ? (
                   <div className="mt-1 h-10 animate-pulse rounded-full bg-surface" aria-hidden="true" />
                 ) : (
-                  <p className="mt-1 rounded-[12px] bg-surface px-3 py-2.5 text-[11.5px] font-semibold text-slate">
+                  <p className="mt-1 rounded-[12px] bg-surface px-3 py-2.5 text-[11.5px] font-medium text-slate">
                     {configError || 'No places for your campus yet.'}
                   </p>
                 )}
@@ -519,7 +519,7 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
 
             {entry.ownGender ? null : (
               <div className="min-w-0">
-                <p className="text-[11.5px] font-bold text-ink">Who can reply</p>
+                <p className="text-[11.5px] font-semibold text-ink">Who can reply</p>
                 <GenderChips
                   className="mt-1"
                   value={girls ? 'girls' : form.genderPref}
@@ -544,7 +544,7 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
                   />
                 </FieldLabel>
               )}
-              <label className="flex min-h-10 items-center gap-2 text-[12.5px] font-bold text-ink">
+              <label className="flex min-h-10 items-center gap-2 text-[12.5px] font-semibold text-ink">
                 <input
                   type="checkbox"
                   checked={form.useSavedNumber}
@@ -561,7 +561,7 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
 
             {duplicateId ? (
               <div role="alert" className="rounded-[12px] bg-royal-tint p-2.5">
-                <p className="text-[12.5px] font-bold text-ink">You already posted this. Bring it back?</p>
+                <p className="text-[12.5px] font-semibold text-ink">You already posted this. Bring it back?</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <button
                     type="button"
@@ -579,7 +579,7 @@ export function NewListingForm({ initialKind, audience, initialTitle }: FormProp
             ) : null}
 
             {error ? (
-              <div role="alert" className="rounded-[12px] bg-market-tint px-3 py-2.5 text-[11.5px] font-bold text-market">
+              <div role="alert" className="rounded-[12px] bg-market-tint px-3 py-2.5 text-[11.5px] font-semibold text-market">
                 {error}
               </div>
             ) : null}

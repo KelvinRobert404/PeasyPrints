@@ -204,7 +204,7 @@ function DemoStart({ searchParams }: { searchParams: SearchParams }) {
 }
 
 function SectionLabel({ children }: { children: ReactNode }) {
-  return <h2 className="mb-1.5 mt-4 font-heading text-[14.5px] leading-[1.1] text-ink">{children}</h2>;
+  return <h2 className="mb-1.5 mt-4 font-heading text-[14px] leading-[1.1] text-ink">{children}</h2>;
 }
 
 function ChoiceButton({
@@ -239,7 +239,7 @@ function ChoiceButton({
       {leading}
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate text-[12.5px] font-bold text-ink">{title}</span>
+          <span className="truncate text-[12.5px] font-semibold text-ink">{title}</span>
           {badge}
         </span>
         <span className="truncate text-[11px] text-slate">{busy ? 'Opening…' : subtitle}</span>

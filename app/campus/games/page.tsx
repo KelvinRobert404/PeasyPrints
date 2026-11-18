@@ -138,7 +138,7 @@ function GamesScreen() {
         <section className="flex items-center gap-3 overflow-hidden rounded-[14px] bg-surface px-3 py-2.5">
           <div className="min-w-0 flex-1">
             <Tag tone="white">{TRUST_LINE}</Tag>
-            <h2 className="font-heading mt-1 text-[15px] leading-[1.1] text-ink">Hey, up for a game?</h2>
+            <h2 className="font-heading mt-1 text-[14px] leading-[1.1] text-ink">Hey, up for a game?</h2>
             <p className="mt-0.5 text-[11.5px] leading-[1.4] text-slate">Grab a slot or start your own.</p>
             <button type="button" onClick={() => setHosting(true)} className={cn(swButton({ size: 'sm' }), 'mt-2')}>
               <PlusIcon size={13} aria-hidden="true" />
@@ -160,7 +160,7 @@ function GamesScreen() {
         </div>
 
         {notice ? (
-          <p role="status" className="rounded-[12px] bg-go-tint px-3 py-2 text-[11.5px] font-bold text-go-text">
+          <p role="status" className="rounded-[12px] bg-go-tint px-3 py-2 text-[11.5px] font-semibold text-go-text">
             {notice}
           </p>
         ) : null}
@@ -279,7 +279,7 @@ function GameRow({
       <div className="flex items-center gap-2.5">
         <IconTile icon={BallIcon} tone={game.joined || game.isHost ? 'go' : 'royal'} shape="square" size={40} />
         <div className="flex min-w-0 flex-1 flex-col gap-px">
-          <p className="break-words text-[12.5px] font-bold leading-[1.3] text-ink">{line}</p>
+          <p className="break-words text-[12.5px] font-semibold leading-[1.3] text-ink">{line}</p>
           <p className="truncate text-[11px] text-slate">
             {game.place?.label ?? 'Place to be shared'} · {game.isHost ? 'Your game' : `By ${game.host.displayName}`}
             {game.joined && !game.isHost ? ' · You are in' : ''}
@@ -289,7 +289,7 @@ function GameRow({
         <span className="shrink-0">{trailing}</span>
       </div>
       {error ? (
-        <p role="alert" className="mt-1.5 rounded-[10px] bg-market-tint px-2.5 py-1.5 text-[11px] font-bold text-market">
+        <p role="alert" className="mt-1.5 rounded-[10px] bg-market-tint px-2.5 py-1.5 text-[11px] font-semibold text-market">
           {error}
         </p>
       ) : null}
@@ -325,7 +325,7 @@ function Sheet({ title, kicker, onClose, children }: { title: string; kicker?: s
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            {kicker ? <p className="truncate text-[10.5px] font-semibold text-slate">{kicker}</p> : null}
+            {kicker ? <p className="truncate text-[10.5px] font-medium text-slate">{kicker}</p> : null}
             <h2 id={titleId} className="font-heading text-[16px] leading-[1.1] text-ink">
               {title}
             </h2>
@@ -401,7 +401,7 @@ function HostSheet({ campusCode, onClose, onCreated }: { campusCode: string; onC
     <Sheet title="Start a game" kicker="Only verified students can join" onClose={onClose}>
       <div className="space-y-3">
         <div>
-          <p className="text-[11.5px] font-bold text-ink">Which sport?</p>
+          <p className="text-[11.5px] font-semibold text-ink">Which sport?</p>
           <div role="group" aria-label="Sport" className="mt-1 flex flex-wrap gap-1.5">
             {SPORTS.map((value) => (
               <Chip key={value} selected={sport === value} onClick={() => setSport(value)}>
@@ -424,12 +424,12 @@ function HostSheet({ campusCode, onClose, onCreated }: { campusCode: string; onC
             {offList ? <p className="mt-1 text-[10.5px] font-semibold text-market">Pick a place from the list.</p> : null}
           </div>
         ) : configFailed ? (
-          <p className="rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-bold text-market">Could not load places. Try again.</p>
+          <p className="rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-semibold text-market">Could not load places. Try again.</p>
         ) : (
           <div className="h-10 animate-pulse rounded-[12px] bg-surface" aria-busy="true" />
         )}
 
-        <label className="block text-[11.5px] font-bold text-ink">
+        <label className="block text-[11.5px] font-semibold text-ink">
           When?
           <input
             type="datetime-local"
@@ -439,13 +439,13 @@ function HostSheet({ campusCode, onClose, onCreated }: { campusCode: string; onC
             onChange={(event) => setStartsAt(event.target.value)}
             className="campus-input mt-1"
           />
-          {startValid && start ? <span className="mt-1 block text-[10.5px] font-semibold text-slate">{slotLabel(start, new Date())}</span> : null}
+          {startValid && start ? <span className="mt-1 block text-[10.5px] font-medium text-slate">{slotLabel(start, new Date())}</span> : null}
         </label>
 
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11.5px] font-bold text-ink">How many players?</p>
-            <p className="text-[10.5px] font-semibold text-slate">You take the first slot.</p>
+            <p className="text-[11.5px] font-semibold text-ink">How many players?</p>
+            <p className="text-[10.5px] font-medium text-slate">You take the first slot.</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button
@@ -473,7 +473,7 @@ function HostSheet({ campusCode, onClose, onCreated }: { campusCode: string; onC
         </div>
 
         {error ? (
-          <p role="alert" className="rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-bold text-market">
+          <p role="alert" className="rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-semibold text-market">
             {error}
           </p>
         ) : null}

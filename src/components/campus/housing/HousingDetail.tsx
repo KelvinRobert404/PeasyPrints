@@ -125,8 +125,8 @@ function Fact({ icon: Icon, label, value }: { icon: ComponentType<IconProps>; la
     <div className="flex min-w-0 items-center gap-2 rounded-[12px] bg-surface px-2.5 py-2">
       <Icon size={18} className="shrink-0 text-ink" aria-hidden="true" />
       <div className="min-w-0">
-        <p className="text-[10.5px] font-semibold text-slate">{label}</p>
-        <p className="break-words text-[12px] font-bold leading-[1.2] text-ink">{value}</p>
+        <p className="text-[10.5px] font-medium text-slate">{label}</p>
+        <p className="break-words text-[12px] font-semibold leading-[1.2] text-ink">{value}</p>
       </div>
     </div>
   );
@@ -182,7 +182,7 @@ function LowerRentSheet({ current, busy, error, onClose, onSubmit }: LowerRentSh
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10.5px] font-semibold text-slate">Now {formatPrice(current, 'pp')}</p>
+            <p className="text-[10.5px] font-medium text-slate">Now {formatPrice(current, 'pp')}</p>
             <h2 id={titleId} className="font-heading text-[16px] leading-[1.1] text-ink">
               Lower the rent
             </h2>
@@ -198,14 +198,14 @@ function LowerRentSheet({ current, busy, error, onClose, onSubmit }: LowerRentSh
         >
           <PriceInput value={rent} onChange={setRent} suffix="pp" label="New rent per person" placeholder="7.5k" />
           {problem || error ? (
-            <p role="alert" className="mt-1.5 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-bold text-market">
+            <p role="alert" className="mt-1.5 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-semibold text-market">
               {problem || error}
             </p>
           ) : null}
           <button type="submit" disabled={!ready || busy} className={cn(swButton({ variant: 'primary' }), 'mt-3 w-full')}>
             {busy ? 'Saving…' : 'Lower rent'}
           </button>
-          <p className="mt-1.5 text-center text-[10.5px] font-semibold text-slate">Savers get a price drop alert.</p>
+          <p className="mt-1.5 text-center text-[10.5px] font-medium text-slate">Savers get a price drop alert.</p>
         </form>
       </section>
     </div>
@@ -231,9 +231,9 @@ function OwnerPanel({ item, busy, error, onAction }: OwnerPanelProps) {
     const label = HOUSING_STATUS_LABELS[item.status as HousingStatus] ?? 'Closed';
     return (
       <section className="mt-3 rounded-[14px] border border-line bg-white p-3">
-        <p className="text-[10.5px] font-semibold text-slate">Only you see this</p>
-        <p className="font-heading text-[14.5px] leading-[1.1] text-ink">This post is {label.toLowerCase()}</p>
-        <p className="mt-1 text-[11.5px] font-semibold text-slate">Students can no longer see it.</p>
+        <p className="text-[10.5px] font-medium text-slate">Only you see this</p>
+        <p className="font-heading text-[14px] leading-[1.1] text-ink">This post is {label.toLowerCase()}</p>
+        <p className="mt-1 text-[11.5px] font-medium text-slate">Students can no longer see it.</p>
       </section>
     );
   }
@@ -246,7 +246,7 @@ function OwnerPanel({ item, busy, error, onAction }: OwnerPanelProps) {
     <>
       {nudge ? (
         <section aria-labelledby="housing-nudge" className="mt-3 rounded-[14px] bg-royal p-3 text-white">
-          <h2 id="housing-nudge" className="font-heading text-[16px] leading-[1.1]">
+          <h2 id="housing-nudge" className="font-heading text-[14px] leading-[1.1]">
             Still available?
           </h2>
           <p className="mt-0.5 text-[12px] font-semibold text-white/90">Confirm so students keep seeing it.</p>
@@ -278,10 +278,10 @@ function OwnerPanel({ item, busy, error, onAction }: OwnerPanelProps) {
           {item.status === 'active' || reserved ? (
             <div className="flex items-center justify-between gap-2 py-2">
               <div className="min-w-0">
-                <p className="text-[12.5px] font-bold text-ink">
+                <p className="text-[12.5px] font-semibold text-ink">
                   {reserved && item.reservedUntil ? reservedUntilLabel(item.reservedUntil) : 'Hold it for one student'}
                 </p>
-                <p className="text-[11px] font-semibold text-slate">{reserved ? 'Others cannot ask meanwhile.' : 'Pauses requests for 24 hours.'}</p>
+                <p className="text-[11px] font-medium text-slate">{reserved ? 'Others cannot ask meanwhile.' : 'Pauses requests for 24 hours.'}</p>
               </div>
               <button
                 type="button"
@@ -296,8 +296,8 @@ function OwnerPanel({ item, busy, error, onAction }: OwnerPanelProps) {
 
           <div className="flex items-center justify-between gap-2 py-2">
             <div className="min-w-0">
-              <p className="text-[12.5px] font-bold text-ink">Rent {formatPrice(item.rentPp, 'pp')}</p>
-              <p className="text-[11px] font-semibold text-slate">Lower it to get more requests.</p>
+              <p className="text-[12.5px] font-semibold text-ink">Rent {formatPrice(item.rentPp, 'pp')}</p>
+              <p className="text-[11px] font-medium text-slate">Lower it to get more requests.</p>
             </div>
             <button
               type="button"
@@ -311,8 +311,8 @@ function OwnerPanel({ item, busy, error, onAction }: OwnerPanelProps) {
 
           <div className="flex items-center justify-between gap-2 py-2">
             <div className="min-w-0">
-              <p className="text-[12.5px] font-bold text-ink">Beds left</p>
-              <p className="text-[11px] font-semibold text-slate">Mark booked when all are gone.</p>
+              <p className="text-[12.5px] font-semibold text-ink">Beds left</p>
+              <p className="text-[11px] font-medium text-slate">Mark booked when all are gone.</p>
             </div>
             <div className="flex shrink-0 items-center gap-1.5" role="group" aria-label="Beds left">
               <button
@@ -324,7 +324,7 @@ function OwnerPanel({ item, busy, error, onAction }: OwnerPanelProps) {
               >
                 <MinusIcon size={15} aria-hidden="true" />
               </button>
-              <span aria-live="polite" className="font-heading w-6 text-center text-[15px] tabular-nums text-ink">
+              <span aria-live="polite" className="w-6 text-center text-[14px] font-bold tabular-nums text-ink">
                 {item.bedsLeft}
               </span>
               <button
@@ -342,8 +342,8 @@ function OwnerPanel({ item, busy, error, onAction }: OwnerPanelProps) {
 
         {confirmBooked ? (
           <div className="mt-2 rounded-[12px] bg-surface p-2.5">
-            <p className="text-[12px] font-bold text-ink">Mark as booked?</p>
-            <p className="text-[11px] font-semibold text-slate">Students stop seeing this post.</p>
+            <p className="text-[12px] font-semibold text-ink">Mark as booked?</p>
+            <p className="text-[11px] font-medium text-slate">Students stop seeing this post.</p>
             <div className="mt-2 grid grid-cols-2 gap-1.5">
               <button type="button" disabled={working} onClick={() => setConfirmBooked(false)} className={cn(swButton({ variant: 'white', size: 'sm' }), 'w-full')}>
                 Cancel
@@ -365,7 +365,7 @@ function OwnerPanel({ item, busy, error, onAction }: OwnerPanelProps) {
         )}
 
         {error && !lowerOpen ? (
-          <p role="alert" className="mt-2 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-bold text-market">
+          <p role="alert" className="mt-2 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-semibold text-market">
             {error}
           </p>
         ) : null}
@@ -553,13 +553,13 @@ function HousingBody({ item, audience, campusCode, busy, actionError, onAction }
               Agent listing
             </Tag>
           ) : null}
-          {item.serial ? <span className="ml-auto font-mono text-[10px] font-semibold text-slate">{item.serial}</span> : null}
+          {item.serial ? <span className="ml-auto font-mono text-[10px] font-medium text-slate">{item.serial}</span> : null}
         </div>
 
         <h2 className="font-heading mt-1.5 break-words text-[16px] leading-[1.1] text-ink">{item.title}</h2>
 
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <p className={cn('font-heading text-[15px] tabular-nums', closed ? 'text-slate line-through' : 'text-ink')}>
+          <p className={cn('text-[15px] font-bold tabular-nums', closed ? 'text-slate line-through' : 'text-ink')}>
             {price.rent}
             {price.deposit ? <span className="text-text-secondary"> · {price.deposit}</span> : null}
           </p>
@@ -567,14 +567,14 @@ function HousingBody({ item, audience, campusCode, busy, actionError, onAction }
         </div>
 
         {dropped ? (
-          <p className="mt-1 flex items-center gap-1 text-[11.5px] font-bold text-go-text">
+          <p className="mt-1 flex items-center gap-1 text-[11.5px] font-semibold text-go-text">
             <PriceDropIcon size={14} aria-hidden="true" />
             Price dropped from {formatPrice(item.previousRentPp!)}
           </p>
         ) : null}
 
         {reserved && item.reservedUntil ? (
-          <p className="mt-1 flex items-center gap-1 text-[11.5px] font-bold text-ink">
+          <p className="mt-1 flex items-center gap-1 text-[11.5px] font-semibold text-ink">
             <ClockIcon size={14} aria-hidden="true" />
             {reservedUntilLabel(item.reservedUntil)}
           </p>
@@ -583,7 +583,7 @@ function HousingBody({ item, audience, campusCode, busy, actionError, onAction }
         <div className="mt-1.5 space-y-0.5">
           <DistanceLine meters={meters} campusLabel={campusCode} />
           {placeLabel ? (
-            <p className="flex min-w-0 items-center gap-1 text-[11.5px] font-semibold text-slate">
+            <p className="flex min-w-0 items-center gap-1 text-[11.5px] font-medium text-slate">
               <PinIcon size={13} className="shrink-0 text-ink" aria-hidden="true" />
               <span className="truncate">{placeLabel}</span>
             </p>
@@ -605,7 +605,7 @@ function HousingBody({ item, audience, campusCode, busy, actionError, onAction }
       </section>
 
       {termLines.length ? (
-        <ul className="mt-2 space-y-0.5 text-[11.5px] font-semibold text-text-secondary">
+        <ul className="mt-2 space-y-0.5 text-[11.5px] font-medium text-text-secondary">
           {termLines.map((line) => (
             <li key={line}>{line}</li>
           ))}
@@ -651,13 +651,13 @@ function HousingBody({ item, audience, campusCode, busy, actionError, onAction }
         <div className="flex items-center gap-2 rounded-[12px] bg-surface px-2.5 py-2">
           <ShieldCheckIcon size={20} className="shrink-0 text-go-text" aria-hidden="true" />
           <div className="min-w-0">
-            <p className="truncate text-[12.5px] font-bold text-ink">{item.poster.displayName}</p>
-            <p className="text-[11px] font-semibold text-slate">
+            <p className="truncate text-[12.5px] font-semibold text-ink">{item.poster.displayName}</p>
+            <p className="text-[11px] font-medium text-slate">
               {POSTED_AS_LABELS[item.postedAs]} · {brokerageLabel(item)}
             </p>
           </div>
         </div>
-        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-slate">
+        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-slate">
           <ShieldCheckIcon size={13} className="shrink-0 text-ink" aria-hidden="true" />
           Only verified students
         </p>

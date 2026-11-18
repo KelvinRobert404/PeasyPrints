@@ -81,7 +81,7 @@ function withStatus(listing: MarketListing, status: MarketStatus, extra: Partial
 function Block({ name, note, children }: { name: string; note?: string; children: ReactNode }) {
   return (
     <section className="min-w-0 pt-3.5">
-      <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">{name}</h2>
+      <h2 className="font-heading text-[14px] leading-[1.1] text-ink">{name}</h2>
       {note ? <p className="mt-0.5 text-[11px] text-slate">{note}</p> : null}
       <div className="mt-2">{children}</div>
     </section>

@@ -21,7 +21,7 @@ export default async function SsoCallbackPage({ searchParams }: { searchParams: 
   return (
     <div role="status" aria-live="polite" className="flex min-h-screen flex-col items-center justify-center gap-3 bg-white px-5">
       <SwoopLogo size={28} className="animate-pulse" />
-      <p className="text-[12.5px] font-semibold text-slate">Signing you in…</p>
+      <p className="text-[12.5px] font-medium text-slate">Signing you in…</p>
       <AuthenticateWithRedirectCallback
         signInUrl="/login"
         signUpUrl="/login"

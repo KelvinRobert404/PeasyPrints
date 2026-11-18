@@ -39,8 +39,8 @@ export function AskCard({
     <article className={cn('flex min-w-0 items-center gap-2.5 rounded-[14px] bg-surface p-2.5', className)}>
       <RowIconTile icon={HandIcon} />
       <div className="min-w-0 flex-1">
-        <p className="font-heading line-clamp-2 text-[13px] leading-[1.15] text-ink">{thing ? `Any ${thing} available?` : 'Need something?'}</p>
-        <p className="mt-0.5 text-[11px] font-semibold text-slate">Students near you will see it.</p>
+        <p className="font-heading line-clamp-2 text-[12.5px] leading-[1.15] text-ink">{thing ? `Any ${thing} available?` : 'Need something?'}</p>
+        <p className="mt-0.5 text-[11px] font-medium text-slate">Students near you will see it.</p>
       </div>
       <Link href={href ?? askHref(thing)} className={cn(BUTTON, 'shrink-0')}>
         Ask {code}

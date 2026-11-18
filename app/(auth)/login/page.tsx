@@ -157,7 +157,7 @@ function LoginFlow() {
         <div className="mb-5 flex items-center gap-2.5 rounded-[12px] bg-surface px-2.5 py-2">
           <IconTile icon={LandmarkIcon} tone="royal" size={28} />
           <span className="flex min-w-0 flex-1 flex-col gap-px">
-            <span className="truncate text-[12px] font-bold text-ink">{campus.label}</span>
+            <span className="truncate text-[12px] font-semibold text-ink">{campus.label}</span>
             <span className="truncate text-[11px] text-slate">{college?.shortName ?? campus.name}</span>
           </span>
           <button

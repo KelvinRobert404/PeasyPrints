@@ -265,8 +265,8 @@ function ChoiceRow({
       {leading}
       <span className="flex min-w-0 flex-1 flex-col gap-px">
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate text-[12.5px] font-bold text-ink">{title}</span>
-          {meta ? <span className="shrink-0 truncate text-[10.5px] font-semibold text-slate">{meta}</span> : null}
+          <span className="truncate text-[12.5px] font-semibold text-ink">{title}</span>
+          {meta ? <span className="shrink-0 truncate text-[10.5px] font-medium text-slate">{meta}</span> : null}
         </span>
         <span className="truncate text-[11px] text-slate">{subtitle}</span>
       </span>

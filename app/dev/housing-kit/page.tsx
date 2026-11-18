@@ -62,7 +62,7 @@ function toCardItem({ id, data }: FixtureDoc<HousingListingDoc>): HousingCardIte
 function Section({ title, note, children }: { title: string; note: string; children: ReactNode }) {
   return (
     <section className="pt-3">
-      <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">{title}</h2>
+      <h2 className="font-heading text-[14px] leading-[1.1] text-ink">{title}</h2>
       <p className="mt-0.5 text-[11px] text-slate">{note}</p>
       <div className="mt-2">{children}</div>
     </section>

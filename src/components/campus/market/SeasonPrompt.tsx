@@ -54,8 +54,8 @@ export function SeasonPrompt({
   return (
     <section className={cn('relative flex min-h-[96px] items-center gap-2 overflow-hidden rounded-[14px] bg-royal-tint py-2.5 pl-3 pr-1', className)}>
       <div className="min-w-0 flex-1">
-        <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">{copy.title}</h2>
-        {copy.body ? <p className="mt-0.5 text-[11.5px] font-semibold text-text-secondary">{copy.body}</p> : null}
+        <h2 className="font-heading text-[14px] leading-[1.1] text-ink">{copy.title}</h2>
+        {copy.body ? <p className="mt-0.5 text-[11.5px] font-medium text-text-secondary">{copy.body}</p> : null}
         <Link href={href ?? copy.href} className={cn(BUTTON, 'mt-2')}>
           {copy.action}
         </Link>

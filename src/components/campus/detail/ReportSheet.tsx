@@ -138,7 +138,7 @@ export function ReportSheet({ contentType, contentId, open, onOpenChange, trigge
               })}
             </div>
 
-            <label className="mt-3 block text-[11.5px] font-bold text-ink">
+            <label className="mt-3 block text-[11.5px] font-semibold text-ink">
               Tell us more
               <textarea
                 autoFocus
@@ -151,7 +151,7 @@ export function ReportSheet({ contentType, contentId, open, onOpenChange, trigge
             </label>
 
             {error ? (
-              <p role="alert" className="mt-2 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-bold text-market">
+              <p role="alert" className="mt-2 rounded-[12px] bg-market-tint px-3 py-2 text-[11.5px] font-semibold text-market">
                 {error}
               </p>
             ) : null}
@@ -164,7 +164,7 @@ export function ReportSheet({ contentType, contentId, open, onOpenChange, trigge
             >
               {busy ? 'Sending…' : 'Send private report'}
             </button>
-            <p className="mt-1.5 text-center text-[10.5px] font-semibold text-slate">Goes to the campus team.</p>
+            <p className="mt-1.5 text-center text-[10.5px] font-medium text-slate">Goes to the campus team.</p>
           </section>
         </div>
       ) : null}

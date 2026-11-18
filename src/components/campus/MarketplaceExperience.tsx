@@ -266,7 +266,7 @@ function MarketHome({ audience }: { audience: CampusAudience }) {
                 className="campus-press flex w-full min-w-0 items-center gap-2 rounded-[12px] bg-go-tint px-3 py-2 text-left text-go-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal/40"
               >
                 <PriceDropIcon size={16} className="shrink-0" aria-hidden="true" />
-                <span className="min-w-0 flex-1 truncate text-[12px] font-bold">
+                <span className="min-w-0 flex-1 truncate text-[12px] font-semibold">
                   Price dropped on {savedDrops.length === 1 ? '1 thing' : `${savedDrops.length} things`} you saved
                 </span>
                 <ChevronRightIcon size={14} className={cn('shrink-0 transition-transform', showDrops && 'rotate-90')} aria-hidden="true" />
@@ -402,7 +402,7 @@ function HomeSection({
       {shown.length ? (
         <SectionBody id={id} listings={shown} code={code} now={now} paths={paths} onToggleSave={onToggleSave} row />
       ) : (
-        <p className="mt-1.5 text-[11.5px] font-semibold text-slate">{SECTION_EMPTY_LINE[id]}</p>
+        <p className="mt-1.5 text-[11.5px] font-medium text-slate">{SECTION_EMPTY_LINE[id]}</p>
       )}
     </section>
   );
@@ -441,7 +441,7 @@ function ResultsView({
     askBlock = (
       <div role="status" className="mt-2 flex min-w-0 items-center gap-2 rounded-[14px] bg-go-tint p-2.5 text-go-text">
         <CheckIcon size={16} className="shrink-0" aria-hidden="true" />
-        <p className="min-w-0 flex-1 text-[12px] font-bold">Asked. Students near you will see it.</p>
+        <p className="min-w-0 flex-1 text-[12px] font-semibold">Asked. Students near you will see it.</p>
         {ask.id ? (
           <Link href={paths.detail(ask.id)} className="shrink-0 text-[12px] font-bold text-ink">
             View

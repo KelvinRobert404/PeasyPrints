@@ -29,7 +29,7 @@ export function DistanceLine({ meters, campusLabel, icon = true, className }: Pr
   const walkable = meters <= WALKABLE_MAX_M;
   const Icon = walkable ? WalkIcon : PinIcon;
   return (
-    <p className={cn('flex min-w-0 items-center gap-1 text-[11.5px] font-semibold text-slate', className)}>
+    <p className={cn('flex min-w-0 items-center gap-1 text-[11.5px] font-medium text-slate', className)}>
       {icon ? <Icon size={13} className="shrink-0 text-ink" aria-hidden="true" /> : null}
       <span className="truncate">{walkable ? formatFromCampus(meters, label) : `${formatDistance(meters)} from ${label}`}</span>
     </p>

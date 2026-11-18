@@ -34,7 +34,7 @@ export default function AboutPage() {
       </Card>
 
       <section className="pt-3.5">
-        <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">More</h2>
+        <h2 className="font-heading text-[14px] leading-[1.1] text-ink">More</h2>
         <Card className="mt-2 px-3">
           <ListRow href="/contact" leading={<IconTile icon={HelpIcon} />} title="Help & support" />
           <ListRow href="/privacy" leading={<IconTile icon={ShieldCheckIcon} />} title="Privacy policy" />

@@ -24,10 +24,10 @@ function TopBar() {
   );
 }
 
-/** 'Rs 80' via formatPrice; print totals can carry paise ('Rs 7.5'), so keep them. */
+/** '₹80' via formatPrice; print totals can carry paise ('₹7.5'), so keep them. */
 function paidLabel(total: unknown): string {
   const rupees = Math.round(Math.max(0, Number(total) || 0) * 100) / 100;
-  return Number.isInteger(rupees) ? formatPrice(rupees) : `Rs ${rupees.toFixed(2).replace(/0$/, '')}`;
+  return Number.isInteger(rupees) ? formatPrice(rupees) : `₹${rupees.toFixed(2).replace(/0$/, '')}`;
 }
 
 /** The line beside the pickup art, by order state. */
@@ -40,8 +40,8 @@ function artCaption(meta: { ready: boolean; active: boolean }): string {
 function Stat({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center gap-0.5 rounded-[12px] bg-surface py-2.5">
-      <span className="font-heading text-[16px] leading-none tabular-nums text-ink">{value}</span>
-      <span className="text-[10.5px] font-semibold text-slate">{label}</span>
+      <span className="text-[15px] font-bold leading-none tabular-nums text-ink">{value}</span>
+      <span className="text-[10.5px] font-medium text-slate">{label}</span>
     </div>
   );
 }
@@ -163,7 +163,7 @@ export default function PickupPage() {
             <span className="text-[11px] font-semibold text-white/80">Show this at the counter</span>
             <Tag tone={meta.ready ? 'go' : 'white'}>{meta.label}</Tag>
           </div>
-          <p className="font-heading break-words text-[36px] leading-[0.95]">{order.userName}</p>
+          <p className="break-words text-[36px] font-bold leading-[0.95] tracking-[-0.02em]">{order.userName}</p>
           <p className="truncate text-[12px] font-semibold text-white/80">at {order.shopName}</p>
         </section>
 

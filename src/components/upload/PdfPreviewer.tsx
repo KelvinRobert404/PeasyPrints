@@ -59,7 +59,7 @@ export function PdfPreviewer() {
         const wrapper = document.createElement('div');
         wrapper.className = 'mb-3 last:mb-0';
         const label = document.createElement('div');
-        label.className = 'mb-1 text-[11px] font-semibold text-slate';
+        label.className = 'mb-1 text-[11px] font-medium text-slate';
         label.textContent = `Page ${i} of ${pageCount}`;
         wrapper.appendChild(label);
         canvas.className = 'block h-auto max-w-full rounded-[12px] border border-line bg-white';

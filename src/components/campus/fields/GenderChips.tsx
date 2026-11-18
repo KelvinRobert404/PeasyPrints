@@ -68,7 +68,7 @@ export function GenderChips({ value, defaultValue = 'anyone', onChange, locked =
           );
         })}
       </div>
-      {locked ? <p className="mt-1 text-[11px] font-semibold text-slate">Girls&apos; space posts are for girls only.</p> : null}
+      {locked ? <p className="mt-1 text-[11px] font-medium text-slate">Girls&apos; space posts are for girls only.</p> : null}
     </div>
   );
 }

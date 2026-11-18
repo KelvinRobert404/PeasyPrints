@@ -89,7 +89,7 @@ export function CodeInput({
             <div
               key={i}
               className={cn(
-                'flex h-12 min-w-0 flex-1 items-center justify-center rounded-[10px] border bg-surface font-heading text-[20px] text-ink transition-colors',
+                'flex h-12 min-w-0 flex-1 items-center justify-center rounded-[10px] border bg-surface text-[20px] font-bold tabular-nums text-ink transition-colors',
                 invalid ? 'border-market' : isActive ? 'border-royal bg-white ring-2 ring-royal/20' : 'border-transparent',
                 disabled && 'opacity-45'
               )}
@@ -189,7 +189,7 @@ export function EmailCodeForm({
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-2.5">
       {stage === 'email' ? (
         <>
-          <label htmlFor={emailId} className="text-[12px] font-bold text-ink">
+          <label htmlFor={emailId} className="text-[12px] font-semibold text-ink">
             Your email
           </label>
           <input
@@ -224,7 +224,7 @@ export function EmailCodeForm({
       ) : (
         <>
           <div>
-            <p className="text-[12.5px] font-bold text-ink">Enter the 6-digit code</p>
+            <p className="text-[12.5px] font-semibold text-ink">Enter the 6-digit code</p>
             <p className="mt-0.5 text-[11.5px] text-slate">
               Sent to <span className="font-semibold text-ink">{email.trim()}</span>.{' '}
               <button

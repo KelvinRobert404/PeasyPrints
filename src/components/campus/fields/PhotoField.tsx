@@ -98,10 +98,10 @@ export function PhotoField({
   return (
     <div className={cn('min-w-0', className)}>
       <div className="flex items-baseline justify-between gap-2">
-        <label htmlFor={id} className="text-[11.5px] font-bold text-ink">
+        <label htmlFor={id} className="text-[11.5px] font-semibold text-ink">
           {label}
         </label>
-        <span className="text-[11px] font-semibold tabular-nums text-slate">
+        <span className="text-[11px] font-medium tabular-nums text-slate">
           {photos.length} of {max}
         </span>
       </div>
@@ -132,7 +132,7 @@ export function PhotoField({
             className="campus-press flex aspect-square flex-col items-center justify-center gap-0.5 rounded-[12px] border border-dashed border-slate/40 bg-surface text-ink"
           >
             <CameraIcon size={20} />
-            <span className="text-[11px] font-bold">Add photo</span>
+            <span className="text-[11px] font-semibold">Add photo</span>
           </button>
         ) : null}
       </div>
@@ -152,7 +152,7 @@ export function PhotoField({
         {uploading ? `Uploading ${uploading} photo${uploading > 1 ? 's' : ''}…` : hint}
       </p>
       {error ? (
-        <p role="alert" className="mt-1 text-[11.5px] font-bold text-market">
+        <p role="alert" className="mt-1 text-[11.5px] font-semibold text-market">
           {error}
         </p>
       ) : null}

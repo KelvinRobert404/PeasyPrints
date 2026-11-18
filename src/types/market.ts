@@ -15,7 +15,7 @@ export type MarketCategory =
   | 'travel'
   | 'other';
 
-/** How the price is meant. Feeds formatPrice ('Rs 1.5k', 'Rs 8.5k pp'). */
+/** How the price is meant. Feeds formatPrice ('₹1.5k', '₹8.5k pp'). */
 export type PriceTerms = 'fixed' | 'negotiable' | 'free' | 'swap' | 'per_person';
 
 export type MarketStatus =

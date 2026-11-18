@@ -20,14 +20,14 @@ const createSchema = z.object({
 const ADMIN_VIEWER = '__admin__';
 const LIVE_STATUSES: ReadonlySet<string> = new Set(['active', 'reserved']);
 
-/** 'Rs 1.5k', 'Rs 400 pp', 'Free' or 'Swap'. Never the rupee sign. */
+/** '₹1.5k', '₹400 pp', 'Free' or 'Swap'. */
 function marketPriceLabel(item: SerializedMarketListing): string {
   if (item.priceTerms === 'free' || item.price === 0) return 'Free';
   if (item.price === null) return item.priceTerms === 'swap' ? 'Swap' : 'Ask for details';
   return item.priceTerms === 'per_person' ? formatPrice(item.price, 'pp') : formatPrice(item.price);
 }
 
-/** Housing rent is per person: 'Rs 8.5k pp'. */
+/** Housing rent is per person: '₹8.5k pp'. */
 function housingPriceLabel(item: SerializedHousingListing): string {
   return item.rentPp > 0 ? formatPrice(item.rentPp, 'pp') : 'Ask for details';
 }

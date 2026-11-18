@@ -104,7 +104,7 @@ export function MyPostShell({
       <div className="flex min-w-0 items-center gap-2.5">
         {thumb}
         <div className="min-w-0 flex-1">
-          <Link href={href} className="block truncate text-[12.5px] font-bold text-ink hover:underline">
+          <Link href={href} className="block truncate text-[12.5px] font-semibold text-ink hover:underline">
             {title}
           </Link>
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-slate">
@@ -138,7 +138,7 @@ export function StillAvailableCard({
   return (
     <div className="mt-2 flex min-w-0 items-center gap-2 rounded-[10px] bg-royal-tint px-2.5 py-2">
       <div className="min-w-0 flex-1">
-        <p className="text-[12px] font-bold text-ink">Still available?</p>
+        <p className="text-[12px] font-semibold text-ink">Still available?</p>
         <p className="truncate text-[10.5px] text-slate">Keeps your post near the top</p>
       </div>
       <button type="button" disabled={busy} onClick={onDone} className={swButton({ variant: 'white', size: 'sm' })}>
@@ -235,7 +235,7 @@ export function MyPostsSection({ title, count, children }: { title: string; coun
     <section className="pt-3.5">
       <div className="flex items-end justify-between gap-3">
         <SectionHeader className="min-w-0" title={title} />
-        {count !== null && <span className="shrink-0 text-[11px] font-semibold text-slate">{count}</span>}
+        {count !== null && <span className="shrink-0 text-[11px] font-medium text-slate">{count}</span>}
       </div>
       <div className="mt-1.5">{children}</div>
     </section>

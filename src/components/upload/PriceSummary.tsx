@@ -124,8 +124,8 @@ export function PriceSummary() {
         />
       )}
       <div className="flex items-center justify-between gap-3 px-3 py-3">
-        <span className="font-heading text-[14.5px] leading-none text-ink">Total</span>
-        <span className={cn('font-heading text-[14.5px] leading-none tabular-nums', appliedCoupon ? 'text-go-text' : 'text-ink')}>
+        <span className="text-[14px] font-bold leading-none text-ink">Total</span>
+        <span className={cn('text-[14px] font-bold leading-none tabular-nums', appliedCoupon ? 'text-go-text' : 'text-ink')}>
           {formatPrintPrice(appliedCoupon ? finalTotal : subtotal)}
         </span>
       </div>

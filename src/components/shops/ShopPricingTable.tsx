@@ -5,7 +5,7 @@ import { formatPrintPrice } from '@/lib/format/price';
 
 function Price({ value }: { value?: number }) {
   const v = Number(value ?? 0);
-  if (v <= 0) return <span className="text-[11.5px] font-semibold text-slate">Unavailable</span>;
+  if (v <= 0) return <span className="text-[11.5px] font-medium text-slate">Unavailable</span>;
   return <span className="text-[12.5px] font-bold tabular-nums text-ink">{formatPrintPrice(v)}</span>;
 }
 
@@ -19,7 +19,7 @@ function Group({ title, rows }: { title: string; rows: { label: string; value?: 
             key={r.label}
             className={`flex min-h-9 items-center justify-between gap-3 ${i < rows.length - 1 ? 'border-b border-line' : ''}`}
           >
-            <dt className="text-[12px] font-semibold text-text-secondary">{r.label}</dt>
+            <dt className="text-[12px] font-medium text-text-secondary">{r.label}</dt>
             <dd>
               <Price value={r.value} />
             </dd>

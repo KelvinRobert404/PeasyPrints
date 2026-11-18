@@ -70,7 +70,7 @@ export function SignInStep({
 
   return (
     <section aria-labelledby="sign-in-step-title" className="flex flex-col">
-      <h1 id="sign-in-step-title" className="font-heading text-[20px] leading-[1.1] text-ink">
+      <h1 id="sign-in-step-title" className="font-heading text-[16px] leading-[1.1] text-ink">
         Sign in with your {label} email
       </h1>
       <p className="mt-1 text-[12.5px] leading-[1.4] text-slate">Hey, pick the account your college gave you.</p>

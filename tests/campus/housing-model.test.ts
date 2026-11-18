@@ -57,9 +57,9 @@ test('label maps cover every option', () => {
 });
 
 test('housingPriceLabels reads per person and deposit', () => {
-  assert.deepEqual(housingPriceLabels({ rentPp: 8500, deposit: 120000 }), { rent: 'Rs 8.5k pp', deposit: 'Rs 1.2L dep' });
-  assert.deepEqual(housingPriceLabels({ rentPp: 650, deposit: null }), { rent: 'Rs 650 pp', deposit: null });
-  assert.deepEqual(housingPriceLabels({ rentPp: 12000, deposit: 0 }), { rent: 'Rs 12k pp', deposit: 'No deposit' });
+  assert.deepEqual(housingPriceLabels({ rentPp: 8500, deposit: 120000 }), { rent: '₹8.5k pp', deposit: '₹1.2L dep' });
+  assert.deepEqual(housingPriceLabels({ rentPp: 650, deposit: null }), { rent: '₹650 pp', deposit: null });
+  assert.deepEqual(housingPriceLabels({ rentPp: 12000, deposit: 0 }), { rent: '₹12k pp', deposit: 'No deposit' });
 });
 
 test('containsPhoneNumber spots Indian mobiles, not prices or pincodes', () => {

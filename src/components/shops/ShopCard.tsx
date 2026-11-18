@@ -60,8 +60,8 @@ export function ShopCard({ shop, onSelect, href, showAddress = false, divider = 
             <StatusLine open={open} label={open ? 'Open' : 'Closed'} detail={hours} />
             {services.length > 0 && (
               <>
-                <span className="text-[11.5px] text-text-muted">•</span>
-                <span className="truncate text-[11.5px] font-medium text-slate">{services.join(' · ')}</span>
+                <span className="text-[11px] text-text-muted">•</span>
+                <span className="truncate text-[11px] font-medium text-slate">{services.join(' · ')}</span>
               </>
             )}
           </span>

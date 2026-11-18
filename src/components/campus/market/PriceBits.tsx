@@ -13,7 +13,7 @@ export type PriceFields = Pick<MarketListing, 'price' | 'priceTerms'>;
 export type DropFields = Pick<MarketListing, 'price' | 'previousPrice' | 'priceDroppedAt'>;
 
 /**
- * What the price reads: 'Rs 1.5k', 'Rs 400 pp', 'Free' or 'Swap'.
+ * What the price reads: '₹1.5k', '₹400 pp', 'Free' or 'Swap'.
  * `open` is used when there is no price, e.g. 'Open budget' on a wanted post.
  */
 export function priceText({ price, priceTerms }: PriceFields, open = 'Ask price'): string {
@@ -36,9 +36,9 @@ export function termsText(terms: PriceTerms, price: number | null): string | nul
 }
 
 export interface PriceDrop {
-  /** Old price, e.g. 'Rs 2.2k'. */
+  /** Old price, e.g. '₹2.2k'. */
   was: string;
-  /** New price, e.g. 'Rs 1.8k'. */
+  /** New price, e.g. '₹1.8k'. */
   now: string;
 }
 
@@ -48,12 +48,12 @@ export function priceDrop(listing: DropFields, now: Instant): PriceDrop | null {
   return { was: formatPrice(listing.previousPrice), now: formatPrice(listing.price) };
 }
 
-/** 'Fair price Rs 1.2k'. */
+/** 'Fair price ₹1.2k'. */
 export function fairPriceText(rupees: number): string {
   return `Fair price ${formatPrice(rupees)}`;
 }
 
-/** 'Up to Rs 500' for a wanted budget, 'Open budget' when there is none. */
+/** 'Up to ₹500' for a wanted budget, 'Open budget' when there is none. */
 export function budgetText(budgetMax: number | null): string {
   if (budgetMax === null || !Number.isFinite(budgetMax) || budgetMax <= 0) return 'Open budget';
   return `Up to ${formatPrice(budgetMax)}`;
@@ -72,16 +72,16 @@ export function Price({
   className?: string;
 }) {
   return (
-    <span className={cn('font-heading whitespace-nowrap text-[12.5px] leading-[1.1] tabular-nums', muted ? 'text-slate' : 'text-ink', className)}>
+    <span className={cn('whitespace-nowrap text-[12.5px] font-bold leading-[1.1] tabular-nums', muted ? 'text-slate' : 'text-ink', className)}>
       {priceText(listing, open)}
     </span>
   );
 }
 
-/** Old price, struck through. Screen readers hear 'Was Rs 2.2k'. */
+/** Old price, struck through. Screen readers hear 'Was ₹2.2k'. */
 export function WasPrice({ was, className }: { was: string; className?: string }) {
   return (
-    <s className={cn('whitespace-nowrap text-[10.5px] font-semibold text-slate tabular-nums', className)}>
+    <s className={cn('whitespace-nowrap text-[10.5px] font-medium text-slate tabular-nums', className)}>
       <span className="sr-only">Was </span>
       {was}
     </s>
@@ -109,7 +109,7 @@ export function DropTag({ className }: { className?: string }) {
   );
 }
 
-/** 'Fair price Rs 1.2k' line for passes. */
+/** 'Fair price ₹1.2k' line for passes. */
 export function FairPrice({ rupees, className }: { rupees: number; className?: string }) {
-  return <span className={cn('whitespace-nowrap text-[10.5px] font-bold text-go-text', className)}>{fairPriceText(rupees)}</span>;
+  return <span className={cn('whitespace-nowrap text-[10.5px] font-semibold text-go-text', className)}>{fairPriceText(rupees)}</span>;
 }

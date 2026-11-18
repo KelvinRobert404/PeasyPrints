@@ -88,7 +88,7 @@ export function FileDropzone() {
           <div className="flex items-center gap-2 border-t border-line px-2.5 py-2 text-left">
             <DocIcon size={18} className="shrink-0 text-royal" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[12.5px] font-bold text-ink">{file.name}</p>
+              <p className="truncate text-[12.5px] font-semibold text-ink">{file.name}</p>
               <p className="text-[11px] text-slate">Tap to replace</p>
             </div>
           </div>
@@ -96,7 +96,7 @@ export function FileDropzone() {
       ) : (
         <div className="flex flex-col items-center justify-center gap-1">
           <UploadIcon size={24} className={isDragActive ? 'text-royal' : 'text-ink'} />
-          <p className="mt-0.5 text-[12.5px] font-bold text-ink">{isDragActive ? 'Drop the PDF here' : 'Select a PDF'}</p>
+          <p className="mt-0.5 text-[12.5px] font-semibold text-ink">{isDragActive ? 'Drop the PDF here' : 'Select a PDF'}</p>
           <p className="text-[11px] text-slate">Tap to add or drag and drop</p>
         </div>
       )}

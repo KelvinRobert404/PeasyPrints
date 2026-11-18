@@ -120,7 +120,7 @@ export function ImagesUploader() {
             <div className="flex items-center gap-2 border-t border-line px-2.5 py-2 text-left">
               <ImageIcon size={18} className="shrink-0 text-royal" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[12.5px] font-bold text-ink">
+                <p className="truncate text-[12.5px] font-semibold text-ink">
                   {images.length} image{images.length > 1 ? 's' : ''} selected
                 </p>
                 <p className="text-[11px] text-slate">Tap to replace</p>
@@ -130,7 +130,7 @@ export function ImagesUploader() {
         ) : (
           <div className="flex flex-col items-center justify-center gap-1">
             <ImageIcon size={24} className={isDragActive ? 'text-royal' : 'text-ink'} />
-            <p className="mt-0.5 text-[12.5px] font-bold text-ink">{isDragActive ? 'Drop images here' : 'Select images'}</p>
+            <p className="mt-0.5 text-[12.5px] font-semibold text-ink">{isDragActive ? 'Drop images here' : 'Select images'}</p>
             <p className="text-[11px] text-slate">Tap to add or drag and drop</p>
           </div>
         )}

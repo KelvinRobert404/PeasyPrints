@@ -247,7 +247,7 @@ function FactRow({ fact }: { fact: Fact }) {
     <li className="flex min-h-[44px] items-center gap-2.5 border-b border-line py-1.5 last:border-b-0">
       <IconTile icon={fact.icon} size={30} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[12.5px] font-bold text-ink">{fact.title}</span>
+        <span className="block truncate text-[12.5px] font-semibold text-ink">{fact.title}</span>
         {fact.sub ? <span className="block truncate text-[11px] text-slate">{fact.sub}</span> : null}
       </span>
     </li>
@@ -259,7 +259,7 @@ function Notice({ tone, children }: { tone: 'error' | 'ok'; children: ReactNode 
     <p
       role={tone === 'error' ? 'alert' : 'status'}
       className={cn(
-        'mt-2.5 rounded-[12px] px-3 py-2 text-[11.5px] font-bold',
+        'mt-2.5 rounded-[12px] px-3 py-2 text-[11.5px] font-semibold',
         tone === 'error' ? 'bg-market-tint text-market' : 'bg-go-tint text-go-text',
       )}
     >
@@ -456,14 +456,14 @@ function ListingBody({
         <div className="flex flex-wrap items-center gap-1.5">
           <Tag>{MARKET_KIND_LABELS[listing.kind]}</Tag>
           {listing.kind === 'item' || listing.kind === 'bundle' || listing.kind === 'wanted' ? (
-            <span className="text-[10.5px] font-semibold text-slate">{MARKET_CATEGORY_LABELS[listing.category]}</span>
+            <span className="text-[10.5px] font-medium text-slate">{MARKET_CATEGORY_LABELS[listing.category]}</span>
           ) : null}
-          {listing.serial ? <span className="ml-auto font-mono text-[10px] font-semibold text-slate">{listing.serial}</span> : null}
+          {listing.serial ? <span className="ml-auto font-mono text-[10px] font-medium text-slate">{listing.serial}</span> : null}
         </div>
         <h2 className="font-heading mt-1.5 text-[16px] leading-[1.1] text-ink">{listing.title}</h2>
 
         <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1">
-          <span className={cn('font-heading whitespace-nowrap text-[15px] leading-[1.1] tabular-nums', gone ? 'text-slate line-through' : 'text-ink')}>
+          <span className={cn('whitespace-nowrap text-[15px] font-bold leading-[1.1] tabular-nums', gone ? 'text-slate line-through' : 'text-ink')}>
             {d.kind === 'wanted' ? budgetText(d.budgetMax) : priceText(listing, d.kind === 'bundle' ? 'Priced per thing' : 'Ask price')}
           </span>
           {drop ? (
@@ -507,7 +507,7 @@ function ListingBody({
           <div className="flex items-start gap-2.5">
             <IconTile icon={PinIcon} size={30} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[12.5px] font-bold text-ink">{listing.place.label || listing.place.area}</p>
+              <p className="truncate text-[12.5px] font-semibold text-ink">{listing.place.label || listing.place.area}</p>
               {listing.place.label && listing.place.area ? <p className="truncate text-[11px] text-slate">{listing.place.area}</p> : null}
               <DistanceLine meters={listing.distanceM} campusLabel={campusCode} className="mt-0.5" />
             </div>
@@ -515,7 +515,7 @@ function ListingBody({
         ) : (
           <DistanceLine meters={listing.distanceM} campusLabel={campusCode} />
         )}
-        <p className="mt-2 flex items-center gap-1.5 rounded-[12px] bg-surface px-3 py-2 text-[11.5px] font-bold text-ink">
+        <p className="mt-2 flex items-center gap-1.5 rounded-[12px] bg-surface px-3 py-2 text-[11.5px] font-semibold text-ink">
           <RupeeIcon size={14} className="shrink-0 text-royal" aria-hidden="true" />
           {PAY_ON_PICKUP}: UPI or cash
         </p>
@@ -526,7 +526,7 @@ function ListingBody({
           {sellerName.charAt(0)}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[12.5px] font-bold text-ink">{listing.isOwner ? 'You posted this' : sellerName}</span>
+          <span className="block truncate text-[12.5px] font-semibold text-ink">{listing.isOwner ? 'You posted this' : sellerName}</span>
           <span className="block truncate text-[11px] text-slate">Verified {listing.collegeCode || campusCode} student</span>
         </span>
         <ShieldCheckIcon size={16} className="shrink-0 text-royal" aria-hidden="true" />
@@ -543,8 +543,8 @@ function BundleList({ listing, parts, busy, act }: { listing: Listing; parts: re
   return (
     <section className="pt-3" aria-label="Things in this bundle">
       <div className="flex items-end justify-between gap-2">
-        <h3 className="font-heading text-[14.5px] leading-[1.1] text-ink">What is in it</h3>
-        <span className="text-[11px] font-semibold text-slate">
+        <h3 className="font-heading text-[14px] leading-[1.1] text-ink">What is in it</h3>
+        <span className="text-[11px] font-medium text-slate">
           {parts.length === 1 ? '1 thing' : `${parts.length} things`}
           {soldCount ? `, ${soldCount} sold` : ''}
         </span>
@@ -604,7 +604,7 @@ function BuyerCta({
         <button type="button" disabled className={muted}>
           {MARKET_STATUS_LABELS[listing.status] ?? 'No longer available'}
         </button>
-        <p className="mt-1.5 text-center text-[10.5px] font-semibold text-slate">This one is gone.</p>
+        <p className="mt-1.5 text-center text-[10.5px] font-medium text-slate">This one is gone.</p>
       </section>
     );
   }
@@ -652,7 +652,7 @@ function BuyerCta({
         {busy ? 'Sending…' : wanted ? 'I have this' : 'Ask for WhatsApp'}
       </button>
       {error ? <Notice tone="error">{error}</Notice> : null}
-      <p className="mt-1.5 text-center text-[10.5px] font-semibold text-slate">
+      <p className="mt-1.5 text-center text-[10.5px] font-medium text-slate">
         {wanted ? 'They decide to share their number.' : 'The seller decides to share their number.'}
       </p>
     </section>
@@ -688,7 +688,7 @@ function OwnerPanel({
   if (!open) {
     return (
       <section className="mt-3 rounded-[14px] bg-surface p-3">
-        <p className="font-heading text-[14.5px] leading-[1.1] text-ink">Your post</p>
+        <p className="font-heading text-[14px] leading-[1.1] text-ink">Your post</p>
         <p className="mt-0.5 text-[11.5px] text-text-secondary">
           {status === 'expired' ? 'This post has ended.' : `Marked ${(MARKET_STATUS_LABELS[status] ?? status).toLowerCase()}. Buyers no longer see it.`}
         </p>
@@ -698,7 +698,7 @@ function OwnerPanel({
 
   return (
     <section className="mt-3 rounded-[14px] bg-surface p-3" aria-label="Your post">
-      <p className="font-heading text-[14.5px] leading-[1.1] text-ink">{nudge ? 'Still available?' : 'Your post'}</p>
+      <p className="font-heading text-[14px] leading-[1.1] text-ink">{nudge ? 'Still available?' : 'Your post'}</p>
       <p className="mt-0.5 text-[11.5px] text-text-secondary">
         {nudge
           ? 'Confirm to keep it showing.'
@@ -760,7 +760,7 @@ function OwnerPanel({
       ) : null}
 
       {listing.details.kind === 'bundle' ? (
-        <p className="mt-2 text-[11px] font-semibold text-slate">Sold one thing? Tap Mark sold next to it.</p>
+        <p className="mt-2 text-[11px] font-medium text-slate">Sold one thing? Tap Mark sold next to it.</p>
       ) : null}
     </section>
   );
@@ -773,8 +773,8 @@ function SeatsStepper({ initial, max, busy, act }: { initial: number; max: numbe
   return (
     <div className="mt-2.5 flex items-center gap-2 rounded-[12px] bg-white px-3 py-2">
       <span className="min-w-0 flex-1">
-        <span className="block text-[12px] font-bold text-ink">Seats left</span>
-        <span className="block text-[10.5px] font-semibold text-slate">{seats === 0 ? 'Zero marks it booked' : 'Update after each booking'}</span>
+        <span className="block text-[12px] font-semibold text-ink">Seats left</span>
+        <span className="block text-[10.5px] font-medium text-slate">{seats === 0 ? 'Zero marks it booked' : 'Update after each booking'}</span>
       </span>
       <button type="button" aria-label="One seat fewer" disabled={seats <= 0 || busy !== null} onClick={() => setSeats(seats - 1)} className={cn(step, 'border border-line')}>
         <MinusIcon size={14} />
@@ -831,7 +831,7 @@ function LowerPriceSheet({ listing, busy, onClose, act }: { listing: Listing; bu
       <section role="dialog" aria-modal="true" aria-labelledby={titleId} className="mx-auto w-full max-w-md rounded-[14px] bg-white p-4 shadow-[0_8px_30px_rgba(16,24,40,0.18)]">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10.5px] font-semibold text-slate">Now {formatPrice(current, suffix)}</p>
+            <p className="text-[10.5px] font-medium text-slate">Now {formatPrice(current, suffix)}</p>
             <h2 id={titleId} className="font-heading text-[16px] leading-[1.1] text-ink">
               Lower the price
             </h2>
@@ -846,11 +846,11 @@ function LowerPriceSheet({ listing, busy, onClose, act }: { listing: Listing; bu
           }}
         >
           <PriceInput label="New price" value={price} onChange={setPrice} suffix={suffix} />
-          {tooHigh ? <p className="mt-1 text-[11px] font-bold text-market">Pick a price below {formatPrice(current, suffix)}.</p> : null}
+          {tooHigh ? <p className="mt-1 text-[11px] font-semibold text-market">Pick a price below {formatPrice(current, suffix)}.</p> : null}
           <button type="submit" disabled={!valid || busy} className={cn(swButton({ variant: 'primary' }), 'mt-3 w-full')}>
             {busy ? 'Saving…' : 'Lower price'}
           </button>
-          <p className="mt-1.5 text-center text-[10.5px] font-semibold text-slate">People who saved it get a nudge.</p>
+          <p className="mt-1.5 text-center text-[10.5px] font-medium text-slate">People who saved it get a nudge.</p>
         </form>
       </section>
     </div>

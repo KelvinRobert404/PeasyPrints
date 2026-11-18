@@ -190,15 +190,15 @@ export function FieldBlock({ id, label, hint, optional = false, error, filled = 
     >
       {label ? (
         <div className="mb-1 flex items-center gap-1.5">
-          <p className="text-[11.5px] font-bold text-ink">{label}</p>
-          {optional ? <span className="text-[10.5px] font-semibold text-slate">Optional</span> : null}
+          <p className="text-[11.5px] font-semibold text-ink">{label}</p>
+          {optional ? <span className="text-[10.5px] font-medium text-slate">Optional</span> : null}
           {filled ? <span className="ml-auto rounded-full bg-royal px-1.5 py-0.5 text-[9.5px] font-bold text-white">From paste</span> : null}
         </div>
       ) : null}
       {children}
-      {hint && !error ? <p className="mt-1 text-[11px] font-semibold text-slate">{hint}</p> : null}
+      {hint && !error ? <p className="mt-1 text-[11px] font-medium text-slate">{hint}</p> : null}
       {error ? (
-        <p role="alert" className="mt-1 text-[11.5px] font-bold text-market">
+        <p role="alert" className="mt-1 text-[11.5px] font-semibold text-market">
           {error}
         </p>
       ) : null}
@@ -209,7 +209,7 @@ export function FieldBlock({ id, label, hint, optional = false, error, filled = 
 export function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-2.5 pt-3.5">
-      <h2 className="font-heading text-[14.5px] leading-[1.1] text-ink">{title}</h2>
+      <h2 className="font-heading text-[14px] leading-[1.1] text-ink">{title}</h2>
       {children}
     </section>
   );
@@ -391,7 +391,7 @@ export function MoveInField({ mode, date, onChange, error, filled }: MoveInProps
         ))}
       </div>
       {mode === 'date' ? (
-        <label className="mt-2 block text-[11.5px] font-bold text-ink">
+        <label className="mt-2 block text-[11.5px] font-semibold text-ink">
           Move-in date
           <input
             type="date"
@@ -583,7 +583,7 @@ export function RoommateFields({ groupSize, homeState, languages, onGroupSizeCha
   return (
     <FieldBlock id="roommate" error={error} className="space-y-2.5">
       <div>
-        <p className="mb-1 text-[11.5px] font-bold text-ink">How many of you?</p>
+        <p className="mb-1 text-[11.5px] font-semibold text-ink">How many of you?</p>
         <Stepper
           label="People looking"
           value={groupSize}
@@ -593,9 +593,9 @@ export function RoommateFields({ groupSize, homeState, languages, onGroupSizeCha
           display={groupSize === 1 ? 'Just me' : `We are ${groupSize} looking`}
         />
       </div>
-      <label className="block text-[11.5px] font-bold text-ink">
+      <label className="block text-[11.5px] font-semibold text-ink">
         <span className="flex items-center gap-1.5">
-          Home state <span className="text-[10.5px] font-semibold text-slate">Optional</span>
+          Home state <span className="text-[10.5px] font-medium text-slate">Optional</span>
         </span>
         <input
           type="text"
@@ -608,8 +608,8 @@ export function RoommateFields({ groupSize, homeState, languages, onGroupSizeCha
         />
       </label>
       <div>
-        <p className="mb-1 flex items-center gap-1.5 text-[11.5px] font-bold text-ink">
-          Languages <span className="text-[10.5px] font-semibold text-slate">Up to {MAX_LANGUAGES}</span>
+        <p className="mb-1 flex items-center gap-1.5 text-[11.5px] font-semibold text-ink">
+          Languages <span className="text-[10.5px] font-medium text-slate">Up to {MAX_LANGUAGES}</span>
         </p>
         <div role="group" aria-label="Languages" className="flex flex-wrap gap-1.5">
           {LANGUAGES.map((language) => {
@@ -668,9 +668,9 @@ export function TextField({
   const inputId = `${fieldId(id)}-input`;
   return (
     <FieldBlock id={id} error={error} filled={filled} hint={hint}>
-      <label htmlFor={inputId} className="mb-1 flex items-center gap-1.5 text-[11.5px] font-bold text-ink">
+      <label htmlFor={inputId} className="mb-1 flex items-center gap-1.5 text-[11.5px] font-semibold text-ink">
         {label}
-        {optional ? <span className="text-[10.5px] font-semibold text-slate">Optional</span> : null}
+        {optional ? <span className="text-[10.5px] font-medium text-slate">Optional</span> : null}
         {filled ? <span className="ml-auto rounded-full bg-royal px-1.5 py-0.5 text-[9.5px] font-bold text-white">From paste</span> : null}
       </label>
       {multiline ? (

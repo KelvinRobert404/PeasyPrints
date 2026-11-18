@@ -138,7 +138,7 @@ function AccountMenu({
             <Initial name={name} size={32} />
             <div className="flex min-w-0 flex-1 flex-col gap-px">
               <span className="flex min-w-0 items-center gap-1">
-                <span className="truncate text-[12.5px] font-bold text-ink">{name}</span>
+                <span className="truncate text-[12.5px] font-semibold text-ink">{name}</span>
                 <Tag tone="royal" className="shrink-0">
                   Demo
                 </Tag>
@@ -170,7 +170,7 @@ function MenuItem({
   onSelect: () => void;
 }) {
   const cls =
-    'campus-press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2 text-left text-[12.5px] font-bold text-ink hover:bg-surface focus-visible:bg-surface focus-visible:outline-none';
+    'campus-press flex h-10 w-full items-center gap-2.5 rounded-[10px] px-2 text-left text-[12.5px] font-semibold text-ink hover:bg-surface focus-visible:bg-surface focus-visible:outline-none';
   const body = (
     <>
       <Icon size={18} className="shrink-0 text-slate" />

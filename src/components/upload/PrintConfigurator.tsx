@@ -21,7 +21,7 @@ function OptionGroup<T extends string>({
 }) {
   return (
     <div>
-      <p className="mb-1.5 text-[12.5px] font-bold text-ink">{title}</p>
+      <p className="mb-1.5 text-[12.5px] font-semibold text-ink">{title}</p>
       <div
         role="group"
         aria-label={title}
@@ -74,7 +74,7 @@ function StepperRow({
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-[12.5px] font-bold text-ink">{title}</p>
+        <p className="text-[12.5px] font-semibold text-ink">{title}</p>
         {meta && <p className="text-[11px] text-slate">{meta}</p>}
       </div>
       <div className="flex items-center gap-1">
@@ -201,7 +201,7 @@ export function PrintConfigurator() {
       {/* Binding (hidden when images present) */}
       {(images?.length || 0) === 0 && (
         <label className="block">
-          <span className="mb-1.5 block text-[12.5px] font-bold text-ink">Binding</span>
+          <span className="mb-1.5 block text-[12.5px] font-semibold text-ink">Binding</span>
           <span className="relative block">
             <select
               className="h-10 w-full appearance-none rounded-[10px] bg-surface pl-3 pr-9 text-[12.5px] font-semibold text-ink outline-none focus-visible:ring-2 focus-visible:ring-royal/40"

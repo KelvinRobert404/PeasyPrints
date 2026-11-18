@@ -36,7 +36,7 @@ export function AssignmentConfigurator() {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[12.5px] font-bold text-ink">Colour</p>
+      <p className="text-[12.5px] font-semibold text-ink">Colour</p>
       <Segmented
         label="Assignment colour"
         value={assignmentMode}
@@ -51,7 +51,7 @@ export function AssignmentConfigurator() {
         <div className="rounded-[12px] bg-surface p-2.5">
           <div className="flex items-center gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-[12.5px] font-bold text-ink">Colour pages</p>
+              <p className="text-[12.5px] font-semibold text-ink">Colour pages</p>
               <p className="text-[11px] text-slate">Pick them from page thumbnails.</p>
             </div>
             <button type="button" className={swButton({ variant: 'ink', size: 'sm' })} onClick={() => setPickerOpen(true)}>
@@ -60,8 +60,8 @@ export function AssignmentConfigurator() {
           </div>
           {assignmentConfirmed && (
             <div className="mt-2 flex flex-wrap gap-1.5">
-              <span className="rounded-full bg-royal-tint px-2 py-0.5 text-[11px] font-bold text-royal tabular-nums">Colour: {colorText || 'None'}</span>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-ink tabular-nums">B&W: {bwText || 'None'}</span>
+              <span className="rounded-full bg-royal-tint px-2 py-0.5 text-[11px] font-semibold text-royal tabular-nums">Colour: {colorText || 'None'}</span>
+              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-ink tabular-nums">B&W: {bwText || 'None'}</span>
             </div>
           )}
           <p className="mt-2 text-[11px] text-slate">We split the PDF into a B&W and a colour document for the shop.</p>

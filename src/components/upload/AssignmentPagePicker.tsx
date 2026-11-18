@@ -157,13 +157,13 @@ export function AssignmentPagePicker({ open, onOpenChange }: { open: boolean; on
           <DialogTitle className="font-heading text-[16px] text-ink">Pick colour pages</DialogTitle>
           <DialogDescription className="mt-0.5 text-[11.5px] text-slate">Tap a page to switch it between colour and B&W. You can change this later.</DialogDescription>
           <div className="mt-2 flex flex-wrap gap-1.5">
-            <span className="rounded-full bg-royal-tint px-2 py-0.5 text-[11px] font-bold text-royal tabular-nums">Colour: {colorText || 'None'}</span>
-            <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-bold text-ink tabular-nums">B&W: {bwText || 'None'}</span>
+            <span className="rounded-full bg-royal-tint px-2 py-0.5 text-[11px] font-semibold text-royal tabular-nums">Colour: {colorText || 'None'}</span>
+            <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-semibold text-ink tabular-nums">B&W: {bwText || 'None'}</span>
           </div>
         </DialogHeader>
         <div className="grid max-h-[70vh] grid-cols-3 gap-2 overflow-auto sm:grid-cols-4" ref={containerRef} />
         <DialogFooter className="mt-3 items-center gap-1.5">
-          <div className="mr-auto text-[11px] font-semibold text-slate tabular-nums">{colorCount} page{colorCount === 1 ? '' : 's'} in colour</div>
+          <div className="mr-auto text-[11px] font-medium text-slate tabular-nums">{colorCount} page{colorCount === 1 ? '' : 's'} in colour</div>
           <button type="button" className={swButton({ variant: 'surface', size: 'sm' })} onClick={clearAssignmentSelection}>Clear</button>
           <button
             type="button"

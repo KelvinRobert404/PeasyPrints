@@ -31,7 +31,7 @@ function sortPosts(items: SerializedHousingListing[]): SerializedHousingListing[
   return [...items].sort((a, b) => rank(a) - rank(b) || b.createdAt.localeCompare(a.createdAt));
 }
 
-/** 'Rs 8.5k pp, 2 beds left'. */
+/** '₹8.5k pp, 2 beds left'. */
 function detailText(item: SerializedHousingListing): string {
   const rent = item.rentPp > 0 ? formatPrice(item.rentPp, 'pp') : 'Ask rent';
   if (item.status !== 'active' && item.status !== 'reserved') return rent;

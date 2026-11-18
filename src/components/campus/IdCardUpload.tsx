@@ -87,7 +87,7 @@ export function IdCardUpload({
       >
         <DocIcon size={20} className="shrink-0 text-ink" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[12px] font-bold text-ink">{fileName || 'Choose your ID card'}</span>
+          <span className="block truncate text-[12px] font-semibold text-ink">{fileName || 'Choose your ID card'}</span>
           <span className="block text-[10.5px] text-slate">Photo or PDF, under 4 MB</span>
         </span>
         <span className="shrink-0 text-[11.5px] font-bold text-royal">{fileName ? 'Change' : 'Browse'}</span>
@@ -181,7 +181,7 @@ export function GirlsSpaceSection({
         <IconTile icon={GirlsSpaceIcon} tone="girls" size={32} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <h2 id={headingId} className="font-heading text-[14.5px] leading-[1.1] text-ink">
+            <h2 id={headingId} className="font-heading text-[14px] leading-[1.1] text-ink">
               Girls’ space
             </h2>
             <GirlsStatusTag status={status} />

@@ -155,7 +155,7 @@ export default function UploadEntryPage() {
                       )}
                     >
                       <StatusLine open={isOpen} label={isOpen ? 'Open' : 'Closed'} />
-                      <span className="font-heading line-clamp-2 w-full text-[12.5px] leading-[1.1] text-ink">{s.name}</span>
+                      <span className="font-heading line-clamp-2 w-full text-[12.5px] leading-[1.15] text-ink">{s.name}</span>
                     </button>
                   );
                 })}
@@ -180,7 +180,7 @@ export default function UploadEntryPage() {
                 </p>
               )}
               {shopTiming && (
-                <p className="flex items-center gap-1.5 text-[11px] font-bold text-ink tabular-nums">
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold text-ink tabular-nums">
                   <ClockIcon size={14} className="shrink-0 text-slate" />
                   {shopTiming}
                 </p>

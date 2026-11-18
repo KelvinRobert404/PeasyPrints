@@ -43,7 +43,7 @@ function VerifyPreview() {
     <div className="min-h-screen bg-surface">
       <div className="border-b border-line bg-surface px-5 py-2">
         <div className="mx-auto flex w-full max-w-[428px] flex-col gap-1.5">
-          <p className="text-[11px] font-bold text-slate">Verify preview. Nothing is sent.</p>
+          <p className="text-[11px] font-medium text-slate">Verify preview. Nothing is sent.</p>
           <div role="group" aria-label="Preview step" className="flex flex-wrap gap-1.5">
             {VIEWS.map((item) => (
               <Chip key={item.id} selected={view === item.id} onClick={() => setView(item.id)}>

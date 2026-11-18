@@ -91,9 +91,9 @@ export interface HousingPriceInput {
 }
 
 export interface HousingPriceLabels {
-  /** 'Rs 8.5k pp'. */
+  /** '₹8.5k pp'. */
   rent: string;
-  /** 'Rs 1.2L dep', 'No deposit', or null when not stated. */
+  /** '₹1.2L dep', 'No deposit', or null when not stated. */
   deposit: string | null;
 }
 

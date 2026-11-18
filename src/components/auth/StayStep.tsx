@@ -143,7 +143,7 @@ export function StayStep({ campusId, value, onChange, onSkip, className }: StayS
               aria-live="polite"
               className={cn(
                 'min-w-0 flex-1 truncate text-[11.5px]',
-                status === 'done' && distanceM != null ? 'font-bold text-ink' : 'text-slate'
+                status === 'done' && distanceM != null ? 'font-semibold text-ink' : 'font-medium text-slate'
               )}
             >
               {locationLine}

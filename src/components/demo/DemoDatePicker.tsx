@@ -111,7 +111,7 @@ export function DemoDatePicker({ onClose }: { onClose: () => void }) {
                 )}
               >
                 <span className="flex min-w-0 flex-1 flex-col gap-px">
-                  <span className="truncate text-[12.5px] font-bold text-ink">{demoDateLabel(id, now)}</span>
+                  <span className="truncate text-[12.5px] font-semibold text-ink">{demoDateLabel(id, now)}</span>
                   <span className="truncate text-[11px] text-slate">{busy === id ? 'Changing the date…' : DATE_HINTS[id]}</span>
                 </span>
                 {selected ? <CheckIcon size={14} className="shrink-0 text-royal" /> : null}

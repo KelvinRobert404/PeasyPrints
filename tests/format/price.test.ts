@@ -3,31 +3,31 @@ import test from 'node:test';
 import { fairPassPrice, formatPrice, formatPrintPrice, isPriceDrop, parsePriceInput, parsePriceQuery } from '../../src/lib/format/price.ts';
 
 test('formatPrice shows rupees under 1,000', () => {
-  assert.equal(formatPrice(650), 'Rs 650');
-  assert.equal(formatPrice(1), 'Rs 1');
-  assert.equal(formatPrice(999), 'Rs 999');
-  assert.equal(formatPrice(649.6), 'Rs 650');
+  assert.equal(formatPrice(650), '₹650');
+  assert.equal(formatPrice(1), '₹1');
+  assert.equal(formatPrice(999), '₹999');
+  assert.equal(formatPrice(649.6), '₹650');
 });
 
 test('formatPrice shows k with one decimal and no trailing .0', () => {
-  assert.equal(formatPrice(1000), 'Rs 1k');
-  assert.equal(formatPrice(1500), 'Rs 1.5k');
-  assert.equal(formatPrice(12000), 'Rs 12k');
-  assert.equal(formatPrice(12345), 'Rs 12.3k');
-  assert.equal(formatPrice(8500), 'Rs 8.5k');
-  assert.equal(formatPrice(99_999), 'Rs 1L');
+  assert.equal(formatPrice(1000), '₹1k');
+  assert.equal(formatPrice(1500), '₹1.5k');
+  assert.equal(formatPrice(12000), '₹12k');
+  assert.equal(formatPrice(12345), '₹12.3k');
+  assert.equal(formatPrice(8500), '₹8.5k');
+  assert.equal(formatPrice(99_999), '₹1L');
 });
 
 test('formatPrice shows L from 1,00,000', () => {
-  assert.equal(formatPrice(1_00_000), 'Rs 1L');
-  assert.equal(formatPrice(1_20_000), 'Rs 1.2L');
-  assert.equal(formatPrice(2_50_000), 'Rs 2.5L');
+  assert.equal(formatPrice(1_00_000), '₹1L');
+  assert.equal(formatPrice(1_20_000), '₹1.2L');
+  assert.equal(formatPrice(2_50_000), '₹2.5L');
 });
 
 test('formatPrice puts the suffix after a space', () => {
-  assert.equal(formatPrice(8500, 'pp'), 'Rs 8.5k pp');
-  assert.equal(formatPrice(1_20_000, 'dep'), 'Rs 1.2L dep');
-  assert.equal(formatPrice(6000, '/mo'), 'Rs 6k /mo');
+  assert.equal(formatPrice(8500, 'pp'), '₹8.5k pp');
+  assert.equal(formatPrice(1_20_000, 'dep'), '₹1.2L dep');
+  assert.equal(formatPrice(6000, '/mo'), '₹6k /mo');
 });
 
 test('formatPrice gives Free for 0 and bad input', () => {
@@ -37,8 +37,11 @@ test('formatPrice gives Free for 0 and bad input', () => {
   assert.equal(formatPrice(Number.NaN), 'Free');
 });
 
-test('formatPrice never uses the rupee sign', () => {
-  for (const n of [5, 650, 1500, 99_999, 1_20_000]) assert.ok(!formatPrice(n).includes('₹'));
+test('formatPrice always uses the rupee sign, never Rs', () => {
+  for (const n of [5, 650, 1500, 99_999, 1_20_000]) {
+    assert.ok(formatPrice(n).startsWith('₹'));
+    assert.ok(!formatPrice(n).includes('Rs'));
+  }
 });
 
 test('parsePriceInput reads every brief example', () => {
@@ -143,26 +146,29 @@ test('isPriceDrop is true only for a strictly lower price', () => {
 });
 
 test('formatPrintPrice keeps paise and drops trailing zeros', () => {
-  assert.equal(formatPrintPrice(1.5), 'Rs 1.5');
-  assert.equal(formatPrintPrice(1.50), 'Rs 1.5');
-  assert.equal(formatPrintPrice(12.25), 'Rs 12.25');
-  assert.equal(formatPrintPrice(40), 'Rs 40');
-  assert.equal(formatPrintPrice(0.1 + 0.2), 'Rs 0.3');
+  assert.equal(formatPrintPrice(1.5), '₹1.5');
+  assert.equal(formatPrintPrice(1.50), '₹1.5');
+  assert.equal(formatPrintPrice(12.25), '₹12.25');
+  assert.equal(formatPrintPrice(40), '₹40');
+  assert.equal(formatPrintPrice(0.1 + 0.2), '₹0.3');
 });
 
 test('formatPrintPrice never shortens to k or L', () => {
-  assert.equal(formatPrintPrice(1250), 'Rs 1250');
-  assert.equal(formatPrintPrice(1_20_000.5), 'Rs 120000.5');
+  assert.equal(formatPrintPrice(1250), '₹1250');
+  assert.equal(formatPrintPrice(1_20_000.5), '₹120000.5');
 });
 
 test('formatPrintPrice shows zero, discounts and bad input', () => {
-  assert.equal(formatPrintPrice(0), 'Rs 0');
-  assert.equal(formatPrintPrice(-0.001), 'Rs 0');
-  assert.equal(formatPrintPrice(-5.5), '-Rs 5.5');
-  assert.equal(formatPrintPrice(Number.NaN), 'Rs 0');
-  assert.equal(formatPrintPrice(Number.POSITIVE_INFINITY), 'Rs 0');
+  assert.equal(formatPrintPrice(0), '₹0');
+  assert.equal(formatPrintPrice(-0.001), '₹0');
+  assert.equal(formatPrintPrice(-5.5), '-₹5.5');
+  assert.equal(formatPrintPrice(Number.NaN), '₹0');
+  assert.equal(formatPrintPrice(Number.POSITIVE_INFINITY), '₹0');
 });
 
-test('formatPrintPrice never uses the rupee sign', () => {
-  for (const n of [1.5, 40, 1250, -3]) assert.ok(!formatPrintPrice(n).includes('₹'));
+test('formatPrintPrice always uses the rupee sign, never Rs', () => {
+  for (const n of [1.5, 40, 1250, -3]) {
+    assert.ok(formatPrintPrice(n).includes('₹'));
+    assert.ok(!formatPrintPrice(n).includes('Rs'));
+  }
 });

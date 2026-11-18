@@ -235,7 +235,7 @@ export function ListingCard({
           <Price listing={listing} muted={unavailable} />
           {drop ? <WasPrice was={drop.was} /> : null}
         </span>
-        <span className="line-clamp-2 text-[11.5px] font-semibold leading-[1.2]">
+        <span className="font-heading line-clamp-2 text-[11.5px] leading-[1.15]">
           {sold ? <span className="sr-only">Sold: </span> : null}
           {booked ? <span className="sr-only">Booked: </span> : null}
           {listing.title}

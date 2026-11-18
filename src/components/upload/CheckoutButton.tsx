@@ -23,8 +23,8 @@ import { isDemoMode } from '@/lib/demo/mode';
 
 const money = (value: number) => (Math.round(value * 100) / 100).toFixed(2).replace(/\.00$/, '');
 
-/** 'Rs 80' via formatPrice; print totals can carry paise, so 'Rs 7.5' keeps them. */
-const priceLabel = (value: number) => (Number.isInteger(Number(money(value))) ? formatPrice(value) : `Rs ${money(value)}`);
+/** '₹80' via formatPrice; print totals can carry paise, so '₹7.5' keeps them. */
+const priceLabel = (value: number) => (Number.isInteger(Number(money(value))) ? formatPrice(value) : `₹${money(value)}`);
 
 /** A failed payment is an expected outcome in the demo's pay sheet, not a console error. */
 const logPaymentFailure: (error: unknown) => void = isDemoMode()
@@ -318,7 +318,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
         ) : (
           <>
             <span>Checkout</span>
-            {totalCost > 0 && <span className="font-heading text-[14.5px] leading-none tabular-nums">{priceLabel(totalCost)}</span>}
+            {totalCost > 0 && <span className="text-[14px] font-bold leading-none tabular-nums">{priceLabel(totalCost)}</span>}
           </>
         )}
       </button>
@@ -331,8 +331,8 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
           </DialogHeader>
           {jobType === 'Assignment' && assignmentMode === 'Mixed' && (
             <div className="mb-2 flex flex-wrap gap-1.5">
-              <span className="rounded-full bg-royal-tint px-2 py-0.5 text-[11px] font-bold text-royal tabular-nums">Colour: {colorText || 'None'}</span>
-              <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-bold text-ink tabular-nums">B&W: {bwText || 'None'}</span>
+              <span className="rounded-full bg-royal-tint px-2 py-0.5 text-[11px] font-semibold text-royal tabular-nums">Colour: {colorText || 'None'}</span>
+              <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-semibold text-ink tabular-nums">B&W: {bwText || 'None'}</span>
             </div>
           )}
           <div className="max-h-[60vh] overflow-auto rounded-[12px] border border-line bg-white p-2">
@@ -362,7 +362,7 @@ export function CheckoutButton({ shopId, shopName }: { shopId: string; shopName?
               Don&apos;t close or refresh this page. This can take up to a minute.
             </DialogDescription>
           </DialogHeader>
-          <div role="status" className="flex items-center gap-2.5 rounded-[12px] bg-surface px-3 py-2.5 text-[12.5px] font-bold text-ink">
+          <div role="status" className="flex items-center gap-2.5 rounded-[12px] bg-surface px-3 py-2.5 text-[12.5px] font-semibold text-ink">
             <SpinnerIcon size={18} className="shrink-0 animate-spin text-royal" />
             Waiting for confirmation…
           </div>

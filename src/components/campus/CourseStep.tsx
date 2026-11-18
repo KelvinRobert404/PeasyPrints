@@ -91,7 +91,7 @@ export function CourseStep({
       {note}
       <form onSubmit={submit} noValidate className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor={programmeId} className="text-[12px] font-bold text-ink">
+          <label htmlFor={programmeId} className="text-[12px] font-semibold text-ink">
             Course
           </label>
           <select
@@ -121,8 +121,8 @@ export function CourseStep({
 
         {picked && picked.specialisations.length > 0 ? (
           <fieldset className="flex min-w-0 flex-col gap-1.5" disabled={busy}>
-            <legend className="mb-1.5 text-[12px] font-bold text-ink">
-              Specialisation <span className="font-semibold text-slate">(optional)</span>
+            <legend className="mb-1.5 text-[12px] font-semibold text-ink">
+              Specialisation <span className="font-medium text-slate">(optional)</span>
             </legend>
             <div className="flex flex-wrap gap-1.5">
               {picked.specialisations.map((option) => (
@@ -140,7 +140,7 @@ export function CourseStep({
 
         {picked ? (
           <fieldset className="flex min-w-0 flex-col" disabled={busy}>
-            <legend className="mb-1.5 text-[12px] font-bold text-ink">Semester</legend>
+            <legend className="mb-1.5 text-[12px] font-semibold text-ink">Semester</legend>
             <div className="grid grid-cols-5 gap-1.5">
               {semesters.map((value) => {
                 const selected = semester === value;

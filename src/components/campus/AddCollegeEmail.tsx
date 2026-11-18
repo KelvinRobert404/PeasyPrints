@@ -140,7 +140,7 @@ export function DomainMismatchStep({
           >
             <IconTile icon={LogOutIcon} tone="surface" size={32} className="bg-white" />
             <span className="flex min-w-0 flex-1 flex-col gap-px">
-              <span className="truncate text-[12.5px] font-bold text-ink">Sign in with another account</span>
+              <span className="truncate text-[12.5px] font-semibold text-ink">Sign in with another account</span>
               <span className="truncate text-[11px] text-slate">Try your college Google account</span>
             </span>
             <ChevronRightIcon size={16} className="shrink-0 text-slate" />
@@ -178,7 +178,7 @@ function OptionRow({
       >
         <IconTile icon={icon} tone="royal" size={32} />
         <span className="flex min-w-0 flex-1 flex-col gap-px">
-          <span className="truncate text-[12.5px] font-bold text-ink">{title}</span>
+          <span className="truncate text-[12.5px] font-semibold text-ink">{title}</span>
           <span className="truncate text-[11px] text-slate">{subtitle}</span>
         </span>
         <ChevronRightIcon size={16} className={cn('shrink-0 text-slate transition-transform', open && 'rotate-90')} />
@@ -277,7 +277,7 @@ export function AddCollegeEmailForm({
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-2">
       {stage === 'email' ? (
         <>
-          <label htmlFor={emailId} className="text-[12px] font-bold text-ink">
+          <label htmlFor={emailId} className="text-[12px] font-semibold text-ink">
             Your {collegeCode} email
           </label>
           <input
@@ -311,7 +311,7 @@ export function AddCollegeEmailForm({
       ) : (
         <>
           <div>
-            <p className="text-[12.5px] font-bold text-ink">Enter the 6-digit code</p>
+            <p className="text-[12.5px] font-semibold text-ink">Enter the 6-digit code</p>
             <p className="mt-0.5 break-words text-[11.5px] text-slate">
               Sent to <span className="font-semibold text-ink">{email.trim()}</span>.{' '}
               <button

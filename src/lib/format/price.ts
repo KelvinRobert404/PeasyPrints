@@ -1,5 +1,5 @@
 // Price helpers. Pure leaf module: no imports, safe for node tests.
-// Prices are whole rupees and always read 'Rs 1.5k', never with the rupee sign.
+// Prices are whole rupees and read '₹1.5k' (Figtree has the rupee sign; prices are never set in Bricolage).
 
 export type PriceSuffix = 'pp' | 'dep' | '/mo';
 
@@ -16,8 +16,8 @@ function oneDecimal(value: number): string {
 }
 
 /**
- * formatPrice(650) -> 'Rs 650', formatPrice(1500) -> 'Rs 1.5k',
- * formatPrice(120000) -> 'Rs 1.2L', formatPrice(8500, 'pp') -> 'Rs 8.5k pp',
+ * formatPrice(650) -> '₹650', formatPrice(1500) -> '₹1.5k',
+ * formatPrice(120000) -> '₹1.2L', formatPrice(8500, 'pp') -> '₹8.5k pp',
  * formatPrice(0) -> 'Free'. Negative or non-numeric input reads as 0.
  */
 export function formatPrice(n: number, suffix?: PriceSuffix): string {
@@ -33,20 +33,20 @@ export function formatPrice(n: number, suffix?: PriceSuffix): string {
     body = inK < 100 ? `${oneDecimal(inK)}k` : `${oneDecimal(rupees / LAKH)}L`;
   }
 
-  const price = `Rs ${body}`;
+  const price = `₹${body}`;
   return suffix ? `${price} ${suffix}` : price;
 }
 
 /**
  * Print prices keep paise and never shorten to k or L.
- * formatPrintPrice(1.5) -> 'Rs 1.5', formatPrintPrice(12.25) -> 'Rs 12.25',
- * formatPrintPrice(40) -> 'Rs 40', formatPrintPrice(1250) -> 'Rs 1250',
- * formatPrintPrice(-5) -> '-Rs 5' (a discount). Non-numeric input reads as 0.
+ * formatPrintPrice(1.5) -> '₹1.5', formatPrintPrice(12.25) -> '₹12.25',
+ * formatPrintPrice(40) -> '₹40', formatPrintPrice(1250) -> '₹1250',
+ * formatPrintPrice(-5) -> '-₹5' (a discount). Non-numeric input reads as 0.
  */
 export function formatPrintPrice(n: number): string {
   const value = Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
   const body = String(Math.abs(value));
-  return value < 0 ? `-Rs ${body}` : `Rs ${body}`;
+  return value < 0 ? `-₹${body}` : `₹${body}`;
 }
 
 const UNIT_MULTIPLIER: Record<string, number> = {
