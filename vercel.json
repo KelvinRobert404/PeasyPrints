@@ -8,7 +8,8 @@
   "git": {
     "deploymentEnabled": {
       "kada-18/**": false,
-      "kada-19/**": false
+      "kada-19/**": false,
+      "kada-20/**": false
     }
   }
 }
